@@ -1,5 +1,15 @@
 import { useState } from "react";
 
+const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
+
+function getProxiedUrl(src: string): string {
+  // Only proxy Instagram CDN URLs
+  if (src.includes("cdninstagram.com") || src.includes("fbcdn.net")) {
+    return `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`;
+  }
+  return src;
+}
+
 interface InstagramAvatarProps {
   src: string | null | undefined;
   alt: string;
@@ -24,9 +34,8 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
 
   return (
     <img
-      src={src}
+      src={getProxiedUrl(src)}
       alt={alt}
-      referrerPolicy="no-referrer"
       className={`rounded-full object-cover bg-muted ${className}`}
       style={{ width: size, height: size }}
       onError={() => setShowFallback(true)}
