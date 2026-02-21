@@ -1,8 +1,20 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { Bell, Trash2, Sparkles, ChevronRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Bell, Trash2, Sparkles, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 const Settings = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Bis bald! 👋");
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -12,11 +24,19 @@ const Settings = () => {
         <div className="absolute inset-0 mesh-dots" />
       </div>
 
-      <main className="container relative max-w-2xl py-10">
+      <main className="container relative max-w-2xl py-10 pb-24">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-extrabold mb-8">Einstellungen ⚙️</h1>
 
           <div className="space-y-5">
+            {/* Account */}
+            <div className="bento-card">
+              <div className="relative">
+                <h2 className="font-bold text-sm mb-3">Dein Account</h2>
+                <p className="text-[13px] text-muted-foreground">{user?.email}</p>
+              </div>
+            </div>
+
             {/* Subscription */}
             <div className="bento-card">
               <div className="absolute inset-0 aurora-bg opacity-10" />
@@ -66,6 +86,15 @@ const Settings = () => {
                 </div>
               </div>
             </div>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="w-full bento-card flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="text-[13px] font-semibold">Ausloggen</span>
+            </button>
 
             {/* Danger Zone */}
             <div className="bento-card border-destructive/15">
