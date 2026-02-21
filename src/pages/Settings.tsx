@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
-import { CreditCard, Bell, Trash2, ExternalLink, Heart, Sparkles } from "lucide-react";
+import { Bell, Trash2, Sparkles, ChevronRight } from "lucide-react";
 
 const Settings = () => {
   return (
@@ -8,31 +8,32 @@ const Settings = () => {
       <Navbar />
 
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bubble-pattern" />
+        <div className="absolute inset-0 aurora-bg opacity-30" />
+        <div className="absolute inset-0 mesh-dots" />
       </div>
 
-      <main className="container relative max-w-2xl py-8">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-xl font-bold mb-6">Einstellungen ⚙️</h1>
+      <main className="container relative max-w-2xl py-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl font-extrabold mb-8">Einstellungen ⚙️</h1>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Subscription */}
-            <div className="rounded-2xl surface-elevated border border-border/30 p-5 relative overflow-hidden">
-              <div className="absolute inset-0 sparkle" />
+            <div className="bento-card">
+              <div className="absolute inset-0 aurora-bg opacity-10" />
               <div className="relative">
-                <div className="flex items-center gap-2.5 mb-4">
+                <div className="flex items-center gap-2.5 mb-5">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  <h2 className="font-semibold text-sm">Dein Abo</h2>
+                  <h2 className="font-bold text-sm">Dein Abo</h2>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm">
+                    <p className="text-sm font-medium">
                       Aktueller Plan:{" "}
-                      <span className="font-bold text-primary">Free 🆓</span>
+                      <span className="font-extrabold text-primary">Free ✨</span>
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">1 Profil, Updates alle 6h</p>
                   </div>
-                  <button className="gradient-bg px-4 py-2 rounded-full text-[13px] font-bold text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-1.5">
+                  <button className="pill-btn-primary px-5 py-2.5 text-[13px]">
                     Upgrade 💎
                   </button>
                 </div>
@@ -40,25 +41,25 @@ const Settings = () => {
             </div>
 
             {/* Notifications */}
-            <div className="rounded-2xl surface-elevated border border-border/30 p-5 relative overflow-hidden">
+            <div className="bento-card">
               <div className="relative">
-                <div className="flex items-center gap-2.5 mb-4">
+                <div className="flex items-center gap-2.5 mb-5">
                   <Bell className="h-4 w-4 text-accent" />
-                  <h2 className="font-semibold text-sm">Benachrichtigungen 🔔</h2>
+                  <h2 className="font-bold text-sm">Benachrichtigungen 🔔</h2>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[
                     { label: "Neue Follows", desc: "Wenn er jemand neuem folgt 👀", on: true },
                     { label: "Unfollows", desc: "Wenn er jemanden entfolgt 💔", on: true },
                     { label: "Profil privat", desc: "Wenn ein Profil privat wird 🔒", on: false },
                   ].map(item => (
-                    <div key={item.label} className="flex items-center justify-between py-1.5">
+                    <div key={item.label} className="flex items-center justify-between py-1">
                       <div>
-                        <p className="text-[13px] font-medium">{item.label}</p>
+                        <p className="text-[13px] font-semibold">{item.label}</p>
                         <p className="text-[11px] text-muted-foreground">{item.desc}</p>
                       </div>
-                      <button className={`h-6 w-10 rounded-full relative transition-colors ${item.on ? 'gradient-bg' : 'bg-border'}`}>
-                        <span className={`absolute top-1 h-4 w-4 rounded-full bg-foreground transition-all ${item.on ? 'right-1' : 'left-1'}`} />
+                      <button className={`h-7 w-12 rounded-full relative transition-all ${item.on ? 'gradient-bg shadow-lg shadow-primary/20' : 'bg-muted'}`}>
+                        <span className={`absolute top-1 h-5 w-5 rounded-full bg-foreground transition-all ${item.on ? 'right-1' : 'left-1'}`} />
                       </button>
                     </div>
                   ))}
@@ -67,15 +68,15 @@ const Settings = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="rounded-2xl surface-elevated border border-destructive/15 p-5 relative overflow-hidden">
-              <div className="flex items-center gap-2.5 mb-3">
+            <div className="bento-card border-destructive/15">
+              <div className="flex items-center gap-2.5 mb-4">
                 <Trash2 className="h-4 w-4 text-destructive" />
-                <h2 className="font-semibold text-sm">Danger Zone ⚠️</h2>
+                <h2 className="font-bold text-sm">Danger Zone ⚠️</h2>
               </div>
-              <p className="text-[13px] text-muted-foreground mb-3">
+              <p className="text-[13px] text-muted-foreground mb-4">
                 Lösche dein Konto und alle Daten. Das geht nicht rückgängig!
               </p>
-              <button className="px-4 py-2 rounded-full text-[13px] font-medium border border-destructive/20 text-destructive hover:bg-destructive/5 transition-colors">
+              <button className="px-5 py-2.5 rounded-2xl text-[13px] font-semibold border border-destructive/20 text-destructive hover:bg-destructive/5 transition-colors">
                 Konto löschen 😢
               </button>
             </div>

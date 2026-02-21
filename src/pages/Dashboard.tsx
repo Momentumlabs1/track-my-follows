@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Heart, Sparkles } from "lucide-react";
+import { Plus, Heart, Sparkles, TrendingUp, TrendingDown, Users } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProfileCard } from "@/components/ProfileCard";
 import { EventFeedItem } from "@/components/EventFeedItem";
@@ -20,64 +20,67 @@ const Dashboard = () => {
   const totalFollows = mockEvents.filter(e => e.eventType === 'follow').length;
   const totalUnfollows = mockEvents.filter(e => e.eventType === 'unfollow').length;
 
+  const stats = [
+    { value: mockProfiles.length, label: "Profile", icon: Users, color: "from-brand-lavender/20 to-brand-pink/10" },
+    { value: totalFollows, label: "Neue Follows", icon: TrendingUp, color: "from-brand-pink/20 to-brand-rose/10" },
+    { value: totalUnfollows, label: "Unfollows", icon: TrendingDown, color: "from-brand-coral/20 to-brand-peach/10" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bubble-pattern" />
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[150px]" />
+        <div className="absolute inset-0 aurora-bg opacity-50" />
+        <div className="absolute inset-0 mesh-dots" />
       </div>
 
-      <main className="container relative py-6">
+      <main className="container relative py-8">
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              Dein Dashboard 💅
+            <h1 className="text-2xl font-extrabold flex items-center gap-2">
+              Dashboard 💅
             </h1>
-            <p className="text-[13px] text-muted-foreground mt-1">
-              {mockProfiles.length} Profile im Blick · Scanning aktiv ✨
+            <p className="text-[13px] text-muted-foreground mt-1.5">
+              {mockProfiles.length} Profile im Blick · Scanning aktiv
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="gradient-bg px-4 py-2 rounded-full text-[13px] font-semibold text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-1.5 glow-pink"
+            className="pill-btn-primary px-5 py-2.5 text-[13px]"
           >
             <Plus className="h-3.5 w-3.5" />
             Stalken 👀
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { value: mockProfiles.length, label: "Profile", emoji: "👤" },
-            { value: totalFollows, label: "Neue Follows", emoji: "💕" },
-            { value: totalUnfollows, label: "Unfollows", emoji: "💔" },
-          ].map((stat, i) => (
+        {/* Stats - Bento */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="rounded-2xl surface-elevated border border-border/30 p-3.5 text-center relative overflow-hidden"
+              transition={{ delay: i * 0.06 }}
+              className="bento-card text-center group"
             >
-              <div className="absolute inset-0 sparkle" />
-              <span className="text-lg relative">{stat.emoji}</span>
-              <p className="text-2xl font-bold relative mt-1">{stat.value}</p>
-              <p className="text-[11px] text-muted-foreground relative">{stat.label}</p>
+              <div className={`inline-flex items-center justify-center h-10 w-10 rounded-2xl bg-gradient-to-br ${stat.color} border border-primary/10 mb-3 mx-auto`}>
+                <stat.icon className="h-4 w-4 text-primary" />
+              </div>
+              <p className="text-3xl font-extrabold">{stat.value}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">{stat.label}</p>
             </motion.div>
           ))}
         </div>
 
         {/* Profile Cards */}
-        <div className="mb-8">
-          <h2 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="mb-10">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
             <Heart className="h-3 w-3 text-primary fill-primary" />
             Deine Profile
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {mockProfiles.map((profile, i) => (
               <ProfileCard key={profile.id} profile={profile} index={i} />
             ))}
@@ -86,19 +89,19 @@ const Dashboard = () => {
 
         {/* Event Feed */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
               <Sparkles className="h-3 w-3 text-primary" />
               Was ist passiert? 👀
             </h2>
-            <div className="flex items-center gap-0.5 surface-elevated rounded-full p-0.5 border border-border/25">
+            <div className="flex items-center gap-1 glass-card rounded-full p-1">
               {(['all', 'follow', 'unfollow'] as EventFilter[]).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all ${
                     filter === f
-                      ? "bg-primary/10 text-primary"
+                      ? "gradient-bg text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -108,7 +111,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filteredEvents.map((event, i) => (
               <EventFeedItem key={event.id} event={event} index={i} />
             ))}
