@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Sparkles, Settings, Heart } from "lucide-react";
+import { LayoutDashboard, Sparkles, Settings } from "lucide-react";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -10,15 +10,16 @@ const navItems = [
 
 export function BottomNav() {
   const location = useLocation();
-  const isLanding = location.pathname === "/";
+  const hiddenRoutes = ["/", "/login", "/signup", "/add-profile"];
+  const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing");
 
-  if (isLanding) return null;
+  if (isHidden) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/20 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-14">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.to;
+          const isActive = location.pathname === item.to || (item.to === "/dashboard" && location.pathname.startsWith("/profile/"));
           return (
             <Link
               key={item.to}

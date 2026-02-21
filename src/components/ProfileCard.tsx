@@ -1,7 +1,18 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "Never";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 interface ProfileCardProps {
   profile: TrackedProfile;
@@ -11,45 +22,51 @@ interface ProfileCardProps {
 export function ProfileCard({ profile, index }: ProfileCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06, duration: 0.35 }}
     >
-      <Link to={`/profile/${profile.id}`} className="block group">
-        <div className="bento-card">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="ios-card">
+        {/* Top row: avatar, name, view button */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="avatar-ring flex-shrink-0">
+            <img
+              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=random`}
+              alt={profile.username}
+              className="h-11 w-11 rounded-full object-cover"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm text-foreground">@{profile.username}</h3>
+            <p className="text-[11px] text-muted-foreground">
+              Updated {timeAgo(profile.last_scanned_at || profile.updated_at)}
+            </p>
+          </div>
+          <Link
+            to={`/profile/${profile.id}`}
+            className="pill-btn-primary px-4 py-1.5 text-[12px]"
+          >
+            View
+          </Link>
+        </div>
 
-          <div className="relative flex items-center gap-4">
-            <div className="relative flex-shrink-0">
-              <div className="avatar-ring">
-                <img
-                  src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=random`}
-                  alt={profile.username}
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-              </div>
-              <span
-                className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
-                  profile.is_active ? "gradient-bg" : "bg-muted-foreground"
-                }`}
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-bold text-sm truncate">@{profile.username}</h3>
-                <Eye className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{profile.display_name || profile.username}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {(profile.following_count ?? 0).toLocaleString()} Following
-              </p>
-            </div>
-
-            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="stat-box-blue">
+            <p className="text-lg font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
+            <p className="text-[10px] font-medium opacity-70">Followers</p>
+          </div>
+          <div className="stat-box-purple">
+            <p className="text-lg font-extrabold">{(profile.following_count ?? 0).toLocaleString()}</p>
+            <p className="text-[10px] font-medium opacity-70">Following</p>
           </div>
         </div>
-      </Link>
+
+        {/* Tracking since */}
+        <p className="text-[11px] text-muted-foreground">
+          Tracking since {new Date(profile.created_at).toLocaleDateString()}
+        </p>
+      </div>
     </motion.div>
   );
 }
