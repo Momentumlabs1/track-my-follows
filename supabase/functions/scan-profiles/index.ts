@@ -1,20 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-async function uploadAvatar(supabase: ReturnType<typeof createClient>, id: string, imageUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(imageUrl);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const ext = "jpg";
-    const path = `${id}.${ext}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-    if (error) { console.error("Avatar upload error:", error.message); return null; }
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    // Add cache buster to force refresh
-    return data.publicUrl + "?t=" + Date.now();
-  } catch (e) { console.error("Avatar upload failed:", e); return null; }
-}
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -104,17 +89,10 @@ Deno.serve(async (req) => {
         console.log("Parsed igUserId:", igUserId, "type:", typeof igUserId);
 
         // Profil-Metadaten updaten
-        const igAvatarUrl = userInfo.hd_profile_pic_url_info?.url || userInfo.profile_pic_url || null;
-        let permanentAvatarUrl = profile.avatar_url;
-        if (igAvatarUrl) {
-          const uploaded = await uploadAvatar(supabase, profile.id, igAvatarUrl);
-          if (uploaded) permanentAvatarUrl = uploaded;
-        }
-
         await supabase
           .from("tracked_profiles")
           .update({
-            avatar_url: permanentAvatarUrl,
+            avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
             display_name: userInfo.full_name || null,
             follower_count: userInfo.follower_count || 0,
             following_count: userInfo.following_count || 0,
@@ -171,38 +149,29 @@ Deno.serve(async (req) => {
         // 4. Neue Follows erkennen
         let newFollowCount = 0;
         for (const f of allFollowings) {
-          // Upload target avatar to permanent storage
-          let targetAvatarUrl: string | null = f.profile_pic_url || null;
-          if (targetAvatarUrl) {
-            const uploaded = await uploadAvatar(supabase, `target-${f.pk}`, targetAvatarUrl);
-            if (uploaded) targetAvatarUrl = uploaded;
-          }
-
           if (!existingMap.has(f.pk)) {
-            // Neuer Follow
             newFollowCount++;
             await supabase.from("profile_followings").insert({
               tracked_profile_id: profile.id,
               following_username: f.username,
               following_user_id: f.pk,
-              following_avatar_url: targetAvatarUrl,
+              following_avatar_url: f.profile_pic_url || null,
               following_display_name: f.full_name || null,
             });
             await supabase.from("follow_events").insert({
               tracked_profile_id: profile.id,
               event_type: "follow",
               target_username: f.username,
-              target_avatar_url: targetAvatarUrl,
+              target_avatar_url: f.profile_pic_url || null,
               target_display_name: f.full_name || null,
             });
           } else {
-            // Bestehend -> last_seen_at updaten
             const existing = existingMap.get(f.pk) as Record<string, unknown>;
             await supabase
               .from("profile_followings")
               .update({
                 last_seen_at: new Date().toISOString(),
-                following_avatar_url: targetAvatarUrl,
+                following_avatar_url: f.profile_pic_url || null,
                 following_display_name: f.full_name || null,
               })
               .eq("id", existing.id as string);
