@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 function timeAgo(dateStr: string | null): string {
@@ -27,14 +28,13 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
       transition={{ delay: index * 0.06, duration: 0.35 }}
     >
       <div className="ios-card">
-        {/* Top row: avatar, name, view button */}
         <div className="flex items-center gap-3 mb-3">
           <div className="avatar-ring flex-shrink-0">
-            <img
-              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`}
+            <InstagramAvatar
+              src={profile.avatar_url}
               alt={profile.username}
-              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`; }}
-              className="h-11 w-11 rounded-full object-cover bg-muted"
+              fallbackInitials={profile.username}
+              size={44}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -51,7 +51,6 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
           </Link>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="stat-box-blue">
             <p className="text-lg font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
@@ -63,7 +62,6 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
           </div>
         </div>
 
-        {/* Tracking since */}
         <p className="text-[11px] text-muted-foreground">
           Tracking since {new Date(profile.created_at).toLocaleDateString()}
         </p>
