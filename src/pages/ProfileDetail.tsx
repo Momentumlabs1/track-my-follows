@@ -118,9 +118,10 @@ const ProfileDetail = () => {
         <div className="ios-card flex items-center gap-4">
           <div className="avatar-ring flex-shrink-0 p-[3px]">
             <img
-              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=random`}
+              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`}
               alt={profile.username}
-              className="h-16 w-16 rounded-full object-cover"
+              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`; }}
+              className="h-16 w-16 rounded-full object-cover bg-muted"
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -210,9 +211,10 @@ const ProfileDetail = () => {
             displayEvents.map((event) => (
               <div key={event.id} className="flex items-center gap-3 py-2">
                 <img
-                  src={event.target_avatar_url || `https://ui-avatars.com/api/?name=${event.target_username}&background=random`}
+                  src={event.target_avatar_url || `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`}
                   alt={event.target_username}
-                  className="h-10 w-10 rounded-full object-cover"
+                  onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`; }}
+                  className="h-10 w-10 rounded-full object-cover bg-muted"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>

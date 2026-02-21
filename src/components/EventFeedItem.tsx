@@ -38,7 +38,8 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         <img
           src={profileAvatar}
           alt={profileUsername}
-          className="h-6 w-6 rounded-full object-cover"
+          onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profileUsername}&background=FF69B4&color=fff`; }}
+          className="h-6 w-6 rounded-full object-cover bg-muted"
         />
         <span className="text-[12px] font-semibold text-foreground">@{profileUsername}</span>
         <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(event.detected_at)}</span>
@@ -54,7 +55,8 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         <img
           src={targetAvatar}
           alt={event.target_username}
-          className="h-12 w-12 rounded-full object-cover ring-2 ring-border"
+          onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`; }}
+          className="h-12 w-12 rounded-full object-cover ring-2 ring-border bg-muted"
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
