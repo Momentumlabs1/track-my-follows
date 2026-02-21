@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Loader2, Heart, Sparkles } from "lucide-react";
+import { X, Loader2, Heart, Sparkles } from "lucide-react";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -29,48 +29,55 @@ export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 bg-background/60 backdrop-blur-xl"
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4"
           >
-            <div className="rounded-3xl surface-elevated border border-border/30 p-6 overflow-hidden relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-px gradient-bg opacity-50" />
+            <div className="rounded-3xl glass-card p-7 overflow-hidden relative">
+              <div className="absolute inset-0 aurora-bg opacity-30" />
 
-              <div className="text-center mb-5">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl gradient-bg-soft mb-3">
-                  <Sparkles className="h-5 w-5 text-primary-foreground" />
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all z-10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="text-center mb-6 relative">
+                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-bg-aurora mb-4 shadow-lg shadow-primary/20">
+                  <Sparkles className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h2 className="font-bold text-base">Wen willst du stalken? 👀</h2>
-                <p className="text-[12px] text-muted-foreground mt-1">Gib den Instagram-Username ein</p>
+                <h2 className="font-bold text-lg">Wen willst du stalken? 👀</h2>
+                <p className="text-[12px] text-muted-foreground mt-1.5">Gib den Instagram-Username ein</p>
               </div>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="relative">
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold text-sm">@</span>
                   <input
                     type="text"
-                    placeholder="username eingeben..."
+                    placeholder="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full rounded-2xl bg-background border border-border/50 pl-9 pr-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
+                    className="w-full rounded-2xl bg-background/80 border border-border/50 pl-9 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                     autoFocus
                   />
                 </div>
 
-                <p className="mt-2.5 text-[11px] text-muted-foreground text-center">
+                <p className="mt-3 text-[11px] text-muted-foreground text-center">
                   Profil muss öffentlich sein 🔓
                 </p>
 
                 <button
                   type="submit"
                   disabled={!username.trim() || loading}
-                  className="mt-4 w-full gradient-bg rounded-2xl py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="mt-5 w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>

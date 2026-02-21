@@ -56,6 +56,8 @@ export default {
           lavender: "hsl(var(--brand-lavender))",
           peach: "hsl(var(--brand-peach))",
           blush: "hsl(var(--brand-blush))",
+          coral: "hsl(var(--brand-coral))",
+          mint: "hsl(var(--brand-mint))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
