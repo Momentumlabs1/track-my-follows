@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { BadgeCheck, Heart, HeartCrack } from "lucide-react";
-import type { FollowEvent } from "@/lib/mockData";
+import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -17,7 +17,9 @@ interface EventFeedItemProps {
 }
 
 export function EventFeedItem({ event, index }: EventFeedItemProps) {
-  const isFollow = event.eventType === 'follow';
+  const isFollow = event.event_type === 'follow';
+  const profileUsername = event.tracked_profiles?.username ?? '???';
+  const profileAvatar = event.tracked_profiles?.avatar_url || `https://ui-avatars.com/api/?name=${profileUsername}&background=random`;
 
   return (
     <motion.div
@@ -25,14 +27,14 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className={`group flex items-center gap-3.5 bento-card py-3.5 ${
-        !event.isRead ? "border-l-2 border-l-primary" : ""
+        !event.is_read ? "border-l-2 border-l-primary" : ""
       }`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className="avatar-ring flex-shrink-0">
           <img
-            src={event.profilePicUrl}
-            alt={event.profileUsername}
+            src={profileAvatar}
+            alt={profileUsername}
             className="h-9 w-9 rounded-full object-cover"
           />
         </div>
@@ -48,27 +50,24 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         </div>
 
         <img
-          src={event.targetProfilePicUrl}
-          alt={event.targetUsername}
+          src={event.target_avatar_url || `https://ui-avatars.com/api/?name=${event.target_username}&background=random`}
+          alt={event.target_username}
           className="h-9 w-9 rounded-full object-cover flex-shrink-0 ring-2 ring-border/30"
         />
 
         <div className="min-w-0 flex-1">
           <p className="text-[13px] leading-tight">
-            <span className="font-bold">@{event.profileUsername}</span>
+            <span className="font-bold">@{profileUsername}</span>
             <span className="text-muted-foreground">
               {isFollow ? " folgt jetzt " : " hat entfolgt "}
             </span>
-            <span className="font-bold">@{event.targetUsername}</span>
-            {event.targetIsVerified && (
-              <BadgeCheck className="inline h-3.5 w-3.5 ml-0.5 text-accent" />
-            )}
+            <span className="font-bold">@{event.target_username}</span>
           </p>
         </div>
       </div>
 
       <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">
-        {timeAgo(event.detectedAt)}
+        {timeAgo(event.detected_at)}
       </span>
     </motion.div>
   );

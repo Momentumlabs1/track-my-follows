@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Heart, Sparkles } from "lucide-react";
+import { useAddTrackedProfile } from "@/hooks/useTrackedProfiles";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -9,16 +10,17 @@ interface AddProfileModalProps {
 
 export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
+  const addProfile = useAddTrackedProfile();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setUsername("");
-      onClose();
-    }, 1500);
+    if (!username.trim()) return;
+    addProfile.mutate(username, {
+      onSuccess: () => {
+        setUsername("");
+        onClose();
+      },
+    });
   };
 
   return (
@@ -76,10 +78,10 @@ export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
 
                 <button
                   type="submit"
-                  disabled={!username.trim() || loading}
+                  disabled={!username.trim() || addProfile.isPending}
                   className="mt-5 w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {loading ? (
+                  {addProfile.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Wird gesucht...
