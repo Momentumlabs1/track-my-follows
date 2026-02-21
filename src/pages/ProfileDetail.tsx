@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw } from "lucide-react";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -37,7 +38,6 @@ const ProfileDetail = () => {
 
   const isLoading = profilesLoading || eventsLoading;
 
-  // Suspicion level
   const followingCount = profile?.following_count ?? 1;
   const recentFollows = follows.length;
   const suspicionPercent = Math.min(100, Math.round((recentFollows / Math.max(followingCount, 1)) * 100));
@@ -94,13 +94,11 @@ const ProfileDetail = () => {
     );
   }
 
-  const tabItems = follows; // default
   const displayEvents =
     activeTab === "follows" ? follows : activeTab === "followers" ? unfollows : events;
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ml-2 text-foreground">
           <ArrowLeft className="h-5 w-5" />
@@ -113,15 +111,14 @@ const ProfileDetail = () => {
         </button>
       </div>
 
-      {/* Profile banner */}
       <div className="px-5 py-4">
         <div className="ios-card flex items-center gap-4">
           <div className="avatar-ring flex-shrink-0 p-[3px]">
-            <img
-              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`}
+            <InstagramAvatar
+              src={profile.avatar_url}
               alt={profile.username}
-              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`; }}
-              className="h-16 w-16 rounded-full object-cover bg-muted"
+              fallbackInitials={profile.username}
+              size={64}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -136,7 +133,6 @@ const ProfileDetail = () => {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="px-5 grid grid-cols-2 gap-3 mb-4">
         <div className="stat-box-blue">
           <p className="text-xl font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
@@ -148,7 +144,6 @@ const ProfileDetail = () => {
         </div>
       </div>
 
-      {/* Scan button */}
       <div className="px-5 mb-4">
         <button
           onClick={handleScan}
@@ -163,7 +158,6 @@ const ProfileDetail = () => {
         </button>
       </div>
 
-      {/* Suspicion Level */}
       <div className="px-5 mb-5">
         <div className={`ios-card border ${suspicionColor}`}>
           <div className="flex items-center justify-between mb-2">
@@ -182,7 +176,6 @@ const ProfileDetail = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="px-5">
         <div className="flex gap-0 border-b border-border mb-4">
           {(["follows", "followers", "activity"] as DetailTab[]).map((tab) => (
@@ -205,16 +198,15 @@ const ProfileDetail = () => {
           ))}
         </div>
 
-        {/* Event list */}
         <div className="space-y-2">
           {displayEvents.length > 0 ? (
             displayEvents.map((event) => (
               <div key={event.id} className="flex items-center gap-3 py-2">
-                <img
-                  src={event.target_avatar_url || `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`}
+                <InstagramAvatar
+                  src={event.target_avatar_url}
                   alt={event.target_username}
-                  onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`; }}
-                  className="h-10 w-10 rounded-full object-cover bg-muted"
+                  fallbackInitials={event.target_username}
+                  size={40}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>

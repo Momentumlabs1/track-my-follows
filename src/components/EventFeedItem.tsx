@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 function timeAgo(dateStr: string): string {
@@ -19,12 +20,6 @@ interface EventFeedItemProps {
 export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const isFollow = event.event_type === "follow";
   const profileUsername = event.tracked_profiles?.username ?? "???";
-  const profileAvatar =
-    event.tracked_profiles?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${profileUsername}&background=random`;
-  const targetAvatar =
-    event.target_avatar_url ||
-    `https://ui-avatars.com/api/?name=${event.target_username}&background=random`;
 
   return (
     <motion.div
@@ -33,30 +28,28 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       transition={{ delay: index * 0.04, duration: 0.3 }}
       className="ios-card"
     >
-      {/* Source profile row */}
       <div className="flex items-center gap-2 mb-2">
-        <img
-          src={profileAvatar}
+        <InstagramAvatar
+          src={event.tracked_profiles?.avatar_url}
           alt={profileUsername}
-          onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profileUsername}&background=FF69B4&color=fff`; }}
-          className="h-6 w-6 rounded-full object-cover bg-muted"
+          fallbackInitials={profileUsername}
+          size={24}
         />
         <span className="text-[12px] font-semibold text-foreground">@{profileUsername}</span>
         <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(event.detected_at)}</span>
       </div>
 
-      {/* Event text */}
       <p className="text-[13px] text-muted-foreground mb-3">
         {isFollow ? "Got followed by" : "Unfollowed"}
       </p>
 
-      {/* Target user - large */}
       <div className="flex items-center gap-3">
-        <img
-          src={targetAvatar}
+        <InstagramAvatar
+          src={event.target_avatar_url}
           alt={event.target_username}
-          onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${event.target_username}&background=FF69B4&color=fff`; }}
-          className="h-12 w-12 rounded-full object-cover ring-2 ring-border bg-muted"
+          fallbackInitials={event.target_username}
+          size={48}
+          className="ring-2 ring-border"
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
