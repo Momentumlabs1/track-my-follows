@@ -2,12 +2,18 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPlan } from "@/hooks/useTrackedProfiles";
 import { Bell, Trash2, Sparkles, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: userProfile } = useUserPlan();
+
+  const plan = userProfile?.subscription_plans;
+  const planName = plan?.name ?? "free";
+  const maxProfiles = plan?.max_tracked_profiles ?? 1;
 
   const handleLogout = async () => {
     await signOut();
@@ -49,9 +55,11 @@ const Settings = () => {
                   <div>
                     <p className="text-sm font-medium">
                       Aktueller Plan:{" "}
-                      <span className="font-extrabold text-primary">Free ✨</span>
+                      <span className="font-extrabold text-primary capitalize">{planName} ✨</span>
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">1 Profil, Updates alle 6h</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {maxProfiles} {maxProfiles === 1 ? "Profil" : "Profile"}, Updates alle 6h
+                    </p>
                   </div>
                   <button className="pill-btn-primary px-5 py-2.5 text-[13px]">
                     Upgrade 💎

@@ -1,17 +1,32 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Eye, Heart, HeartCrack, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, Eye, Heart, HeartCrack, Clock, Sparkles, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { StatsChart } from "@/components/StatsChart";
-import { mockProfiles, mockEvents } from "@/lib/mockData";
+import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
 
 const ProfileDetail = () => {
   const { id } = useParams();
-  const profile = mockProfiles.find(p => p.id === id);
-  const events = mockEvents.filter(e => e.profileId === id);
-  const follows = events.filter(e => e.eventType === 'follow');
-  const unfollows = events.filter(e => e.eventType === 'unfollow');
+  const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
+  const { data: events = [], isLoading: eventsLoading } = useFollowEvents(id);
+
+  const profile = profiles.find(p => p.id === id);
+  const follows = events.filter(e => e.event_type === 'follow');
+  const unfollows = events.filter(e => e.event_type === 'unfollow');
+
+  const isLoading = profilesLoading || eventsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -28,7 +43,7 @@ const ProfileDetail = () => {
   const statCards = [
     { icon: Heart, value: follows.length, label: "Neue Follows", color: "from-brand-pink/20 to-brand-rose/10", iconClass: "text-primary fill-primary" },
     { icon: HeartCrack, value: unfollows.length, label: "Unfollows", color: "from-brand-coral/20 to-destructive/10", iconClass: "text-destructive" },
-    { icon: Clock, value: "58m", label: "Nächster Scan", color: "from-brand-lavender/20 to-accent/10", iconClass: "text-accent" },
+    { icon: Clock, value: "–", label: "Nächster Scan", color: "from-brand-lavender/20 to-accent/10", iconClass: "text-accent" },
   ];
 
   return (
@@ -61,7 +76,7 @@ const ProfileDetail = () => {
             <div className="relative flex-shrink-0">
               <div className="avatar-ring p-[3px]">
                 <img
-                  src={profile.profilePicUrl}
+                  src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=random`}
                   alt={profile.username}
                   className="h-24 w-24 rounded-full object-cover"
                 />
@@ -77,14 +92,14 @@ const ProfileDetail = () => {
                   <Eye className="h-2.5 w-2.5" /> Öffentlich
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">{profile.fullName}</p>
+              <p className="text-sm text-muted-foreground mt-1">{profile.display_name || profile.username}</p>
               <div className="flex gap-8 mt-4">
                 <div>
-                  <span className="text-xl font-extrabold">{profile.followerCount.toLocaleString()}</span>
+                  <span className="text-xl font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</span>
                   <span className="text-[11px] text-muted-foreground ml-1.5">Follower</span>
                 </div>
                 <div>
-                  <span className="text-xl font-extrabold">{profile.followingCount.toLocaleString()}</span>
+                  <span className="text-xl font-extrabold">{(profile.following_count ?? 0).toLocaleString()}</span>
                   <span className="text-[11px] text-muted-foreground ml-1.5">Following</span>
                 </div>
               </div>
