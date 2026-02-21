@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Loader2, UserPlus } from "lucide-react";
+import { X, Search, Loader2, Radar } from "lucide-react";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -16,6 +16,7 @@ export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      setUsername("");
       onClose();
     }, 1500);
   };
@@ -28,51 +29,63 @@ export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md"
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2"
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 px-4"
           >
-            <div className="rounded-2xl bg-card border border-border/50 p-6 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Profil hinzufügen</h2>
-                <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary transition-colors">
-                  <X className="h-5 w-5 text-muted-foreground" />
+            <div className="rounded-2xl surface-elevated border border-border/40 p-6 noise overflow-hidden relative">
+              {/* Decorative */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px gradient-bg opacity-60" />
+
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <Radar className="h-4 w-4 text-primary" />
+                  <h2 className="font-semibold text-sm">Track New Profile</h2>
+                </div>
+                <button onClick={onClose} className="p-1 rounded-md hover:bg-secondary transition-colors">
+                  <X className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit}>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                   <input
                     type="text"
-                    placeholder="Instagram Username eingeben..."
+                    placeholder="instagram username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full rounded-xl bg-secondary border border-border/50 pl-10 pr-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="w-full rounded-lg bg-background border border-border/60 pl-8 pr-4 py-2.5 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/30 transition-all"
                     autoFocus
                   />
                 </div>
 
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Das Profil muss öffentlich sein, damit wir es überwachen können.
+                <p className="mt-2.5 text-[11px] text-muted-foreground">
+                  Profile must be public for tracking. Private profiles will be paused automatically.
                 </p>
 
                 <button
                   type="submit"
                   disabled={!username.trim() || loading}
-                  className="mt-5 w-full gradient-bg rounded-xl py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="mt-4 w-full gradient-bg rounded-lg py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Scanning...
+                    </>
                   ) : (
-                    <UserPlus className="h-4 w-4" />
+                    <>
+                      <Radar className="h-3.5 w-3.5" />
+                      Start Tracking
+                    </>
                   )}
-                  {loading ? "Wird überprüft..." : "Profil tracken"}
                 </button>
               </form>
             </div>
