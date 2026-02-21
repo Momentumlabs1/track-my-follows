@@ -22,14 +22,17 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
     if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data } = await userClient.auth.getClaims(
-        authHeader.replace("Bearer ", "")
-      );
-      userId = data?.claims?.sub as string | null;
+      const { data: { user }, error: userError } = await userClient.auth.getUser(token);
+      if (userError) {
+        console.error("Auth error:", userError.message);
+      }
+      userId = user?.id ?? null;
+      console.log("Authenticated userId:", userId);
     }
 
     // Alle aktiven Profile laden
@@ -62,23 +65,28 @@ Deno.serve(async (req) => {
     for (const profile of profiles) {
       try {
         // 1. Profil-Info von HikerAPI holen
-        const userInfoRes = await fetch(
-          `https://api.hikerapi.com/v2/user/by/username?username=${encodeURIComponent(profile.username)}`,
-          { headers: { "x-access-key": hikerApiKey } }
-        );
+        const userInfoUrl = `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`;
+        console.log("Fetching user info:", userInfoUrl);
+        const userInfoRes = await fetch(userInfoUrl, {
+          headers: { "x-access-key": hikerApiKey },
+        });
+
+        const userInfoText = await userInfoRes.text();
+        console.log("UserInfo response status:", userInfoRes.status, "body length:", userInfoText.length, "preview:", userInfoText.substring(0, 500));
 
         if (!userInfoRes.ok) {
           results.push({
             username: profile.username,
             newFollows: 0,
             unfollows: 0,
-            error: `User info failed: ${userInfoRes.status}`,
+            error: `User info failed: ${userInfoRes.status} - ${userInfoText.substring(0, 200)}`,
           });
           continue;
         }
 
-        const userInfo = await userInfoRes.json();
+        const userInfo = JSON.parse(userInfoText);
         const igUserId = userInfo.pk || userInfo.id;
+        console.log("Parsed igUserId:", igUserId, "type:", typeof igUserId);
 
         // Profil-Metadaten updaten
         await supabase
@@ -92,44 +100,36 @@ Deno.serve(async (req) => {
           })
           .eq("id", profile.id);
 
-        // 2. Following-Liste komplett laden (paginiert)
-        const allFollowings: Array<{
-          username: string;
-          pk: string;
-          profile_pic_url?: string;
-          full_name?: string;
-        }> = [];
+        // 2. Following-Liste laden
 
-        let nextMaxId: string | null = null;
-        let hasMore = true;
+        // 2. Following-Liste laden (v1 endpoint returns ALL followings in one request)
+        console.log("Fetching all followings for user_id:", igUserId);
+        const followingRes = await fetch(
+          `https://api.hikerapi.com/v1/user/following?user_id=${igUserId}&amount=0`,
+          { headers: { "x-access-key": hikerApiKey } }
+        );
 
-        while (hasMore) {
-          const params = new URLSearchParams({ user_id: String(igUserId) });
-          if (nextMaxId) params.set("max_id", nextMaxId);
-
-          const followingRes = await fetch(
-            `https://api.hikerapi.com/v2/user/following?${params.toString()}`,
-            { headers: { "x-access-key": hikerApiKey } }
-          );
-
-          if (!followingRes.ok) {
-            throw new Error(`Following fetch failed: ${followingRes.status}`);
-          }
-
-          const followingData = await followingRes.json();
-          const users = followingData.users || followingData.items || [];
-          allFollowings.push(
-            ...users.map((u: Record<string, unknown>) => ({
-              username: u.username as string,
-              pk: String(u.pk || u.id),
-              profile_pic_url: (u.profile_pic_url as string) || undefined,
-              full_name: (u.full_name as string) || undefined,
-            }))
-          );
-
-          nextMaxId = followingData.next_max_id || null;
-          hasMore = !!nextMaxId && users.length > 0;
+        if (!followingRes.ok) {
+          const errBody = await followingRes.text();
+          console.error("Following fetch failed:", followingRes.status, errBody);
+          throw new Error(`Following fetch failed: ${followingRes.status} - ${errBody}`);
         }
+
+        const followingUsers = await followingRes.json();
+        console.log("Following response type:", Array.isArray(followingUsers) ? "array" : typeof followingUsers, "length/keys:", Array.isArray(followingUsers) ? followingUsers.length : Object.keys(followingUsers).slice(0, 5).join(","));
+
+        // v1/user/following returns an array of user objects directly
+        const rawUsers: Array<Record<string, unknown>> = Array.isArray(followingUsers) 
+          ? followingUsers 
+          : (followingUsers.users || followingUsers.items || followingUsers.response || []);
+
+        const allFollowings = rawUsers.map((u: Record<string, unknown>) => ({
+          username: u.username as string,
+          pk: String(u.pk || u.id),
+          profile_pic_url: (u.profile_pic_url as string) || undefined,
+          full_name: (u.full_name as string) || undefined,
+        }));
+        console.log("Total followings fetched:", allFollowings.length);
 
         // 3. Vorherige Following-Liste aus DB laden
         const { data: existingFollowings } = await supabase
