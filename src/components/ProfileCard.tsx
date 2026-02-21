@@ -31,9 +31,10 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
         <div className="flex items-center gap-3 mb-3">
           <div className="avatar-ring flex-shrink-0">
             <img
-              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=random`}
+              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`}
               alt={profile.username}
-              className="h-11 w-11 rounded-full object-cover"
+              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.username}&background=FF69B4&color=fff`; }}
+              className="h-11 w-11 rounded-full object-cover bg-muted"
             />
           </div>
           <div className="flex-1 min-w-0">
