@@ -35,7 +35,7 @@ const Dashboard = () => {
         <div className="absolute inset-0 mesh-dots" />
       </div>
 
-      <main className="container relative py-8">
+      <main className="container relative py-8 pb-24">
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>

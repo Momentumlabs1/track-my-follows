@@ -27,6 +27,7 @@ export function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-1 glass-card rounded-full px-1.5 py-1">
+          {/* Desktop nav only - mobile uses BottomNav */}
           {navItems.map(item => {
             const isActive = location.pathname === item.to;
             return (
