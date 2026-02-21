@@ -1,65 +1,98 @@
 
 
-# Fix: Scan-Profiles Edge Function reparieren
+# UI-Redesign: "The Ick"-Style umsetzen
 
-## Probleme identifiziert
+Das aktuelle Dashboard und die Profil-Ansichten werden komplett ueberarbeitet, um dem Look aus den Screenshots zu entsprechen. Der Fokus liegt auf einem cleanen, hellen iOS-Design mit Pink-Akzenten.
 
-1. **HikerAPI Following-Endpoint gibt 400 zurueck**: Der Parameter `user_id` und/oder `max_id` ist falsch. Die HikerAPI v2 verwendet moeglicherweise andere Parameter-Namen. Die Paginierung sollte `end_cursor` statt `max_id` verwenden.
+## Schritt 1: Farbschema auf Hell umstellen
 
-2. **Auth-Fehler**: `getClaims()` existiert nicht in der aktuellen Supabase JS Client-Version. Muss durch `getUser()` ersetzt werden (wie im Stack Overflow Pattern beschrieben).
+Die aktuelle dunkle Farbpalette wird durch ein helles, iOS-artiges Design ersetzt:
+- Hintergrund: Helles Grau/Weiss (wie in den Screenshots)
+- Cards: Weiss mit leichten Schatten
+- Akzentfarben: Pink, Lavendel, Mint-Gruen bleiben als Highlights
+- Text: Dunkelgrau/Schwarz
 
-3. **Profil-Metadaten zeigen 0/0**: Der User-Info-Call scheint zu funktionieren, aber die `follower_count` und `following_count` werden mit `|| 0` behandelt -- wenn der Wert tatsaechlich 0 ist, ist das korrekt, aber die Profil-Daten werden moeglicherweise nicht korrekt gespeichert wegen des Auth-Fehlers.
+## Schritt 2: Dashboard komplett neu aufbauen
 
-## Aenderungen
+Das Dashboard bekommt zwei Tabs wie in den Screenshots:
 
-### 1. Edge Function `scan-profiles/index.ts` ueberarbeiten
+**Tab "What's new?"** (Event-Feed):
+- Jedes Event zeigt: Profil-Avatar + Username, Zeitstempel, Event-Text ("Got followed by..."), Target-User mit grossem Avatar und "NEW"-Badge
+- Kein Bento-Grid, sondern einfache Card-Liste
 
-**Auth-Fix**: `getClaims()` durch `getUser()` ersetzen:
-```text
-// Vorher (fehlerhaft):
-const { data } = await userClient.auth.getClaims(token);
-userId = data?.claims?.sub;
+**Tab "Profiles"** (Profil-Uebersicht):
+- Profil-Cards mit: Avatar, Username, "Updated X ago", "View"-Button (pink pill), Followers/Following Stats in farbigen Boxen (blau/lila), "Recently Following"-Section mit Thumbnail-Bildern
+- FAB-Button (+) unten rechts statt Header-Button
 
-// Nachher (korrekt):
-const { data: { user } } = await supabase.auth.getUser(token);
-userId = user?.id;
-```
+## Schritt 3: "Profil hinzufuegen"-Flow als Fullscreen-Seite
 
-**HikerAPI Following-Fix**: Mehrere moegliche Korrekturen:
-- Parameter `user_id` durch `id` ersetzen (v2-Konvention)
-- Paginierungs-Parameter `max_id` durch `end_cursor` ersetzen
-- Logging hinzufuegen um die genaue API-Antwort zu sehen
+Statt eines Modals wird eine eigene Seite erstellt:
+- Grosser Titel "Who do you want to track?"
+- Untertitel "Enter the Instagram username"
+- Input-Feld mit @-Prefix in pinkem Rahmen
+- "Secure & Anonymous"-Info-Block mit Schloss-Icon
+- "Start The Search"-Button am unteren Rand
+- Plan-Zaehler oben rechts (z.B. "1/5")
+- Zurueck-Pfeil oben links
 
-```text
-// Vorher:
-const params = new URLSearchParams({ user_id: String(igUserId) });
-if (nextMaxId) params.set("max_id", nextMaxId);
+## Schritt 4: Analyse-Screen mit Fortschrittsanzeige
 
-// Nachher:
-const params = new URLSearchParams({ id: String(igUserId) });
-if (nextMaxId) params.set("end_cursor", nextMaxId);
-```
+Nach dem Klick auf "Start The Search" kommt ein Lade-Screen:
+- "Analyzing Follows" als Titel
+- @username darunter
+- Grosses Profilbild mit pinkem Ring
+- Fortschrittsbalken mit Prozentanzeige
+- 5 Schritte als Cards die nacheinander gruen werden:
+  1. Connecting to Instagram servers...
+  2. Searching user profile...
+  3. Fetching profile data anonymously...
+  4. Analyzing recent follows...
+  5. Finalizing & securing data...
+- Jeder Schritt bekommt ein Haekchen wenn fertig
 
-**Response-Parsing anpassen**: Die Paginierungs-Antwort koennte `end_cursor` statt `next_max_id` enthalten:
-```text
-// Vorher:
-nextMaxId = followingData.next_max_id || null;
+## Schritt 5: Profil-Detail-Seite ueberarbeiten
 
-// Nachher:
-nextMaxId = followingData.next_max_id || followingData.end_cursor || null;
-```
+Die Profil-Detail-Seite wird angepasst:
+- Header: Zurueck-Pfeil, "TrackIQ" Titel (pink), Muelleimer-Icon rechts
+- Profil-Banner: Avatar + Username + "Tracking since..." + "Updated..."
+- Statistics: Followers/Following in farbigen Boxen
+- "Suspicion Level"-Gauge (berechnet aus Follow-Aktivitaet):
+  - 0-20%: Gruen "Very Safe"
+  - 21-50%: Gelb "Getting Suspicious"
+  - 51-100%: Rot "Very Suspicious"
+- 3 Tabs: "Last follows" / "Last followers" / "Activity"
+- Liste der gefolgten/entfolgten User mit Avatar + @username
 
-**Logging hinzufuegen**: `console.log` Statements um die API-Antworten zu debuggen, falls der Fix nicht sofort greift.
+## Schritt 6: Bottom-Navigation anpassen
 
-### 2. Testen
+Die Navigation bleibt, aber mit angepasstem Styling fuer das helle Theme.
 
-Nach dem Deployment die Edge Function erneut aufrufen und die Logs pruefen, um sicherzustellen, dass die HikerAPI korrekt antwortet und Follow-Events in die Datenbank geschrieben werden.
+---
 
 ## Technische Details
 
-Die Edge Function wird an folgenden Stellen geaendert:
-- **Zeile 29-32**: `getClaims()` durch `getUser()` ersetzen
-- **Zeile 107**: `user_id` durch `id` im URL-Parameter ersetzen
-- **Zeile 108**: `max_id` durch `end_cursor` ersetzen
-- **Zeile 130**: `next_max_id` Fallback auf `end_cursor`
-- Mehrere `console.log` Statements fuer Debugging
+### Betroffene Dateien:
+
+1. **src/index.css** - Farbvariablen auf helles Theme umstellen
+2. **src/pages/Dashboard.tsx** - Komplett neu: Tab-basiert (What's new / Profiles), FAB-Button
+3. **src/components/ProfileCard.tsx** - Neues Card-Design mit View-Button, Stats-Boxen, Recently Following
+4. **src/components/EventFeedItem.tsx** - Neues Design: groessere Target-Avatare, "NEW"-Badge
+5. **src/components/AddProfileModal.tsx** - Wird zu einer Fullscreen-Seite/Route umgebaut
+6. **src/pages/AddProfile.tsx** (neu) - Fullscreen "Who do you want to track?" Seite
+7. **src/pages/AnalyzingProfile.tsx** (neu) - Fortschritts-Screen mit den 5 Schritten
+8. **src/pages/ProfileDetail.tsx** - Suspicion Level, Tabs, Follower-Liste
+9. **src/App.tsx** - Neue Routes fuer /add-profile und /analyzing/:username
+10. **src/components/BottomNav.tsx** - Styling-Anpassungen fuer helles Theme
+
+### Suspicion-Level Berechnung:
+- Basiert auf Anzahl neuer Follows relativ zur Following-Gesamtzahl
+- Beispiel: 10 neue Follows bei 100 Following = 10% = "Very Safe"
+- Formel: `(neue_follows_letzte_7_tage / following_count) * 100`
+
+### Analyse-Screen Logik:
+- Die 5 Schritte sind rein visuell/animiert (der eigentliche API-Call passiert im Hintergrund)
+- Schritt 1-2: Sofort starten, simulierte Verzoegerung
+- Schritt 3: Tatsaechlicher scan-profiles API-Call
+- Schritt 4-5: Nach API-Antwort abschliessen
+- Nach Fertigstellung: Weiterleitung zur Profil-Detail-Seite
+
