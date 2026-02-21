@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
-import { BadgeCheck, Heart, HeartCrack } from "lucide-react";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `vor ${mins}m`;
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `vor ${hours}h`;
-  return `vor ${Math.floor(hours / 24)}d`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 interface EventFeedItemProps {
@@ -17,58 +17,55 @@ interface EventFeedItemProps {
 }
 
 export function EventFeedItem({ event, index }: EventFeedItemProps) {
-  const isFollow = event.event_type === 'follow';
-  const profileUsername = event.tracked_profiles?.username ?? '???';
-  const profileAvatar = event.tracked_profiles?.avatar_url || `https://ui-avatars.com/api/?name=${profileUsername}&background=random`;
+  const isFollow = event.event_type === "follow";
+  const profileUsername = event.tracked_profiles?.username ?? "???";
+  const profileAvatar =
+    event.tracked_profiles?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${profileUsername}&background=random`;
+  const targetAvatar =
+    event.target_avatar_url ||
+    `https://ui-avatars.com/api/?name=${event.target_username}&background=random`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={`group flex items-center gap-3.5 bento-card py-3.5 ${
-        !event.is_read ? "border-l-2 border-l-primary" : ""
-      }`}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.3 }}
+      className="ios-card"
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="avatar-ring flex-shrink-0">
-          <img
-            src={profileAvatar}
-            alt={profileUsername}
-            className="h-9 w-9 rounded-full object-cover"
-          />
-        </div>
-
-        <div className={`flex-shrink-0 rounded-xl p-2 ${
-          isFollow ? "bg-primary/10 border border-primary/15" : "bg-destructive/10 border border-destructive/15"
-        }`}>
-          {isFollow ? (
-            <Heart className="h-3 w-3 text-primary fill-primary" />
-          ) : (
-            <HeartCrack className="h-3 w-3 text-destructive" />
-          )}
-        </div>
-
+      {/* Source profile row */}
+      <div className="flex items-center gap-2 mb-2">
         <img
-          src={event.target_avatar_url || `https://ui-avatars.com/api/?name=${event.target_username}&background=random`}
-          alt={event.target_username}
-          className="h-9 w-9 rounded-full object-cover flex-shrink-0 ring-2 ring-border/30"
+          src={profileAvatar}
+          alt={profileUsername}
+          className="h-6 w-6 rounded-full object-cover"
         />
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] leading-tight">
-            <span className="font-bold">@{profileUsername}</span>
-            <span className="text-muted-foreground">
-              {isFollow ? " folgt jetzt " : " hat entfolgt "}
-            </span>
-            <span className="font-bold">@{event.target_username}</span>
-          </p>
-        </div>
+        <span className="text-[12px] font-semibold text-foreground">@{profileUsername}</span>
+        <span className="text-[10px] text-muted-foreground ml-auto">{timeAgo(event.detected_at)}</span>
       </div>
 
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">
-        {timeAgo(event.detected_at)}
-      </span>
+      {/* Event text */}
+      <p className="text-[13px] text-muted-foreground mb-3">
+        {isFollow ? "Got followed by" : "Unfollowed"}
+      </p>
+
+      {/* Target user - large */}
+      <div className="flex items-center gap-3">
+        <img
+          src={targetAvatar}
+          alt={event.target_username}
+          className="h-12 w-12 rounded-full object-cover ring-2 ring-border"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
+          {event.target_display_name && (
+            <p className="text-[11px] text-muted-foreground truncate">{event.target_display_name}</p>
+          )}
+        </div>
+        {!event.is_read && (
+          <span className="tag-pink text-[10px]">NEW</span>
+        )}
+      </div>
     </motion.div>
   );
 }
