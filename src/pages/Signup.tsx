@@ -1,12 +1,39 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Heart, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Heart, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    toast.success("Account erstellt! Check deine Emails 💌");
+    navigate("/dashboard");
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
@@ -36,7 +63,7 @@ const Signup = () => {
               <p className="text-[13px] text-muted-foreground mt-1">Erstelle dein Konto und starte</p>
             </div>
 
-            <form onSubmit={e => e.preventDefault()} className="space-y-3.5">
+            <form onSubmit={handleSignup} className="space-y-3.5">
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
@@ -44,6 +71,7 @@ const Signup = () => {
                   placeholder="Dein Name"
                   value={name}
                   onChange={e => setName(e.target.value)}
+                  required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 pl-11 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                 />
               </div>
@@ -54,6 +82,7 @@ const Signup = () => {
                   placeholder="Deine Email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 pl-11 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                 />
               </div>
@@ -61,15 +90,20 @@ const Signup = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="password"
-                  placeholder="Passwort"
+                  placeholder="Passwort (min. 6 Zeichen)"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={6}
                   className="w-full rounded-2xl bg-background/80 border border-border/50 pl-11 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                 />
               </div>
-              <button className="w-full pill-btn-primary py-3.5 justify-center text-sm">
-                Account erstellen 💅
-                <ArrowRight className="h-4 w-4" />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Account erstellen 💅 <ArrowRight className="h-4 w-4" /></>}
               </button>
             </form>
 
