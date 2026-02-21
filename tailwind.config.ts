@@ -14,8 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -52,10 +51,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         brand: {
-          cyan: "hsl(var(--brand-cyan))",
-          emerald: "hsl(var(--brand-emerald))",
-          gold: "hsl(var(--brand-gold))",
+          pink: "hsl(var(--brand-pink))",
           rose: "hsl(var(--brand-rose))",
+          lavender: "hsl(var(--brand-lavender))",
+          peach: "hsl(var(--brand-peach))",
+          blush: "hsl(var(--brand-blush))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Loader2, Radar } from "lucide-react";
+import { X, Search, Loader2, Heart, Sparkles } from "lucide-react";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -33,57 +33,54 @@ export function AddProfileModal({ isOpen, onClose }: AddProfileModalProps) {
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 10 }}
-            transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 px-4"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4"
           >
-            <div className="rounded-2xl surface-elevated border border-border/40 p-6 noise overflow-hidden relative">
-              {/* Decorative */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px gradient-bg opacity-60" />
+            <div className="rounded-3xl surface-elevated border border-border/30 p-6 overflow-hidden relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-px gradient-bg opacity-50" />
 
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2">
-                  <Radar className="h-4 w-4 text-primary" />
-                  <h2 className="font-semibold text-sm">Track New Profile</h2>
+              <div className="text-center mb-5">
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl gradient-bg-soft mb-3">
+                  <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <button onClick={onClose} className="p-1 rounded-md hover:bg-secondary transition-colors">
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </button>
+                <h2 className="font-bold text-base">Wen willst du stalken? 👀</h2>
+                <p className="text-[12px] text-muted-foreground mt-1">Gib den Instagram-Username ein</p>
               </div>
 
               <form onSubmit={handleSubmit}>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                   <input
                     type="text"
-                    placeholder="instagram username"
+                    placeholder="username eingeben..."
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full rounded-lg bg-background border border-border/60 pl-8 pr-4 py-2.5 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/30 transition-all"
+                    className="w-full rounded-2xl bg-background border border-border/50 pl-9 pr-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                     autoFocus
                   />
                 </div>
 
-                <p className="mt-2.5 text-[11px] text-muted-foreground">
-                  Profile must be public for tracking. Private profiles will be paused automatically.
+                <p className="mt-2.5 text-[11px] text-muted-foreground text-center">
+                  Profil muss öffentlich sein 🔓
                 </p>
 
                 <button
                   type="submit"
                   disabled={!username.trim() || loading}
-                  className="mt-4 w-full gradient-bg rounded-lg py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="mt-4 w-full gradient-bg rounded-2xl py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Scanning...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Wird gesucht...
                     </>
                   ) : (
                     <>
-                      <Radar className="h-3.5 w-3.5" />
-                      Start Tracking
+                      <Heart className="h-4 w-4" />
+                      Tracken starten 💕
                     </>
                   )}
                 </button>
