@@ -55,6 +55,50 @@ export type Database = {
           },
         ]
       }
+      profile_followings: {
+        Row: {
+          first_seen_at: string
+          following_avatar_url: string | null
+          following_display_name: string | null
+          following_user_id: string
+          following_username: string
+          id: string
+          is_current: boolean
+          last_seen_at: string
+          tracked_profile_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          following_avatar_url?: string | null
+          following_display_name?: string | null
+          following_user_id: string
+          following_username: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          tracked_profile_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          following_avatar_url?: string | null
+          following_display_name?: string | null
+          following_user_id?: string
+          following_username?: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          tracked_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_followings_tracked_profile_id_fkey"
+            columns: ["tracked_profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

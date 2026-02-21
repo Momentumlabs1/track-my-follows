@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Heart, Sparkles, TrendingUp, TrendingDown, Users, Loader2 } from "lucide-react";
+import { Plus, Heart, Sparkles, TrendingUp, TrendingDown, Users, Loader2, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ProfileCard } from "@/components/ProfileCard";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { AddProfileModal } from "@/components/AddProfileModal";
 import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type EventFilter = 'all' | 'follow' | 'unfollow';
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState<EventFilter>('all');
+  const [isScanning, setIsScanning] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: events = [], isLoading: eventsLoading } = useFollowEvents();
@@ -28,6 +33,29 @@ const Dashboard = () => {
     { value: totalFollows, label: "Neue Follows", icon: TrendingUp, color: "from-brand-pink/20 to-brand-rose/10" },
     { value: totalUnfollows, label: "Unfollows", icon: TrendingDown, color: "from-brand-coral/20 to-brand-peach/10" },
   ];
+
+  const handleScan = async () => {
+    setIsScanning(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("scan-profiles", {
+        headers: session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {},
+      });
+      if (res.error) throw res.error;
+      const result = res.data;
+      const totalNew = result.results?.reduce((s: number, r: { newFollows: number }) => s + r.newFollows, 0) ?? 0;
+      const totalUn = result.results?.reduce((s: number, r: { unfollows: number }) => s + r.unfollows, 0) ?? 0;
+      toast.success(`Scan fertig! ${totalNew} neue Follows, ${totalUn} Unfollows 👀`);
+      queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+    } catch (err) {
+      toast.error("Scan fehlgeschlagen: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const isLoading = profilesLoading || eventsLoading;
 
@@ -51,13 +79,27 @@ const Dashboard = () => {
               {profiles.length} Profile im Blick · Scanning aktiv
             </p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="pill-btn-primary px-5 py-2.5 text-[13px]"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Stalken 👀
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleScan}
+              disabled={isScanning || profiles.length === 0}
+              className="pill-btn-primary px-5 py-2.5 text-[13px] disabled:opacity-50"
+            >
+              {isScanning ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              {isScanning ? "Scannt..." : "Scannen 🔍"}
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="pill-btn-primary px-5 py-2.5 text-[13px]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Stalken 👀
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
