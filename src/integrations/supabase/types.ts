@@ -14,13 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      follow_events: {
+        Row: {
+          detected_at: string
+          event_type: string
+          id: string
+          is_read: boolean
+          target_avatar_url: string | null
+          target_display_name: string | null
+          target_username: string
+          tracked_profile_id: string
+        }
+        Insert: {
+          detected_at?: string
+          event_type: string
+          id?: string
+          is_read?: boolean
+          target_avatar_url?: string | null
+          target_display_name?: string | null
+          target_username: string
+          tracked_profile_id: string
+        }
+        Update: {
+          detected_at?: string
+          event_type?: string
+          id?: string
+          is_read?: boolean
+          target_avatar_url?: string | null
+          target_display_name?: string | null
+          target_username?: string
+          tracked_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_events_tracked_profile_id_fkey"
+            columns: ["tracked_profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          plan_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          plan_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          plan_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          id: string
+          max_tracked_profiles: number
+          name: string
+          price_monthly: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_tracked_profiles?: number
+          name: string
+          price_monthly?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_tracked_profiles?: number
+          name?: string
+          price_monthly?: number
+        }
+        Relationships: []
+      }
+      tracked_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          follower_count: number | null
+          following_count: number | null
+          id: string
+          is_active: boolean
+          last_scanned_at: string | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          follower_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          follower_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      count_user_tracked_profiles: {
+        Args: { _user_id: string }
+        Returns: number
+      }
+      get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
+      owns_tracked_profile: {
+        Args: { _tracked_profile_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
