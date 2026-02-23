@@ -61,13 +61,13 @@ const Landing = () => {
             </motion.div>
 
             <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold tracking-tight leading-[0.95]">
-              Wer folgt wem
+              Vertrauen ist gut.
               <br />
-              <span className="gradient-text">heimlich?</span>
+              <span className="gradient-text">Spy-Secret ist besser.</span>
             </h1>
 
             <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Dein geheimer Agent überwacht jedes öffentliche Instagram-Profil und meldet dir <span className="text-foreground font-medium">sofort</span> neue Follows. Unsichtbar & ohne Login.
+              Finde heraus, wem er <span className="text-foreground font-medium">wirklich</span> folgt. Dein geheimer Agent überwacht jedes öffentliche Instagram-Profil – unsichtbar & ohne Login.
             </p>
 
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
