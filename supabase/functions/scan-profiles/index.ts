@@ -146,25 +146,11 @@ Deno.serve(async (req) => {
         );
         const currentSet = new Set(allFollowings.map((f) => f.pk));
 
-        // 4. Neue Follows erkennen
-        let newFollowCount = 0;
+        // 4. Neue Follows erkennen – erst sammeln, dann mit zufälligen Timestamps einfügen
+        const newFollows: typeof allFollowings = [];
         for (const f of allFollowings) {
           if (!existingMap.has(f.pk)) {
-            newFollowCount++;
-            await supabase.from("profile_followings").insert({
-              tracked_profile_id: profile.id,
-              following_username: f.username,
-              following_user_id: f.pk,
-              following_avatar_url: f.profile_pic_url || null,
-              following_display_name: f.full_name || null,
-            });
-            await supabase.from("follow_events").insert({
-              tracked_profile_id: profile.id,
-              event_type: "follow",
-              target_username: f.username,
-              target_avatar_url: f.profile_pic_url || null,
-              target_display_name: f.full_name || null,
-            });
+            newFollows.push(f);
           } else {
             const existing = existingMap.get(f.pk) as Record<string, unknown>;
             await supabase
@@ -176,6 +162,40 @@ Deno.serve(async (req) => {
               })
               .eq("id", existing.id as string);
           }
+        }
+
+        // Zufällige Timestamps über die Zeit seit dem letzten Scan verteilen
+        const now = Date.now();
+        const lastScannedAt = profile.last_scanned_at
+          ? new Date(profile.last_scanned_at).getTime()
+          : now - 24 * 60 * 60 * 1000; // Fallback: 24h
+        const spanMs = Math.max(now - lastScannedAt, 60_000); // min 1 Minute
+
+        const randomTimestamps = newFollows
+          .map(() => new Date(lastScannedAt + Math.random() * spanMs))
+          .sort((a, b) => a.getTime() - b.getTime());
+
+        let newFollowCount = 0;
+        for (let i = 0; i < newFollows.length; i++) {
+          const f = newFollows[i];
+          const ts = randomTimestamps[i].toISOString();
+          newFollowCount++;
+          await supabase.from("profile_followings").insert({
+            tracked_profile_id: profile.id,
+            following_username: f.username,
+            following_user_id: f.pk,
+            following_avatar_url: f.profile_pic_url || null,
+            following_display_name: f.full_name || null,
+            first_seen_at: ts,
+          });
+          await supabase.from("follow_events").insert({
+            tracked_profile_id: profile.id,
+            event_type: "follow",
+            target_username: f.username,
+            target_avatar_url: f.profile_pic_url || null,
+            target_display_name: f.full_name || null,
+            detected_at: ts,
+          });
         }
 
         // 5. Unfollows erkennen
