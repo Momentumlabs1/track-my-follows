@@ -4,8 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,16 +16,13 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-
-    toast.success("Willkommen zurück! 💕");
+    toast.success(t("auth.login_success"));
     navigate("/dashboard");
   };
 
@@ -47,51 +46,32 @@ const Login = () => {
 
         <div className="rounded-3xl glass-card p-7 overflow-hidden relative">
           <div className="absolute inset-0 aurora-bg opacity-20" />
-
           <div className="relative">
             <div className="text-center mb-6">
               <span className="text-4xl">💕</span>
-              <h1 className="text-xl font-extrabold mt-3">Willkommen zurück!</h1>
-              <p className="text-[13px] text-muted-foreground mt-1">Log dich ein um weiterzustalken</p>
+              <h1 className="text-xl font-extrabold mt-3">{t("auth.welcome_back")}</h1>
+              <p className="text-[13px] text-muted-foreground mt-1">{t("auth.login_subtitle")}</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-3.5">
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="email"
-                  placeholder="Deine Email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  className="w-full rounded-2xl bg-background/80 border border-border/50 pl-11 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
-                />
+                <Mail className="absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input type="email" placeholder={t("auth.email_placeholder")} value={email} onChange={e => setEmail(e.target.value)} required
+                  className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="password"
-                  placeholder="Passwort"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  className="w-full rounded-2xl bg-background/80 border border-border/50 pl-11 pr-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
-                />
+                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input type="password" placeholder={t("auth.password_placeholder")} value={password} onChange={e => setPassword(e.target.value)} required
+                  className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Einloggen <ArrowRight className="h-4 w-4" /></>}
+              <button type="submit" disabled={loading} className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("auth.login_button")} <ArrowRight className="h-4 w-4" /></>}
               </button>
             </form>
 
             <p className="text-center text-[13px] text-muted-foreground mt-5">
-              Noch kein Konto?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-semibold">
-                Registrieren ✨
-              </Link>
+              {t("auth.no_account")}{" "}
+              <Link to="/signup" className="text-primary hover:underline font-semibold">{t("auth.signup_link")}</Link>
             </p>
           </div>
         </div>

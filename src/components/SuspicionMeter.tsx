@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
 
 interface SuspicionMeterProps {
@@ -6,6 +7,7 @@ interface SuspicionMeterProps {
 }
 
 export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
+  const { t } = useTranslation();
   const { overallScore, label, emoji, factors, genderStats } = analysis;
 
   const getBarGradient = () => {
@@ -34,20 +36,17 @@ export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
 
   return (
     <div className="space-y-3">
-      {/* Main Score Card */}
       <div className={`ios-card border ${getBgColor()}`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{emoji}</span>
             <div>
               <p className={`text-[15px] font-extrabold ${getScoreColor()}`}>{label}</p>
-              <p className="text-[10px] text-muted-foreground">Suspicion Score</p>
+              <p className="text-[10px] text-muted-foreground">{t("suspicion.score_label")}</p>
             </div>
           </div>
           <div className={`text-2xl font-black ${getScoreColor()}`}>{overallScore}%</div>
         </div>
-
-        {/* Animated Progress Bar */}
         <div className="h-3 bg-muted/60 rounded-full overflow-hidden">
           <motion.div
             className={`h-full rounded-full bg-gradient-to-r ${getBarGradient()}`}
@@ -58,24 +57,15 @@ export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
         </div>
       </div>
 
-      {/* Factor Breakdown */}
       <div className="ios-card space-y-3">
-        <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider">Analyse-Faktoren</p>
+        <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider">{t("suspicion.factors_title")}</p>
         {factors.map((factor, i) => (
-          <motion.div
-            key={factor.name}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="flex items-center gap-3"
-          >
+          <motion.div key={factor.name} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.1 }} className="flex items-center gap-3">
             <span className="text-lg flex-shrink-0">{factor.icon}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[12px] font-semibold text-foreground">{factor.name}</span>
-                <span className="text-[11px] font-bold text-muted-foreground">
-                  {factor.score}/{factor.maxScore}
-                </span>
+                <span className="text-[11px] font-bold text-muted-foreground">{factor.score}/{factor.maxScore}</span>
               </div>
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div
@@ -91,43 +81,26 @@ export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
         ))}
       </div>
 
-      {/* Gender Breakdown Mini Card */}
       {genderStats.total > 0 && (
         <div className="ios-card">
-          <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-            Gender-Verteilung der Follows
-          </p>
+          <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("suspicion.gender_title")}</p>
           <div className="flex gap-2">
             <div className="flex-1 rounded-xl bg-pink-50 p-2.5 text-center">
-              <p className="text-lg font-extrabold text-pink-500">
-                {genderStats.femalePercent}%
-              </p>
-              <p className="text-[10px] font-medium text-pink-400">Weiblich</p>
+              <p className="text-lg font-extrabold text-pink-500">{genderStats.femalePercent}%</p>
+              <p className="text-[10px] font-medium text-pink-400">{t("suspicion.female")}</p>
             </div>
             <div className="flex-1 rounded-xl bg-blue-50 p-2.5 text-center">
-              <p className="text-lg font-extrabold text-blue-500">
-                {genderStats.total > 0 ? 100 - genderStats.femalePercent : 0}%
-              </p>
-              <p className="text-[10px] font-medium text-blue-400">Männlich</p>
+              <p className="text-lg font-extrabold text-blue-500">{genderStats.total > 0 ? 100 - genderStats.femalePercent : 0}%</p>
+              <p className="text-[10px] font-medium text-blue-400">{t("suspicion.male")}</p>
             </div>
           </div>
           <div className="h-2 rounded-full overflow-hidden mt-2 flex">
-            <motion.div
-              className="h-full bg-pink-400"
-              initial={{ width: 0 }}
-              animate={{ width: `${genderStats.femalePercent}%` }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            />
-            <motion.div
-              className="h-full bg-blue-400"
-              initial={{ width: 0 }}
-              animate={{ width: `${100 - genderStats.femalePercent}%` }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            />
+            <motion.div className="h-full bg-pink-400" initial={{ width: 0 }} animate={{ width: `${genderStats.femalePercent}%` }} transition={{ duration: 0.8, delay: 0.4 }} />
+            <motion.div className="h-full bg-blue-400" initial={{ width: 0 }} animate={{ width: `${100 - genderStats.femalePercent}%` }} transition={{ duration: 0.8, delay: 0.5 }} />
           </div>
           <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-            Basierend auf {genderStats.female + genderStats.male} erkannten Namen
-            {genderStats.unknown > 0 && ` (${genderStats.unknown} nicht erkannt)`}
+            {t("suspicion.based_on", { count: genderStats.female + genderStats.male })}
+            {genderStats.unknown > 0 && ` ${t("suspicion.not_detected", { count: genderStats.unknown })}`}
           </p>
         </div>
       )}
