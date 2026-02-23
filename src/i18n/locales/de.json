@@ -122,22 +122,15 @@
     "per_year": "/Jahr"
   },
   "auth": {
-    "welcome_back": "Willkommen zurück!",
-    "login_subtitle": "Log dich ein um weiterzustalken",
-    "login_button": "Einloggen",
-    "login_success": "Willkommen zurück! 💕",
-    "signup_title": "Join the Club!",
-    "signup_subtitle": "Erstelle dein Konto und starte",
-    "signup_button": "Account erstellen 💅",
-    "signup_success": "Account erstellt! Check deine Emails 💌",
+    "sign_in_apple": "Mit Apple anmelden",
+    "continue_google": "Mit Google fortfahren",
+    "or_divider": "oder",
+    "continue_button": "Weiter",
     "email_placeholder": "Deine Email",
     "password_placeholder": "Passwort",
-    "password_min": "Passwort (min. 6 Zeichen)",
-    "name_placeholder": "Dein Name",
-    "no_account": "Noch kein Konto?",
-    "signup_link": "Registrieren ✨",
-    "have_account": "Schon dabei?",
-    "login_link": "Einloggen 💕"
+    "login_success": "Willkommen zurück! 💕",
+    "signup_success": "Account erstellt! 🎉",
+    "free_note": "Kein Abo nötig. Starte kostenlos."
   },
   "landing": {
     "beta_badge": "Geheime Beta-Mission 🕵️",

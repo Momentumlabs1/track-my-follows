@@ -15,7 +15,7 @@ import ProfileDetail from "./pages/ProfileDetail";
 import AddProfile from "./pages/AddProfile";
 import AnalyzingProfile from "./pages/AnalyzingProfile";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -33,7 +33,7 @@ function AppContent() {
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
         <Route path="/analyzing/:profileId/:username" element={<ProtectedRoute><AnalyzingProfile /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
