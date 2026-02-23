@@ -170,6 +170,57 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          billing_period: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          max_tracked_profiles: number
+          plan_type: string
+          revenuecat_app_user_id: string | null
+          revenuecat_entitlement: string | null
+          status: string
+          store: string | null
+          trial_end: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_period?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          max_tracked_profiles?: number
+          plan_type?: string
+          revenuecat_app_user_id?: string | null
+          revenuecat_entitlement?: string | null
+          status?: string
+          store?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_period?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          max_tracked_profiles?: number
+          plan_type?: string
+          revenuecat_app_user_id?: string | null
+          revenuecat_entitlement?: string | null
+          status?: string
+          store?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tracked_profiles: {
         Row: {
           avatar_url: string | null
@@ -255,6 +306,7 @@ export type Database = {
         Returns: number
       }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
+      get_user_limits: { Args: { p_user_id: string }; Returns: Json }
       owns_tracked_profile: {
         Args: { _tracked_profile_id: string; _user_id: string }
         Returns: boolean

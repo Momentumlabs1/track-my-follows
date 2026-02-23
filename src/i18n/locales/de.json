@@ -52,7 +52,9 @@
     "no_gone_events": "Noch keine Unfollows erkannt",
     "will_update": "Wird beim nächsten Scan aktualisiert",
     "start_scan": "Starte einen Scan um Aktivität zu erkennen",
-    "not_found": "Profil nicht gefunden"
+    "not_found": "Profil nicht gefunden",
+    "pro_required": "🔒 Pro erforderlich",
+    "upgrade_unfollows": "Upgrade auf Pro um Unfollows zu sehen"
   },
   "suspicion": {
     "score_label": "Verdachts-Score",
@@ -70,7 +72,8 @@
     "unfollowed": "Hat entfolgt",
     "new_badge": "NEU",
     "no_events": "Noch keine Aktivität erkannt",
-    "no_events_subtitle": "Wir benachrichtigen dich sobald etwas passiert"
+    "no_events_subtitle": "Wir benachrichtigen dich sobald etwas passiert",
+    "upgrade_to_reveal": "🔒 Upgrade zum Anzeigen"
   },
   "settings": {
     "title": "Einstellungen ⚙️",
@@ -79,6 +82,7 @@
     "current_plan": "Aktueller Plan",
     "profiles_updates": "{{count}} Profil(e), stündliche Updates",
     "upgrade": "Upgrade 💎",
+    "manage_subscription": "Abo verwalten",
     "notifications": "Benachrichtigungen 🔔",
     "notif_follows": "Neue Follows",
     "notif_follows_desc": "Wenn er jemand Neuem folgt 👀",
@@ -91,7 +95,31 @@
     "logout_toast": "Bis bald! 👋",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Lösche dein Konto und alle Daten. Das geht nicht rückgängig!",
-    "delete_account": "Konto löschen 😢"
+    "delete_account": "Konto löschen 😢",
+    "billing_issue": "⚠️ Zahlungsproblem – bitte Zahlungsmethode aktualisieren"
+  },
+  "paywall": {
+    "title": "Pro freischalten",
+    "subtitle": "Alle Features nutzen",
+    "feature_profiles": "Bis zu 5 Profile tracken",
+    "feature_hourly": "Stündliche Scan-Updates",
+    "feature_unfollows": "Entfolgen-Erkennung",
+    "feature_push": "Push-Benachrichtigungen",
+    "feature_stats": "Statistiken & Einblicke",
+    "feature_unblur": "Unverschwommene Vorschau",
+    "weekly": "Wöchentlich",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "save_percent": "{{percent}}% SPAREN",
+    "free_trial": "3 Tage gratis",
+    "continue": "Weiter",
+    "restore": "Käufe wiederherstellen",
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutz",
+    "cancel_note": "Jederzeit kündbar. Abrechnung nach Ende der Testphase.",
+    "per_week": "/Woche",
+    "per_month": "/Monat",
+    "per_year": "/Jahr"
   },
   "auth": {
     "welcome_back": "Willkommen zurück!",
