@@ -5,10 +5,10 @@ import { Navbar } from "@/components/Navbar";
 import { useRef } from "react";
 
 const features = [
-  { icon: Eye, title: "Kein Login nötig", desc: "Username eingeben – dein Agent startet sofort die Überwachung.", emoji: "🕵️", color: "from-brand-pink/20 to-brand-rose/10" },
-  { icon: Zap, title: "Stündliche Scans", desc: "Dein Agent checkt alle 60 Min auf neue Follows & Unfollows.", emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
-  { icon: Bell, title: "Geheim-Alerts", desc: "Sofortige Benachrichtigung wenn sich was tut.", emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
-  { icon: Shield, title: "100% Unsichtbar", desc: "Niemand erfährt von deiner Mission. Versprochen. 🤫", emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
+  { icon: Eye, title: "Kein Login nötig", desc: "Username eingeben – und schon weißt du Bescheid.", emoji: "🕵️", color: "from-brand-pink/20 to-brand-rose/10" },
+  { icon: Zap, title: "Stündliche Scans", desc: "Wir checken alle 60 Min, ob er jemandem Neuem folgt.", emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
+  { icon: Bell, title: "Sofort-Alerts", desc: "Du erfährst es als Erste, wenn sich was tut.", emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
+  { icon: Shield, title: "100% Unsichtbar", desc: "Er wird nie erfahren, dass du es weißt. 🤫", emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
 ];
 
 const plans = [
@@ -112,7 +112,7 @@ const Landing = () => {
                   ))}
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  <span className="text-foreground font-semibold">2.400+</span> Spys im Einsatz 🕵️‍♀️
+                  <span className="text-foreground font-semibold">2.400+</span> Spys vertrauen uns 🕵️‍♀️
                 </p>
               </div>
             </motion.div>
@@ -129,14 +129,14 @@ const Landing = () => {
           className="text-center mb-14"
         >
           <span className="tag-pink mb-4">Deine Mission</span>
-          <h2 className="text-3xl md:text-4xl font-bold mt-4">Drei Steps zur <span className="gradient-text">Geheim-Mission</span> 🕵️</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mt-4">So einfach <span className="gradient-text">funktioniert's</span> 🕵️</h2>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {[
-            { step: "01", title: "Zielperson eingeben", desc: "Tipp den Instagram-Username deiner Zielperson ein", emoji: "🎯" },
-            { step: "02", title: "Agent überwacht", desc: "Dein Agent scannt stündlich alle neuen Follows & Unfollows", emoji: "🕵️" },
-            { step: "03", title: "Du weißt alles", desc: "Geheim-Alert sobald deine Zielperson jemand neuem folgt", emoji: "🔓" },
+            { step: "01", title: "Seinen Username eingeben", desc: "Tipp den Instagram-Username ein – mehr brauchst du nicht", emoji: "🎯" },
+            { step: "02", title: "Wir überwachen für dich", desc: "Spy-Secret scannt stündlich alle neuen Follows & Unfollows", emoji: "🕵️" },
+            { step: "03", title: "Du weißt Bescheid", desc: "Sofort-Alert wenn er jemandem Neuem folgt", emoji: "🔓" },
           ].map((item, i) => (
             <motion.div
               key={item.step}
@@ -257,10 +257,10 @@ const Landing = () => {
           <div className="absolute inset-0 mesh-dots opacity-20" />
           <div className="relative text-center py-16 px-8">
             <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">
-              Bereit für deine Mission? 🕵️
+              Bereit zu wissen, was er treibt? 🕵️‍♀️
             </h2>
             <p className="mt-3 text-primary-foreground/70 text-sm max-w-md mx-auto">
-              Starte jetzt kostenlos und überwache jedes öffentliche Instagram-Profil in Echtzeit.
+              Starte jetzt kostenlos – in 30 Sekunden weißt du mehr als er denkt.
             </p>
             <Link
               to="/signup"
