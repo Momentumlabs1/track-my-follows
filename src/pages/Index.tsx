@@ -1,20 +1,20 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Bell, Eye, Shield, Sparkles, ChevronRight, Zap, Star, Crown, Check } from "lucide-react";
+import { ArrowRight, Heart, Bell, Eye, Shield, Sparkles, ChevronRight, Zap, Star, Crown, Check, Lock } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useRef } from "react";
 
 const features = [
-  { icon: Eye, title: "Kein Instagram-Login", desc: "Einfach Username eingeben. Kein Passwort, kein Risiko.", emoji: "🔮", color: "from-brand-pink/20 to-brand-rose/10" },
-  { icon: Zap, title: "Stündliche Updates", desc: "Check alle 60 Min auf neue Follows & Unfollows.", emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
-  { icon: Bell, title: "Sofort-Alerts", desc: "Du erfährst sofort wenn sich was tut.", emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
-  { icon: Shield, title: "100% Anonym", desc: "Niemand erfährt, dass du stalkst. Versprochen. 🤫", emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
+  { icon: Eye, title: "Kein Login nötig", desc: "Username eingeben – dein Agent startet sofort die Überwachung.", emoji: "🕵️", color: "from-brand-pink/20 to-brand-rose/10" },
+  { icon: Zap, title: "Stündliche Scans", desc: "Dein Agent checkt alle 60 Min auf neue Follows & Unfollows.", emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
+  { icon: Bell, title: "Geheim-Alerts", desc: "Sofortige Benachrichtigung wenn sich was tut.", emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
+  { icon: Shield, title: "100% Unsichtbar", desc: "Niemand erfährt von deiner Mission. Versprochen. 🤫", emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
 ];
 
 const plans = [
-  { name: "Free", emoji: "✨", price: "0", features: ["1 Profil", "Updates alle 6h", "Basis-Feed"], cta: "Kostenlos starten", highlighted: false },
-  { name: "Bestie", emoji: "💕", price: "4.99", features: ["3 Profile", "Stündliche Updates", "Unfollow-Tracking", "Event-Verlauf"], cta: "Bestie werden", highlighted: true },
-  { name: "Queen", emoji: "👑", price: "9.99", features: ["5 Profile", "Stündliche Updates", "Push-Alerts", "Stats & Charts", "Priority-Scanning"], cta: "Queen Plan", highlighted: false },
+  { name: "Rookie", emoji: "🕵️", price: "0", features: ["1 Zielperson", "Updates alle 6h", "Basis-Feed"], cta: "Mission starten", highlighted: false },
+  { name: "Agent", emoji: "🔍", price: "4.99", features: ["3 Zielpersonen", "Stündliche Scans", "Unfollow-Tracking", "Event-Verlauf"], cta: "Agent werden", highlighted: true },
+  { name: "Spymaster", emoji: "🎯", price: "9.99", features: ["5 Zielpersonen", "Stündliche Scans", "Push-Alerts", "Stats & Charts", "Priority-Scanning"], cta: "Spymaster Plan", highlighted: false },
 ];
 
 const Landing = () => {
@@ -57,17 +57,17 @@ const Landing = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 gradient-bg" />
               </span>
-              Jetzt in der Beta 🎀
+              Geheime Beta-Mission 🕵️
             </motion.div>
 
             <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold tracking-tight leading-[0.95]">
               Wem folgt dein
               <br />
-              <span className="gradient-text">Crush wirklich?</span>
+              <span className="gradient-text">Crush heimlich?</span>
             </h1>
 
             <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Tracke jedes öffentliche Instagram-Profil und sieh <span className="text-foreground font-medium">sofort</span> wem er oder sie neu folgt. Anonym & ohne Login.
+              Dein geheimer Agent überwacht jedes öffentliche Instagram-Profil und meldet dir <span className="text-foreground font-medium">sofort</span> neue Follows. Unsichtbar & ohne Login.
             </p>
 
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -75,8 +75,8 @@ const Landing = () => {
                 to="/signup"
                 className="pill-btn-primary px-8 py-3.5 text-sm"
               >
-                Jetzt starten
-                <Heart className="h-4 w-4 fill-primary-foreground" />
+                Mission starten
+                <Eye className="h-4 w-4" />
               </Link>
               <Link
                 to="/dashboard"
@@ -112,7 +112,7 @@ const Landing = () => {
                   ))}
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  <span className="text-foreground font-semibold">2.400+</span> Girls nutzen TrackIQ 💅
+                  <span className="text-foreground font-semibold">2.400+</span> Agentinnen im Einsatz 🕵️‍♀️
                 </p>
               </div>
             </motion.div>
@@ -128,15 +128,15 @@ const Landing = () => {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <span className="tag-pink mb-4">So einfach geht's</span>
-          <h2 className="text-3xl md:text-4xl font-bold mt-4">Drei Steps zum <span className="gradient-text">Stalken</span> ✨</h2>
+          <span className="tag-pink mb-4">Deine Mission</span>
+          <h2 className="text-3xl md:text-4xl font-bold mt-4">Drei Steps zur <span className="gradient-text">Geheim-Mission</span> 🕵️</h2>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {[
-            { step: "01", title: "Username eingeben", desc: "Tipp den Instagram-Username ein, den du im Auge behalten willst", emoji: "🔍" },
-            { step: "02", title: "Wir scannen", desc: "Unser System checkt stündlich alle neuen Follows & Unfollows", emoji: "📡" },
-            { step: "03", title: "Du siehst alles", desc: "Bekomm sofort eine Notification wenn er jemand neuem folgt", emoji: "💅" },
+            { step: "01", title: "Zielperson eingeben", desc: "Tipp den Instagram-Username deiner Zielperson ein", emoji: "🎯" },
+            { step: "02", title: "Agent überwacht", desc: "Dein Agent scannt stündlich alle neuen Follows & Unfollows", emoji: "🕵️" },
+            { step: "03", title: "Du weißt alles", desc: "Geheim-Alert sobald deine Zielperson jemand neuem folgt", emoji: "🔓" },
           ].map((item, i) => (
             <motion.div
               key={item.step}
@@ -188,11 +188,11 @@ const Landing = () => {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <span className="tag-lavender mb-4">Pricing</span>
+          <span className="tag-lavender mb-4">Geheim-Pläne</span>
           <h2 className="text-3xl md:text-5xl font-bold mt-4">
-            Wähle deinen <span className="gradient-text">Plan</span>
+            Wähle deine <span className="gradient-text">Clearance</span>
           </h2>
-          <p className="mt-4 text-muted-foreground text-sm">Starte kostenlos, upgrade wenn du mehr willst.</p>
+          <p className="mt-4 text-muted-foreground text-sm">Starte kostenlos, upgrade für mehr Zielpersonen.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
@@ -210,8 +210,8 @@ const Landing = () => {
               }`}
             >
               {plan.highlighted && (
-                <span className="absolute top-4 right-4 gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">
-                  Beliebtester 💕
+               <span className="absolute top-4 right-4 gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">
+                  Top-Agent 🔍
                 </span>
               )}
               <span className="text-3xl">{plan.emoji}</span>
@@ -257,16 +257,16 @@ const Landing = () => {
           <div className="absolute inset-0 mesh-dots opacity-20" />
           <div className="relative text-center py-16 px-8">
             <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">
-              Ready zum Stalken? 👀
+              Bereit für deine Mission? 🕵️
             </h2>
             <p className="mt-3 text-primary-foreground/70 text-sm max-w-md mx-auto">
-              Starte jetzt kostenlos und sieh in Echtzeit, wem dein Crush folgt.
+              Starte jetzt kostenlos und überwache in Echtzeit, wem dein Crush folgt.
             </p>
             <Link
               to="/signup"
               className="mt-8 inline-flex items-center gap-2 bg-primary-foreground text-primary px-8 py-3.5 rounded-full text-sm font-bold hover:opacity-90 transition-opacity"
             >
-              Kostenlos starten
+              Mission starten
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -278,11 +278,11 @@ const Landing = () => {
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="h-7 w-7 rounded-xl gradient-bg flex items-center justify-center">
-              <Heart className="h-3.5 w-3.5 text-primary-foreground fill-primary-foreground" />
+              <Eye className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-sm">Track<span className="text-primary">IQ</span></span>
+            <span className="font-bold text-sm">Spy-<span className="text-primary">Secret</span></span>
           </div>
-          <p className="text-[11px] text-muted-foreground">© 2026 TrackIQ · Made with 💕</p>
+          <p className="text-[11px] text-muted-foreground">© 2026 Spy-Secret · Made with 🕵️</p>
         </div>
       </footer>
     </div>

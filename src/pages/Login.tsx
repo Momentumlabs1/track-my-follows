@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Eye, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -40,9 +40,9 @@ const Login = () => {
       >
         <Link to="/" className="flex items-center gap-2.5 justify-center mb-10">
           <div className="h-9 w-9 rounded-2xl gradient-bg flex items-center justify-center shadow-lg shadow-primary/20">
-            <Heart className="h-4 w-4 text-primary-foreground fill-primary-foreground" />
+            <Eye className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-lg font-extrabold">Track<span className="text-primary">IQ</span></span>
+          <span className="text-lg font-extrabold">Spy-<span className="text-primary">Secret</span></span>
         </Link>
 
         <div className="rounded-3xl glass-card p-7 overflow-hidden relative">

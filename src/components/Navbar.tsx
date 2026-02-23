@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, Heart, LayoutDashboard, Settings, Sparkles } from "lucide-react";
+import { Bell, Eye, LayoutDashboard, Settings, Sparkles } from "lucide-react";
 import { mockEvents } from "@/lib/mockData";
 
 const navItems = [
@@ -19,10 +19,10 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="relative h-9 w-9 rounded-2xl gradient-bg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
-            <Heart className="h-4 w-4 text-primary-foreground fill-primary-foreground" />
+            <Eye className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-base font-extrabold tracking-tight">
-            Track<span className="text-primary">IQ</span>
+            Spy-<span className="text-primary">Secret</span>
           </span>
         </Link>
 
