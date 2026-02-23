@@ -17,6 +17,7 @@ export type Database = {
       follow_events: {
         Row: {
           detected_at: string
+          direction: string
           event_type: string
           id: string
           is_read: boolean
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           detected_at?: string
+          direction?: string
           event_type: string
           id?: string
           is_read?: boolean
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           detected_at?: string
+          direction?: string
           event_type?: string
           id?: string
           is_read?: boolean
@@ -57,6 +60,7 @@ export type Database = {
       }
       profile_followings: {
         Row: {
+          direction: string
           first_seen_at: string
           following_avatar_url: string | null
           following_display_name: string | null
@@ -68,6 +72,7 @@ export type Database = {
           tracked_profile_id: string
         }
         Insert: {
+          direction?: string
           first_seen_at?: string
           following_avatar_url?: string | null
           following_display_name?: string | null
@@ -79,6 +84,7 @@ export type Database = {
           tracked_profile_id: string
         }
         Update: {
+          direction?: string
           first_seen_at?: string
           following_avatar_url?: string | null
           following_display_name?: string | null
