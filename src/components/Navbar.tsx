@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, Eye, LayoutDashboard, Settings, Sparkles } from "lucide-react";
+import { Bell, LayoutDashboard, Settings, Sparkles } from "lucide-react";
 import { mockEvents } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
+import logoSquare from "@/assets/logo-square.png";
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -20,9 +21,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 glass border-b border-border/20">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="relative h-9 w-9 rounded-2xl gradient-bg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
-            <Eye className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 rounded-2xl shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow" />
           <span className="text-base font-extrabold tracking-tight">Spy-<span className="text-primary">Secret</span></span>
         </Link>
 

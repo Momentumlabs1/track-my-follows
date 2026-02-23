@@ -4,6 +4,8 @@ import { ArrowRight, Bell, Eye, Shield, Sparkles, ChevronRight, Zap, Star, Check
 import { Navbar } from "@/components/Navbar";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import logoWide from "@/assets/logo-wide.png";
+import logoSquare from "@/assets/logo-square.png";
 
 const Landing = () => {
   const { t } = useTranslation();
@@ -51,6 +53,8 @@ const Landing = () => {
               </span>
               {t("landing.beta_badge")}
             </motion.div>
+
+            <motion.img src={logoWide} alt="Spy-Secret" className="h-16 md:h-24 mx-auto mb-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }} />
 
             <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold tracking-tight leading-[0.95]">
               {t("landing.hero_line1")}<br />
@@ -157,7 +161,7 @@ const Landing = () => {
       <footer className="border-t border-border/15 py-8">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-xl gradient-bg flex items-center justify-center"><Eye className="h-3.5 w-3.5 text-primary-foreground" /></div>
+            <img src={logoSquare} alt="Spy-Secret" className="h-7 w-7 rounded-xl" />
             <span className="font-bold text-sm">Spy-<span className="text-primary">Secret</span></span>
           </div>
           <p className="text-[11px] text-muted-foreground">{t("landing.footer")}</p>

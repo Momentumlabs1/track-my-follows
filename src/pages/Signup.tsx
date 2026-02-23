@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import logoSquare from "@/assets/logo-square.png";
 
 const Signup = () => {
   const { t } = useTranslation();
@@ -38,9 +39,7 @@ const Signup = () => {
         className="relative w-full max-w-sm"
       >
         <Link to="/" className="flex items-center gap-2.5 justify-center mb-10">
-          <div className="h-9 w-9 rounded-2xl gradient-bg flex items-center justify-center shadow-lg shadow-primary/20">
-            <Eye className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img src={logoSquare} alt="Spy-Secret" className="h-12 w-12 rounded-2xl shadow-lg shadow-primary/20" />
           <span className="text-lg font-extrabold">Spy-<span className="text-primary">Secret</span></span>
         </Link>
 
