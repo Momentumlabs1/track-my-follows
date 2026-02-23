@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BottomNav } from "@/components/BottomNav";
+import { PaywallSheet } from "@/components/PaywallSheet";
 import { useDirection } from "@/hooks/useDirection";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -37,6 +39,7 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
+      <PaywallSheet />
     </>
   );
 }
@@ -48,7 +51,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppContent />
+          <SubscriptionProvider>
+            <AppContent />
+          </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

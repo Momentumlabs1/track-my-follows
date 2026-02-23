@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock } from "lucide-react";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -36,6 +37,7 @@ const ProfileDetail = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<DetailTab>("neu");
   const [isScanning, setIsScanning] = useState(false);
+  const { canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: events = [], isLoading: eventsLoading } = useFollowEvents(id);
@@ -168,8 +170,18 @@ const ProfileDetail = () => {
         </button>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-5 mb-5">
-        <SuspicionMeter analysis={suspicionAnalysis} />
+      {/* Suspicion Meter - gated behind Pro for stats */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-5 mb-5 relative">
+        {!canUseStats && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-card/80 backdrop-blur-sm">
+            <button onClick={() => showPaywall("stats")} className="gradient-bg text-primary-foreground text-[12px] font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" /> {t("profile_detail.pro_required")}
+            </button>
+          </div>
+        )}
+        <div className={!canUseStats ? "blur-sm pointer-events-none" : ""}>
+          <SuspicionMeter analysis={suspicionAnalysis} />
+        </div>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
@@ -182,9 +194,16 @@ const ProfileDetail = () => {
             {activeTab === "neu" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-emerald-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
           </button>
           <button
-            onClick={() => setActiveTab("weg")}
+            onClick={() => {
+              if (!canUseUnfollows) {
+                showPaywall("unfollows");
+                return;
+              }
+              setActiveTab("weg");
+            }}
             className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "weg" ? "text-red-500" : "text-muted-foreground"}`}
           >
+            {!canUseUnfollows && <Lock className="h-3 w-3" />}
             🔴 {t("profile_detail.tab_gone")} ({wegEvents.length})
             {activeTab === "weg" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-red-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
           </button>
@@ -192,22 +211,30 @@ const ProfileDetail = () => {
 
         <div className="space-y-1">
           {displayEvents.length > 0 ? displayEvents.map((event, i) => (
-            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-2.5 px-1">
-              <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={40} />
-              <div className="flex-1 min-w-0">
+            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-2.5 px-1 relative">
+              <div className={shouldBlur ? "blur-sm" : ""}>
+                <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={40} />
+              </div>
+              <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
                 <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>
                 {event.target_display_name && <p className="text-[11px] text-muted-foreground">{event.target_display_name}</p>}
                 <p className="text-[10px] text-muted-foreground">{timeAgo(event.detected_at)}</p>
               </div>
-              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                activeTab === "neu"
-                  ? (event.direction === "follower" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")
-                  : (event.direction === "follower" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600")
-              }`}>
-                {activeTab === "neu"
-                  ? (event.direction === "follower" ? t("profile_detail.new_follower") : t("profile_detail.new_following"))
-                  : (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))}
-              </span>
+              {shouldBlur ? (
+                <button onClick={() => showPaywall("blur")} className="gradient-bg text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">
+                  {t("events.upgrade_to_reveal")}
+                </button>
+              ) : (
+                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
+                  activeTab === "neu"
+                    ? (event.direction === "follower" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")
+                    : (event.direction === "follower" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600")
+                }`}>
+                  {activeTab === "neu"
+                    ? (event.direction === "follower" ? t("profile_detail.new_follower") : t("profile_detail.new_following"))
+                    : (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))}
+                </span>
+              )}
             </motion.div>
           )) : (
             <div className="text-center py-12">

@@ -52,7 +52,9 @@
     "no_gone_events": "لم يتم اكتشاف إلغاء متابعات بعد",
     "will_update": "سيتم التحديث في الفحص التالي",
     "start_scan": "ابدأ فحصاً لاكتشاف النشاط",
-    "not_found": "الحساب غير موجود"
+    "not_found": "الحساب غير موجود",
+    "pro_required": "🔒 مطلوب Pro",
+    "upgrade_unfollows": "قم بالترقية إلى Pro لرؤية إلغاء المتابعات"
   },
   "suspicion": {
     "score_label": "مؤشر الشك",
@@ -70,7 +72,8 @@
     "unfollowed": "ألغى المتابعة",
     "new_badge": "جديد",
     "no_events": "لم يتم اكتشاف أي نشاط بعد",
-    "no_events_subtitle": "سنُعلمك عندما يحدث شيء"
+    "no_events_subtitle": "سنُعلمك عندما يحدث شيء",
+    "upgrade_to_reveal": "🔒 ترقية للكشف"
   },
   "settings": {
     "title": "الإعدادات ⚙️",
@@ -79,6 +82,7 @@
     "current_plan": "الخطة الحالية",
     "profiles_updates": "{{count}} حساب(ات)، تحديثات كل ساعة",
     "upgrade": "ترقية 💎",
+    "manage_subscription": "إدارة الاشتراك",
     "notifications": "الإشعارات 🔔",
     "notif_follows": "متابعات جديدة",
     "notif_follows_desc": "عندما يتابع شخصاً جديداً 👀",
@@ -91,7 +95,31 @@
     "logout_toast": "إلى اللقاء! 👋",
     "danger_zone": "منطقة الخطر ⚠️",
     "danger_text": "حذف حسابك وجميع بياناتك. لا يمكن التراجع!",
-    "delete_account": "حذف الحساب 😢"
+    "delete_account": "حذف الحساب 😢",
+    "billing_issue": "⚠️ مشكلة في الدفع – يرجى تحديث طريقة الدفع"
+  },
+  "paywall": {
+    "title": "اشترك في Pro",
+    "subtitle": "افتح جميع الميزات",
+    "feature_profiles": "تتبع حتى 5 حسابات",
+    "feature_hourly": "تحديثات كل ساعة",
+    "feature_unfollows": "كشف إلغاء المتابعة",
+    "feature_push": "إشعارات فورية",
+    "feature_stats": "إحصائيات ورؤى",
+    "feature_unblur": "معاينة واضحة",
+    "weekly": "أسبوعي",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "save_percent": "وفّر {{percent}}%",
+    "free_trial": "3 أيام مجاناً",
+    "continue": "متابعة",
+    "restore": "استعادة المشتريات",
+    "terms": "شروط الاستخدام",
+    "privacy": "سياسة الخصوصية",
+    "cancel_note": "يمكنك الإلغاء في أي وقت. يتم الدفع بعد انتهاء الفترة التجريبية.",
+    "per_week": "/أسبوع",
+    "per_month": "/شهر",
+    "per_year": "/سنة"
   },
   "auth": {
     "welcome_back": "مرحباً بعودتك!",

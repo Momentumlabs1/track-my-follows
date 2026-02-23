@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 function useTimeAgo() {
@@ -24,6 +25,7 @@ interface EventFeedItemProps {
 export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
+  const { shouldBlur, showPaywall } = useSubscription();
   const isFollow = event.event_type === "follow";
   const profileUsername = event.tracked_profiles?.username ?? "???";
 
@@ -46,15 +48,27 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
 
       <p className="text-[13px] text-muted-foreground mb-3">{label}</p>
 
-      <div className="flex items-center gap-3">
-        <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={48} className="ring-2 ring-border" />
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-3 relative">
+        <div className={shouldBlur ? "blur-sm" : ""}>
+          <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={48} className="ring-2 ring-border" />
+        </div>
+        <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
           <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
           {event.target_display_name && (
             <p className="text-[11px] text-muted-foreground truncate">{event.target_display_name}</p>
           )}
         </div>
-        {!event.is_read && (
+        {shouldBlur && (
+          <button
+            onClick={() => showPaywall("blur")}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <span className="gradient-bg text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+              {t("events.upgrade_to_reveal")}
+            </span>
+          </button>
+        )}
+        {!shouldBlur && !event.is_read && (
           <span className="tag-pink text-[10px]">{t("events.new_badge")}</span>
         )}
       </div>

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, Loader2, Search } from "lucide-react";
-import { useAddTrackedProfile, useTrackedProfiles, useUserPlan } from "@/hooks/useTrackedProfiles";
+import { useAddTrackedProfile, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const AddProfile = () => {
   const { t } = useTranslation();
@@ -10,14 +11,20 @@ const AddProfile = () => {
   const navigate = useNavigate();
   const addProfile = useAddTrackedProfile();
   const { data: profiles = [] } = useTrackedProfiles();
-  const { data: userPlan } = useUserPlan();
+  const { maxProfiles, showPaywall } = useSubscription();
 
-  const maxProfiles = (userPlan as any)?.subscription_plans?.max_tracked_profiles ?? 5;
   const currentCount = profiles.length;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
+
+    // Check plan limit
+    if (currentCount >= maxProfiles) {
+      showPaywall("profiles");
+      return;
+    }
+
     addProfile.mutate(username, {
       onSuccess: (data) => {
         navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`);

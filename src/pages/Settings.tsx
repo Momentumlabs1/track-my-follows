@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserPlan } from "@/hooks/useTrackedProfiles";
-import { Bell, Trash2, Sparkles, LogOut, Globe } from "lucide-react";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Bell, Trash2, Sparkles, LogOut, Globe, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,13 +18,9 @@ const languages = [
 const Settings = () => {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
+  const { plan, status, billingPeriod, maxProfiles, showPaywall } = useSubscription();
   const navigate = useNavigate();
-  const { data: userProfile } = useUserPlan();
   const [currentLang, setCurrentLang] = useState(i18n.language);
-
-  const plan = userProfile?.subscription_plans;
-  const planName = plan?.name ?? "free";
-  const maxProfiles = plan?.max_tracked_profiles ?? 1;
 
   const handleLogout = async () => {
     await signOut();
@@ -40,6 +36,13 @@ const Settings = () => {
         .from("user_settings")
         .upsert({ user_id: user.id, language: langCode }, { onConflict: "user_id" });
     }
+  };
+
+  const handleManageSubscription = () => {
+    // TODO: Replace with Despia/RevenueCat
+    // despia('revenuecat://manage');
+    console.log("Manage subscription triggered");
+    toast.info("Subscription management coming soon");
   };
 
   const notifications = [
@@ -101,20 +104,39 @@ const Settings = () => {
               <div className="absolute inset-0 aurora-bg opacity-10" />
               <div className="relative">
                 <div className="flex items-center gap-2.5 mb-5">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Crown className="h-4 w-4 text-primary" />
                   <h2 className="font-bold text-sm">{t("settings.subscription")}</h2>
                 </div>
+
+                {status === "past_due" && (
+                  <div className="mb-4 p-3 rounded-xl bg-destructive/10 text-destructive text-[12px] font-medium">
+                    {t("settings.billing_issue")}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">
                       {t("settings.current_plan")}:{" "}
-                      <span className="font-extrabold text-primary capitalize">{planName} ✨</span>
+                      <span className="font-extrabold text-primary capitalize">
+                        {plan === "pro" ? "Pro ✨" : "Free"}
+                      </span>
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {t("settings.profiles_updates", { count: maxProfiles })}
+                      {plan === "pro"
+                        ? `${maxProfiles} ${t("settings.profiles_updates", { count: maxProfiles })}${billingPeriod ? ` · ${billingPeriod}` : ""}`
+                        : t("settings.profiles_updates", { count: maxProfiles })}
                     </p>
                   </div>
-                  <button className="pill-btn-primary px-5 py-2.5 text-[13px]">{t("settings.upgrade")}</button>
+                  {plan === "pro" ? (
+                    <button onClick={handleManageSubscription} className="pill-btn-ghost px-4 py-2 text-[12px]">
+                      {t("settings.manage_subscription")}
+                    </button>
+                  ) : (
+                    <button onClick={() => showPaywall("settings")} className="pill-btn-primary px-5 py-2.5 text-[13px]">
+                      {t("settings.upgrade")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

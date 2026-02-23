@@ -52,7 +52,9 @@
     "no_gone_events": "No unfollows detected yet",
     "will_update": "Will be updated on next scan",
     "start_scan": "Start a scan to detect activity",
-    "not_found": "Profile not found"
+    "not_found": "Profile not found",
+    "pro_required": "🔒 Pro required",
+    "upgrade_unfollows": "Upgrade to Pro to see unfollows"
   },
   "suspicion": {
     "score_label": "Suspicion Score",
@@ -70,7 +72,8 @@
     "unfollowed": "Unfollowed",
     "new_badge": "NEW",
     "no_events": "No activity detected yet",
-    "no_events_subtitle": "We'll notify you when something happens"
+    "no_events_subtitle": "We'll notify you when something happens",
+    "upgrade_to_reveal": "🔒 Upgrade to reveal"
   },
   "settings": {
     "title": "Settings ⚙️",
@@ -79,6 +82,7 @@
     "current_plan": "Current Plan",
     "profiles_updates": "{{count}} profile(s), hourly updates",
     "upgrade": "Upgrade 💎",
+    "manage_subscription": "Manage Subscription",
     "notifications": "Notifications 🔔",
     "notif_follows": "New Follows",
     "notif_follows_desc": "When they follow someone new 👀",
@@ -91,7 +95,31 @@
     "logout_toast": "See you soon! 👋",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Delete your account and all data. This cannot be undone!",
-    "delete_account": "Delete Account 😢"
+    "delete_account": "Delete Account 😢",
+    "billing_issue": "⚠️ Billing issue – please update your payment method"
+  },
+  "paywall": {
+    "title": "Go Pro",
+    "subtitle": "Unlock all features",
+    "feature_profiles": "Track up to 5 profiles",
+    "feature_hourly": "Hourly scan updates",
+    "feature_unfollows": "Unfollow detection",
+    "feature_push": "Push notifications",
+    "feature_stats": "Statistics & insights",
+    "feature_unblur": "Unblurred previews",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save_percent": "SAVE {{percent}}%",
+    "free_trial": "3 days free",
+    "continue": "Continue",
+    "restore": "Restore Purchases",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "cancel_note": "Cancel anytime. Billed after free trial ends.",
+    "per_week": "/week",
+    "per_month": "/month",
+    "per_year": "/year"
   },
   "auth": {
     "welcome_back": "Welcome back!",
