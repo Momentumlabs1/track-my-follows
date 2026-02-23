@@ -1,152 +1,93 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Bell, Eye, Shield, Sparkles, ChevronRight, Zap, Star, Crown, Check, Lock } from "lucide-react";
+import { ArrowRight, Bell, Eye, Shield, Sparkles, ChevronRight, Zap, Star, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { useRef } from "react";
-
-const features = [
-  { icon: Eye, title: "Kein Login nötig", desc: "Username eingeben – und schon weißt du Bescheid.", emoji: "🕵️", color: "from-brand-pink/20 to-brand-rose/10" },
-  { icon: Zap, title: "Stündliche Scans", desc: "Wir checken alle 60 Min, ob er jemandem Neuem folgt.", emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
-  { icon: Bell, title: "Sofort-Alerts", desc: "Du erfährst es als Erste, wenn sich was tut.", emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
-  { icon: Shield, title: "100% Unsichtbar", desc: "Er wird nie erfahren, dass du es weißt. 🤫", emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
-];
-
-const plans = [
-  { name: "Rookie", emoji: "🕵️", price: "0", features: ["1 Zielperson", "Updates alle 6h", "Basis-Feed"], cta: "Mission starten", highlighted: false },
-  { name: "Agent", emoji: "🔍", price: "4.99", features: ["3 Zielpersonen", "Stündliche Scans", "Unfollow-Tracking", "Event-Verlauf"], cta: "Agent werden", highlighted: true },
-  { name: "Spymaster", emoji: "🎯", price: "9.99", features: ["5 Zielpersonen", "Stündliche Scans", "Push-Alerts", "Stats & Charts", "Priority-Scanning"], cta: "Spymaster Plan", highlighted: false },
-];
+import { useTranslation } from "react-i18next";
 
 const Landing = () => {
+  const { t } = useTranslation();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+  const features = [
+    { icon: Eye, title: t("landing.feat_no_login"), desc: t("landing.feat_no_login_desc"), emoji: "🕵️", color: "from-brand-pink/20 to-brand-rose/10" },
+    { icon: Zap, title: t("landing.feat_hourly"), desc: t("landing.feat_hourly_desc"), emoji: "⚡", color: "from-brand-lavender/20 to-brand-pink/10" },
+    { icon: Bell, title: t("landing.feat_alerts"), desc: t("landing.feat_alerts_desc"), emoji: "🔔", color: "from-brand-peach/20 to-brand-coral/10" },
+    { icon: Shield, title: t("landing.feat_invisible"), desc: t("landing.feat_invisible_desc"), emoji: "🫣", color: "from-brand-mint/20 to-brand-lavender/10" },
+  ];
+
+  const steps = [
+    { step: "01", title: t("landing.step_1_title"), desc: t("landing.step_1_desc"), emoji: "🎯" },
+    { step: "02", title: t("landing.step_2_title"), desc: t("landing.step_2_desc"), emoji: "🕵️" },
+    { step: "03", title: t("landing.step_3_title"), desc: t("landing.step_3_desc"), emoji: "🔓" },
+  ];
+
+  const plans = [
+    { name: t("landing.plan_rookie"), emoji: "🕵️", price: "0", features: ["1 target", "6h updates", "Basic feed"], cta: t("landing.cta_start"), highlighted: false },
+    { name: t("landing.plan_agent"), emoji: "🔍", price: "4.99", features: ["3 targets", "Hourly scans", "Unfollow tracking", "Event history"], cta: t("landing.plan_agent"), highlighted: true },
+    { name: t("landing.plan_spymaster"), emoji: "🎯", price: "9.99", features: ["5 targets", "Hourly scans", "Push alerts", "Stats & Charts", "Priority scanning"], cta: t("landing.plan_spymaster"), highlighted: false },
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar />
 
-      {/* Hero */}
       <section ref={heroRef} className="relative min-h-[90vh] flex items-center">
-        {/* Animated aurora background */}
         <div className="absolute inset-0 aurora-bg" />
         <div className="absolute inset-0 mesh-dots" />
-        
-        {/* Floating orbs */}
-        <div className="absolute top-20 left-[10%] w-72 h-72 rounded-full bg-primary/8 blur-[100px] animate-float" />
-        <div className="absolute bottom-20 right-[15%] w-96 h-96 rounded-full bg-accent/6 blur-[120px] animate-float-delayed" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-primary/5 animate-rotate-slow" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-accent/5 animate-rotate-slow" style={{ animationDirection: 'reverse', animationDuration: '15s' }} />
+        <div className="absolute top-20 start-[10%] w-72 h-72 rounded-full bg-primary/8 blur-[100px] animate-float" />
+        <div className="absolute bottom-20 end-[15%] w-96 h-96 rounded-full bg-accent/6 blur-[120px] animate-float-delayed" />
 
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="container relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 rounded-full glass-card px-5 py-2 text-[12px] font-semibold text-primary mb-10"
-            >
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="max-w-3xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 rounded-full glass-card px-5 py-2 text-[12px] font-semibold text-primary mb-10">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 gradient-bg" />
               </span>
-              Geheime Beta-Mission 🕵️
+              {t("landing.beta_badge")}
             </motion.div>
 
             <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold tracking-tight leading-[0.95]">
-              Vertrauen ist gut.
-              <br />
-              <span className="gradient-text">Spy-Secret ist besser.</span>
+              {t("landing.hero_line1")}<br />
+              <span className="gradient-text">{t("landing.hero_line2")}</span>
             </h1>
 
-            <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Finde heraus, wem er <span className="text-foreground font-medium">wirklich</span> folgt. Dein geheimer Agent überwacht jedes öffentliche Instagram-Profil – unsichtbar & ohne Login.
-            </p>
+            <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">{t("landing.hero_desc")}</p>
 
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/signup"
-                className="pill-btn-primary px-8 py-3.5 text-sm"
-              >
-                Mission starten
-                <Eye className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/dashboard"
-                className="pill-btn-ghost px-8 py-3.5 text-sm group"
-              >
-                Demo ansehen
-                <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              <Link to="/signup" className="pill-btn-primary px-8 py-3.5 text-sm">{t("landing.cta_start")} <Eye className="h-4 w-4" /></Link>
+              <Link to="/dashboard" className="pill-btn-ghost px-8 py-3.5 text-sm group">{t("landing.cta_demo")} <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" /></Link>
             </div>
 
-            {/* Social proof */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="mt-16 inline-flex items-center gap-4 glass-card rounded-2xl px-6 py-4"
-            >
-              <div className="flex -space-x-3">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }}
+              className="mt-16 inline-flex items-center gap-4 glass-card rounded-2xl px-6 py-4">
+              <div className="flex -space-x-3 rtl:space-x-reverse">
                 {[1, 5, 10, 15, 20].map(i => (
-                  <div key={i} className="avatar-ring">
-                    <img
-                      src={`https://i.pravatar.cc/40?img=${i}`}
-                      className="h-8 w-8 rounded-full object-cover"
-                      alt=""
-                    />
-                  </div>
+                  <div key={i} className="avatar-ring"><img src={`https://i.pravatar.cc/40?img=${i}`} className="h-8 w-8 rounded-full object-cover" alt="" /></div>
                 ))}
               </div>
-              <div className="text-left">
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map(i => (
-                    <Star key={i} className="h-3 w-3 text-brand-peach fill-brand-peach" />
-                  ))}
-                </div>
-                <p className="text-[12px] text-muted-foreground mt-0.5">
-                  <span className="text-foreground font-semibold">2.400+</span> Spys vertrauen uns 🕵️‍♀️
-                </p>
+              <div className="text-start">
+                <div className="flex items-center gap-1">{[1,2,3,4,5].map(i => <Star key={i} className="h-3 w-3 text-brand-peach fill-brand-peach" />)}</div>
+                <p className="text-[12px] text-muted-foreground mt-0.5"><span className="text-foreground font-semibold">{t("landing.social_proof")}</span></p>
               </div>
             </motion.div>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* How it works - Bento Grid */}
       <section className="container py-24">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mb-14"
-        >
-          <span className="tag-pink mb-4">Deine Mission</span>
-          <h2 className="text-3xl md:text-4xl font-bold mt-4">So einfach <span className="gradient-text">funktioniert's</span> 🕵️</h2>
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
+          <span className="tag-pink mb-4">{t("landing.how_title")}</span>
+          <h2 className="text-3xl md:text-4xl font-bold mt-4">{t("landing.how_subtitle")}</h2>
         </motion.div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-          {[
-            { step: "01", title: "Seinen Username eingeben", desc: "Tipp den Instagram-Username ein – mehr brauchst du nicht", emoji: "🎯" },
-            { step: "02", title: "Wir überwachen für dich", desc: "Spy-Secret scannt stündlich alle neuen Follows & Unfollows", emoji: "🕵️" },
-            { step: "03", title: "Du weißt Bescheid", desc: "Sofort-Alert wenn er jemandem Neuem folgt", emoji: "🔓" },
-          ].map((item, i) => (
-            <motion.div
-              key={item.step}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.12 }}
-              className="bento-card group text-center"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          {steps.map((item, i) => (
+            <motion.div key={item.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12 }} className="bento-card group text-center">
               <span className="text-4xl mb-4 block relative">{item.emoji}</span>
               <span className="inline-block gradient-text text-xs font-black tracking-widest mb-2">{item.step}</span>
               <h3 className="font-bold text-base mb-2 relative">{item.title}</h3>
@@ -156,133 +97,70 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features - Bento Layout */}
       <section className="container py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
           {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="bento-card group flex items-start gap-4"
-            >
-              <div className={`flex-shrink-0 rounded-2xl bg-gradient-to-br ${f.color} p-3.5 border border-primary/10`}>
-                <f.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div className="relative">
-                <h3 className="font-bold text-sm mb-1">{f.title}</h3>
-                <p className="text-[13px] text-muted-foreground leading-relaxed">{f.desc}</p>
-              </div>
+            <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="bento-card group flex items-start gap-4">
+              <div className={`flex-shrink-0 rounded-2xl bg-gradient-to-br ${f.color} p-3.5 border border-primary/10`}><f.icon className="h-5 w-5 text-primary" /></div>
+              <div><h3 className="font-bold text-sm mb-1">{f.title}</h3><p className="text-[13px] text-muted-foreground leading-relaxed">{f.desc}</p></div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Pricing */}
       <section className="container py-24" id="pricing">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mb-14"
-        >
-          <span className="tag-lavender mb-4">Geheim-Pläne</span>
-          <h2 className="text-3xl md:text-5xl font-bold mt-4">
-            Wähle deine <span className="gradient-text">Clearance</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground text-sm">Starte kostenlos, upgrade für mehr Zielpersonen.</p>
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
+          <span className="tag-lavender mb-4">{t("landing.pricing_tag")}</span>
+          <h2 className="text-3xl md:text-5xl font-bold mt-4"><span className="gradient-text">{t("landing.pricing_title")}</span></h2>
+          <p className="mt-4 text-muted-foreground text-sm">{t("landing.pricing_subtitle")}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative rounded-3xl p-6 transition-all overflow-hidden ${
-                plan.highlighted
-                  ? "glass-card gradient-border border-transparent glow-pink scale-[1.03]"
-                  : "glass-card"
-              }`}
-            >
-              {plan.highlighted && (
-               <span className="absolute top-4 right-4 gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">
-                  Top-Agent 🔍
-                </span>
-              )}
+            <motion.div key={plan.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              className={`relative rounded-3xl p-6 transition-all overflow-hidden ${plan.highlighted ? "glass-card gradient-border border-transparent glow-pink scale-[1.03]" : "glass-card"}`}>
+              {plan.highlighted && <span className="absolute top-4 end-4 gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">{t("landing.plan_top_agent")}</span>}
               <span className="text-3xl">{plan.emoji}</span>
               <h3 className="text-lg font-bold mt-2">{plan.name}</h3>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold">€{plan.price}</span>
-                <span className="text-muted-foreground text-xs">/Monat</span>
+                <span className="text-muted-foreground text-xs">{t("pricing.per_month")}</span>
               </div>
               <ul className="mt-6 space-y-3">
                 {plan.features.map(f => (
                   <li key={f} className="flex items-center gap-2.5 text-[13px]">
-                    <div className="h-4 w-4 rounded-full gradient-bg flex items-center justify-center flex-shrink-0">
-                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
-                    </div>
+                    <div className="h-4 w-4 rounded-full gradient-bg flex items-center justify-center flex-shrink-0"><Check className="h-2.5 w-2.5 text-primary-foreground" /></div>
                     <span className="text-muted-foreground">{f}</span>
                   </li>
                 ))}
               </ul>
-              <Link
-                to="/signup"
-                className={`mt-8 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13px] font-bold transition-all ${
-                  plan.highlighted
-                    ? "pill-btn-primary w-full justify-center"
-                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80 w-full"
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              <Link to="/signup" className={`mt-8 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13px] font-bold transition-all ${plan.highlighted ? "pill-btn-primary w-full justify-center" : "bg-secondary text-secondary-foreground hover:bg-secondary/80 w-full"}`}>{plan.cta}</Link>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
       <section className="container py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative max-w-3xl mx-auto rounded-3xl overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="relative max-w-3xl mx-auto rounded-3xl overflow-hidden">
           <div className="absolute inset-0 gradient-bg opacity-90" />
           <div className="absolute inset-0 mesh-dots opacity-20" />
           <div className="relative text-center py-16 px-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">
-              Bereit zu wissen, was er treibt? 🕵️‍♀️
-            </h2>
-            <p className="mt-3 text-primary-foreground/70 text-sm max-w-md mx-auto">
-              Starte jetzt kostenlos – in 30 Sekunden weißt du mehr als er denkt.
-            </p>
-            <Link
-              to="/signup"
-              className="mt-8 inline-flex items-center gap-2 bg-primary-foreground text-primary px-8 py-3.5 rounded-full text-sm font-bold hover:opacity-90 transition-opacity"
-            >
-              Mission starten
-              <ArrowRight className="h-4 w-4" />
+            <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">{t("landing.cta_final")}</h2>
+            <p className="mt-3 text-primary-foreground/70 text-sm max-w-md mx-auto">{t("landing.cta_final_sub")}</p>
+            <Link to="/signup" className="mt-8 inline-flex items-center gap-2 bg-primary-foreground text-primary px-8 py-3.5 rounded-full text-sm font-bold hover:opacity-90 transition-opacity">
+              {t("landing.cta_start")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </motion.div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border/15 py-8">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-xl gradient-bg flex items-center justify-center">
-              <Eye className="h-3.5 w-3.5 text-primary-foreground" />
-            </div>
+            <div className="h-7 w-7 rounded-xl gradient-bg flex items-center justify-center"><Eye className="h-3.5 w-3.5 text-primary-foreground" /></div>
             <span className="font-bold text-sm">Spy-<span className="text-primary">Secret</span></span>
           </div>
-          <p className="text-[11px] text-muted-foreground">© 2026 Spy-Secret · Made with 🕵️</p>
+          <p className="text-[11px] text-muted-foreground">{t("landing.footer")}</p>
         </div>
       </footer>
     </div>

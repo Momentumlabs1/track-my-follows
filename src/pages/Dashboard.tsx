@@ -5,10 +5,12 @@ import { ProfileCard } from "@/components/ProfileCard";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 type Tab = "news" | "profiles";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("profiles");
   const navigate = useNavigate();
 
@@ -32,16 +34,14 @@ const Dashboard = () => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`relative px-4 pb-2.5 text-[13px] font-semibold transition-colors ${
-                  activeTab === tab
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                  activeTab === tab ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
-                {tab === "news" ? "What's new?" : "Profiles"}
+                {tab === "news" ? t("tabs.whats_new") : t("tabs.profiles")}
                 {activeTab === tab && (
                   <motion.div
                     layoutId="dashboard-tab"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full"
+                    className="absolute bottom-0 start-0 end-0 h-[2px] bg-primary rounded-full"
                     transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
                   />
                 )}
@@ -68,10 +68,8 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-20">
                 <span className="text-5xl block mb-4">👀</span>
-                <p className="text-sm font-medium text-foreground">No profiles yet</p>
-                <p className="text-[12px] text-muted-foreground mt-1">
-                  Tap + to start tracking someone
-                </p>
+                <p className="text-sm font-medium text-foreground">{t("dashboard.no_profiles")}</p>
+                <p className="text-[12px] text-muted-foreground mt-1">{t("dashboard.add_first")}</p>
               </div>
             )}
           </>
@@ -86,10 +84,8 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-20">
                 <span className="text-5xl block mb-4">🔍</span>
-                <p className="text-sm font-medium text-foreground">No events yet</p>
-                <p className="text-[12px] text-muted-foreground mt-1">
-                  We'll notify you when something happens
-                </p>
+                <p className="text-sm font-medium text-foreground">{t("events.no_events")}</p>
+                <p className="text-[12px] text-muted-foreground mt-1">{t("events.no_events_subtitle")}</p>
               </div>
             )}
           </>
@@ -99,7 +95,7 @@ const Dashboard = () => {
       {/* FAB */}
       <button
         onClick={() => navigate("/add-profile")}
-        className="fixed bottom-20 right-5 z-50 h-14 w-14 rounded-full gradient-bg text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+        className="fixed bottom-20 end-5 z-50 h-14 w-14 rounded-full gradient-bg text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform"
       >
         <Plus className="h-6 w-6" />
       </button>
