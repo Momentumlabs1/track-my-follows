@@ -28,6 +28,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         setSession(session);
         setLoading(false);
+
+        // Auto-save user timezone on login
+        if (session?.user) {
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          supabase
+            .from("user_settings")
+            .upsert({ user_id: session.user.id, timezone }, { onConflict: "user_id" })
+            .then(() => console.log("Timezone saved:", timezone));
+        }
       }
     );
 

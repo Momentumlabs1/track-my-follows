@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, UserPlus, UserMinus, UserCheck, UserX } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -22,20 +22,13 @@ function timeAgo(dateStr: string | null): string {
   return `vor ${Math.floor(hours / 24)}d`;
 }
 
-type DetailTab = "new_following" | "lost_following" | "new_follower" | "lost_follower";
-
-const TAB_CONFIG: { key: DetailTab; icon: typeof UserPlus; label: string; direction: string; eventType: string }[] = [
-  { key: "new_following", icon: UserPlus, label: "Folgt neu", direction: "following", eventType: "follow" },
-  { key: "lost_following", icon: UserMinus, label: "Entfolgt", direction: "following", eventType: "unfollow" },
-  { key: "new_follower", icon: UserCheck, label: "Neue Follower", direction: "follower", eventType: "follow" },
-  { key: "lost_follower", icon: UserX, label: "Follower weg", direction: "follower", eventType: "unfollow" },
-];
+type DetailTab = "neu" | "weg";
 
 const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<DetailTab>("new_following");
+  const [activeTab, setActiveTab] = useState<DetailTab>("neu");
   const [isScanning, setIsScanning] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
@@ -44,10 +37,8 @@ const ProfileDetail = () => {
   const deleteProfile = useDeleteTrackedProfile();
 
   const profile = profiles.find((p) => p.id === id);
-
   const isLoading = profilesLoading || eventsLoading;
 
-  // Smart suspicion analysis
   const suspicionAnalysis = analyzeSuspicion(
     events,
     followings,
@@ -59,11 +50,17 @@ const ProfileDetail = () => {
     setIsScanning(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("scan-profiles", {
+      const res = await supabase.functions.invoke("trigger-scan", {
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+        body: { profileId: id },
       });
       if (res.error) throw res.error;
-      toast.success("Scan abgeschlossen! 👀");
+      const resData = res.data as { results?: Array<{ error?: string }> };
+      if (resData?.results?.[0]?.error) {
+        toast.error(`Scan-Fehler: ${resData.results[0].error}`);
+      } else {
+        toast.success("Scan abgeschlossen! 👀");
+      }
       queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
       queryClient.invalidateQueries({ queryKey: ["follow_events"] });
       queryClient.invalidateQueries({ queryKey: ["profile_followings"] });
@@ -98,10 +95,23 @@ const ProfileDetail = () => {
     );
   }
 
-  const activeConfig = TAB_CONFIG.find((t) => t.key === activeTab)!;
-  const displayEvents = events.filter(
-    (e) => e.direction === activeConfig.direction && e.event_type === activeConfig.eventType,
-  );
+  // Split events into "neu" (follows) and "weg" (unfollows)
+  const neuEvents = events
+    .filter((e) => e.event_type === "follow")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+
+  const wegEvents = events
+    .filter((e) => e.event_type === "unfollow")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+
+  const displayEvents = activeTab === "neu" ? neuEvents : wegEvents;
+
+  const followerDelta = (profile as Record<string, unknown>).previous_follower_count != null
+    ? (profile.follower_count ?? 0) - ((profile as Record<string, unknown>).previous_follower_count as number)
+    : null;
+  const followingDelta = (profile as Record<string, unknown>).previous_following_count != null
+    ? (profile.following_count ?? 0) - ((profile as Record<string, unknown>).previous_following_count as number)
+    : null;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -128,7 +138,7 @@ const ProfileDetail = () => {
             <h2 className="text-lg font-extrabold text-foreground">@{profile.username}</h2>
             {profile.display_name && <p className="text-[12px] text-muted-foreground font-medium">{profile.display_name}</p>}
             <p className="text-[11px] text-muted-foreground mt-0.5">Tracking seit {new Date(profile.created_at).toLocaleDateString("de-DE")}</p>
-            <p className="text-[11px] text-muted-foreground">Aktualisiert {timeAgo(profile.last_scanned_at || profile.updated_at)}</p>
+            <p className="text-[11px] text-muted-foreground">{timeAgo(profile.last_scanned_at || profile.updated_at)}</p>
           </div>
         </div>
       </motion.div>
@@ -136,11 +146,27 @@ const ProfileDetail = () => {
       {/* Stats Grid */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-5 grid grid-cols-3 gap-2.5 mb-4">
         <div className="stat-box-blue">
-          <p className="text-xl font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
+          <div className="flex items-baseline justify-center gap-1">
+            <p className="text-xl font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
+            {followerDelta !== null && followerDelta !== 0 && (
+              <span className={`text-[10px] font-bold flex items-center gap-0.5 ${followerDelta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                {followerDelta > 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                {followerDelta > 0 ? `+${followerDelta}` : followerDelta}
+              </span>
+            )}
+          </div>
           <p className="text-[10px] font-medium opacity-70">Follower</p>
         </div>
         <div className="stat-box-purple">
-          <p className="text-xl font-extrabold">{(profile.following_count ?? 0).toLocaleString()}</p>
+          <div className="flex items-baseline justify-center gap-1">
+            <p className="text-xl font-extrabold">{(profile.following_count ?? 0).toLocaleString()}</p>
+            {followingDelta !== null && followingDelta !== 0 && (
+              <span className={`text-[10px] font-bold flex items-center gap-0.5 ${followingDelta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                {followingDelta > 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                {followingDelta > 0 ? `+${followingDelta}` : followingDelta}
+              </span>
+            )}
+          </div>
           <p className="text-[10px] font-medium opacity-70">Following</p>
         </div>
         <div className="stat-box rounded-xl px-3 py-2 text-center" style={{ background: "hsl(330 100% 95%)", color: "hsl(330 100% 40%)" }}>
@@ -161,32 +187,39 @@ const ProfileDetail = () => {
         <SuspicionMeter analysis={suspicionAnalysis} />
       </motion.div>
 
-      {/* Tabs & Event List */}
+      {/* 2-Tab Design: Neu / Weg */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
-        <div className="flex gap-0 overflow-x-auto border-b border-border mb-4 scrollbar-none">
-          {TAB_CONFIG.map((tab) => {
-            const count = events.filter((e) => e.direction === tab.direction && e.event_type === tab.eventType).length;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`relative flex items-center gap-1 px-2.5 pb-2.5 text-[11px] font-semibold transition-colors whitespace-nowrap ${
-                  activeTab === tab.key ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label} ({count})
-                {activeTab === tab.key && (
-                  <motion.div
-                    layoutId="profile-tab"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-                  />
-                )}
-              </button>
-            );
-          })}
+        <div className="flex gap-0 border-b border-border mb-4">
+          <button
+            onClick={() => setActiveTab("neu")}
+            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${
+              activeTab === "neu" ? "text-emerald-600" : "text-muted-foreground"
+            }`}
+          >
+            🟢 Neu ({neuEvents.length})
+            {activeTab === "neu" && (
+              <motion.div
+                layoutId="profile-tab"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-full"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("weg")}
+            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${
+              activeTab === "weg" ? "text-red-500" : "text-muted-foreground"
+            }`}
+          >
+            🔴 Weg ({wegEvents.length})
+            {activeTab === "weg" && (
+              <motion.div
+                layoutId="profile-tab"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-red-500 rounded-full"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+              />
+            )}
+          </button>
         </div>
 
         <div className="space-y-1">
@@ -207,18 +240,28 @@ const ProfileDetail = () => {
                 </div>
                 <span
                   className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                    event.event_type === "follow" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                    activeTab === "neu"
+                      ? (event.direction === "follower" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")
+                      : (event.direction === "follower" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600")
                   }`}
                 >
-                  {event.event_type === "follow" ? (event.direction === "follower" ? "Neu" : "Follow") : (event.direction === "follower" ? "Weg" : "Entfolgt")}
+                  {activeTab === "neu"
+                    ? (event.direction === "follower" ? "Neuer Follower" : "Folgt neu")
+                    : (event.direction === "follower" ? "Follower weg" : "Entfolgt")}
                 </span>
               </motion.div>
             ))
           ) : (
             <div className="text-center py-12">
-              <span className="text-4xl block mb-3">🔍</span>
-              <p className="text-[13px] text-muted-foreground">Noch keine Events</p>
-              <p className="text-[11px] text-muted-foreground mt-1">Starte einen Scan um Aktivität zu erkennen</p>
+              <span className="text-4xl block mb-3">{activeTab === "neu" ? "✨" : "🔍"}</span>
+              <p className="text-[13px] text-muted-foreground">
+                {activeTab === "neu" ? "Noch keine neuen Follows erkannt" : "Noch keine Unfollows erkannt"}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {profile.last_scanned_at
+                  ? "Wird beim nächsten Scan aktualisiert"
+                  : "Starte einen Scan um Aktivität zu erkennen"}
+              </p>
             </div>
           )}
         </div>

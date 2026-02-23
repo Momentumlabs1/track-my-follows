@@ -21,6 +21,7 @@ export type Database = {
           event_type: string
           id: string
           is_read: boolean
+          notification_sent: boolean | null
           target_avatar_url: string | null
           target_display_name: string | null
           target_username: string
@@ -32,6 +33,7 @@ export type Database = {
           event_type: string
           id?: string
           is_read?: boolean
+          notification_sent?: boolean | null
           target_avatar_url?: string | null
           target_display_name?: string | null
           target_username: string
@@ -43,6 +45,7 @@ export type Database = {
           event_type?: string
           id?: string
           is_read?: boolean
+          notification_sent?: boolean | null
           target_avatar_url?: string | null
           target_display_name?: string | null
           target_username?: string
@@ -177,6 +180,8 @@ export type Database = {
           id: string
           is_active: boolean
           last_scanned_at: string | null
+          previous_follower_count: number | null
+          previous_following_count: number | null
           updated_at: string
           user_id: string
           username: string
@@ -190,6 +195,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_scanned_at?: string | null
+          previous_follower_count?: number | null
+          previous_following_count?: number | null
           updated_at?: string
           user_id: string
           username: string
@@ -203,9 +210,32 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_scanned_at?: string | null
+          previous_follower_count?: number | null
+          previous_following_count?: number | null
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          id: string
+          timezone: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          timezone?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          timezone?: string
+          user_id?: string
         }
         Relationships: []
       }
