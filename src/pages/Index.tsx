@@ -61,9 +61,9 @@ const Landing = () => {
             </motion.div>
 
             <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold tracking-tight leading-[0.95]">
-              Wem folgt dein
+              Wer folgt wem
               <br />
-              <span className="gradient-text">Crush heimlich?</span>
+              <span className="gradient-text">heimlich?</span>
             </h1>
 
             <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
@@ -260,7 +260,7 @@ const Landing = () => {
               Bereit für deine Mission? 🕵️
             </h2>
             <p className="mt-3 text-primary-foreground/70 text-sm max-w-md mx-auto">
-              Starte jetzt kostenlos und überwache in Echtzeit, wem dein Crush folgt.
+              Starte jetzt kostenlos und überwache jedes öffentliche Instagram-Profil in Echtzeit.
             </p>
             <Link
               to="/signup"
