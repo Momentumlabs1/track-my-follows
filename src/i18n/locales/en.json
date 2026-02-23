@@ -188,6 +188,18 @@
     "upgrade": "Upgrade",
     "settings": "Settings"
   },
+  "onboarding": {
+    "slide1_title": "Trust is good.",
+    "slide1_highlight": "Spy-Secret is better.",
+    "slide1_desc": "Find out who they really follow. Your secret agent – invisible & anonymous.",
+    "slide2_title": "Anonymous & Invisible",
+    "slide2_desc": "No Instagram login needed. We scan public profiles – they'll never know.",
+    "slide3_title": "Real-Time Alerts",
+    "slide3_desc": "Get notified instantly when something changes.",
+    "next": "Next",
+    "get_started": "Start Mission",
+    "login": "Log In"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
