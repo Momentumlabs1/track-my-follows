@@ -112,7 +112,7 @@ const Landing = () => {
                   ))}
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  <span className="text-foreground font-semibold">2.400+</span> Agentinnen im Einsatz 🕵️‍♀️
+                  <span className="text-foreground font-semibold">2.400+</span> Spys im Einsatz 🕵️‍♀️
                 </p>
               </div>
             </motion.div>
