@@ -1,98 +1,100 @@
 
 
-# Redesign: Landing Page zu App-Onboarding-Flow
+# Auth-Flow Redesign: Social Login wie echte Apps
 
 ## Problem
 
-Die aktuelle `/` Route zeigt eine klassische Website-Landing-Page mit Navbar, Hero, Features, Pricing-Sektionen und Footer. In einer nativen App (via Despia) macht das keinen Sinn. Apps haben:
-- **Onboarding-Screens** (Carousel/Slides) beim ersten Oeffnen
-- Danach direkt **Login/Signup**
-- Kein Navbar, kein Footer, kein Scroll-Marketing
-
-## Loesung: 3-Slide Onboarding + Auth
-
-Die `/` Route wird zu einem fullscreen Onboarding-Carousel umgebaut. Kein Navbar, kein Footer. Nur 3 Slides die man swipen kann, dann ein CTA-Button der zu Signup fuehrt.
+Aktuell gibt es Email/Passwort Login und Signup -- das ist ein Web-Pattern. Echte mobile Apps machen es so:
 
 ```text
-┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
-│                  │   │                  │   │                  │
-│     [Logo]       │   │      🕵️          │   │      🔔          │
-│                  │   │                  │   │                  │
-│  Vertrauen ist   │   │  Kein Login      │   │  Echtzeit-       │
-│  gut.            │   │  noetig          │   │  Benachrichti-   │
-│  Spy-Secret ist  │   │                  │   │  gungen          │
-│  besser.         │   │  Wir scannen     │   │                  │
-│                  │   │  oeffentliche    │   │  Erfahre sofort   │
-│  Finde heraus,   │   │  Profile –       │   │  wenn sich was   │
-│  wem er wirklich │   │  anonym &        │   │  aendert.        │
-│  folgt.          │   │  unsichtbar.     │   │                  │
-│                  │   │                  │   │                  │
-│     ● ○ ○        │   │     ○ ● ○        │   │     ○ ○ ●        │
-│                  │   │                  │   │                  │
-│  [Mission        │   │  [Weiter →]      │   │  [Los geht's →]  │
-│   starten →]     │   │                  │   │  [Einloggen]     │
-└──────────────────┘   └──────────────────┘   └──────────────────┘
+┌──────────────────────┐
+│                      │
+│       [Logo]         │
+│    Spy-Secret        │
+│                      │
+│ ┌──────────────────┐ │
+│ │  Sign in with   │ │  ← Apple Requirement wenn
+│ │  Apple           │ │    andere Social Logins da sind
+│ └──────────────────┘ │
+│                      │
+│ ┌──────────────────┐ │
+│ │  Continue with   │ │
+│ │  Google      [G] │ │
+│ └──────────────────┘ │
+│                      │
+│ ─── or ───────────── │
+│                      │
+│ ┌──────────────────┐ │
+│ │ 📧 Email         │ │  ← Fallback fuer User ohne
+│ └──────────────────┘ │    Apple/Google Account
+│ ┌──────────────────┐ │
+│ │ 🔒 Password      │ │
+│ └──────────────────┘ │
+│                      │
+│ [Continue →]         │
+│                      │
+│ No subscription      │
+│ needed. Start free.  │
+└──────────────────────┘
 ```
 
-## Aenderungen
+## Was aendert sich
 
-### 1. `src/pages/Index.tsx` -- Komplett neu als Onboarding
+### 1. Unified Auth Screen (`src/pages/Login.tsx`)
 
-- **Entferne**: Navbar, Footer, alle Sektionen (Hero, Features, Steps, Pricing, CTA)
-- **Neu**: Fullscreen swipeable Carousel mit 3 Slides (via `embla-carousel-react`, bereits installiert)
-- Slide 1: Logo + Tagline + Beschreibung
-- Slide 2: Feature "Anonym & unsichtbar" mit Icon
-- Slide 3: Feature "Echtzeit-Alerts" mit CTA-Buttons (Signup + Login)
-- Dot-Indikator unten zeigt aktuelle Position
-- Jeder Slide hat einen "Weiter"-Button, letzter Slide hat "Mission starten" + "Einloggen"
-- Kein Navbar (`<Navbar />` Import entfernen)
-- Kein Footer
-- Alle Texte ueber i18n (neue Keys: `onboarding.slide1_title`, etc.)
-- Fullscreen `min-h-screen` mit Aurora-Background
-- Wenn User bereits eingeloggt ist: automatisch Redirect zu `/dashboard`
+- **Sign in with Apple** Button (gross, schwarz, oben) -- Apple Pflicht!
+- **Continue with Google** Button (weiss mit Google-Icon)
+- Trennlinie "or"
+- Email/Passwort darunter als Fallback
+- **Smart Auth**: Ein Button "Continue" -- versucht Login, bei Fehler automatisch Signup
+- Kein separater Signup-Screen mehr
+- Kein Name-Feld (kann spaeter in Settings)
 
-### 2. `src/components/Navbar.tsx` -- Anpassen
+### 2. `/signup` Route entfernen (`src/App.tsx`)
 
-- Entferne die Landing-spezifische Logik (`isLanding` Check und Login/Signup Buttons)
-- Navbar wird nur noch auf Dashboard/Settings/etc. gezeigt, nie auf `/`
+- Route entfernen, alles geht ueber `/login`
+- Onboarding-Buttons zeigen auf `/login`
 
-### 3. i18n-Dateien -- Neue Onboarding-Keys
+### 3. `src/pages/Index.tsx` -- Links anpassen
 
-In `en.json`, `de.json`, `ar.json` neue Keys hinzufuegen:
+- Beide Buttons (Start Mission + Login) auf `/login`
 
-```
-"onboarding": {
-  "slide1_title": "Vertrauen ist gut.",
-  "slide1_highlight": "Spy-Secret ist besser.",
-  "slide1_desc": "Finde heraus, wem er wirklich folgt...",
-  "slide2_title": "Anonym & unsichtbar",
-  "slide2_desc": "Kein Instagram-Login noetig...",
-  "slide3_title": "Echtzeit-Alerts",
-  "slide3_desc": "Erfahre sofort wenn...",
-  "next": "Weiter",
-  "get_started": "Mission starten",
-  "login": "Einloggen"
-}
-```
+### 4. Supabase OAuth Setup
 
-### 4. Routing -- Bereits eingeloggte User
+- `supabase.auth.signInWithOAuth({ provider: 'apple' })` 
+- `supabase.auth.signInWithOAuth({ provider: 'google' })`
+- **Wichtig**: Die Provider muessen im Supabase Dashboard aktiviert werden (Apple + Google). Das ist ein manueller Schritt fuer den User.
 
-In `Index.tsx`: Wenn `useAuth()` einen User hat, automatisch `navigate('/dashboard')`. Der Onboarding-Flow ist nur fuer nicht-eingeloggte User.
+### 5. i18n Keys (alle 3 Sprachen)
+
+Neue Keys:
+- `auth.continue_title` -- "Continue" / "Weiter" / "متابعة"
+- `auth.or_divider` -- "or" / "oder" / "أو"
+- `auth.sign_in_apple` -- "Sign in with Apple"
+- `auth.continue_google` -- "Continue with Google"
+- `auth.free_note` -- "No subscription needed. Start free."
+
+### 6. `src/components/BottomNav.tsx`
+
+- `/signup` aus hiddenRoutes entfernen
 
 ## Betroffene Dateien
 
 | Datei | Aenderung |
 |---|---|
-| `src/pages/Index.tsx` | Komplett neu: Onboarding-Carousel statt Landing Page |
-| `src/components/Navbar.tsx` | Landing-Logik entfernen |
-| `src/i18n/locales/en.json` | Onboarding-Keys hinzufuegen |
-| `src/i18n/locales/de.json` | Onboarding-Keys hinzufuegen |
-| `src/i18n/locales/ar.json` | Onboarding-Keys hinzufuegen |
+| `src/pages/Login.tsx` | Komplett neu: Apple + Google + Email/PW Fallback, Smart Auth |
+| `src/App.tsx` | `/signup` Route entfernen |
+| `src/pages/Index.tsx` | Alle Links auf `/login` |
+| `src/components/BottomNav.tsx` | `/signup` aus hiddenRoutes |
+| `src/i18n/locales/en.json` | Neue auth Keys |
+| `src/i18n/locales/de.json` | Neue auth Keys |
+| `src/i18n/locales/ar.json` | Neue auth Keys |
 
 ## Technische Details
 
-- **Carousel**: `embla-carousel-react` (bereits in `package.json`) fuer native swipe-Gesten
-- **Keine neuen Abhaengigkeiten** noetig
-- Die alte Landing Page (`landing.*` i18n-Keys) kann bestehen bleiben fuer spaeter (Web-Version/App-Store-Listing), wird aber nicht mehr auf `/` gezeigt
-- RTL funktioniert automatisch da Embla RTL unterstuetzt
+- **Sign in with Apple**: Supabase unterstuetzt das nativ via `signInWithOAuth({ provider: 'apple' })`. Muss im Supabase Dashboard unter Authentication > Providers aktiviert werden. Apple Developer Account noetig.
+- **Google Sign-In**: Gleich via `signInWithOAuth({ provider: 'google' })`. Google Cloud Console OAuth Credentials noetig.
+- **Smart Auth (Email)**: `signInWithPassword()` zuerst. Bei "Invalid login credentials" automatisch `signUp()`. User merkt nichts.
+- **Apple Requirement**: Wenn die App Social Login anbietet (Google), MUSS auch "Sign in with Apple" vorhanden sein. Sonst wird die App im Review abgelehnt.
+- Die OAuth Buttons werden im Frontend sofort funktionieren. Die Provider-Konfiguration im Supabase Dashboard ist ein separater Schritt den der User machen muss.
 
