@@ -1,51 +1,36 @@
 
 
-# Fix: Instagram-Profilbilder ueber Image-Proxy laden
+# Follow-Events mit zufaellig verteilten Timestamps
 
-## Problem
-Instagram CDN blockiert Bildrequests aus fremden Domains - auch mit `referrerPolicy="no-referrer"`. Die Bilder laden einfach nicht im Browser.
+## Was passiert
+Beim Scan werden neue Follows nicht mehr alle mit dem gleichen Zeitstempel gespeichert, sondern zufaellig ueber die Zeit seit dem letzten Scan verteilt. So sieht es natuerlicher aus im Feed.
 
-## Loesung
-Eine Edge Function als Bild-Proxy: Das Frontend ruft nicht mehr direkt die Instagram-URL auf, sondern unsere eigene Edge Function. Diese laedt das Bild serverseitig (wo es keine Browser-Einschraenkungen gibt) und gibt es an den Browser weiter.
+## Beispiel
+- Letzter Scan: 12:00 Uhr
+- Aktueller Scan: 15:00 Uhr
+- 5 neue Follows erkannt
+- Statt alle "vor 0m": zufaellig verteilt, z.B. 12:14, 12:47, 13:22, 14:05, 14:51
+- Die Reihenfolge wird nach Generierung chronologisch sortiert
 
-```text
-Browser  -->  Edge Function (image-proxy)  -->  Instagram CDN
-Browser  <--  Bild-Daten zurueck           <--  Instagram CDN
-```
+## Technische Umsetzung
 
-## Schritte
+### Datei: `supabase/functions/scan-profiles/index.ts`
 
-### 1. Neue Edge Function `image-proxy` erstellen
-- Nimmt eine Instagram-Bild-URL als Query-Parameter entgegen
-- Laedt das Bild serverseitig per `fetch`
-- Gibt die Bild-Bytes mit dem richtigen Content-Type zurueck
-- Caching-Header fuer Performance (1 Stunde)
-- Validierung: Nur URLs von `cdninstagram.com` oder `fbcdn.net` erlaubt
+1. Vor der Event-Schleife: Neue Follows erst sammeln statt sofort einfuegen
+2. Zeitspanne berechnen: `lastScan` bis `now`
+3. Fuer jeden neuen Follow einen zufaelligen Timestamp generieren: `lastScan + Math.random() * spanMs`
+4. Die generierten Timestamps chronologisch sortieren
+5. Dann Events mit den sortierten Timestamps einfuegen (`detected_at` und `first_seen_at`)
+6. Unfollows behalten weiterhin den aktuellen Zeitpunkt
 
-### 2. `InstagramAvatar` Komponente updaten
-- Statt die Instagram-URL direkt im `<img>` Tag zu nutzen, wird die URL durch die Proxy-Edge-Function geleitet
-- Format: `{supabaseUrl}/functions/v1/image-proxy?url={encodedInstagramUrl}`
-- `referrerPolicy` wird nicht mehr benoetigt
-- Der `onError` Fallback auf Initialen bleibt als Backup
+### Aenderungen im Detail
+- Neue Follows werden in ein temporaeres Array gesammelt
+- `Math.random()` erzeugt zufaellige Positionen innerhalb der Zeitspanne
+- Array wird nach Timestamp sortiert damit die Reihenfolge im Feed Sinn ergibt
+- Beim ersten Scan (kein `last_scanned_at`) wird eine Standard-Spanne von 24h verwendet
 
-### 3. Edge Function deployen und config.toml updaten
-- `verify_jwt = false` setzen damit die Bilder ohne Auth laden
-- Deployen der neuen Function
+### Keine Aenderungen noetig an
+- Datenbank-Schema
+- Frontend-Komponenten (zeigen bereits `timeAgo(event.detected_at)` korrekt an)
+- Andere Edge Functions
 
-## Technische Details
-
-**Edge Function (`supabase/functions/image-proxy/index.ts`)**:
-- GET Request mit `?url=...` Parameter
-- Whitelist-Check auf Instagram-CDN-Domains
-- Bild per `fetch()` serverseitig laden
-- Response mit `Content-Type` vom Original und `Cache-Control: public, max-age=3600`
-
-**Frontend (`src/components/InstagramAvatar.tsx`)**:
-- Baut die Proxy-URL zusammen: `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`
-- Nutzt diese URL direkt im `<img>` Tag
-- Kein `useEffect`, kein `blob`, kein State - einfach eine URL-Transformation
-
-**Dateien die geaendert werden**:
-- `supabase/functions/image-proxy/index.ts` (neu)
-- `supabase/config.toml` (verify_jwt = false fuer image-proxy)
-- `src/components/InstagramAvatar.tsx` (Proxy-URL statt direkte URL)
