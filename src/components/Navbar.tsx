@@ -9,7 +9,6 @@ export function Navbar() {
   const { t } = useTranslation();
   const location = useLocation();
   const unreadCount = mockEvents.filter(e => !e.isRead).length;
-  const isLanding = location.pathname === "/";
 
   const navItems = [
     { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -20,7 +19,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 glass border-b border-border/20">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link to="/dashboard" className="flex items-center gap-2.5 group">
           <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 rounded-2xl shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow" />
           <span className="text-base font-extrabold tracking-tight">Spy-<span className="text-primary">Secret</span></span>
         </Link>
@@ -43,12 +42,6 @@ export function Navbar() {
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && <span className="absolute top-1.5 end-1.5 h-2.5 w-2.5 rounded-full gradient-bg ring-2 ring-background" />}
           </button>
-          {isLanding && (
-            <>
-              <Link to="/login" className="px-4 py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors">{t("landing.nav_login")}</Link>
-              <Link to="/signup" className="pill-btn-primary px-5 py-2 text-[13px]">{t("landing.nav_start")}</Link>
-            </>
-          )}
         </div>
       </div>
     </nav>
