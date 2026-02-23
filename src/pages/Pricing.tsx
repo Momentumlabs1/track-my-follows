@@ -4,9 +4,9 @@ import { Check, Heart } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
 const plans = [
-  { name: "Free", emoji: "✨", price: "0", features: ["1 Profil", "Updates alle 6h", "Basis Event-Feed", "7 Tage Verlauf"], cta: "Kostenlos starten", highlighted: false },
-  { name: "Bestie", emoji: "💕", price: "4.99", features: ["3 Profile", "Stündliche Updates", "Unfollow-Tracking", "30 Tage Verlauf", "Email-Alerts"], cta: "Bestie werden 💕", highlighted: true },
-  { name: "Queen", emoji: "👑", price: "9.99", features: ["5 Profile", "Stündliche Updates", "Push-Notifications", "Stats & Charts", "Priority-Scanning", "Unbegrenzter Verlauf"], cta: "Queen Plan 👑", highlighted: false },
+  { name: "Rookie", emoji: "🕵️", price: "0", features: ["1 Zielperson", "Updates alle 6h", "Basis Event-Feed", "7 Tage Verlauf"], cta: "Mission starten", highlighted: false },
+  { name: "Agent", emoji: "🔍", price: "4.99", features: ["3 Zielpersonen", "Stündliche Scans", "Unfollow-Tracking", "30 Tage Verlauf", "Email-Alerts"], cta: "Agent werden 🔍", highlighted: true },
+  { name: "Spymaster", emoji: "🎯", price: "9.99", features: ["5 Zielpersonen", "Stündliche Scans", "Push-Notifications", "Stats & Charts", "Priority-Scanning", "Unbegrenzter Verlauf"], cta: "Spymaster Plan 🎯", highlighted: false },
 ];
 
 const Pricing = () => {
@@ -25,12 +25,12 @@ const Pricing = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <span className="tag-lavender mb-4">Pricing</span>
+          <span className="tag-lavender mb-4">Geheim-Pläne</span>
           <h1 className="text-3xl md:text-5xl font-extrabold mt-4">
-            Wähle deinen <span className="gradient-text">Plan</span> 💎
+            Wähle deine <span className="gradient-text">Clearance</span> 🔐
           </h1>
           <p className="mt-4 text-muted-foreground text-sm max-w-md mx-auto">
-            Starte kostenlos. Keine versteckten Kosten. Upgrade wann du willst.
+            Starte kostenlos. Keine versteckten Kosten. Upgrade für mehr Zielpersonen.
           </p>
         </motion.div>
 
@@ -51,8 +51,8 @@ const Pricing = () => {
                 <div className="absolute inset-0 aurora-bg opacity-15" />
               )}
               {plan.highlighted && (
-                <span className="relative inline-block gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full mb-4">
-                  Beliebtester 💕
+                 <span className="relative inline-block gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full mb-4">
+                  Top-Agent 🔍
                 </span>
               )}
               <div className="relative">

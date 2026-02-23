@@ -110,7 +110,7 @@ const ProfileDetail = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <span className="text-base font-extrabold">
-          Track<span className="text-primary">IQ</span>
+          Spy-<span className="text-primary">Secret</span>
         </span>
         <button onClick={handleDelete} className="p-2 -mr-2 text-destructive">
           <Trash2 className="h-5 w-5" />

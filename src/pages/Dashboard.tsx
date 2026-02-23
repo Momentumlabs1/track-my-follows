@@ -23,7 +23,7 @@ const Dashboard = () => {
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="px-5 pt-4 pb-0">
           <h1 className="text-xl font-extrabold">
-            Track<span className="text-primary">IQ</span>
+            Spy-<span className="text-primary">Secret</span>
           </h1>
           {/* Tabs */}
           <div className="flex gap-0 mt-3">
