@@ -122,22 +122,15 @@
     "per_year": "/year"
   },
   "auth": {
-    "welcome_back": "Welcome back!",
-    "login_subtitle": "Log in to continue stalking",
-    "login_button": "Log In",
-    "login_success": "Welcome back! 💕",
-    "signup_title": "Join the Club!",
-    "signup_subtitle": "Create your account and start",
-    "signup_button": "Create Account 💅",
-    "signup_success": "Account created! Check your emails 💌",
+    "sign_in_apple": "Sign in with Apple",
+    "continue_google": "Continue with Google",
+    "or_divider": "or",
+    "continue_button": "Continue",
     "email_placeholder": "Your email",
     "password_placeholder": "Password",
-    "password_min": "Password (min. 6 chars)",
-    "name_placeholder": "Your name",
-    "no_account": "Don't have an account?",
-    "signup_link": "Sign Up ✨",
-    "have_account": "Already signed up?",
-    "login_link": "Log In 💕"
+    "login_success": "Welcome back! 💕",
+    "signup_success": "Account created! 🎉",
+    "free_note": "No subscription needed. Start free."
   },
   "landing": {
     "beta_badge": "Secret Beta Mission 🕵️",

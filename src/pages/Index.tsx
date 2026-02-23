@@ -125,21 +125,13 @@ export default function Index() {
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   ) : (
-                    <>
-                      <Link
-                        to="/signup"
-                        className="pill-btn-primary w-full justify-center px-6 py-3.5 text-[15px]"
-                      >
-                        {t("onboarding.get_started")}
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        to="/login"
-                        className="pill-btn-ghost w-full justify-center px-6 py-3 text-[15px]"
-                      >
-                        {t("onboarding.login")}
-                      </Link>
-                    </>
+                    <Link
+                      to="/login"
+                      className="pill-btn-primary w-full justify-center px-6 py-3.5 text-[15px]"
+                    >
+                      {t("onboarding.get_started")}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
                   )}
                 </motion.div>
 

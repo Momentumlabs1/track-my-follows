@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 export function BottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
-  const hiddenRoutes = ["/", "/login", "/signup", "/add-profile"];
+  const hiddenRoutes = ["/", "/login", "/add-profile"];
   const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing");
 
   if (isHidden) return null;

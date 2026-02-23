@@ -122,22 +122,15 @@
     "per_year": "/سنة"
   },
   "auth": {
-    "welcome_back": "مرحباً بعودتك!",
-    "login_subtitle": "سجل دخولك للمتابعة",
-    "login_button": "تسجيل الدخول",
-    "login_success": "مرحباً بعودتك! 💕",
-    "signup_title": "انضم إلينا!",
-    "signup_subtitle": "أنشئ حسابك وابدأ",
-    "signup_button": "إنشاء حساب 💅",
-    "signup_success": "تم إنشاء الحساب! تحقق من بريدك الإلكتروني 💌",
+    "sign_in_apple": "تسجيل الدخول بـ Apple",
+    "continue_google": "المتابعة مع Google",
+    "or_divider": "أو",
+    "continue_button": "متابعة",
     "email_placeholder": "بريدك الإلكتروني",
     "password_placeholder": "كلمة المرور",
-    "password_min": "كلمة المرور (6 أحرف على الأقل)",
-    "name_placeholder": "اسمك",
-    "no_account": "ليس لديك حساب؟",
-    "signup_link": "إنشاء حساب ✨",
-    "have_account": "لديك حساب بالفعل؟",
-    "login_link": "تسجيل الدخول 💕"
+    "login_success": "مرحباً بعودتك! 💕",
+    "signup_success": "تم إنشاء الحساب! 🎉",
+    "free_note": "لا حاجة لاشتراك. ابدأ مجاناً."
   },
   "landing": {
     "beta_badge": "مهمة بيتا سرية 🕵️",
