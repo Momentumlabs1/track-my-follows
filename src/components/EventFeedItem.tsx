@@ -40,7 +40,9 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       </div>
 
       <p className="text-[13px] text-muted-foreground mb-3">
-        {isFollow ? "Got followed by" : "Unfollowed"}
+        {event.direction === "follower"
+          ? (isFollow ? "Neuer Follower" : "Follower verloren")
+          : (isFollow ? "Folgt jetzt" : "Hat entfolgt")}
       </p>
 
       <div className="flex items-center gap-3">

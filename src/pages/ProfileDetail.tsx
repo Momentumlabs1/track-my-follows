@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, Users, UserPlus, Activity } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, UserPlus, UserMinus, UserCheck, UserX } from "lucide-react";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -22,19 +22,20 @@ function timeAgo(dateStr: string | null): string {
   return `vor ${Math.floor(hours / 24)}d`;
 }
 
-type DetailTab = "follows" | "unfollows" | "activity";
+type DetailTab = "new_following" | "lost_following" | "new_follower" | "lost_follower";
 
-const TAB_CONFIG: { key: DetailTab; icon: typeof UserPlus; label: string }[] = [
-  { key: "follows", icon: UserPlus, label: "Follows" },
-  { key: "unfollows", icon: Users, label: "Unfollows" },
-  { key: "activity", icon: Activity, label: "Aktivität" },
+const TAB_CONFIG: { key: DetailTab; icon: typeof UserPlus; label: string; direction: string; eventType: string }[] = [
+  { key: "new_following", icon: UserPlus, label: "Folgt neu", direction: "following", eventType: "follow" },
+  { key: "lost_following", icon: UserMinus, label: "Entfolgt", direction: "following", eventType: "unfollow" },
+  { key: "new_follower", icon: UserCheck, label: "Neue Follower", direction: "follower", eventType: "follow" },
+  { key: "lost_follower", icon: UserX, label: "Follower weg", direction: "follower", eventType: "unfollow" },
 ];
 
 const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<DetailTab>("follows");
+  const [activeTab, setActiveTab] = useState<DetailTab>("new_following");
   const [isScanning, setIsScanning] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
@@ -43,8 +44,6 @@ const ProfileDetail = () => {
   const deleteProfile = useDeleteTrackedProfile();
 
   const profile = profiles.find((p) => p.id === id);
-  const follows = events.filter((e) => e.event_type === "follow");
-  const unfollows = events.filter((e) => e.event_type === "unfollow");
 
   const isLoading = profilesLoading || eventsLoading;
 
@@ -99,8 +98,10 @@ const ProfileDetail = () => {
     );
   }
 
-  const displayEvents =
-    activeTab === "follows" ? follows : activeTab === "unfollows" ? unfollows : events;
+  const activeConfig = TAB_CONFIG.find((t) => t.key === activeTab)!;
+  const displayEvents = events.filter(
+    (e) => e.direction === activeConfig.direction && e.event_type === activeConfig.eventType,
+  );
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -118,42 +119,22 @@ const ProfileDetail = () => {
       </div>
 
       {/* Profile Header Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-5 py-4"
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-5 py-4">
         <div className="ios-card flex items-center gap-4">
           <div className="avatar-ring flex-shrink-0 p-[3px]">
-            <InstagramAvatar
-              src={profile.avatar_url}
-              alt={profile.username}
-              fallbackInitials={profile.username}
-              size={64}
-            />
+            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={64} />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-extrabold text-foreground">@{profile.username}</h2>
-            {profile.display_name && (
-              <p className="text-[12px] text-muted-foreground font-medium">{profile.display_name}</p>
-            )}
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Tracking seit {new Date(profile.created_at).toLocaleDateString("de-DE")}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              Aktualisiert {timeAgo(profile.last_scanned_at || profile.updated_at)}
-            </p>
+            {profile.display_name && <p className="text-[12px] text-muted-foreground font-medium">{profile.display_name}</p>}
+            <p className="text-[11px] text-muted-foreground mt-0.5">Tracking seit {new Date(profile.created_at).toLocaleDateString("de-DE")}</p>
+            <p className="text-[11px] text-muted-foreground">Aktualisiert {timeAgo(profile.last_scanned_at || profile.updated_at)}</p>
           </div>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="px-5 grid grid-cols-3 gap-2.5 mb-4"
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-5 grid grid-cols-3 gap-2.5 mb-4">
         <div className="stat-box-blue">
           <p className="text-xl font-extrabold">{(profile.follower_count ?? 0).toLocaleString()}</p>
           <p className="text-[10px] font-medium opacity-70">Follower</p>
@@ -170,45 +151,27 @@ const ProfileDetail = () => {
 
       {/* Scan Button */}
       <div className="px-5 mb-4">
-        <button
-          onClick={handleScan}
-          disabled={isScanning}
-          className="w-full pill-btn-primary py-3 justify-center text-[13px] disabled:opacity-50"
-        >
-          {isScanning ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> Scanning...</>
-          ) : (
-            <><RefreshCw className="h-4 w-4" /> Jetzt scannen</>
-          )}
+        <button onClick={handleScan} disabled={isScanning} className="w-full pill-btn-primary py-3 justify-center text-[13px] disabled:opacity-50">
+          {isScanning ? (<><Loader2 className="h-4 w-4 animate-spin" /> Scanning...</>) : (<><RefreshCw className="h-4 w-4" /> Jetzt scannen</>)}
         </button>
       </div>
 
       {/* Suspicion Meter */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="px-5 mb-5"
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-5 mb-5">
         <SuspicionMeter analysis={suspicionAnalysis} />
       </motion.div>
 
       {/* Tabs & Event List */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="px-5"
-      >
-        <div className="flex gap-0 border-b border-border mb-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
+        <div className="flex gap-0 overflow-x-auto border-b border-border mb-4 scrollbar-none">
           {TAB_CONFIG.map((tab) => {
-            const count = tab.key === "follows" ? follows.length : tab.key === "unfollows" ? unfollows.length : events.length;
+            const count = events.filter((e) => e.direction === tab.direction && e.event_type === tab.eventType).length;
             const Icon = tab.icon;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative flex items-center gap-1.5 px-3 pb-2.5 text-[12px] font-semibold transition-colors ${
+                className={`relative flex items-center gap-1 px-2.5 pb-2.5 text-[11px] font-semibold transition-colors whitespace-nowrap ${
                   activeTab === tab.key ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
@@ -236,27 +199,18 @@ const ProfileDetail = () => {
                 transition={{ delay: i * 0.03 }}
                 className="flex items-center gap-3 py-2.5 px-1"
               >
-                <InstagramAvatar
-                  src={event.target_avatar_url}
-                  alt={event.target_username}
-                  fallbackInitials={event.target_username}
-                  size={40}
-                />
+                <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={40} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>
-                  {event.target_display_name && (
-                    <p className="text-[11px] text-muted-foreground">{event.target_display_name}</p>
-                  )}
+                  {event.target_display_name && <p className="text-[11px] text-muted-foreground">{event.target_display_name}</p>}
                   <p className="text-[10px] text-muted-foreground">{timeAgo(event.detected_at)}</p>
                 </div>
                 <span
                   className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                    event.event_type === "follow"
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-red-50 text-red-600"
+                    event.event_type === "follow" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                   }`}
                 >
-                  {event.event_type === "follow" ? "Follow" : "Unfollow"}
+                  {event.event_type === "follow" ? (event.direction === "follower" ? "Neu" : "Follow") : (event.direction === "follower" ? "Weg" : "Entfolgt")}
                 </span>
               </motion.div>
             ))
