@@ -3,7 +3,6 @@ import { useState } from "react";
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
 
 function getProxiedUrl(src: string): string {
-  // Only proxy Instagram CDN URLs
   if (src.includes("cdninstagram.com") || src.includes("fbcdn.net")) {
     return `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`;
   }
@@ -24,7 +23,7 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
   if (!src || showFallback) {
     return (
       <div
-        className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold ${className}`}
+        className={`rounded-full gradient-pink text-primary-foreground flex items-center justify-center font-semibold ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.35 }}
       >
         {fallbackInitials.slice(0, 2).toUpperCase()}
@@ -36,6 +35,7 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
     <img
       src={getProxiedUrl(src)}
       alt={alt}
+      referrerPolicy="no-referrer"
       className={`rounded-full object-cover bg-muted ${className}`}
       style={{ width: size, height: size }}
       onError={() => setShowFallback(true)}
