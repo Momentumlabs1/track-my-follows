@@ -160,10 +160,12 @@ async function diffAndSync(
 ) {
   const { data: existing } = await supabase.from("profile_followings").select("*").eq("tracked_profile_id", profileId).eq("direction", direction).eq("is_current", true);
   const existingMap = new Map((existing || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
+  const currentSet = new Set(currentUsers.map((f) => f.pk));
   const now = Date.now();
   const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
   const spanMs = Math.max(now - lastTs, 60_000);
   let newCount = 0;
+  let removedCount = 0;
   const newEntries: FollowingUser[] = [];
   for (const f of currentUsers) {
     if (!existingMap.has(f.pk)) { newEntries.push(f); }
@@ -188,7 +190,26 @@ async function diffAndSync(
     });
     newCount++;
   }
-  return { newCount };
+
+  // Unfollow detection: mark entries no longer in current scan
+  for (const [userId, ex] of existingMap) {
+    if (!currentSet.has(userId)) {
+      removedCount++;
+      const e = ex as Record<string, unknown>;
+      await supabase.from("profile_followings").update({ is_current: false }).eq("id", e.id as string);
+      await supabase.from("follow_events").insert({
+        tracked_profile_id: profileId, event_type: "unfollow",
+        target_username: e.following_username as string,
+        target_avatar_url: (e.following_avatar_url as string) || null,
+        target_display_name: (e.following_display_name as string) || null,
+        direction, notification_sent: false,
+        gender_tag: detectGender(e.following_display_name as string | null),
+        category: "normal",
+      });
+    }
+  }
+
+  return { newCount, removedCount };
 }
 
 Deno.serve(async (req) => {
@@ -258,7 +279,7 @@ Deno.serve(async (req) => {
       const followingDiff = await diffAndSync(supabase, profile.id, followingUsers, "following", profile.last_scanned_at);
       const followerDiff = await diffAndSync(supabase, profile.id, followerUsers, "follower", profile.last_scanned_at);
 
-      results.push({ username: profile.username, new_follows: followingDiff.newCount + followerDiff.newCount });
+      results.push({ username: profile.username, new_follows: followingDiff.newCount + followerDiff.newCount, unfollows: followingDiff.removedCount + followerDiff.removedCount });
     }
 
     return new Response(JSON.stringify({ results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
