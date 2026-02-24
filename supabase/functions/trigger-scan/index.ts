@@ -41,6 +41,65 @@ function categorizeFollow(followerCount: number | null | undefined, isPrivate: b
   return "normal";
 }
 
+function toRecordArray(raw: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null);
+}
+
+function parseChunkResponse(payload: unknown): { users: Array<Record<string, unknown>>; nextMaxId: string | null } {
+  if (Array.isArray(payload)) {
+    if (Array.isArray(payload[0])) {
+      const nextRaw = payload[1];
+      return {
+        users: toRecordArray(payload[0]),
+        nextMaxId: typeof nextRaw === "string" && nextRaw.length > 0 ? nextRaw : null,
+      };
+    }
+
+    return { users: toRecordArray(payload), nextMaxId: null };
+  }
+
+  if (payload && typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    const response = obj.response && typeof obj.response === "object"
+      ? (obj.response as Record<string, unknown>)
+      : null;
+
+    const usersRaw = obj.users ?? obj.items ?? response?.users ?? response?.items ?? [];
+    const nextRaw = obj.next_max_id ?? obj.nextMaxId ?? response?.next_max_id ?? response?.nextMaxId ?? null;
+
+    return {
+      users: toRecordArray(usersRaw),
+      nextMaxId: typeof nextRaw === "string" && nextRaw.length > 0 ? nextRaw : null,
+    };
+  }
+
+  return { users: [], nextMaxId: null };
+}
+
+function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
+  const username = typeof raw.username === "string" ? raw.username : null;
+  const idRaw = raw.pk ?? raw.id ?? raw.user_id;
+  if (!username || idRaw === undefined || idRaw === null) return null;
+
+  const followerRaw = raw.follower_count;
+  let followerCount: number | undefined;
+  if (typeof followerRaw === "number") followerCount = followerRaw;
+  else if (typeof followerRaw === "string" && followerRaw.trim()) {
+    const parsed = Number(followerRaw);
+    if (!Number.isNaN(parsed)) followerCount = parsed;
+  }
+
+  return {
+    username,
+    pk: String(idRaw),
+    profile_pic_url: typeof raw.profile_pic_url === "string" ? raw.profile_pic_url : undefined,
+    full_name: typeof raw.full_name === "string" ? raw.full_name : undefined,
+    follower_count: followerCount,
+    is_private: typeof raw.is_private === "boolean" ? raw.is_private : undefined,
+  };
+}
+
 async function fetchFollowingChunked(userId: string, hikerApiKey: string, maxPages: number): Promise<FollowingUser[]> {
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
@@ -49,16 +108,19 @@ async function fetchFollowingChunked(userId: string, hikerApiKey: string, maxPag
     let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
-     if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
-     const data = await res.json();
-     console.log(`Following chunk page ${page}: keys=${Object.keys(data).join(",")}, users_count=${(data.users || data.items || []).length}, next_max_id=${data.next_max_id || "none"}`);
-     const users: Array<Record<string, unknown>> = data.users || data.items || [];
-    for (const u of users) {
-      allUsers.push({ username: u.username as string, pk: String(u.pk || u.id), profile_pic_url: (u.profile_pic_url as string) || undefined, full_name: (u.full_name as string) || undefined, follower_count: (u.follower_count as number) || undefined, is_private: (u.is_private as boolean) || undefined });
+    if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
+
+    const parsed = parseChunkResponse(await res.json());
+    console.log(`Following chunk page ${page}: users_count=${parsed.users.length}, next_max_id=${parsed.nextMaxId || "none"}`);
+
+    for (const rawUser of parsed.users) {
+      const user = mapFollowingUser(rawUser);
+      if (user) allUsers.push(user);
     }
-    nextMaxId = data.next_max_id || null;
+
+    nextMaxId = parsed.nextMaxId;
     page++;
-    if (!nextMaxId || users.length === 0) break;
+    if (!nextMaxId || parsed.users.length === 0) break;
     if (page < maxPages) await sleep(1000);
   }
   return allUsers;
@@ -73,14 +135,18 @@ async function fetchFollowerChunked(userId: string, hikerApiKey: string, maxPage
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (!res.ok) { const text = await res.text(); throw new Error(`Follower fetch failed: ${res.status} ${text}`); }
-    const data = await res.json();
-    const users: Array<Record<string, unknown>> = data.users || data.items || [];
-    for (const u of users) {
-      allUsers.push({ username: u.username as string, pk: String(u.pk || u.id), profile_pic_url: (u.profile_pic_url as string) || undefined, full_name: (u.full_name as string) || undefined, follower_count: (u.follower_count as number) || undefined, is_private: (u.is_private as boolean) || undefined });
+
+    const parsed = parseChunkResponse(await res.json());
+    console.log(`Follower chunk page ${page}: users_count=${parsed.users.length}, next_max_id=${parsed.nextMaxId || "none"}`);
+
+    for (const rawUser of parsed.users) {
+      const user = mapFollowingUser(rawUser);
+      if (user) allUsers.push(user);
     }
-    nextMaxId = data.next_max_id || null;
+
+    nextMaxId = parsed.nextMaxId;
     page++;
-    if (!nextMaxId || users.length === 0) break;
+    if (!nextMaxId || parsed.users.length === 0) break;
     if (page < maxPages) await sleep(1000);
   }
   return allUsers;
