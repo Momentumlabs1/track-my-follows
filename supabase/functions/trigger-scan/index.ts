@@ -111,7 +111,7 @@ async function fetchFollowingChunked(userId: string, hikerApiKey: string, maxPag
     if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
 
     const parsed = parseChunkResponse(await res.json());
-    console.log(`Following chunk page ${page}: users_count=${parsed.users.length}, next_max_id=${parsed.nextMaxId || "none"}`);
+    
 
     for (const rawUser of parsed.users) {
       const user = mapFollowingUser(rawUser);
@@ -137,7 +137,7 @@ async function fetchFollowerChunked(userId: string, hikerApiKey: string, maxPage
     if (!res.ok) { const text = await res.text(); throw new Error(`Follower fetch failed: ${res.status} ${text}`); }
 
     const parsed = parseChunkResponse(await res.json());
-    console.log(`Follower chunk page ${page}: users_count=${parsed.users.length}, next_max_id=${parsed.nextMaxId || "none"}`);
+    
 
     for (const rawUser of parsed.users) {
       const user = mapFollowingUser(rawUser);
@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
         initial_scan_done: true,
       }).eq("id", profile.id);
 
-      console.log(`${profile.username}: igUserId=${igUserId}, follower_count=${userInfo.follower_count}, following_count=${userInfo.following_count}, is_private=${userInfo.is_private}`);
+      
 
       await sleep(1000);
       const followingUsers = await fetchFollowingChunked(igUserId, hikerApiKey, 2);
