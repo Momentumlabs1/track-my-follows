@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['-apple-system', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+        arabic: ['"IBM Plex Sans Arabic"', '-apple-system', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -53,11 +54,9 @@ export default {
         brand: {
           pink: "hsl(var(--brand-pink))",
           rose: "hsl(var(--brand-rose))",
-          lavender: "hsl(var(--brand-lavender))",
-          peach: "hsl(var(--brand-peach))",
-          blush: "hsl(var(--brand-blush))",
-          coral: "hsl(var(--brand-coral))",
-          mint: "hsl(var(--brand-mint))",
+          green: "hsl(var(--brand-green))",
+          red: "hsl(var(--brand-red))",
+          yellow: "hsl(var(--brand-yellow))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -84,10 +83,25 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.35s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
       },
     },
   },

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Plus, Settings } from "lucide-react";
+import { Home, PlusCircle, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function BottomNav() {
@@ -13,26 +13,40 @@ export function BottomNav() {
 
   const navItems = [
     { to: "/dashboard", label: t("nav.dashboard"), icon: Home },
-    { to: "/add-profile", label: t("nav.add"), icon: Plus },
+    { to: "/add-profile", label: t("nav.add"), icon: PlusCircle },
     { to: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 
   return (
-    <nav className="fixed bottom-0 start-0 end-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-around h-14">
+    <nav className="fixed bottom-0 start-0 end-0 z-50 glass-strong border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to || (item.to === "/dashboard" && location.pathname.startsWith("/profile/"));
           return (
-            <Link key={item.to} to={item.to} className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full">
+            <Link
+              key={item.to}
+              to={item.to}
+              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px]"
+            >
               {isActive && (
                 <motion.div
-                  layoutId="bottom-nav-pill"
-                  className="absolute top-0 start-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full gradient-bg"
+                  layoutId="bottom-nav-dot"
+                  className="absolute top-1.5 h-[3px] w-6 rounded-full gradient-pink"
                   transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                 />
               )}
-              <item.icon className={`h-5 w-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-              <span className={`text-[10px] font-semibold transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>{item.label}</span>
+              <item.icon
+                className={`h-[22px] w-[22px] transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              />
+              <span
+                className={`text-[10px] font-semibold transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}

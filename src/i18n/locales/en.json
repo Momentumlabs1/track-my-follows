@@ -4,6 +4,10 @@
     "whats_new": "What's new?",
     "profiles": "Profiles"
   },
+  "feed": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
   "dashboard": {
     "just_now": "Just now",
     "minutes_ago": "{{count}}m ago",
@@ -73,7 +77,7 @@
   "suspicion": {
     "score_label": "Suspicion Score",
     "factors_title": "Analysis Factors",
-    "gender_title": "Gender Distribution of Follows",
+    "gender_title": "Gender Distribution",
     "female": "Female",
     "male": "Male",
     "based_on": "Based on {{count}} detected names",
@@ -90,7 +94,8 @@
     "followingFollowerRatio": "Following/Follower",
     "followingFollowerRatioDesc": "Ratio: {{ratio}}x",
     "nightActivity": "Late Night Activity",
-    "nightActivityDesc": "Following people between 11pm-5am"
+    "nightActivityDesc": "Following people between 11pm-5am",
+    "trend_4_weeks": "4 week trend"
   },
   "events": {
     "new_follower": "New follower",
@@ -104,8 +109,8 @@
     "new_badge": "NEW",
     "no_events": "No activity detected yet",
     "no_events_subtitle": "We'll notify you when something happens",
-    "upgrade_to_reveal": "🔒 Upgrade to reveal",
-    "mutual": "They follow each other"
+    "upgrade_to_reveal": "Upgrade to reveal",
+    "mutual": "Mutual"
   },
   "category": {
     "influencer": "Influencer",
@@ -119,10 +124,15 @@
   },
   "insights": {
     "title": "Insights",
+    "activity_heatmap": "Activity Heatmap",
     "peakHours": "Peak Activity Hours",
     "mostActive": "Most active",
     "genderBreakdown": "Gender Breakdown",
-    "weeklyActivity": "Weekly Follow Activity"
+    "weeklyActivity": "Weekly Follow Activity",
+    "last_30_days": "Last 30 days",
+    "vs_last_week": "vs last week",
+    "needs_time": "More insights unlock over time",
+    "tracking_for_days": "Tracking for {{days}} days"
   },
   "settings": {
     "title": "Settings ⚙️",
@@ -279,7 +289,7 @@
     "no_unfollows": "No unfollows detected"
   },
   "scan_status": {
-    "auto_hourly": "Auto-hourly",
+    "auto_hourly": "Hourly",
     "once_daily": "1×/day"
   }
 }

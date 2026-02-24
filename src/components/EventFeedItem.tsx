@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Lock } from "lucide-react";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 function useTimeAgo() {
@@ -17,6 +18,12 @@ function useTimeAgo() {
   };
 }
 
+function formatCount(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
+}
+
 interface EventFeedItemProps {
   event: FollowEvent;
   index: number;
@@ -29,83 +36,115 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const isFollow = event.event_type === "follow";
   const profileUsername = event.tracked_profiles?.username ?? "???";
 
-  const getEventStyle = () => {
-    if (isFollow && event.direction === "following") return { label: t("events.newFollowing"), color: "text-pink-600 dark:text-pink-400" };
-    if (isFollow && event.direction === "follower") return { label: t("events.newFollower"), color: "text-emerald-600 dark:text-emerald-400" };
-    if (!isFollow && event.direction === "following") return { label: t("events.hasUnfollowed"), color: "text-orange-600 dark:text-orange-400" };
-    return { label: t("events.lostFollower"), color: "text-red-600 dark:text-red-400" };
-  };
-  const eventStyle = getEventStyle();
-
   const ev = event as Record<string, unknown>;
   const genderTag = ev.gender_tag as string | undefined;
   const isMutual = ev.is_mutual as boolean | undefined;
   const category = ev.category as string | undefined;
+  const followerCount = ev.target_follower_count as number | undefined;
+  const isPrivate = ev.target_is_private as boolean | undefined;
+
+  const getEventVerb = () => {
+    if (isFollow && event.direction === "following") return t("events.newFollowing");
+    if (isFollow && event.direction === "follower") return t("events.newFollower");
+    if (!isFollow && event.direction === "following") return t("events.hasUnfollowed");
+    return t("events.lostFollower");
+  };
+
+  const getGenderColor = () => {
+    if (genderTag === "female") return "gradient-pink";
+    if (genderTag === "male") return "bg-blue-500";
+    return "bg-muted-foreground";
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
-      className="ios-card"
+      className="native-card p-4"
     >
-      <div className="flex items-center gap-2 mb-2">
-        <InstagramAvatar src={event.tracked_profiles?.avatar_url} alt={profileUsername} fallbackInitials={profileUsername} size={24} />
-        <span className="text-[12px] font-semibold text-foreground">@{profileUsername}</span>
-        <span className="text-[10px] text-muted-foreground ms-auto">{timeAgo(event.detected_at)}</span>
+      {/* Header: Tracked profile + verb + time */}
+      <div className="flex items-center gap-2 mb-3">
+        <InstagramAvatar
+          src={event.tracked_profiles?.avatar_url}
+          alt={profileUsername}
+          fallbackInitials={profileUsername}
+          size={22}
+        />
+        <span className="text-[12px] font-semibold text-muted-foreground">
+          {profileUsername}
+        </span>
+        <span className={`text-[12px] font-medium ${isFollow ? "text-primary" : "text-destructive"}`}>
+          {getEventVerb()}
+        </span>
+        <span className="text-[11px] text-muted-foreground ms-auto">
+          {timeAgo(event.detected_at)}
+        </span>
       </div>
 
-      <p className={`text-[13px] font-semibold ${eventStyle.color} mb-3`}>{eventStyle.label}</p>
-
+      {/* Main: Target profile */}
       <div className="flex items-center gap-3 relative">
-        <div className={shouldBlur ? "blur-sm" : ""}>
-          <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={48} className="ring-2 ring-border" />
-        </div>
-        <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
-            {genderTag === "female" && <span className="text-[11px]">👩</span>}
-            {genderTag === "male" && <span className="text-[11px]">👨</span>}
+        {/* Avatar with gender ring */}
+        <div className="relative flex-shrink-0">
+          <div className={shouldBlur ? "blur-md" : ""}>
+            <InstagramAvatar
+              src={event.target_avatar_url}
+              alt={event.target_username}
+              fallbackInitials={event.target_username}
+              size={50}
+            />
           </div>
-          {event.target_display_name && (
-            <p className="text-[11px] text-muted-foreground truncate">{event.target_display_name}</p>
+          {genderTag && genderTag !== "unknown" && (
+            <div className={`absolute -bottom-0.5 -end-0.5 h-5 w-5 rounded-full flex items-center justify-center text-[10px] text-white ${getGenderColor()}`}>
+              {genderTag === "female" ? "♀" : "♂"}
+            </div>
           )}
+        </div>
+
+        {/* Info */}
+        <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
+          <a
+            href={`https://instagram.com/${event.target_username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[14px] font-bold text-foreground hover:text-primary transition-colors block"
+          >
+            @{event.target_username}
+          </a>
+          {event.target_display_name && (
+            <p className="text-[12px] text-muted-foreground truncate">{event.target_display_name}</p>
+          )}
+
           {/* Badges */}
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
             {isMutual && (
-              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-                🔄 {t("events.mutual")}
-              </span>
+              <span className="tag-red">🔄 {t("events.mutual")}</span>
             )}
             {category === "influencer" && (
-              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                ⭐ {t("category.influencer")}
-              </span>
+              <span className="tag-yellow">⭐ {followerCount ? formatCount(followerCount) : t("category.influencer")}</span>
             )}
             {category === "celebrity" && (
-              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                👑 {t("category.celebrity")}
-              </span>
+              <span className="tag-yellow">👑 {followerCount ? formatCount(followerCount) : t("category.celebrity")}</span>
             )}
-            {category === "private" && (
-              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                🔒 {t("category.private")}
-              </span>
+            {(category === "private" || isPrivate) && (
+              <span className="tag-muted">🔒 {t("category.private")}</span>
+            )}
+            {!event.is_read && !shouldBlur && (
+              <span className="tag-pink">{t("events.new_badge")}</span>
             )}
           </div>
         </div>
+
+        {/* Blur overlay */}
         {shouldBlur && (
           <button
             onClick={() => showPaywall("blur")}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center rounded-2xl"
           >
-            <span className="gradient-bg text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-              {t("events.upgrade_to_reveal")}
+            <span className="gradient-pink text-primary-foreground text-[12px] font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" /> {t("events.upgrade_to_reveal")}
             </span>
           </button>
-        )}
-        {!shouldBlur && !event.is_read && (
-          <span className="tag-pink text-[10px]">{t("events.new_badge")}</span>
         )}
       </div>
     </motion.div>
