@@ -1,19 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Crown } from "lucide-react";
+import { X, Check, Crown, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
+import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib/native";
 
 type Period = "weekly" | "monthly" | "yearly";
-
-const PRODUCTS = {
-  weekly: "trackiq_pro_weekly",
-  monthly: "trackiq_pro_monthly",
-  yearly: "trackiq_pro_yearly",
-};
 
 const PRICES: Record<Period, { price: string; unit: string; trial: boolean }> = {
   weekly: { price: "8.99", unit: "per_week", trial: false },
@@ -43,27 +38,34 @@ export function PaywallSheet() {
   const handlePurchase = async () => {
     if (!user) return;
     setLoading(true);
+    haptic.light();
 
     try {
-      // TODO: Replace with Despia/RevenueCat call
-      // despia(`revenuecat://purchase?external_id=${user.id}&product=${PRODUCTS[selected]}`);
-      console.log("Purchase triggered for:", PRODUCTS[selected]);
-
-      if (import.meta.env.DEV) {
+      if (isNativeApp()) {
+        await purchase(user.id, PRODUCTS[selected]);
+        haptic.success();
+        await refetch();
+        closePaywall();
+      } else if (import.meta.env.DEV) {
+        // Dev simulation
         const { error } = await supabase.from("subscriptions").upsert({
-            user_id: user.id,
-            plan_type: "pro",
-            billing_period: selected,
-            status: "active",
-            max_tracked_profiles: 5,
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }, { onConflict: "user_id" });
+          user_id: user.id,
+          plan_type: "pro",
+          billing_period: selected,
+          status: "active",
+          max_tracked_profiles: 5,
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        }, { onConflict: "user_id" });
         if (error) throw error;
+        haptic.success();
         await refetch();
         toast.success("Pro activated! 🎉");
         closePaywall();
+      } else {
+        toast.info(t("settings.manage_in_app_store"));
       }
     } catch (err) {
+      haptic.error();
       toast.error(t("common.error"));
       console.error(err);
     } finally {
@@ -71,11 +73,16 @@ export function PaywallSheet() {
     }
   };
 
-  const handleRestore = () => {
-    // TODO: Replace with Despia/RevenueCat
-    // despia('revenuecat://restore');
-    console.log("Restore purchases triggered");
-    toast.info("Restore not available yet");
+  const handleRestore = async () => {
+    if (!user) return;
+    haptic.light();
+    try {
+      await restorePurchases(user.id);
+      await refetch();
+      toast.success(t("settings.subscription_restored"));
+    } catch {
+      toast.info(t("settings.no_subscription_found"));
+    }
   };
 
   return (
@@ -96,18 +103,14 @@ export function PaywallSheet() {
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-card border-t border-border"
           >
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="h-1.5 w-12 rounded-full bg-muted" />
             </div>
-
-            {/* Close */}
-            <button onClick={closePaywall} className="absolute top-4 end-4 p-2 text-muted-foreground hover:text-foreground z-10">
+            <button onClick={closePaywall} className="absolute top-4 end-4 p-2 text-muted-foreground hover:text-foreground z-10 min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="h-5 w-5" />
             </button>
 
             <div className="px-6 pb-8 pt-2">
-              {/* Header */}
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-bg mb-3">
                   <Crown className="h-7 w-7 text-primary-foreground" />
@@ -116,7 +119,6 @@ export function PaywallSheet() {
                 <p className="text-sm text-muted-foreground mt-1">{t("paywall.subtitle")}</p>
               </div>
 
-              {/* Features */}
               <div className="space-y-2.5 mb-6">
                 {features.map((f) => (
                   <div key={f} className="flex items-center gap-3">
@@ -128,7 +130,6 @@ export function PaywallSheet() {
                 ))}
               </div>
 
-              {/* Period selector */}
               <div className="grid grid-cols-3 gap-2 mb-6">
                 {(["weekly", "monthly", "yearly"] as Period[]).map((period) => {
                   const isSelected = selected === period;
@@ -136,8 +137,8 @@ export function PaywallSheet() {
                   return (
                     <button
                       key={period}
-                      onClick={() => setSelected(period)}
-                      className={`relative rounded-2xl border-2 p-3 text-center transition-all ${
+                      onClick={() => { setSelected(period); haptic.light(); }}
+                      className={`relative rounded-2xl border-2 p-3 text-center transition-all min-h-[44px] ${
                         isSelected
                           ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
                           : "border-border hover:border-primary/30"
@@ -148,46 +149,39 @@ export function PaywallSheet() {
                           {t("paywall.save_percent", { percent: 89 })}
                         </span>
                       )}
-                      <p className="text-[11px] font-semibold text-muted-foreground mb-1">
-                        {t(`paywall.${period}`)}
-                      </p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-1">{t(`paywall.${period}`)}</p>
                       <p className="text-lg font-extrabold">€{info.price}</p>
                       <p className="text-[10px] text-muted-foreground">{t(`paywall.${info.unit}`)}</p>
                       {info.trial && (
-                        <span className="mt-1 inline-block text-[9px] font-semibold text-primary">
-                          {t("paywall.free_trial")}
-                        </span>
+                        <span className="mt-1 inline-block text-[9px] font-semibold text-primary">{t("paywall.free_trial")}</span>
                       )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Savings info */}
               {savingsPercent > 0 && (
                 <p className="text-center text-[12px] text-muted-foreground mb-4">
                   ≈ €{weeklyEquiv}{t("paywall.per_week")} · {t("paywall.save_percent", { percent: savingsPercent })}
                 </p>
               )}
 
-              {/* CTA */}
               <button
                 onClick={handlePurchase}
                 disabled={loading}
-                className="w-full pill-btn-primary py-4 justify-center text-[15px] font-bold disabled:opacity-50"
+                className="w-full pill-btn-primary py-4 justify-center text-[15px] font-bold disabled:opacity-50 min-h-[44px]"
               >
-                {loading ? t("common.loading") : `${t("paywall.continue")} (${t(`paywall.${selected}`)})`}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `${t("paywall.continue")} (${t(`paywall.${selected}`)})`}
               </button>
 
-              {/* Footer links */}
               <div className="flex items-center justify-center gap-4 mt-4">
-                <button onClick={handleRestore} className="text-[11px] text-muted-foreground hover:text-foreground">
+                <button onClick={handleRestore} className="text-[11px] text-muted-foreground hover:text-foreground min-h-[44px] px-2">
                   {t("paywall.restore")}
                 </button>
                 <span className="text-muted-foreground text-[10px]">·</span>
-                <a href="#" className="text-[11px] text-muted-foreground hover:text-foreground">{t("paywall.terms")}</a>
+                <button onClick={() => closePaywall()} className="text-[11px] text-muted-foreground hover:text-foreground min-h-[44px] px-2">{t("paywall.terms")}</button>
                 <span className="text-muted-foreground text-[10px]">·</span>
-                <a href="#" className="text-[11px] text-muted-foreground hover:text-foreground">{t("paywall.privacy")}</a>
+                <button onClick={() => closePaywall()} className="text-[11px] text-muted-foreground hover:text-foreground min-h-[44px] px-2">{t("paywall.privacy")}</button>
               </div>
               <p className="text-center text-[10px] text-muted-foreground mt-2">{t("paywall.cancel_note")}</p>
             </div>

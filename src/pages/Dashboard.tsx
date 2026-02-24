@@ -1,23 +1,34 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Loader2, Settings } from "lucide-react";
+import { Plus, Loader2, Settings, RefreshCw } from "lucide-react";
 import { ProfileStoryRing } from "@/components/ProfileStoryRing";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
 import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { haptic } from "@/lib/native";
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: events = [], isLoading: eventsLoading } = useFollowEvents();
 
   const isLoading = profilesLoading || eventsLoading;
 
-  // Group events by day
+  const handleRefresh = async () => {
+    haptic.light();
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+    await queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+    setRefreshing(false);
+  };
+
   const groupedEvents = useMemo(() => {
     const groups: { date: string; events: typeof events }[] = [];
     let currentDate = "";
@@ -32,7 +43,6 @@ const Dashboard = () => {
     return groups;
   }, [events]);
 
-  // Check which profiles have new events (last 24h)
   const profilesWithNewEvents = useMemo(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     const ids = new Set<string>();
@@ -47,22 +57,31 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
         <h1 className="text-xl font-extrabold">
-          Spy-<span className="gradient-text">Secret</span>
+          Track<span className="gradient-text">IQ</span>
         </h1>
-        <button
-          onClick={() => navigate("/settings")}
-          className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <Settings className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={() => navigate("/settings")}
+            className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Story-style profile scroller */}
       {profiles.length > 0 && (
         <div className="px-4 py-3">
-          <div className="flex gap-4 overflow-x-auto pb-1">
+          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
             {profiles.map((profile) => (
               <ProfileStoryRing
                 key={profile.id}
@@ -108,7 +127,7 @@ const Dashboard = () => {
           </div>
         ) : profiles.length > 0 ? (
           <div className="text-center py-20">
-            <span className="text-5xl block mb-4">🔍</span>
+            <span className="text-5xl block mb-4">⏳</span>
             <p className="text-sm font-semibold text-foreground">{t("events.no_events")}</p>
             <p className="text-[12px] text-muted-foreground mt-1">{t("events.no_events_subtitle")}</p>
           </div>
