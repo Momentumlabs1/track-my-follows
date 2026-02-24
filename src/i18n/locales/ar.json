@@ -59,6 +59,17 @@
     "pro_required": "🔒 مطلوب Pro",
     "upgrade_unfollows": "قم بالترقية إلى Pro لرؤية إلغاء المتابعات"
   },
+  "profile": {
+    "followed": "متابَع",
+    "unfollowed": "إلغاء المتابعة",
+    "recentFollowing": "يتابع حديثاً",
+    "newFollowers": "متابعون جدد",
+    "hasUnfollowed": "ألغى المتابعة",
+    "lostFollowers": "فقد متابعين",
+    "unfollowedEmptyTitle": "المقارنة تبدأ الآن",
+    "unfollowedEmptyDesc": "بدءاً من الفحص القادم ستظهر هنا من ألغى المتابعة.",
+    "noEventsYet": "لا توجد أحداث بعد"
+  },
   "suspicion": {
     "score_label": "مؤشر الشك",
     "factors_title": "عوامل التحليل",
@@ -86,6 +97,10 @@
     "lost_follower": "فقد متابع",
     "now_following": "يتابع الآن",
     "unfollowed": "ألغى المتابعة",
+    "newFollowing": "يتابع الآن",
+    "newFollower": "متابع جديد",
+    "hasUnfollowed": "ألغى المتابعة",
+    "lostFollower": "فقد متابع",
     "new_badge": "جديد",
     "no_events": "لم يتم اكتشاف أي نشاط بعد",
     "no_events_subtitle": "سنُعلمك عندما يحدث شيء",

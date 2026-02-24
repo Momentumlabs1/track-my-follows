@@ -29,9 +29,13 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const isFollow = event.event_type === "follow";
   const profileUsername = event.tracked_profiles?.username ?? "???";
 
-  const label = event.direction === "follower"
-    ? (isFollow ? t("events.new_follower") : t("events.lost_follower"))
-    : (isFollow ? t("events.now_following") : t("events.unfollowed"));
+  const getEventStyle = () => {
+    if (isFollow && event.direction === "following") return { label: t("events.newFollowing"), color: "text-pink-600 dark:text-pink-400" };
+    if (isFollow && event.direction === "follower") return { label: t("events.newFollower"), color: "text-emerald-600 dark:text-emerald-400" };
+    if (!isFollow && event.direction === "following") return { label: t("events.hasUnfollowed"), color: "text-orange-600 dark:text-orange-400" };
+    return { label: t("events.lostFollower"), color: "text-red-600 dark:text-red-400" };
+  };
+  const eventStyle = getEventStyle();
 
   const ev = event as Record<string, unknown>;
   const genderTag = ev.gender_tag as string | undefined;
@@ -51,7 +55,7 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         <span className="text-[10px] text-muted-foreground ms-auto">{timeAgo(event.detected_at)}</span>
       </div>
 
-      <p className="text-[13px] text-muted-foreground mb-3">{label}</p>
+      <p className={`text-[13px] font-semibold ${eventStyle.color} mb-3`}>{eventStyle.label}</p>
 
       <div className="flex items-center gap-3 relative">
         <div className={shouldBlur ? "blur-sm" : ""}>
