@@ -1,100 +1,40 @@
 
 
-# Auth-Flow Redesign: Social Login wie echte Apps
-
 ## Problem
 
-Aktuell gibt es Email/Passwort Login und Signup -- das ist ein Web-Pattern. Echte mobile Apps machen es so:
+The scan fails with error: `Following fetch failed: 404 {"detail":"Entries not found","exc_type":"NotFoundError"}`. This happens when HikerAPI returns a 404 for the following/follower chunk endpoint -- likely for accounts with 0 followings, private accounts, or accounts HikerAPI can't access. The current code `throw`s on any non-2xx response, which crashes the entire scan.
 
-```text
-┌──────────────────────┐
-│                      │
-│       [Logo]         │
-│    Spy-Secret        │
-│                      │
-│ ┌──────────────────┐ │
-│ │  Sign in with   │ │  ← Apple Requirement wenn
-│ │  Apple           │ │    andere Social Logins da sind
-│ └──────────────────┘ │
-│                      │
-│ ┌──────────────────┐ │
-│ │  Continue with   │ │
-│ │  Google      [G] │ │
-│ └──────────────────┘ │
-│                      │
-│ ─── or ───────────── │
-│                      │
-│ ┌──────────────────┐ │
-│ │ 📧 Email         │ │  ← Fallback fuer User ohne
-│ └──────────────────┘ │    Apple/Google Account
-│ ┌──────────────────┐ │
-│ │ 🔒 Password      │ │
-│ └──────────────────┘ │
-│                      │
-│ [Continue →]         │
-│                      │
-│ No subscription      │
-│ needed. Start free.  │
-└──────────────────────┘
+## Root Cause
+
+In `fetchFollowingChunked` (line 111) and `fetchFollowerChunked` (line 137), a 404 response causes an immediate throw. Since `mtlabs.ai` has only 4 followings, HikerAPI may return 404 ("Entries not found") instead of an empty list.
+
+## Fix
+
+### 1. Handle 404 gracefully in both fetch functions (`trigger-scan/index.ts`)
+
+In `fetchFollowingChunked` and `fetchFollowerChunked`, treat a 404 response as "empty list" instead of throwing:
+
+```typescript
+// Instead of:
+if (!res.ok) { const text = await res.text(); throw new Error(...); }
+
+// Do:
+if (res.status === 404) {
+  await res.text(); // consume body
+  console.log(`No ${direction} entries found for user ${userId} (404)`);
+  break;
+}
+if (!res.ok) { const text = await res.text(); throw new Error(...); }
 ```
 
-## Was aendert sich
+This applies to both `fetchFollowingChunked` (line 111) and `fetchFollowerChunked` (line 137).
 
-### 1. Unified Auth Screen (`src/pages/Login.tsx`)
+### 2. Same fix in `auto-scan/index.ts`
 
-- **Sign in with Apple** Button (gross, schwarz, oben) -- Apple Pflicht!
-- **Continue with Google** Button (weiss mit Google-Icon)
-- Trennlinie "or"
-- Email/Passwort darunter als Fallback
-- **Smart Auth**: Ein Button "Continue" -- versucht Login, bei Fehler automatisch Signup
-- Kein separater Signup-Screen mehr
-- Kein Name-Feld (kann spaeter in Settings)
+Apply the identical 404 handling in the auto-scan edge function's fetch loops.
 
-### 2. `/signup` Route entfernen (`src/App.tsx`)
+### 3. No other changes needed
 
-- Route entfernen, alles geht ueber `/login`
-- Onboarding-Buttons zeigen auf `/login`
-
-### 3. `src/pages/Index.tsx` -- Links anpassen
-
-- Beide Buttons (Start Mission + Login) auf `/login`
-
-### 4. Supabase OAuth Setup
-
-- `supabase.auth.signInWithOAuth({ provider: 'apple' })` 
-- `supabase.auth.signInWithOAuth({ provider: 'google' })`
-- **Wichtig**: Die Provider muessen im Supabase Dashboard aktiviert werden (Apple + Google). Das ist ein manueller Schritt fuer den User.
-
-### 5. i18n Keys (alle 3 Sprachen)
-
-Neue Keys:
-- `auth.continue_title` -- "Continue" / "Weiter" / "متابعة"
-- `auth.or_divider` -- "or" / "oder" / "أو"
-- `auth.sign_in_apple` -- "Sign in with Apple"
-- `auth.continue_google` -- "Continue with Google"
-- `auth.free_note` -- "No subscription needed. Start free."
-
-### 6. `src/components/BottomNav.tsx`
-
-- `/signup` aus hiddenRoutes entfernen
-
-## Betroffene Dateien
-
-| Datei | Aenderung |
-|---|---|
-| `src/pages/Login.tsx` | Komplett neu: Apple + Google + Email/PW Fallback, Smart Auth |
-| `src/App.tsx` | `/signup` Route entfernen |
-| `src/pages/Index.tsx` | Alle Links auf `/login` |
-| `src/components/BottomNav.tsx` | `/signup` aus hiddenRoutes |
-| `src/i18n/locales/en.json` | Neue auth Keys |
-| `src/i18n/locales/de.json` | Neue auth Keys |
-| `src/i18n/locales/ar.json` | Neue auth Keys |
-
-## Technische Details
-
-- **Sign in with Apple**: Supabase unterstuetzt das nativ via `signInWithOAuth({ provider: 'apple' })`. Muss im Supabase Dashboard unter Authentication > Providers aktiviert werden. Apple Developer Account noetig.
-- **Google Sign-In**: Gleich via `signInWithOAuth({ provider: 'google' })`. Google Cloud Console OAuth Credentials noetig.
-- **Smart Auth (Email)**: `signInWithPassword()` zuerst. Bei "Invalid login credentials" automatisch `signUp()`. User merkt nichts.
-- **Apple Requirement**: Wenn die App Social Login anbietet (Google), MUSS auch "Sign in with Apple" vorhanden sein. Sonst wird die App im Review abgelehnt.
-- Die OAuth Buttons werden im Frontend sofort funktionieren. Die Provider-Konfiguration im Supabase Dashboard ist ein separater Schritt den der User machen muss.
+- No UI changes required -- the scan will simply return 0 new events for that direction instead of crashing
+- The profile metadata (follower/following counts, avatar) will still update since that fetch uses a different endpoint (`/v1/user/by/username`) which works fine
 
