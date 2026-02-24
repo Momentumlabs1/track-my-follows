@@ -21,7 +21,9 @@
     "following": "Folgt",
     "tracking_since": "Tracking seit {{date}}",
     "no_profiles": "Noch keine Profile getrackt",
-    "add_first": "Tippe + um jemanden zu tracken"
+    "add_first": "Tippe + um jemanden zu tracken",
+    "hello": "Hallo",
+    "hot_alert": "Neuester Alert"
   },
   "add_profile": {
     "title": "Wen willst du\ntracken?",
