@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Lock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 function useTimeAgo() {
@@ -43,7 +44,7 @@ function CountDelta({ current, previous, label }: { current: number; previous?: 
 }
 
 interface ProfileCardProps {
-  profile: TrackedProfile & { previous_follower_count?: number | null; previous_following_count?: number | null };
+  profile: TrackedProfile & { previous_follower_count?: number | null; previous_following_count?: number | null; initial_scan_done?: boolean };
   index: number;
 }
 
@@ -52,10 +53,19 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
   const timeAgo = useTimeAgo();
   const [isScanning, setIsScanning] = useState(false);
   const queryClient = useQueryClient();
+  const { plan, showPaywall } = useSubscription();
+
+  const isFreeAndScanned = plan === "free" && (profile as Record<string, unknown>).initial_scan_done === true;
 
   const handleQuickScan = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isFreeAndScanned) {
+      showPaywall("scan");
+      return;
+    }
+
     setIsScanning(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -64,8 +74,10 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
         body: { profileId: profile.id },
       });
       if (res.error) throw res.error;
-      const resData = res.data as { results?: Array<{ error?: string }> };
-      if (resData?.results?.[0]?.error) {
+      const resData = res.data as { error?: string; results?: Array<{ error?: string }> };
+      if (resData?.error === "PAYWALL_REQUIRED") {
+        showPaywall("scan");
+      } else if (resData?.results?.[0]?.error) {
         toast.error(t("profile_detail.scan_error", { error: resData.results[0].error }));
       } else {
         toast.success(t("profile_detail.scan_complete"));
@@ -100,7 +112,11 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
               disabled={isScanning}
               className="p-2 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+              {isFreeAndScanned ? (
+                <Lock className="h-4 w-4" />
+              ) : (
+                <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+              )}
             </button>
           </div>
 

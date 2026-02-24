@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -15,7 +16,6 @@ import ProfileDetail from "./pages/ProfileDetail";
 import AddProfile from "./pages/AddProfile";
 import AnalyzingProfile from "./pages/AnalyzingProfile";
 import Login from "./pages/Login";
-
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -33,7 +33,6 @@ function AppContent() {
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
         <Route path="/analyzing/:profileId/:username" element={<ProtectedRoute><AnalyzingProfile /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
-        
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
@@ -45,19 +44,21 @@ function AppContent() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppContent />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <AppContent />
+            </SubscriptionProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

@@ -44,6 +44,7 @@
     "events": "Events",
     "tab_new": "Neu",
     "tab_gone": "Weg",
+    "tab_insights": "Insights",
     "new_follower": "Neuer Follower",
     "new_following": "Folgt neu",
     "lost_follower": "Follower weg",
@@ -63,7 +64,20 @@
     "female": "Weiblich",
     "male": "Männlich",
     "based_on": "Basierend auf {{count}} erkannten Namen",
-    "not_detected": "({{count}} nicht erkannt)"
+    "not_detected": "({{count}} nicht erkannt)",
+    "safe": "Alles sicher",
+    "suspicious": "Verdächtig",
+    "verySuspicious": "Sehr verdächtig",
+    "genderRatio": "Gender-Ratio",
+    "genderRatioDesc": "{{percent}}% weibliche Accounts",
+    "followActivity": "Follow-Aktivität",
+    "followActivityDesc": "{{count}} neue Follows in 7 Tagen",
+    "followUnfollow": "Follow/Unfollow",
+    "followUnfollowDesc": "{{unfollows}} Unfollows vs {{follows}} Follows",
+    "followingFollowerRatio": "Following/Follower",
+    "followingFollowerRatioDesc": "Ratio: {{ratio}}x",
+    "nightActivity": "Nachtaktivität",
+    "nightActivityDesc": "Folgt Personen zwischen 23-05 Uhr"
   },
   "events": {
     "new_follower": "Neuer Follower",
@@ -73,7 +87,25 @@
     "new_badge": "NEU",
     "no_events": "Noch keine Aktivität erkannt",
     "no_events_subtitle": "Wir benachrichtigen dich sobald etwas passiert",
-    "upgrade_to_reveal": "🔒 Upgrade zum Anzeigen"
+    "upgrade_to_reveal": "🔒 Upgrade zum Anzeigen",
+    "mutual": "Folgen sich gegenseitig"
+  },
+  "category": {
+    "influencer": "Influencer",
+    "celebrity": "Promi",
+    "private": "Privat"
+  },
+  "gender": {
+    "female": "Frauen",
+    "male": "Männer",
+    "unknown": "Unbekannt"
+  },
+  "insights": {
+    "title": "Insights",
+    "peakHours": "Aktivste Uhrzeiten",
+    "mostActive": "Am aktivsten",
+    "genderBreakdown": "Geschlechterverteilung",
+    "weeklyActivity": "Wöchentliche Follow-Aktivität"
   },
   "settings": {
     "title": "Einstellungen ⚙️",
@@ -91,12 +123,22 @@
     "notif_private": "Profil privat",
     "notif_private_desc": "Wenn ein Profil privat wird 🔒",
     "language": "Sprache 🌐",
+    "theme": "Design",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
     "logout": "Ausloggen",
     "logout_toast": "Bis bald! 👋",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Lösche dein Konto und alle Daten. Das geht nicht rückgängig!",
     "delete_account": "Konto löschen 😢",
-    "billing_issue": "⚠️ Zahlungsproblem – bitte Zahlungsmethode aktualisieren"
+    "delete_confirm": "Bist du sicher, dass du dein Konto löschen willst? Das kann nicht rückgängig gemacht werden.",
+    "account_deleted": "Konto gelöscht. Tschüss! 😢",
+    "billing_issue": "⚠️ Zahlungsproblem – bitte Zahlungsmethode aktualisieren",
+    "legal": "Rechtliches",
+    "impressum": "Impressum",
+    "privacy": "Datenschutz",
+    "pro_required_push": "Push-Benachrichtigungen erfordern Pro"
   },
   "paywall": {
     "title": "Pro freischalten",
@@ -119,7 +161,9 @@
     "cancel_note": "Jederzeit kündbar. Abrechnung nach Ende der Testphase.",
     "per_week": "/Woche",
     "per_month": "/Monat",
-    "per_year": "/Jahr"
+    "per_year": "/Jahr",
+    "scanLocked": "Upgrade auf Pro für stündliche Updates",
+    "trackMore": "Tracke mehr Profile mit Pro"
   },
   "auth": {
     "sign_in_apple": "Mit Apple anmelden",
@@ -174,11 +218,12 @@
     "title": "Wähle deine Clearance 🔐",
     "subtitle": "Starte kostenlos. Keine versteckten Kosten. Upgrade für mehr Zielpersonen.",
     "per_month": "/Monat",
-    "top_agent": "Top-Agent 🔍"
+    "top_agent": "Top-Agent 🔍",
+    "current": "Aktueller Plan"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "upgrade": "Upgrade",
+    "dashboard": "Home",
+    "add": "Hinzufügen",
     "settings": "Einstellungen"
   },
   "onboarding": {
@@ -192,6 +237,12 @@
     "next": "Weiter",
     "get_started": "Mission starten",
     "login": "Einloggen"
+  },
+  "toast": {
+    "profileTracked": "Profil wird getrackt! 👀",
+    "planLimitReached": "Plan-Limit erreicht! Upgrade für mehr Profile 💎",
+    "error": "Fehler: ",
+    "profileRemoved": "Profil entfernt 👋"
   },
   "common": {
     "back": "Zurück",

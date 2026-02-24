@@ -6,6 +6,9 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SuspicionMeter } from "@/components/SuspicionMeter";
+import { PeakHoursChart } from "@/components/PeakHoursChart";
+import { GenderBreakdownChart } from "@/components/GenderBreakdownChart";
+import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,7 +30,7 @@ function useTimeAgo() {
   };
 }
 
-type DetailTab = "neu" | "weg";
+type DetailTab = "neu" | "weg" | "insights";
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
@@ -37,7 +40,7 @@ const ProfileDetail = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<DetailTab>("neu");
   const [isScanning, setIsScanning] = useState(false);
-  const { canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
+  const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: events = [], isLoading: eventsLoading } = useFollowEvents(id);
@@ -48,10 +51,28 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
 
   const suspicionAnalysis = analyzeSuspicion(
-    events, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0,
+    events, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
   );
 
+  // Calculate weekly scores for sparkline
+  const weeklyScores = Array.from({ length: 4 }, (_, i) => {
+    const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
+    const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekEvents = events.filter((e) => {
+      const d = new Date(e.detected_at);
+      return d >= weekStart && d < weekEnd;
+    });
+    const analysis = analyzeSuspicion(weekEvents, [], profile?.follower_count ?? 0, profile?.following_count ?? 0);
+    return analysis.overallScore;
+  }).reverse();
+
+  const isFreeAndScanned = plan === "free" && (profile as Record<string, unknown> | undefined)?.initial_scan_done === true;
+
   const handleScan = async () => {
+    if (isFreeAndScanned) {
+      showPaywall("scan");
+      return;
+    }
     setIsScanning(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -60,8 +81,10 @@ const ProfileDetail = () => {
         body: { profileId: id },
       });
       if (res.error) throw res.error;
-      const resData = res.data as { results?: Array<{ error?: string }> };
-      if (resData?.results?.[0]?.error) {
+      const resData = res.data as { error?: string; results?: Array<{ error?: string }> };
+      if (resData?.error === "PAYWALL_REQUIRED") {
+        showPaywall("scan");
+      } else if (resData?.results?.[0]?.error) {
         toast.error(t("profile_detail.scan_error", { error: resData.results[0].error }));
       } else {
         toast.success(t("profile_detail.scan_complete"));
@@ -158,19 +181,29 @@ const ProfileDetail = () => {
           </div>
           <p className="text-[10px] font-medium opacity-70">{t("dashboard.following")}</p>
         </div>
-        <div className="stat-box rounded-xl px-3 py-2 text-center" style={{ background: "hsl(330 100% 95%)", color: "hsl(330 100% 40%)" }}>
+        <div className="stat-box rounded-xl px-3 py-2 text-center bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400">
           <p className="text-xl font-extrabold">{events.length}</p>
           <p className="text-[10px] font-medium opacity-70">{t("profile_detail.events")}</p>
         </div>
       </motion.div>
 
       <div className="px-5 mb-4">
-        <button onClick={handleScan} disabled={isScanning} className="w-full pill-btn-primary py-3 justify-center text-[13px] disabled:opacity-50">
-          {isScanning ? (<><Loader2 className="h-4 w-4 animate-spin" /> {t("profile_detail.scanning")}</>) : (<><RefreshCw className="h-4 w-4" /> {t("profile_detail.scan_now")}</>)}
+        <button
+          onClick={handleScan}
+          disabled={isScanning}
+          className="w-full pill-btn-primary py-3 justify-center text-[13px] disabled:opacity-50"
+        >
+          {isFreeAndScanned ? (
+            <><Lock className="h-4 w-4" /> {t("paywall.scanLocked")}</>
+          ) : isScanning ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> {t("profile_detail.scanning")}</>
+          ) : (
+            <><RefreshCw className="h-4 w-4" /> {t("profile_detail.scan_now")}</>
+          )}
         </button>
       </div>
 
-      {/* Suspicion Meter - gated behind Pro for stats */}
+      {/* Suspicion Meter */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-5 mb-5 relative">
         {!canUseStats && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-card/80 backdrop-blur-sm">
@@ -180,10 +213,11 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={!canUseStats ? "blur-sm pointer-events-none" : ""}>
-          <SuspicionMeter analysis={suspicionAnalysis} />
+          <SuspicionMeter analysis={suspicionAnalysis} weeklyScores={weeklyScores} />
         </div>
       </motion.div>
 
+      {/* Tabs */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
         <div className="flex gap-0 border-b border-border mb-4">
           <button
@@ -195,10 +229,7 @@ const ProfileDetail = () => {
           </button>
           <button
             onClick={() => {
-              if (!canUseUnfollows) {
-                showPaywall("unfollows");
-                return;
-              }
+              if (!canUseUnfollows) { showPaywall("unfollows"); return; }
               setActiveTab("weg");
             }}
             className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "weg" ? "text-red-500" : "text-muted-foreground"}`}
@@ -207,43 +238,79 @@ const ProfileDetail = () => {
             🔴 {t("profile_detail.tab_gone")} ({wegEvents.length})
             {activeTab === "weg" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-red-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
           </button>
+          <button
+            onClick={() => {
+              if (!canUseStats) { showPaywall("insights"); return; }
+              setActiveTab("insights");
+            }}
+            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "insights" ? "text-primary" : "text-muted-foreground"}`}
+          >
+            {!canUseStats && <Lock className="h-3 w-3" />}
+            📊 {t("profile_detail.tab_insights")}
+            {activeTab === "insights" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-primary rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
+          </button>
         </div>
 
-        <div className="space-y-1">
-          {displayEvents.length > 0 ? displayEvents.map((event, i) => (
-            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-2.5 px-1 relative">
-              <div className={shouldBlur ? "blur-sm" : ""}>
-                <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={40} />
+        {activeTab === "insights" ? (
+          <div className="space-y-4">
+            <PeakHoursChart events={events} />
+            <GenderBreakdownChart events={events} />
+            <WeeklyActivityChart events={events} />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {displayEvents.length > 0 ? displayEvents.map((event, i) => {
+              const ev = event as Record<string, unknown>;
+              const genderTag = ev.gender_tag as string | undefined;
+              const isMutual = ev.is_mutual as boolean | undefined;
+              const category = ev.category as string | undefined;
+
+              return (
+                <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-2.5 px-1 relative">
+                  <div className={shouldBlur ? "blur-sm" : ""}>
+                    <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={40} />
+                  </div>
+                  <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>
+                      {genderTag === "female" && <span className="text-[11px]">👩</span>}
+                      {genderTag === "male" && <span className="text-[11px]">👨</span>}
+                    </div>
+                    {event.target_display_name && <p className="text-[11px] text-muted-foreground">{event.target_display_name}</p>}
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {isMutual && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">🔄 {t("events.mutual")}</span>}
+                      {category === "influencer" && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">⭐ {t("category.influencer")}</span>}
+                      {category === "celebrity" && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">👑 {t("category.celebrity")}</span>}
+                      {category === "private" && <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">🔒 {t("category.private")}</span>}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{timeAgo(event.detected_at)}</p>
+                  </div>
+                  {shouldBlur ? (
+                    <button onClick={() => showPaywall("blur")} className="gradient-bg text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">
+                      {t("events.upgrade_to_reveal")}
+                    </button>
+                  ) : (
+                    <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
+                      activeTab === "neu"
+                        ? (event.direction === "follower" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-blue-50 dark:bg-blue-900/20 text-blue-600")
+                        : (event.direction === "follower" ? "bg-red-50 dark:bg-red-900/20 text-red-600" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600")
+                    }`}>
+                      {activeTab === "neu"
+                        ? (event.direction === "follower" ? t("profile_detail.new_follower") : t("profile_detail.new_following"))
+                        : (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))}
+                    </span>
+                  )}
+                </motion.div>
+              );
+            }) : (
+              <div className="text-center py-12">
+                <span className="text-4xl block mb-3">{activeTab === "neu" ? "✨" : "🔍"}</span>
+                <p className="text-[13px] text-muted-foreground">{activeTab === "neu" ? t("profile_detail.no_new_events") : t("profile_detail.no_gone_events")}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}</p>
               </div>
-              <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
-                <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>
-                {event.target_display_name && <p className="text-[11px] text-muted-foreground">{event.target_display_name}</p>}
-                <p className="text-[10px] text-muted-foreground">{timeAgo(event.detected_at)}</p>
-              </div>
-              {shouldBlur ? (
-                <button onClick={() => showPaywall("blur")} className="gradient-bg text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full">
-                  {t("events.upgrade_to_reveal")}
-                </button>
-              ) : (
-                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                  activeTab === "neu"
-                    ? (event.direction === "follower" ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")
-                    : (event.direction === "follower" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600")
-                }`}>
-                  {activeTab === "neu"
-                    ? (event.direction === "follower" ? t("profile_detail.new_follower") : t("profile_detail.new_following"))
-                    : (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))}
-                </span>
-              )}
-            </motion.div>
-          )) : (
-            <div className="text-center py-12">
-              <span className="text-4xl block mb-3">{activeTab === "neu" ? "✨" : "🔍"}</span>
-              <p className="text-[13px] text-muted-foreground">{activeTab === "neu" ? t("profile_detail.no_new_events") : t("profile_detail.no_gone_events")}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">{profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}</p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );

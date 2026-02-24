@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export type TrackedProfile = Tables<"tracked_profiles">;
 export type FollowEvent = Tables<"follow_events"> & {
@@ -48,6 +49,7 @@ export function useFollowEvents(trackedProfileId?: string) {
 export function useAddTrackedProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (username: string) => {
       if (!user) throw new Error("Not authenticated");
@@ -61,13 +63,13 @@ export function useAddTrackedProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
-      toast.success("Profil wird getrackt! 👀");
+      toast.success(t("toast.profileTracked"));
     },
     onError: (error: Error) => {
       if (error.message?.includes("row-level security")) {
-        toast.error("Plan-Limit erreicht! Upgrade für mehr Profile 💎");
+        toast.error(t("toast.planLimitReached"));
       } else {
-        toast.error("Fehler: " + error.message);
+        toast.error(t("toast.error") + error.message);
       }
     },
   });
@@ -75,6 +77,7 @@ export function useAddTrackedProfile() {
 
 export function useDeleteTrackedProfile() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -86,7 +89,7 @@ export function useDeleteTrackedProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
       queryClient.invalidateQueries({ queryKey: ["follow_events"] });
-      toast.success("Profil entfernt 👋");
+      toast.success(t("toast.profileRemoved"));
     },
   });
 }

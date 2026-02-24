@@ -1,59 +1,29 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
+import { SuspicionGauge } from "@/components/SuspicionGauge";
+import { SuspicionSparkline } from "@/components/SuspicionSparkline";
 
 interface SuspicionMeterProps {
   analysis: SuspicionBreakdown;
+  weeklyScores?: number[];
 }
 
-export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
+export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) {
   const { t } = useTranslation();
-  const { overallScore, label, emoji, factors, genderStats } = analysis;
-
-  const getBarGradient = () => {
-    if (overallScore <= 15) return "from-emerald-400 to-emerald-500";
-    if (overallScore <= 35) return "from-emerald-400 to-yellow-400";
-    if (overallScore <= 55) return "from-yellow-400 to-orange-400";
-    if (overallScore <= 75) return "from-orange-400 to-red-400";
-    return "from-red-400 to-red-600";
-  };
-
-  const getScoreColor = () => {
-    if (overallScore <= 15) return "text-emerald-600";
-    if (overallScore <= 35) return "text-emerald-500";
-    if (overallScore <= 55) return "text-yellow-600";
-    if (overallScore <= 75) return "text-orange-500";
-    return "text-red-500";
-  };
-
-  const getBgColor = () => {
-    if (overallScore <= 15) return "bg-emerald-50 border-emerald-200";
-    if (overallScore <= 35) return "bg-emerald-50/50 border-emerald-100";
-    if (overallScore <= 55) return "bg-yellow-50 border-yellow-200";
-    if (overallScore <= 75) return "bg-orange-50 border-orange-200";
-    return "bg-red-50 border-red-200";
-  };
+  const { overallScore, factors, genderStats } = analysis;
 
   return (
     <div className="space-y-3">
-      <div className={`ios-card border ${getBgColor()}`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{emoji}</span>
-            <div>
-              <p className={`text-[15px] font-extrabold ${getScoreColor()}`}>{label}</p>
-              <p className="text-[10px] text-muted-foreground">{t("suspicion.score_label")}</p>
+      <div className="ios-card">
+        <div className="flex items-center justify-between">
+          <SuspicionGauge score={overallScore} />
+          {weeklyScores && weeklyScores.length > 1 && (
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-[10px] text-muted-foreground">4W Trend</p>
+              <SuspicionSparkline weeklyScores={weeklyScores} />
             </div>
-          </div>
-          <div className={`text-2xl font-black ${getScoreColor()}`}>{overallScore}%</div>
-        </div>
-        <div className="h-3 bg-muted/60 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full rounded-full bg-gradient-to-r ${getBarGradient()}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${overallScore}%` }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          />
+          )}
         </div>
       </div>
 
@@ -85,11 +55,11 @@ export function SuspicionMeter({ analysis }: SuspicionMeterProps) {
         <div className="ios-card">
           <p className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("suspicion.gender_title")}</p>
           <div className="flex gap-2">
-            <div className="flex-1 rounded-xl bg-pink-50 p-2.5 text-center">
+            <div className="flex-1 rounded-xl bg-pink-50 dark:bg-pink-900/20 p-2.5 text-center">
               <p className="text-lg font-extrabold text-pink-500">{genderStats.femalePercent}%</p>
               <p className="text-[10px] font-medium text-pink-400">{t("suspicion.female")}</p>
             </div>
-            <div className="flex-1 rounded-xl bg-blue-50 p-2.5 text-center">
+            <div className="flex-1 rounded-xl bg-blue-50 dark:bg-blue-900/20 p-2.5 text-center">
               <p className="text-lg font-extrabold text-blue-500">{genderStats.total > 0 ? 100 - genderStats.femalePercent : 0}%</p>
               <p className="text-[10px] font-medium text-blue-400">{t("suspicion.male")}</p>
             </div>
