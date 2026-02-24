@@ -6,34 +6,24 @@
   :root {
     --background: 220 20% 97%;
     --foreground: 220 20% 10%;
-
     --card: 0 0% 100%;
     --card-foreground: 220 20% 10%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 10%;
-
     --primary: 330 100% 60%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 220 14% 93%;
     --secondary-foreground: 220 20% 30%;
-
     --muted: 220 14% 95%;
     --muted-foreground: 220 10% 50%;
-
     --accent: 270 80% 65%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 220 13% 90%;
     --input: 220 13% 90%;
     --ring: 330 100% 60%;
-
     --radius: 1.25rem;
-
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 20% 10%;
     --sidebar-primary: 330 100% 60%;
@@ -42,7 +32,6 @@
     --sidebar-accent-foreground: 220 20% 10%;
     --sidebar-border: 220 13% 90%;
     --sidebar-ring: 330 100% 60%;
-
     /* Brand tokens */
     --brand-pink: 330 100% 60%;
     --brand-rose: 345 90% 58%;
@@ -57,33 +46,35 @@
   }
 
   .dark {
-    --background: 220 20% 97%;
-    --foreground: 220 20% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --background: 224 20% 6%;
+    --foreground: 220 14% 92%;
+    --card: 224 18% 10%;
+    --card-foreground: 220 14% 92%;
+    --popover: 224 18% 10%;
+    --popover-foreground: 220 14% 92%;
     --primary: 330 100% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 93%;
-    --secondary-foreground: 220 20% 30%;
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 10% 50%;
+    --secondary: 224 14% 16%;
+    --secondary-foreground: 220 14% 80%;
+    --muted: 224 14% 14%;
+    --muted-foreground: 220 10% 55%;
     --accent: 270 80% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
+    --border: 224 12% 18%;
+    --input: 224 12% 18%;
     --ring: 330 100% 60%;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 10%;
+    --sidebar-background: 224 18% 10%;
+    --sidebar-foreground: 220 14% 92%;
     --sidebar-primary: 330 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 95%;
-    --sidebar-accent-foreground: 220 20% 10%;
-    --sidebar-border: 220 13% 90%;
+    --sidebar-accent: 224 14% 16%;
+    --sidebar-accent-foreground: 220 14% 92%;
+    --sidebar-border: 224 12% 18%;
     --sidebar-ring: 330 100% 60%;
+    --surface-elevated: 224 18% 12%;
+    --surface-glass: 224 18% 10%;
   }
 }
 
@@ -121,7 +112,6 @@
     background-image: linear-gradient(135deg, hsl(var(--brand-lavender)), hsl(var(--brand-pink)));
   }
 
-  /* ─── Glass surfaces (light) ─── */
   .glass {
     background: hsl(var(--surface-glass) / 0.85);
     backdrop-filter: blur(20px) saturate(180%);
@@ -138,7 +128,6 @@
     background: hsl(var(--surface-elevated));
   }
 
-  /* ─── Pill button style ─── */
   .pill-btn {
     @apply inline-flex items-center gap-2 rounded-full font-semibold transition-all duration-200;
   }
@@ -150,13 +139,11 @@
     @apply pill-btn text-muted-foreground hover:text-foreground border border-border hover:border-primary/25;
   }
 
-  /* ─── Avatar ring ─── */
   .avatar-ring {
     @apply rounded-full p-[2px];
     background: linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-lavender)));
   }
 
-  /* ─── Tag / chip ─── */
   .tag {
     @apply inline-flex items-center gap-1.5 rounded-full text-[11px] font-medium px-3 py-1;
   }
@@ -170,13 +157,11 @@
     @apply tag bg-destructive/10 text-destructive;
   }
 
-  /* ─── iOS-style card ─── */
   .ios-card {
     @apply bg-card rounded-2xl border border-border p-4;
     box-shadow: 0 1px 3px hsl(220 20% 10% / 0.04);
   }
 
-  /* ─── Stat box ─── */
   .stat-box {
     @apply rounded-xl px-3 py-2 text-center;
   }
@@ -189,5 +174,14 @@
     @apply stat-box;
     background: hsl(270 80% 95%);
     color: hsl(270 80% 40%);
+  }
+
+  .dark .stat-box-blue {
+    background: hsl(210 80% 15%);
+    color: hsl(210 80% 70%);
+  }
+  .dark .stat-box-purple {
+    background: hsl(270 80% 15%);
+    color: hsl(270 80% 70%);
   }
 }

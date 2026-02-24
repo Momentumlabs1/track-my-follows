@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Check, Crown, X } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
@@ -10,7 +9,7 @@ const Pricing = () => {
 
   const freeFeatures = [
     { label: t("paywall.feature_profiles").replace("5", "1"), included: true },
-    { label: "6h scan updates", included: true },
+    { label: "1x initial scan", included: true },
     { label: t("paywall.feature_unfollows"), included: false },
     { label: t("paywall.feature_push"), included: false },
     { label: t("paywall.feature_stats"), included: false },
@@ -27,34 +26,27 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
+    <div className="min-h-screen bg-background pb-28">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 aurora-bg opacity-40" />
-        <div className="absolute inset-0 mesh-dots" />
       </div>
 
-      <main className="container relative py-20">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+      <main className="container relative py-10 px-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <span className="tag-lavender mb-4">{t("pricing.tag")}</span>
-          <h1 className="text-3xl md:text-5xl font-extrabold mt-4">
-            {t("pricing.title")}
-          </h1>
-          <p className="mt-4 text-muted-foreground text-sm max-w-md mx-auto">
-            {t("pricing.subtitle")}
-          </p>
+          <h1 className="text-2xl font-extrabold mt-4">{t("pricing.title")}</h1>
+          <p className="mt-3 text-muted-foreground text-sm max-w-md mx-auto">{t("pricing.subtitle")}</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-sm mx-auto">
           {/* Free */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-3xl p-7">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="ios-card">
             <span className="text-3xl">🕵️</span>
             <h3 className="text-xl font-extrabold mt-2">Free</h3>
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-4xl font-extrabold">€0</span>
             </div>
-            <ul className="mt-7 space-y-3">
+            <ul className="mt-5 space-y-2.5">
               {freeFeatures.map(f => (
                 <li key={f.label} className="flex items-center gap-2.5 text-[13px]">
                   {f.included ? (
@@ -71,16 +63,16 @@ const Pricing = () => {
               ))}
             </ul>
             {plan === "free" && (
-              <div className="mt-8 w-full py-3 rounded-2xl text-[13px] font-bold bg-secondary text-secondary-foreground text-center">
-                {t("pricing.current") || "Current Plan"}
+              <div className="mt-6 w-full py-3 rounded-2xl text-[13px] font-bold bg-secondary text-secondary-foreground text-center">
+                {t("pricing.current")}
               </div>
             )}
           </motion.div>
 
           {/* Pro */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="relative glass-card gradient-border border-transparent glow-pink rounded-3xl p-7 scale-[1.03]">
-            <div className="absolute inset-0 aurora-bg opacity-15 rounded-3xl" />
+            className="relative ios-card border-primary/30">
+            <div className="absolute inset-0 aurora-bg opacity-15 rounded-2xl" />
             <span className="relative inline-block gradient-bg text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full mb-4">
               🔥 Best Value
             </span>
@@ -96,7 +88,7 @@ const Pricing = () => {
               <p className="text-[11px] text-primary font-semibold mt-1">
                 ≈ €0.96{t("paywall.per_week")} · {t("paywall.save_percent", { percent: 89 })}
               </p>
-              <ul className="mt-7 space-y-3">
+              <ul className="mt-5 space-y-2.5">
                 {proFeatures.map(f => (
                   <li key={f} className="flex items-center gap-2.5 text-[13px]">
                     <div className="h-4 w-4 rounded-full gradient-bg flex items-center justify-center flex-shrink-0">
@@ -108,9 +100,9 @@ const Pricing = () => {
               </ul>
               <button
                 onClick={() => showPaywall("pricing")}
-                className="mt-8 pill-btn-primary w-full py-3 justify-center text-[13px] font-bold"
+                className="mt-6 pill-btn-primary w-full py-3 justify-center text-[13px] font-bold"
               >
-                {plan === "pro" ? (t("pricing.current") || "Current Plan") : `${t("paywall.title")} 🚀`}
+                {plan === "pro" ? t("pricing.current") : `${t("paywall.title")} 🚀`}
               </button>
             </div>
           </motion.div>

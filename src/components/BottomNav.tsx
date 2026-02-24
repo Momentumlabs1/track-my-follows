@@ -1,19 +1,19 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Sparkles, Settings } from "lucide-react";
+import { Home, Plus, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function BottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
-  const hiddenRoutes = ["/", "/login", "/add-profile"];
+  const hiddenRoutes = ["/", "/login"];
   const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing");
 
   if (isHidden) return null;
 
   const navItems = [
-    { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { to: "/pricing", label: t("nav.upgrade"), icon: Sparkles },
+    { to: "/dashboard", label: t("nav.dashboard"), icon: Home },
+    { to: "/add-profile", label: t("nav.add"), icon: Plus },
     { to: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 

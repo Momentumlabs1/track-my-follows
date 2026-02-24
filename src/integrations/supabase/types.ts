@@ -16,38 +16,53 @@ export type Database = {
     Tables: {
       follow_events: {
         Row: {
+          category: string | null
           detected_at: string
           direction: string
           event_type: string
+          gender_tag: string | null
           id: string
+          is_mutual: boolean | null
           is_read: boolean
           notification_sent: boolean | null
           target_avatar_url: string | null
           target_display_name: string | null
+          target_follower_count: number | null
+          target_is_private: boolean | null
           target_username: string
           tracked_profile_id: string
         }
         Insert: {
+          category?: string | null
           detected_at?: string
           direction?: string
           event_type: string
+          gender_tag?: string | null
           id?: string
+          is_mutual?: boolean | null
           is_read?: boolean
           notification_sent?: boolean | null
           target_avatar_url?: string | null
           target_display_name?: string | null
+          target_follower_count?: number | null
+          target_is_private?: boolean | null
           target_username: string
           tracked_profile_id: string
         }
         Update: {
+          category?: string | null
           detected_at?: string
           direction?: string
           event_type?: string
+          gender_tag?: string | null
           id?: string
+          is_mutual?: boolean | null
           is_read?: boolean
           notification_sent?: boolean | null
           target_avatar_url?: string | null
           target_display_name?: string | null
+          target_follower_count?: number | null
+          target_is_private?: boolean | null
           target_username?: string
           tracked_profile_id?: string
         }
@@ -229,6 +244,7 @@ export type Database = {
           follower_count: number | null
           following_count: number | null
           id: string
+          initial_scan_done: boolean | null
           is_active: boolean
           last_scanned_at: string | null
           previous_follower_count: number | null
@@ -244,6 +260,7 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           id?: string
+          initial_scan_done?: boolean | null
           is_active?: boolean
           last_scanned_at?: string | null
           previous_follower_count?: number | null
@@ -259,6 +276,7 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           id?: string
+          initial_scan_done?: boolean | null
           is_active?: boolean
           last_scanned_at?: string | null
           previous_follower_count?: number | null
@@ -274,6 +292,9 @@ export type Database = {
           created_at: string
           id: string
           language: string
+          push_follows: boolean | null
+          push_unfollows: boolean | null
+          theme: string | null
           timezone: string
           updated_at: string
           user_id: string
@@ -282,6 +303,9 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          push_follows?: boolean | null
+          push_unfollows?: boolean | null
+          theme?: string | null
           timezone?: string
           updated_at?: string
           user_id: string
@@ -290,6 +314,9 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          push_follows?: boolean | null
+          push_unfollows?: boolean | null
+          theme?: string | null
           timezone?: string
           updated_at?: string
           user_id?: string

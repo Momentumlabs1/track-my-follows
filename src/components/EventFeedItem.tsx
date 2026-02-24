@@ -33,6 +33,11 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
     ? (isFollow ? t("events.new_follower") : t("events.lost_follower"))
     : (isFollow ? t("events.now_following") : t("events.unfollowed"));
 
+  const ev = event as Record<string, unknown>;
+  const genderTag = ev.gender_tag as string | undefined;
+  const isMutual = ev.is_mutual as boolean | undefined;
+  const category = ev.category as string | undefined;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -53,10 +58,37 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
           <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={48} className="ring-2 ring-border" />
         </div>
         <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
-          <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold text-foreground">@{event.target_username}</p>
+            {genderTag === "female" && <span className="text-[11px]">👩</span>}
+            {genderTag === "male" && <span className="text-[11px]">👨</span>}
+          </div>
           {event.target_display_name && (
             <p className="text-[11px] text-muted-foreground truncate">{event.target_display_name}</p>
           )}
+          {/* Badges */}
+          <div className="flex flex-wrap gap-1 mt-1">
+            {isMutual && (
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                🔄 {t("events.mutual")}
+              </span>
+            )}
+            {category === "influencer" && (
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                ⭐ {t("category.influencer")}
+              </span>
+            )}
+            {category === "celebrity" && (
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                👑 {t("category.celebrity")}
+              </span>
+            )}
+            {category === "private" && (
+              <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                🔒 {t("category.private")}
+              </span>
+            )}
+          </div>
         </div>
         {shouldBlur && (
           <button
