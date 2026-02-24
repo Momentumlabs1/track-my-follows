@@ -49,9 +49,10 @@ async function fetchFollowingChunked(userId: string, hikerApiKey: string, maxPag
     let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
-    if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
-    const data = await res.json();
-    const users: Array<Record<string, unknown>> = data.users || data.items || [];
+     if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
+     const data = await res.json();
+     console.log(`Following chunk page ${page}: keys=${Object.keys(data).join(",")}, users_count=${(data.users || data.items || []).length}, next_max_id=${data.next_max_id || "none"}`);
+     const users: Array<Record<string, unknown>> = data.users || data.items || [];
     for (const u of users) {
       allUsers.push({ username: u.username as string, pk: String(u.pk || u.id), profile_pic_url: (u.profile_pic_url as string) || undefined, full_name: (u.full_name as string) || undefined, follower_count: (u.follower_count as number) || undefined, is_private: (u.is_private as boolean) || undefined });
     }
@@ -176,6 +177,8 @@ Deno.serve(async (req) => {
         following_count: userInfo.following_count || 0, last_scanned_at: new Date().toISOString(),
         initial_scan_done: true,
       }).eq("id", profile.id);
+
+      console.log(`${profile.username}: igUserId=${igUserId}, follower_count=${userInfo.follower_count}, following_count=${userInfo.following_count}, is_private=${userInfo.is_private}`);
 
       await sleep(1000);
       const followingUsers = await fetchFollowingChunked(igUserId, hikerApiKey, 2);
