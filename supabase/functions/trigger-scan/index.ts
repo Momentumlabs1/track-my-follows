@@ -108,6 +108,7 @@ async function fetchFollowingChunked(userId: string, hikerApiKey: string, maxPag
     let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
+    if (res.status === 404) { await res.text(); console.log(`No following entries found for user ${userId} (404)`); break; }
     if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
 
     const parsed = parseChunkResponse(await res.json());
@@ -134,6 +135,7 @@ async function fetchFollowerChunked(userId: string, hikerApiKey: string, maxPage
     let url = `https://api.hikerapi.com/v1/user/followers/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
+    if (res.status === 404) { await res.text(); console.log(`No follower entries found for user ${userId} (404)`); break; }
     if (!res.ok) { const text = await res.text(); throw new Error(`Follower fetch failed: ${res.status} ${text}`); }
 
     const parsed = parseChunkResponse(await res.json());
