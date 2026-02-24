@@ -43,6 +43,8 @@
     "scan_failed": "Scan failed: {{error}}",
     "events": "Events",
     "tab_new": "New",
+    "tab_following": "Following",
+    "tab_followers": "Followers",
     "tab_gone": "Gone",
     "tab_insights": "Insights",
     "new_follower": "New Follower",
