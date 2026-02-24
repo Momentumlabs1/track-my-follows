@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, X, Info } from "lucide-react";
+import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
+import { ScanStatus } from "@/components/ScanStatus";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -198,7 +200,7 @@ const ProfileDetail = () => {
             <h2 className="text-lg font-extrabold text-foreground">@{profile.username}</h2>
             {profile.display_name && <p className="text-[12px] text-muted-foreground font-medium">{profile.display_name}</p>}
             <p className="text-[11px] text-muted-foreground mt-0.5">{t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}</p>
-            <p className="text-[11px] text-muted-foreground">{timeAgo(profile.last_scanned_at || profile.updated_at)}</p>
+            <ScanStatus lastScannedAt={profile.last_scanned_at} />
           </div>
         </div>
       </motion.div>
@@ -250,6 +252,11 @@ const ProfileDetail = () => {
             <><RefreshCw className="h-4 w-4" /> {t("profile_detail.scan_now")}</>
           )}
         </button>
+      </div>
+
+      {/* Unfollow Check Button */}
+      <div className="px-5 mb-4">
+        <UnfollowCheckButton profileId={id!} />
       </div>
 
       {/* Suspicion Meter */}
