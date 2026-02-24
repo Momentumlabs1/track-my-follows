@@ -1,8 +1,15 @@
 {
   "app_name": "TrackIQ",
+  "splash": {
+    "subtitle": "اعرف من يتابعون"
+  },
   "tabs": {
     "whats_new": "ما الجديد؟",
     "profiles": "الحسابات"
+  },
+  "feed": {
+    "today": "اليوم",
+    "yesterday": "أمس"
   },
   "dashboard": {
     "just_now": "الآن",
@@ -90,7 +97,8 @@
     "followingFollowerRatio": "نسبة المتابَعين/المتابِعين",
     "followingFollowerRatioDesc": "النسبة: {{ratio}}x",
     "nightActivity": "نشاط ليلي",
-    "nightActivityDesc": "متابعة أشخاص بين 11 مساءً و5 صباحاً"
+    "nightActivityDesc": "متابعة أشخاص بين 11 مساءً و5 صباحاً",
+    "trend_4_weeks": "اتجاه 4 أسابيع"
   },
   "events": {
     "new_follower": "متابع جديد",
@@ -119,10 +127,16 @@
   },
   "insights": {
     "title": "إحصائيات",
+    "activity_heatmap": "خريطة النشاط",
     "peakHours": "أوقات الذروة",
     "mostActive": "الأكثر نشاطاً",
     "genderBreakdown": "توزيع الجنس",
-    "weeklyActivity": "نشاط المتابعة الأسبوعي"
+    "weeklyActivity": "نشاط المتابعة الأسبوعي",
+    "last_30_days": "آخر 30 يوم",
+    "vs_last_week": "مقارنة بالأسبوع الماضي",
+    "needs_time": "المزيد من الإحصائيات ستظهر مع مرور الوقت.",
+    "tracking_for_days": "التتبع منذ {{days}} أيام",
+    "days": "أيام"
   },
   "settings": {
     "title": "الإعدادات ⚙️",
@@ -132,6 +146,10 @@
     "profiles_updates": "{{count}} حساب(ات)، تحديثات كل ساعة",
     "upgrade": "ترقية 💎",
     "manage_subscription": "إدارة الاشتراك",
+    "manage_in_app_store": "إدارة اشتراكك في متجر التطبيقات",
+    "restore_purchases": "استعادة المشتريات",
+    "subscription_restored": "تم استعادة الاشتراك! ✅",
+    "no_subscription_found": "لم يتم العثور على اشتراك نشط",
     "notifications": "الإشعارات 🔔",
     "notif_follows": "متابعات جديدة",
     "notif_follows_desc": "عندما يتابع شخصاً جديداً 👀",
@@ -148,8 +166,9 @@
     "logout_toast": "إلى اللقاء! 👋",
     "danger_zone": "منطقة الخطر ⚠️",
     "danger_text": "حذف حسابك وجميع بياناتك. لا يمكن التراجع!",
-    "delete_account": "حذف الحساب 😢",
-    "delete_confirm": "هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.",
+    "delete_account": "حذف الحساب",
+    "delete_confirm": "هل أنت متأكد من حذف حسابك؟",
+    "delete_confirm_detailed": "هل أنت متأكد؟ سيتم حذف حسابك وجميع الحسابات المتتبعة وكل البيانات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
     "account_deleted": "تم حذف الحساب. وداعاً! 😢",
     "billing_issue": "⚠️ مشكلة في الدفع – يرجى تحديث طريقة الدفع",
     "legal": "قانوني",
@@ -192,6 +211,64 @@
     "login_success": "مرحباً بعودتك! 💕",
     "signup_success": "تم إنشاء الحساب! 🎉",
     "free_note": "لا حاجة لاشتراك. ابدأ مجاناً."
+  },
+  "onboarding": {
+    "slide1_title": "الثقة جيدة.",
+    "slide1_highlight": "Spy-Secret أفضل.",
+    "slide1_desc": "اكتشف من يتابعون حقاً. عميلك السري – غير مرئي ومجهول.",
+    "title_1": "تتبع متابعات أي شخص",
+    "sub_1": "لا حاجة لتسجيل الدخول. مجهول 100%.",
+    "title_2": "تنبيهات فورية",
+    "sub_2": "فحوصات كل ساعة تكشف كل متابعة جديدة.",
+    "title_3": "اعرف الحقيقة",
+    "sub_3": "مؤشر الشك، توزيع الجنس، أنماط النشاط.",
+    "slide2_title": "مجهول وغير مرئي",
+    "slide2_desc": "لا حاجة لتسجيل الدخول. نفحص الحسابات العامة – لن يعرف أبداً.",
+    "slide3_title": "تنبيهات فورية",
+    "slide3_desc": "اعرف فوراً عندما يتغير شيء.",
+    "next": "التالي",
+    "get_started": "ابدأ الآن",
+    "login": "تسجيل الدخول",
+    "already_have_account": "لديك حساب بالفعل؟"
+  },
+  "errors": {
+    "no_connection": "لا يوجد اتصال بالإنترنت",
+    "try_again": "حاول مرة أخرى",
+    "profile_not_found": "الحساب غير موجود. تحقق من اسم المستخدم.",
+    "profile_private": "هذا الحساب خاص. يمكننا فقط تتبع الحسابات العامة.",
+    "scan_failed": "فشل الفحص. سنحاول مرة أخرى تلقائياً."
+  },
+  "toast": {
+    "profileTracked": "يتم تتبع الحساب! 👀",
+    "planLimitReached": "تم الوصول للحد الأقصى! قم بالترقية لمزيد من الحسابات 💎",
+    "error": "خطأ: ",
+    "profileRemoved": "تم إزالة الحساب 👋"
+  },
+  "common": {
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "save": "حفظ",
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "retry": "حاول مرة أخرى"
+  },
+  "unfollow_check": {
+    "button": "فحص إلغاء المتابعات",
+    "checking": "جاري الفحص...",
+    "pro_only": "Pro: كشف إلغاء المتابعة",
+    "limit_reached": "لم تتبقى فحوصات اليوم",
+    "unfollows_detected": "إلغاء متابعات تم اكتشافها",
+    "no_unfollows": "لم يتم اكتشاف إلغاء متابعات"
+  },
+  "scan_status": {
+    "auto_hourly": "كل ساعة",
+    "once_daily": "1×/يوم"
+  },
+  "nav": {
+    "dashboard": "الرئيسية",
+    "add": "إضافة",
+    "settings": "الإعدادات"
   },
   "landing": {
     "beta_badge": "مهمة بيتا سرية 🕵️",
@@ -237,37 +314,5 @@
     "per_month": "/شهر",
     "top_agent": "أفضل عميل 🔍",
     "current": "الخطة الحالية"
-  },
-  "nav": {
-    "dashboard": "الرئيسية",
-    "add": "إضافة",
-    "settings": "الإعدادات"
-  },
-  "onboarding": {
-    "slide1_title": "الثقة جيدة.",
-    "slide1_highlight": "Spy-Secret أفضل.",
-    "slide1_desc": "اكتشف من يتابعون حقاً. عميلك السري – غير مرئي ومجهول.",
-    "slide2_title": "مجهول وغير مرئي",
-    "slide2_desc": "لا حاجة لتسجيل الدخول. نفحص الحسابات العامة – لن يعرف أبداً.",
-    "slide3_title": "تنبيهات فورية",
-    "slide3_desc": "اعرف فوراً عندما يتغير شيء.",
-    "next": "التالي",
-    "get_started": "ابدأ المهمة",
-    "login": "تسجيل الدخول"
-  },
-  "toast": {
-    "profileTracked": "يتم تتبع الحساب! 👀",
-    "planLimitReached": "تم الوصول للحد الأقصى! قم بالترقية لمزيد من الحسابات 💎",
-    "error": "خطأ: ",
-    "profileRemoved": "تم إزالة الحساب 👋"
-  },
-  "common": {
-    "back": "رجوع",
-    "cancel": "إلغاء",
-    "confirm": "تأكيد",
-    "save": "حفظ",
-    "loading": "جاري التحميل...",
-    "error": "حدث خطأ ما",
-    "retry": "حاول مرة أخرى"
   }
 }

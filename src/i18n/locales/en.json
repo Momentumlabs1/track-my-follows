@@ -1,5 +1,8 @@
 {
   "app_name": "TrackIQ",
+  "splash": {
+    "subtitle": "See who they follow"
+  },
   "tabs": {
     "whats_new": "What's new?",
     "profiles": "Profiles"
@@ -131,8 +134,9 @@
     "weeklyActivity": "Weekly Follow Activity",
     "last_30_days": "Last 30 days",
     "vs_last_week": "vs last week",
-    "needs_time": "More insights unlock over time",
-    "tracking_for_days": "Tracking for {{days}} days"
+    "needs_time": "More insights unlock over time as we gather data.",
+    "tracking_for_days": "Tracking for {{days}} days",
+    "days": "days"
   },
   "settings": {
     "title": "Settings ⚙️",
@@ -142,6 +146,10 @@
     "profiles_updates": "{{count}} profile(s), hourly updates",
     "upgrade": "Upgrade 💎",
     "manage_subscription": "Manage Subscription",
+    "manage_in_app_store": "Manage your subscription in the App Store",
+    "restore_purchases": "Restore Purchases",
+    "subscription_restored": "Subscription restored! ✅",
+    "no_subscription_found": "No active subscription found",
     "notifications": "Notifications 🔔",
     "notif_follows": "New Follows",
     "notif_follows_desc": "When they follow someone new 👀",
@@ -158,8 +166,9 @@
     "logout_toast": "See you soon! 👋",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Delete your account and all data. This cannot be undone!",
-    "delete_account": "Delete Account 😢",
+    "delete_account": "Delete Account",
     "delete_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "delete_confirm_detailed": "Are you sure? This will permanently delete your account, all tracked profiles, and all data. This cannot be undone.",
     "account_deleted": "Account deleted. Goodbye! 😢",
     "billing_issue": "⚠️ Billing issue – please update your payment method",
     "legal": "Legal",
@@ -202,6 +211,64 @@
     "login_success": "Welcome back! 💕",
     "signup_success": "Account created! 🎉",
     "free_note": "No subscription needed. Start free."
+  },
+  "onboarding": {
+    "slide1_title": "Trust is good.",
+    "slide1_highlight": "Spy-Secret is better.",
+    "slide1_desc": "Find out who they really follow. Your secret agent – invisible & anonymous.",
+    "title_1": "Track anyone's new follows",
+    "sub_1": "No Instagram login needed. 100% anonymous.",
+    "title_2": "Get alerts instantly",
+    "sub_2": "Hourly scans detect every new follow.",
+    "title_3": "Know the truth",
+    "sub_3": "Suspicion score, gender breakdown, activity patterns.",
+    "slide2_title": "Anonymous & Invisible",
+    "slide2_desc": "No Instagram login needed. We scan public profiles – they'll never know.",
+    "slide3_title": "Real-Time Alerts",
+    "slide3_desc": "Get notified instantly when something changes.",
+    "next": "Next",
+    "get_started": "Get Started",
+    "login": "Log In",
+    "already_have_account": "Already have an account?"
+  },
+  "errors": {
+    "no_connection": "No internet connection",
+    "try_again": "Try again",
+    "profile_not_found": "Profile not found. Check the username.",
+    "profile_private": "This profile is private. We can only track public profiles.",
+    "scan_failed": "Scan failed. We'll try again automatically."
+  },
+  "toast": {
+    "profileTracked": "Profile is being tracked! 👀",
+    "planLimitReached": "Plan limit reached! Upgrade for more profiles 💎",
+    "error": "Error: ",
+    "profileRemoved": "Profile removed 👋"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again"
+  },
+  "unfollow_check": {
+    "button": "Check Unfollows",
+    "checking": "Checking...",
+    "pro_only": "Pro: Unfollow Detection",
+    "limit_reached": "No checks remaining today",
+    "unfollows_detected": "unfollows detected",
+    "no_unfollows": "No unfollows detected"
+  },
+  "scan_status": {
+    "auto_hourly": "Hourly",
+    "once_daily": "1×/day"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "add": "Add",
+    "settings": "Settings"
   },
   "landing": {
     "beta_badge": "Secret Beta Mission 🕵️",
@@ -247,49 +314,5 @@
     "per_month": "/month",
     "top_agent": "Top Agent 🔍",
     "current": "Current Plan"
-  },
-  "nav": {
-    "dashboard": "Home",
-    "add": "Add",
-    "settings": "Settings"
-  },
-  "onboarding": {
-    "slide1_title": "Trust is good.",
-    "slide1_highlight": "Spy-Secret is better.",
-    "slide1_desc": "Find out who they really follow. Your secret agent – invisible & anonymous.",
-    "slide2_title": "Anonymous & Invisible",
-    "slide2_desc": "No Instagram login needed. We scan public profiles – they'll never know.",
-    "slide3_title": "Real-Time Alerts",
-    "slide3_desc": "Get notified instantly when something changes.",
-    "next": "Next",
-    "get_started": "Start Mission",
-    "login": "Log In"
-  },
-  "toast": {
-    "profileTracked": "Profile is being tracked! 👀",
-    "planLimitReached": "Plan limit reached! Upgrade for more profiles 💎",
-    "error": "Error: ",
-    "profileRemoved": "Profile removed 👋"
-  },
-  "common": {
-    "back": "Back",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
-    "save": "Save",
-    "loading": "Loading...",
-    "error": "Something went wrong",
-    "retry": "Try again"
-  },
-  "unfollow_check": {
-    "button": "Check Unfollows",
-    "checking": "Checking...",
-    "pro_only": "Pro: Unfollow Detection",
-    "limit_reached": "No checks remaining today",
-    "unfollows_detected": "unfollows detected",
-    "no_unfollows": "No unfollows detected"
-  },
-  "scan_status": {
-    "auto_hourly": "Hourly",
-    "once_daily": "1×/day"
   }
 }

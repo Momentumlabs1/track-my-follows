@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, Search, AlertCircle } from "lucide-react";
 import { useAddTrackedProfile, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { haptic } from "@/lib/native";
 
 const AddProfile = () => {
   const { t } = useTranslation();
   const [username, setUsername] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const addProfile = useAddTrackedProfile();
   const { data: profiles = [] } = useTrackedProfiles();
@@ -18,24 +20,38 @@ const AddProfile = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
+    setError(null);
 
-    // Check plan limit
     if (currentCount >= maxProfiles) {
+      haptic.warning();
       showPaywall("profiles");
       return;
     }
 
+    haptic.light();
     addProfile.mutate(username, {
       onSuccess: (data) => {
+        haptic.success();
         navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`);
+      },
+      onError: (err) => {
+        haptic.error();
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("private")) {
+          setError(t("errors.profile_private"));
+        } else if (msg.includes("not found") || msg.includes("404")) {
+          setError(t("errors.profile_not_found"));
+        } else {
+          setError(t("errors.scan_failed"));
+        }
       },
     });
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex items-center justify-between px-5 pt-4 pb-2">
-        <button onClick={() => navigate(-1)} className="p-2 -ms-2 text-foreground">
+      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+16px)] pb-2">
+        <button onClick={() => navigate(-1)} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <span className="text-[13px] font-semibold text-primary">
@@ -56,11 +72,21 @@ const AddProfile = () => {
               type="text"
               placeholder={t("add_profile.placeholder")}
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-2xl bg-card border-2 border-primary/30 ps-10 pe-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              onChange={(e) => { setUsername(e.target.value); setError(null); }}
+              className={`w-full rounded-2xl bg-card border-2 ps-10 pe-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                error ? "border-destructive/50 focus:border-destructive" : "border-primary/30 focus:border-primary"
+              }`}
               autoFocus
             />
           </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="mt-3 flex items-start gap-2 text-destructive">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <p className="text-[13px] font-medium">{error}</p>
+            </div>
+          )}
 
           <div className="mt-6 flex items-start gap-3 bg-muted rounded-2xl p-4">
             <div className="p-2 bg-card rounded-xl flex-shrink-0">
@@ -75,7 +101,7 @@ const AddProfile = () => {
           <button
             type="submit"
             disabled={!username.trim() || addProfile.isPending}
-            className="mt-8 w-full pill-btn-primary py-4 justify-center text-[15px] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="mt-8 w-full pill-btn-primary py-4 justify-center text-[15px] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
           >
             {addProfile.isPending ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> {t("add_profile.adding")}</>

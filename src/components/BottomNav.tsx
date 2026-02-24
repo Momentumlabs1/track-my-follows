@@ -2,11 +2,12 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, PlusCircle, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { haptic } from "@/lib/native";
 
 export function BottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
-  const hiddenRoutes = ["/", "/login"];
+  const hiddenRoutes = ["/", "/splash", "/onboarding", "/login", "/impressum", "/datenschutz"];
   const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing");
 
   if (isHidden) return null;
@@ -26,6 +27,7 @@ export function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
+              onClick={() => haptic.light()}
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px]"
             >
               {isActive && (

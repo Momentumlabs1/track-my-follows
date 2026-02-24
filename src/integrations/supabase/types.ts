@@ -367,6 +367,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: number
       }
+      delete_own_account: { Args: never; Returns: undefined }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
       get_user_limits: { Args: { p_user_id: string }; Returns: Json }
       owns_tracked_profile: {
