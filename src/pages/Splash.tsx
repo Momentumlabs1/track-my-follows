@@ -26,16 +26,20 @@ export default function Splash() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex flex-col items-center"
       >
-        <img src={logoSquare} alt="TrackIQ" className="h-20 w-20 rounded-3xl shadow-xl shadow-primary/20 mb-5" />
-        <h1 className="text-2xl font-extrabold text-foreground">
-          Track<span className="text-primary">IQ</span>
-        </h1>
-        <p className="text-sm text-muted-foreground/40 mt-1.5">{t("splash.subtitle")}</p>
+        <motion.img
+          src={logoSquare}
+          alt="Spy-Secret"
+          className="h-24 w-24 drop-shadow-2xl mb-5"
+          initial={{ rotate: -10 }}
+          animate={{ rotate: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+        <p className="text-sm text-muted-foreground/40 mt-1">{t("splash.subtitle")}</p>
       </motion.div>
     </div>
   );

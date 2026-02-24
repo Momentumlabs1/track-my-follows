@@ -5,7 +5,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import logoSquare from "@/assets/logo-square.png";
+import logoWide from "@/assets/logo-wide.png";
 
 const Login = () => {
   const { t } = useTranslation();
@@ -67,9 +67,8 @@ const Login = () => {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative w-full max-w-sm"
       >
-        <Link to="/" className="flex items-center gap-2.5 justify-center mb-10">
-          <img src={logoSquare} alt="Spy-Secret" className="h-12 w-12 rounded-2xl shadow-lg shadow-primary/20" />
-          <span className="text-lg font-extrabold">Spy-<span className="text-primary">Secret</span></span>
+        <Link to="/" className="flex items-center justify-center mb-10">
+          <img src={logoWide} alt="Spy-Secret" className="h-12 drop-shadow-lg" />
         </Link>
 
         <div className="rounded-3xl glass-card p-7 overflow-hidden relative">
