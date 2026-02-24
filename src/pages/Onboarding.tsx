@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import logoSquare from "@/assets/logo-square.png";
 
 const slides = [
   { emoji: "🔍", key: "1" },
@@ -54,6 +55,16 @@ export default function Onboarding() {
         <div className="absolute -top-32 -start-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
         <div className="absolute top-1/2 -end-20 w-64 h-64 rounded-full bg-accent/8 blur-3xl" />
         <div className="absolute -bottom-20 start-1/4 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      {/* Logo top */}
+      <div className="absolute top-[calc(env(safe-area-inset-top)+20px)] inset-x-0 flex justify-center z-20">
+        <div className="flex items-center gap-2">
+          <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8 drop-shadow-md" />
+          <span className="text-base font-extrabold text-foreground">
+            Spy<span className="text-primary">Secret</span>
+          </span>
+        </div>
       </div>
 
       {/* Carousel */}

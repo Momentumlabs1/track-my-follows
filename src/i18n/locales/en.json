@@ -21,7 +21,9 @@
     "following": "Following",
     "tracking_since": "Tracking since {{date}}",
     "no_profiles": "No profiles tracked yet",
-    "add_first": "Tap + to start tracking someone"
+    "add_first": "Tap + to start tracking someone",
+    "hello": "Hello",
+    "hot_alert": "Latest alert"
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
