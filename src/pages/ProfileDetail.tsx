@@ -30,7 +30,7 @@ function useTimeAgo() {
   };
 }
 
-type DetailTab = "neu" | "weg" | "insights";
+type DetailTab = "following" | "followers" | "weg" | "insights";
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
@@ -38,7 +38,7 @@ const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<DetailTab>("neu");
+  const [activeTab, setActiveTab] = useState<DetailTab>("following");
   const [isScanning, setIsScanning] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
 
@@ -121,9 +121,10 @@ const ProfileDetail = () => {
     );
   }
 
-  const neuEvents = events.filter((e) => e.event_type === "follow").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  const followingEvents = events.filter((e) => e.event_type === "follow" && e.direction === "following").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  const followerEvents = events.filter((e) => e.event_type === "follow" && e.direction === "follower").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
   const wegEvents = events.filter((e) => e.event_type === "unfollow").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  const displayEvents = activeTab === "neu" ? neuEvents : wegEvents;
+  const displayEvents = activeTab === "following" ? followingEvents : activeTab === "followers" ? followerEvents : wegEvents;
 
   const followerDelta = (profile as Record<string, unknown>).previous_follower_count != null
     ? (profile.follower_count ?? 0) - ((profile as Record<string, unknown>).previous_follower_count as number) : null;
@@ -219,20 +220,27 @@ const ProfileDetail = () => {
 
       {/* Tabs */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
-        <div className="flex gap-0 border-b border-border mb-4">
+        <div className="flex gap-0 border-b border-border mb-4 overflow-x-auto">
           <button
-            onClick={() => setActiveTab("neu")}
-            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "neu" ? "text-emerald-600" : "text-muted-foreground"}`}
+            onClick={() => setActiveTab("following")}
+            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "following" ? "text-blue-600" : "text-muted-foreground"}`}
           >
-            🟢 {t("profile_detail.tab_new")} ({neuEvents.length})
-            {activeTab === "neu" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-emerald-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
+            🔵 {t("profile_detail.tab_following")} ({followingEvents.length})
+            {activeTab === "following" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-blue-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
+          </button>
+          <button
+            onClick={() => setActiveTab("followers")}
+            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "followers" ? "text-emerald-600" : "text-muted-foreground"}`}
+          >
+            🟢 {t("profile_detail.tab_followers")} ({followerEvents.length})
+            {activeTab === "followers" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-emerald-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
           </button>
           <button
             onClick={() => {
               if (!canUseUnfollows) { showPaywall("unfollows"); return; }
               setActiveTab("weg");
             }}
-            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "weg" ? "text-red-500" : "text-muted-foreground"}`}
+            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "weg" ? "text-red-500" : "text-muted-foreground"}`}
           >
             {!canUseUnfollows && <Lock className="h-3 w-3" />}
             🔴 {t("profile_detail.tab_gone")} ({wegEvents.length})
@@ -243,7 +251,7 @@ const ProfileDetail = () => {
               if (!canUseStats) { showPaywall("insights"); return; }
               setActiveTab("insights");
             }}
-            className={`relative flex items-center gap-1.5 px-4 pb-2.5 text-[13px] font-semibold transition-colors ${activeTab === "insights" ? "text-primary" : "text-muted-foreground"}`}
+            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "insights" ? "text-primary" : "text-muted-foreground"}`}
           >
             {!canUseStats && <Lock className="h-3 w-3" />}
             📊 {t("profile_detail.tab_insights")}
@@ -291,21 +299,25 @@ const ProfileDetail = () => {
                     </button>
                   ) : (
                     <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                      activeTab === "neu"
-                        ? (event.direction === "follower" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-blue-50 dark:bg-blue-900/20 text-blue-600")
-                        : (event.direction === "follower" ? "bg-red-50 dark:bg-red-900/20 text-red-600" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600")
+                      activeTab === "weg"
+                        ? (event.direction === "follower" ? "bg-red-50 dark:bg-red-900/20 text-red-600" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600")
+                        : activeTab === "followers"
+                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
+                          : "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                     }`}>
-                      {activeTab === "neu"
-                        ? (event.direction === "follower" ? t("profile_detail.new_follower") : t("profile_detail.new_following"))
-                        : (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))}
+                      {activeTab === "weg"
+                        ? (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))
+                        : activeTab === "followers"
+                          ? t("profile_detail.new_follower")
+                          : t("profile_detail.new_following")}
                     </span>
                   )}
                 </motion.div>
               );
             }) : (
               <div className="text-center py-12">
-                <span className="text-4xl block mb-3">{activeTab === "neu" ? "✨" : "🔍"}</span>
-                <p className="text-[13px] text-muted-foreground">{activeTab === "neu" ? t("profile_detail.no_new_events") : t("profile_detail.no_gone_events")}</p>
+                <span className="text-4xl block mb-3">{activeTab === "weg" ? "🔍" : "✨"}</span>
+                <p className="text-[13px] text-muted-foreground">{activeTab === "weg" ? t("profile_detail.no_gone_events") : t("profile_detail.no_new_events")}</p>
                 <p className="text-[11px] text-muted-foreground mt-1">{profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}</p>
               </div>
             )}

@@ -43,6 +43,8 @@
     "scan_failed": "Scan fehlgeschlagen: {{error}}",
     "events": "Events",
     "tab_new": "Neu",
+    "tab_following": "Zuletzt gefolgt",
+    "tab_followers": "Neue Follower",
     "tab_gone": "Weg",
     "tab_insights": "Insights",
     "new_follower": "Neuer Follower",

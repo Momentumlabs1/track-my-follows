@@ -43,6 +43,8 @@
     "scan_failed": "فشل الفحص: {{error}}",
     "events": "الأحداث",
     "tab_new": "جديد",
+    "tab_following": "يتابع",
+    "tab_followers": "متابعون جدد",
     "tab_gone": "مغادر",
     "tab_insights": "إحصائيات",
     "new_follower": "متابع جديد",
