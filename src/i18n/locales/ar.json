@@ -66,7 +66,13 @@
     "start_scan": "ابدأ فحصاً لاكتشاف النشاط",
     "not_found": "الحساب غير موجود",
     "pro_required": "🔒 مطلوب Pro",
-    "upgrade_unfollows": "قم بالترقية إلى Pro لرؤية إلغاء المتابعات"
+    "upgrade_unfollows": "قم بالترقية إلى Pro لرؤية إلغاء المتابعات",
+    "agent_report": "تقرير العميل",
+    "new_today": "متابعات جديدة",
+    "unfollows_today": "إلغاء متابعات",
+    "suspicion": "الشبهة",
+    "hottest_activity": "أبرز تنبيه",
+    "no_activity_today": "لا نشاط اليوم – كل شيء هادئ"
   },
   "profile": {
     "followed": "متابَع",

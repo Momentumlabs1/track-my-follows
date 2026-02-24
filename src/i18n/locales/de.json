@@ -66,7 +66,13 @@
     "start_scan": "Starte einen Scan um Aktivität zu erkennen",
     "not_found": "Profil nicht gefunden",
     "pro_required": "🔒 Pro erforderlich",
-    "upgrade_unfollows": "Upgrade auf Pro um Unfollows zu sehen"
+    "upgrade_unfollows": "Upgrade auf Pro um Unfollows zu sehen",
+    "agent_report": "Agenten-Report",
+    "new_today": "Neue Follows",
+    "unfollows_today": "Unfollows",
+    "suspicion": "Verdacht",
+    "hottest_activity": "Heißester Alert",
+    "no_activity_today": "Keine Aktivität heute – alles ruhig"
   },
   "profile": {
     "followed": "Gefolgt",

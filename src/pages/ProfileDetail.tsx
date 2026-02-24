@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, X, Info } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, X, Info, Flame, Eye } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import logoSquare from "@/assets/logo-square.png";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
 import { ScanStatus } from "@/components/ScanStatus";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
@@ -44,6 +46,7 @@ const ProfileDetail = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
+  const { user } = useAuth();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: events = [], isLoading: eventsLoading } = useFollowEvents(id);
@@ -137,13 +140,30 @@ const ProfileDetail = () => {
   const followingDelta = (profile as Record<string, unknown>).previous_following_count != null
     ? (profile.following_count ?? 0) - ((profile as Record<string, unknown>).previous_following_count as number) : null;
 
+  const spyName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Agent";
+
+  // Today's activity summary
+  const todayFollows = events.filter((e) => {
+    const isToday = new Date(e.detected_at).toDateString() === new Date().toDateString();
+    return isToday && (e.event_type === "follow" || e.event_type === "new_following");
+  }).length;
+  const todayUnfollows = events.filter((e) => {
+    const isToday = new Date(e.detected_at).toDateString() === new Date().toDateString();
+    return isToday && (e.event_type === "unfollow" || e.event_type === "unfollowed");
+  }).length;
+  const hottestToday = events.find((e) => new Date(e.detected_at).toDateString() === new Date().toDateString()) ?? null;
+
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
+        <div className="flex items-center gap-2">
+          <img src={logoSquare} alt="Spy-Secret" className="h-6 w-6" />
+          <span className="text-sm font-extrabold text-foreground">Spy<span className="text-primary">Secret</span></span>
+        </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => {
@@ -160,8 +180,63 @@ const ProfileDetail = () => {
         </div>
       </div>
 
+      {/* Mini Dashboard – Welcome + Today's Activity */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mx-4 mb-4 native-card p-4 overflow-hidden relative"
+      >
+        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="relative">
+          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">
+            {t("profile_detail.agent_report")}
+          </p>
+          <h2 className="text-lg font-extrabold text-foreground mb-3">
+            {t("dashboard.hello")}, {spyName} 🕵️
+          </h2>
+
+          <div className="flex gap-3 mb-3">
+            <div className="flex-1 rounded-xl bg-primary/10 p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <Eye className="h-3.5 w-3.5 text-primary" />
+                <span className="text-lg font-extrabold text-foreground tabular-nums">{todayFollows}</span>
+              </div>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.new_today")}</p>
+            </div>
+            <div className="flex-1 rounded-xl bg-destructive/10 p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                <span className="text-lg font-extrabold text-foreground tabular-nums">{todayUnfollows}</span>
+              </div>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.unfollows_today")}</p>
+            </div>
+            <div className="flex-1 rounded-xl bg-accent/10 p-3 text-center">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <Flame className="h-3.5 w-3.5 text-accent" />
+                <span className="text-lg font-extrabold text-foreground tabular-nums">{suspicionAnalysis.overallScore}</span>
+              </div>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.suspicion")}</p>
+            </div>
+          </div>
+
+          {hottestToday ? (
+            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2">
+              <span className="text-sm">🔥</span>
+              <p className="text-[12px] text-foreground font-semibold flex-1">
+                {t("profile_detail.hottest_activity")}: <span className="text-primary">@{hottestToday.target_username}</span>
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+              <span className="text-sm">😴</span>
+              <p className="text-[12px] text-muted-foreground">{t("profile_detail.no_activity_today")}</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
       {/* Profile header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center px-4 py-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-col items-center px-4 py-3">
         {/* Avatar with gradient ring */}
         <div className="avatar-ring p-[3px] mb-3">
           <div className="rounded-full bg-background p-[2px]">
