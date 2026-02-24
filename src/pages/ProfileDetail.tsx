@@ -343,7 +343,7 @@ const ProfileDetail = () => {
                   </div>
                   <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-sm" : ""}`}>
                     <div className="flex items-center gap-1.5">
-                      <p className="text-[13px] font-semibold text-foreground">@{event.target_username}</p>
+                      <a href={`https://instagram.com/${event.target_username}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors">@{event.target_username}</a>
                       {genderTag === "female" && <span className="text-[11px]">👩</span>}
                       {genderTag === "male" && <span className="text-[11px]">👨</span>}
                     </div>
