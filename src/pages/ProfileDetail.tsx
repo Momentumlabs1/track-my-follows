@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, X, Info } from "lucide-react";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -30,7 +31,8 @@ function useTimeAgo() {
   };
 }
 
-type DetailTab = "following" | "followers" | "weg" | "insights";
+type MainTab = "followed" | "unfollowed";
+type SubTab = "following" | "follower";
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
@@ -38,8 +40,10 @@ const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<DetailTab>("following");
+  const [mainTab, setMainTab] = useState<MainTab>("followed");
+  const [subTab, setSubTab] = useState<SubTab>("following");
   const [isScanning, setIsScanning] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
@@ -54,7 +58,6 @@ const ProfileDetail = () => {
     events, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
   );
 
-  // Calculate weekly scores for sparkline
   const weeklyScores = Array.from({ length: 4 }, (_, i) => {
     const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
     const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -69,10 +72,7 @@ const ProfileDetail = () => {
   const isFreeAndScanned = plan === "free" && (profile as Record<string, unknown> | undefined)?.initial_scan_done === true;
 
   const handleScan = async () => {
-    if (isFreeAndScanned) {
-      showPaywall("scan");
-      return;
-    }
+    if (isFreeAndScanned) { showPaywall("scan"); return; }
     setIsScanning(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -121,28 +121,74 @@ const ProfileDetail = () => {
     );
   }
 
-  const followingEvents = events.filter((e) => e.event_type === "follow" && e.direction === "following").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  const followerEvents = events.filter((e) => e.event_type === "follow" && e.direction === "follower").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  const wegEvents = events.filter((e) => e.event_type === "unfollow").sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  const displayEvents = activeTab === "following" ? followingEvents : activeTab === "followers" ? followerEvents : wegEvents;
+  // Event filtering
+  const followingNewEvents = events
+    .filter((e) => (e.event_type === "follow" && e.direction === "following") || e.event_type === "new_following")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  const followerNewEvents = events
+    .filter((e) => (e.event_type === "follow" && e.direction === "follower") || e.event_type === "new_follower")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  const unfollowedEvents = events
+    .filter((e) => (e.event_type === "unfollow" && e.direction === "following") || e.event_type === "unfollowed")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+  const lostFollowerEvents = events
+    .filter((e) => (e.event_type === "unfollow" && e.direction === "follower") || e.event_type === "lost_follower")
+    .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
+
+  let displayEvents: typeof events = [];
+  if (mainTab === "followed") {
+    displayEvents = subTab === "following" ? followingNewEvents : followerNewEvents;
+  } else {
+    displayEvents = subTab === "following" ? unfollowedEvents : lostFollowerEvents;
+  }
+
+  // Detect "first scan" for empty state on unfollowed tab
+  const isFirstScanPhase = unfollowedEvents.length === 0 && lostFollowerEvents.length === 0
+    && profile.created_at && (Date.now() - new Date(profile.created_at).getTime()) < 24 * 60 * 60 * 1000;
 
   const followerDelta = (profile as Record<string, unknown>).previous_follower_count != null
     ? (profile.follower_count ?? 0) - ((profile as Record<string, unknown>).previous_follower_count as number) : null;
   const followingDelta = (profile as Record<string, unknown>).previous_following_count != null
     ? (profile.following_count ?? 0) - ((profile as Record<string, unknown>).previous_following_count as number) : null;
 
+  // Get event label + color for the list
+  const getEventLabel = () => {
+    if (mainTab === "followed") {
+      return subTab === "following"
+        ? { label: t("profile_detail.new_following"), color: "bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400" }
+        : { label: t("profile_detail.new_follower"), color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" };
+    }
+    return subTab === "following"
+      ? { label: t("profile_detail.unfollowed"), color: "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400" }
+      : { label: t("profile_detail.lost_follower"), color: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400" };
+  };
+  const eventStyle = getEventLabel();
+
   return (
     <div className="min-h-screen bg-background pb-28">
+      {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <span className="text-base font-extrabold">Spy-<span className="text-primary">Secret</span></span>
-        <button onClick={handleDelete} className="p-2 -me-2 text-destructive">
-          <Trash2 className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              if (!canUseStats) { showPaywall("stats"); return; }
+              setShowInsights(true);
+            }}
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BarChart3 className="h-5 w-5" />
+          </button>
+          <button onClick={handleDelete} className="p-2 -me-2 text-destructive">
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
+      {/* Profile Info */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-5 py-4">
         <div className="ios-card flex items-center gap-4">
           <div className="avatar-ring flex-shrink-0 p-[3px]">
@@ -157,6 +203,7 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
+      {/* Stats */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-5 grid grid-cols-3 gap-2.5 mb-4">
         <div className="stat-box-blue">
           <div className="flex items-baseline justify-center gap-1">
@@ -188,6 +235,7 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
+      {/* Scan Button */}
       <div className="px-5 mb-4">
         <button
           onClick={handleScan}
@@ -218,54 +266,69 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
-      {/* Tabs */}
+      {/* 2 Main Tabs */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-5">
-        <div className="flex gap-0 border-b border-border mb-4 overflow-x-auto">
+        <div className="flex gap-0 border-b border-border mb-3">
           <button
-            onClick={() => setActiveTab("following")}
-            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "following" ? "text-blue-600" : "text-muted-foreground"}`}
+            onClick={() => { setMainTab("followed"); setSubTab("following"); }}
+            className={`relative flex-1 pb-2.5 text-[13px] font-bold transition-colors text-center ${mainTab === "followed" ? "text-primary" : "text-muted-foreground"}`}
           >
-            🔵 {t("profile_detail.tab_following")} ({followingEvents.length})
-            {activeTab === "following" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-blue-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("followers")}
-            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "followers" ? "text-emerald-600" : "text-muted-foreground"}`}
-          >
-            🟢 {t("profile_detail.tab_followers")} ({followerEvents.length})
-            {activeTab === "followers" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-emerald-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
+            {t("profile.followed")}
+            {mainTab === "followed" && (
+              <motion.div layoutId="main-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-primary rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />
+            )}
           </button>
           <button
             onClick={() => {
               if (!canUseUnfollows) { showPaywall("unfollows"); return; }
-              setActiveTab("weg");
+              setMainTab("unfollowed");
+              setSubTab("following");
             }}
-            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "weg" ? "text-red-500" : "text-muted-foreground"}`}
+            className={`relative flex-1 pb-2.5 text-[13px] font-bold transition-colors text-center flex items-center justify-center gap-1.5 ${mainTab === "unfollowed" ? "text-primary" : "text-muted-foreground"}`}
           >
-            {!canUseUnfollows && <Lock className="h-3 w-3" />}
-            🔴 {t("profile_detail.tab_gone")} ({wegEvents.length})
-            {activeTab === "weg" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-red-500 rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
-          </button>
-          <button
-            onClick={() => {
-              if (!canUseStats) { showPaywall("insights"); return; }
-              setActiveTab("insights");
-            }}
-            className={`relative flex items-center gap-1 px-3 pb-2.5 text-[12px] font-semibold transition-colors whitespace-nowrap ${activeTab === "insights" ? "text-primary" : "text-muted-foreground"}`}
-          >
-            {!canUseStats && <Lock className="h-3 w-3" />}
-            📊 {t("profile_detail.tab_insights")}
-            {activeTab === "insights" && <motion.div layoutId="profile-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-primary rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />}
+            {!canUseUnfollows && <Lock className="h-3.5 w-3.5" />}
+            {t("profile.unfollowed")}
+            {mainTab === "unfollowed" && (
+              <motion.div layoutId="main-tab" className="absolute bottom-0 start-0 end-0 h-[2px] bg-primary rounded-full" transition={{ type: "spring", bounce: 0.15, duration: 0.4 }} />
+            )}
           </button>
         </div>
 
-        {activeTab === "insights" ? (
-          <div className="space-y-4">
-            <PeakHoursChart events={events} />
-            <GenderBreakdownChart events={events} />
-            <WeeklyActivityChart events={events} />
+        {/* Sub-pills */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setSubTab("following")}
+            className={`flex-1 py-2 px-3 rounded-full text-[12px] font-semibold transition-all ${
+              subTab === "following"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {mainTab === "followed" ? t("profile.recentFollowing") : t("profile.hasUnfollowed")}
+            {" "}({subTab === "following" ? displayEvents.length : (mainTab === "followed" ? followingNewEvents.length : unfollowedEvents.length)})
+          </button>
+          <button
+            onClick={() => setSubTab("follower")}
+            className={`flex-1 py-2 px-3 rounded-full text-[12px] font-semibold transition-all ${
+              subTab === "follower"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {mainTab === "followed" ? t("profile.newFollowers") : t("profile.lostFollowers")}
+            {" "}({subTab === "follower" ? displayEvents.length : (mainTab === "followed" ? followerNewEvents.length : lostFollowerEvents.length)})
+          </button>
+        </div>
+
+        {/* Empty state for unfollowed tab - first scan */}
+        {mainTab === "unfollowed" && isFirstScanPhase && displayEvents.length === 0 ? (
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-5 text-center">
+            <Info className="h-8 w-8 text-blue-500 mx-auto mb-3" />
+            <h3 className="text-[14px] font-bold text-foreground mb-1">{t("profile.unfollowedEmptyTitle")}</h3>
+            <p className="text-[12px] text-muted-foreground">{t("profile.unfollowedEmptyDesc")}</p>
           </div>
         ) : (
+          /* Event list */
           <div className="space-y-1">
             {displayEvents.length > 0 ? displayEvents.map((event, i) => {
               const ev = event as Record<string, unknown>;
@@ -298,32 +361,41 @@ const ProfileDetail = () => {
                       {t("events.upgrade_to_reveal")}
                     </button>
                   ) : (
-                    <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                      activeTab === "weg"
-                        ? (event.direction === "follower" ? "bg-red-50 dark:bg-red-900/20 text-red-600" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600")
-                        : activeTab === "followers"
-                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
-                          : "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
-                    }`}>
-                      {activeTab === "weg"
-                        ? (event.direction === "follower" ? t("profile_detail.lost_follower") : t("profile_detail.unfollowed"))
-                        : activeTab === "followers"
-                          ? t("profile_detail.new_follower")
-                          : t("profile_detail.new_following")}
+                    <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${eventStyle.color}`}>
+                      {eventStyle.label}
                     </span>
                   )}
                 </motion.div>
               );
             }) : (
               <div className="text-center py-12">
-                <span className="text-4xl block mb-3">{activeTab === "weg" ? "🔍" : "✨"}</span>
-                <p className="text-[13px] text-muted-foreground">{activeTab === "weg" ? t("profile_detail.no_gone_events") : t("profile_detail.no_new_events")}</p>
+                <span className="text-4xl block mb-3">{mainTab === "unfollowed" ? "🔍" : "✨"}</span>
+                <p className="text-[13px] text-muted-foreground">{mainTab === "unfollowed" ? t("profile_detail.no_gone_events") : t("profile_detail.no_new_events")}</p>
                 <p className="text-[11px] text-muted-foreground mt-1">{profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}</p>
               </div>
             )}
           </div>
         )}
       </motion.div>
+
+      {/* Insights Drawer */}
+      <Drawer open={showInsights} onOpenChange={setShowInsights}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="flex items-center justify-between">
+            <DrawerTitle className="text-lg font-extrabold">{t("insights.title")}</DrawerTitle>
+            <DrawerClose asChild>
+              <button className="p-2 text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </DrawerClose>
+          </DrawerHeader>
+          <div className="px-4 pb-6 space-y-4 overflow-y-auto">
+            <PeakHoursChart events={events} />
+            <GenderBreakdownChart events={events} />
+            <WeeklyActivityChart events={events} />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

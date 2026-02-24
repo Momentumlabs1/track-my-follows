@@ -59,6 +59,17 @@
     "pro_required": "🔒 Pro erforderlich",
     "upgrade_unfollows": "Upgrade auf Pro um Unfollows zu sehen"
   },
+  "profile": {
+    "followed": "Gefolgt",
+    "unfollowed": "Entfolgt",
+    "recentFollowing": "Folgt neu",
+    "newFollowers": "Neue Follower",
+    "hasUnfollowed": "Hat entfolgt",
+    "lostFollowers": "Follower verloren",
+    "unfollowedEmptyTitle": "Vergleich startet jetzt",
+    "unfollowedEmptyDesc": "Ab dem nächsten Scan siehst du hier wer entfolgt wurde.",
+    "noEventsYet": "Noch keine Events"
+  },
   "suspicion": {
     "score_label": "Verdachts-Score",
     "factors_title": "Analyse-Faktoren",
@@ -86,6 +97,10 @@
     "lost_follower": "Follower verloren",
     "now_following": "Folgt jetzt",
     "unfollowed": "Hat entfolgt",
+    "newFollowing": "folgt jetzt",
+    "newFollower": "neuer Follower",
+    "hasUnfollowed": "hat entfolgt",
+    "lostFollower": "Follower verloren",
     "new_badge": "NEU",
     "no_events": "Noch keine Aktivität erkannt",
     "no_events_subtitle": "Wir benachrichtigen dich sobald etwas passiert",
