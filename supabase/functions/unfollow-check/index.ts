@@ -82,63 +82,27 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Fetch page 1 only (quick scan) ──
-async function fetchFollowingPage1(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
-  const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
-  if (res.status === 404) { await res.text(); return []; }
-  if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
-  const parsed = parseChunkResponse(await res.json());
-  const users: FollowingUser[] = [];
-  for (const raw of parsed.users) { const u = mapFollowingUser(raw); if (u) users.push(u); }
-  return users;
-}
-
-// ── Sync new follows only (no unfollow detection) ──
-async function syncNewFollows(
-  supabase: ReturnType<typeof createClient>,
-  profileId: string,
-  currentUsers: FollowingUser[],
-  lastScannedAt: string | null,
-) {
-  const { data: existing } = await supabase
-    .from("profile_followings")
-    .select("following_user_id")
-    .eq("tracked_profile_id", profileId)
-    .eq("direction", "following")
-    .eq("is_current", true);
-
-  const existingIds = new Set((existing || []).map((f: Record<string, unknown>) => f.following_user_id as string));
-  const newEntries = currentUsers.filter((f) => !existingIds.has(f.pk));
-  if (newEntries.length === 0) return 0;
-
-  const now = Date.now();
-  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
-  const spanMs = Math.max(now - lastTs, 60_000);
-  const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
-
-  for (let i = 0; i < newEntries.length; i++) {
-    const f = newEntries[i];
-    const ts = randomTs[i].toISOString();
-    await supabase.from("profile_followings").insert({
-      tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
-      following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
-      first_seen_at: ts, direction: "following",
-    });
-    await supabase.from("follow_events").insert({
-      tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
-      target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
-      detected_at: ts, direction: "following", notification_sent: false,
-      gender_tag: detectGender(f.full_name),
-      category: categorizeFollow(f.follower_count, f.is_private),
-      target_follower_count: f.follower_count || null,
-      target_is_private: f.is_private || false,
-    });
+// ── Full pagination fetch ──
+async function fetchAllFollowing(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
+  const allUsers: FollowingUser[] = [];
+  let nextMaxId: string | null = null;
+  let page = 0;
+  while (page < 50) { // safety limit
+    let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
+    if (nextMaxId) url += `&max_id=${nextMaxId}`;
+    const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
+    if (res.status === 404) { await res.text(); break; }
+    if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
+    const parsed = parseChunkResponse(await res.json());
+    for (const raw of parsed.users) { const u = mapFollowingUser(raw); if (u) allUsers.push(u); }
+    nextMaxId = parsed.nextMaxId;
+    page++;
+    if (!nextMaxId || parsed.users.length === 0) break;
+    await sleep(800);
   }
-  return newEntries.length;
+  return allUsers;
 }
 
-// ── Main: manual refresh for a single profile ──
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -161,64 +125,151 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Subscription check ──
+    // ── Pro check ──
     const { data: sub } = await supabase.from("subscriptions").select("plan_type, status").eq("user_id", user.id).maybeSingle();
-    const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status || "");
+    if (sub?.plan_type !== "pro" || !["active", "in_trial"].includes(sub?.status || "")) {
+      return new Response(JSON.stringify({ error: "PRO_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
-
-    let query = supabase.from("tracked_profiles").select("*").eq("user_id", user.id).eq("is_active", true);
-    if (profileId) query = query.eq("id", profileId);
-    const { data: profiles, error: profilesError } = await query;
-    if (profilesError) throw profilesError;
-    if (!profiles || profiles.length === 0) {
-      return new Response(JSON.stringify({ message: "No profile found" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!profileId) {
+      return new Response(JSON.stringify({ error: "profileId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Free user: block if initial_scan_done (except first scan)
-    if (!isPro && profiles[0]?.initial_scan_done) {
-      return new Response(JSON.stringify({ error: "PAYWALL_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ── Daily limit: max 2 checks ──
+    const today = new Date().toISOString().split("T")[0];
+    const { count } = await supabase
+      .from("unfollow_checks")
+      .select("*", { count: "exact", head: true })
+      .eq("tracked_profile_id", profileId)
+      .eq("user_id", user.id)
+      .gte("created_at", `${today}T00:00:00Z`);
+
+    if ((count || 0) >= 2) {
+      return new Response(JSON.stringify({ error: "LIMIT_REACHED", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const results = [];
-    for (const profile of profiles) {
-      // Fetch user info
-      const userInfoRes = await fetch(
-        `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-        { headers: { "x-access-key": hikerApiKey } },
-      );
-      if (!userInfoRes.ok) {
-        results.push({ username: profile.username, error: `${userInfoRes.status}` });
-        continue;
+    // ── Load profile ──
+    const { data: profile } = await supabase
+      .from("tracked_profiles")
+      .select("*")
+      .eq("id", profileId)
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (!profile) {
+      return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Get IG user ID ──
+    const userInfoRes = await fetch(
+      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
+      { headers: { "x-access-key": hikerApiKey } },
+    );
+    if (!userInfoRes.ok) {
+      return new Response(JSON.stringify({ error: `User info failed: ${userInfoRes.status}` }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userInfo = await userInfoRes.json();
+    const igUserId = String(userInfo.pk || userInfo.id);
+
+    // Update profile metadata
+    await supabase.from("tracked_profiles").update({
+      previous_follower_count: profile.follower_count || 0,
+      previous_following_count: profile.following_count || 0,
+      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+      display_name: userInfo.full_name || null,
+      follower_count: userInfo.follower_count || 0,
+      following_count: userInfo.following_count || 0,
+      last_scanned_at: new Date().toISOString(),
+    }).eq("id", profile.id);
+
+    // ── FULL SCAN: all pages ──
+    console.log(`[unfollow-check] Starting full scan for ${profile.username}...`);
+    await sleep(500);
+    const allFollowings = await fetchAllFollowing(igUserId, hikerApiKey);
+    console.log(`[unfollow-check] ${profile.username}: ${allFollowings.length} total followings fetched`);
+
+    // ── Compare with DB ──
+    const { data: dbFollowings } = await supabase
+      .from("profile_followings")
+      .select("*")
+      .eq("tracked_profile_id", profile.id)
+      .eq("direction", "following")
+      .eq("is_current", true);
+
+    const currentApiIds = new Set(allFollowings.map((u) => u.pk));
+    const dbMap = new Map((dbFollowings || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
+    const existingIds = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
+
+    // ── Detect unfollows ──
+    let unfollowsFound = 0;
+    for (const [userId, ex] of dbMap) {
+      if (!currentApiIds.has(userId)) {
+        unfollowsFound++;
+        const e = ex as Record<string, unknown>;
+        await supabase.from("profile_followings").update({ is_current: false }).eq("id", e.id as string);
+        await supabase.from("follow_events").insert({
+          tracked_profile_id: profile.id,
+          event_type: "unfollow",
+          target_username: e.following_username as string,
+          target_avatar_url: (e.following_avatar_url as string) || null,
+          target_display_name: (e.following_display_name as string) || null,
+          direction: "following",
+          notification_sent: false,
+          gender_tag: detectGender(e.following_display_name as string | null),
+          category: "normal",
+        });
       }
-      const userInfo = await userInfoRes.json();
-      const igUserId = String(userInfo.pk || userInfo.id);
-
-      // Update profile metadata
-      await supabase.from("tracked_profiles").update({
-        previous_follower_count: profile.follower_count || 0,
-        previous_following_count: profile.following_count || 0,
-        avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-        display_name: userInfo.full_name || null,
-        follower_count: userInfo.follower_count || 0,
-        following_count: userInfo.following_count || 0,
-        last_scanned_at: new Date().toISOString(),
-        initial_scan_done: true,
-      }).eq("id", profile.id);
-
-      // Quick scan: page 1 only
-      await sleep(500);
-      const followingUsers = await fetchFollowingPage1(igUserId, hikerApiKey);
-      const newCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at);
-
-      console.log(`[trigger-scan] ${profile.username}: ${followingUsers.length} on page 1, ${newCount} new follows`);
-      results.push({ username: profile.username, new_follows: newCount });
     }
 
-    return new Response(JSON.stringify({ results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ── Detect new follows missed by smart-scan ──
+    let newFollowsFound = 0;
+    const now = Date.now();
+    const lastTs = profile.last_scanned_at ? new Date(profile.last_scanned_at).getTime() : now - 60 * 60 * 1000;
+    const spanMs = Math.max(now - lastTs, 60_000);
+
+    for (const f of allFollowings) {
+      if (!existingIds.has(f.pk)) {
+        newFollowsFound++;
+        const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
+        await supabase.from("profile_followings").insert({
+          tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
+          following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
+          first_seen_at: ts, direction: "following",
+        });
+        await supabase.from("follow_events").insert({
+          tracked_profile_id: profile.id, event_type: "follow", target_username: f.username,
+          target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
+          detected_at: ts, direction: "following", notification_sent: false,
+          gender_tag: detectGender(f.full_name),
+          category: categorizeFollow(f.follower_count, f.is_private),
+          target_follower_count: f.follower_count || null,
+          target_is_private: f.is_private || false,
+        });
+      }
+    }
+
+    // ── Log the check ──
+    await supabase.from("unfollow_checks").insert({
+      tracked_profile_id: profileId,
+      user_id: user.id,
+      unfollows_found: unfollowsFound,
+      new_follows_found: newFollowsFound,
+    });
+
+    const remaining = 2 - ((count || 0) + 1);
+    console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${remaining} checks remaining`);
+
+    return new Response(JSON.stringify({
+      success: true,
+      unfollows_found: unfollowsFound,
+      new_follows_found: newFollowsFound,
+      checks_remaining: remaining,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
-    console.error("[trigger-scan] Error:", err);
+    console.error("[unfollow-check] Error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

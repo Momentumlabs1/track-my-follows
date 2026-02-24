@@ -269,5 +269,17 @@
     "loading": "Laden...",
     "error": "Etwas ist schiefgelaufen",
     "retry": "Erneut versuchen"
+  },
+  "unfollow_check": {
+    "button": "Unfollows prüfen",
+    "checking": "Wird geprüft...",
+    "pro_only": "Pro: Unfollow-Erkennung",
+    "limit_reached": "Keine Checks mehr heute",
+    "unfollows_detected": "Unfollows erkannt",
+    "no_unfollows": "Keine Unfollows erkannt"
+  },
+  "scan_status": {
+    "auto_hourly": "Stündlich",
+    "once_daily": "1×/Tag"
   }
 }

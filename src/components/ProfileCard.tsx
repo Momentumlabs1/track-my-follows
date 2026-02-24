@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
+import { ScanStatus } from "@/components/ScanStatus";
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -105,7 +106,7 @@ export function ProfileCard({ profile, index }: ProfileCardProps) {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-sm text-foreground">@{profile.username}</h3>
-              <p className="text-[11px] text-muted-foreground">{timeAgo(profile.last_scanned_at)}</p>
+              <ScanStatus lastScannedAt={profile.last_scanned_at} />
             </div>
             <button
               onClick={handleQuickScan}

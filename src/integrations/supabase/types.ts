@@ -287,6 +287,41 @@ export type Database = {
         }
         Relationships: []
       }
+      unfollow_checks: {
+        Row: {
+          created_at: string
+          id: string
+          new_follows_found: number | null
+          tracked_profile_id: string
+          unfollows_found: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_follows_found?: number | null
+          tracked_profile_id: string
+          unfollows_found?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_follows_found?: number | null
+          tracked_profile_id?: string
+          unfollows_found?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unfollow_checks_tracked_profile_id_fkey"
+            columns: ["tracked_profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string
