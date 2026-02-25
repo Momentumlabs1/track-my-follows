@@ -17,13 +17,15 @@ interface ProfileCardProps {
   onAssignSpy: () => void;
   index: number;
   isDragging?: boolean;
+  isHovered?: boolean;
 }
 
-export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: ProfileCardProps) {
+export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHovered }: ProfileCardProps) {
   const { t } = useTranslation();
 
-  // During drag: current spy card gets strong highlight, others get subtle invite
-  const isDropTarget = isDragging && !hasSpy;
+  // Only the hovered card gets the strong highlight
+  const isDropTarget = isHovered === true;
+  // Current spy card dims during any drag
   const isCurrentSpy = isDragging && hasSpy;
 
   return (
@@ -33,22 +35,22 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: Profi
       animate={{
         opacity: 1,
         y: 0,
-        scale: isDropTarget ? 1.02 : isCurrentSpy ? 0.97 : 1,
+        scale: isDropTarget ? 1.03 : isCurrentSpy ? 0.97 : 1,
       }}
       transition={{ delay: isDragging ? 0 : index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
       className="relative transition-all"
     >
-      {/* Drop target glow ring for non-spy cards during drag */}
+      {/* Strong highlight ring ONLY on hovered card */}
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[2px] rounded-2xl border-2 border-primary/50 pointer-events-none z-10"
+          className="absolute -inset-[3px] rounded-2xl border-2 border-primary pointer-events-none z-10"
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.9, 0.4] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
-      {/* Current spy card dimmed during drag */}
+      {/* Current spy card dimmed */}
       {isCurrentSpy && (
         <motion.div
           className="absolute inset-0 rounded-2xl bg-muted/40 pointer-events-none z-10"
@@ -65,8 +67,8 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: Profi
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <motion.div
-              animate={isDropTarget ? { rotate: [0, -3, 3, 0] } : {}}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+              animate={isDropTarget ? { rotate: [0, -4, 4, 0] } : { rotate: 0 }}
+              transition={isDropTarget ? { duration: 0.6, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
             >
               <InstagramAvatar
                 src={profile.avatar_url}
