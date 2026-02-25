@@ -1,6 +1,7 @@
-import { sendLovableEmail } from "@lovable.dev/email-js";
+import { parseEmailWebhookPayload, sendLovableEmail } from "@lovable.dev/email-js";
+import { verifyWebhookRequest, WebhookError } from "@lovable.dev/webhooks-js";
+import type { EmailWebhookPayload } from "@lovable.dev/webhooks-js";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
-import { Webhook } from "npm:standardwebhooks@1.0.0";
 import { SignupEmail } from "../_shared/email-templates/signup.tsx";
 import { RecoveryEmail } from "../_shared/email-templates/recovery.tsx";
 import { InviteEmail } from "../_shared/email-templates/invite.tsx";
@@ -10,6 +11,49 @@ import { ReauthenticationEmail } from "../_shared/email-templates/reauthenticati
 
 const SITE_NAME = "Spy-Secret";
 const SITE_URL = "https://spy-secret.com";
+
+type LegacySupabasePayload = {
+  user?: { email?: string; id?: string };
+  email_data?: {
+    token?: string;
+    token_hash?: string;
+    redirect_to?: string;
+    email_action_type?: string;
+    site_url?: string;
+  };
+};
+
+function extractEmailData(payload: EmailWebhookPayload | LegacySupabasePayload) {
+  if ("data" in payload && payload.data) {
+    const data = payload.data;
+    const actionType = String(data.action_type ?? "");
+    const url = String(data.url ?? SITE_URL);
+    return {
+      runId: String(payload.run_id ?? data.run_id ?? ""),
+      apiBaseUrl: String(data.api_base_url ?? "https://api.lovable.dev"),
+      recipient: String(data.email ?? ""),
+      actionType,
+      token: String(data.token ?? ""),
+      confirmationUrl: url,
+    };
+  }
+
+  const legacy = payload as LegacySupabasePayload;
+  const actionType = legacy.email_data?.email_action_type ?? "";
+  const tokenHash = legacy.email_data?.token_hash ?? "";
+  const redirectTo = legacy.email_data?.redirect_to || SITE_URL;
+  const siteUrl = legacy.email_data?.site_url || SITE_URL;
+  const confirmationUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=${actionType}&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+  return {
+    runId: "",
+    apiBaseUrl: "https://api.lovable.dev",
+    recipient: legacy.user?.email ?? "",
+    actionType,
+    token: legacy.email_data?.token ?? "",
+    confirmationUrl,
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -22,93 +66,73 @@ Deno.serve(async (req) => {
       throw new Error("SEND_EMAIL_HOOK_SECRET not configured");
     }
 
-    // Supabase UI can show secrets as "v1,whsec_..."; standardwebhooks expects "whsec_..."
-    const hookSecret = rawHookSecret.includes(",")
-      ? rawHookSecret.split(",").pop()?.trim() ?? ""
-      : rawHookSecret;
-    if (!hookSecret.startsWith("whsec_")) {
-      throw new Error("Invalid SEND_EMAIL_HOOK_SECRET format");
+    const secrets = rawHookSecret
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value) => value.startsWith("whsec_"));
+
+    const { payload } = await verifyWebhookRequest<EmailWebhookPayload | LegacySupabasePayload>({
+      req,
+      secret: secrets[0] ?? rawHookSecret,
+      signatureHeader: "webhook-signature",
+      timestampHeader: "webhook-timestamp",
+      parser: (body) => {
+        try {
+          return parseEmailWebhookPayload(body);
+        } catch {
+          return JSON.parse(body) as LegacySupabasePayload;
+        }
+      },
+    });
+
+    const { runId, apiBaseUrl, recipient, actionType, token, confirmationUrl } = extractEmailData(payload);
+
+    if (!recipient) {
+      throw new Error("Missing recipient email in webhook payload");
     }
 
-    // Verify Supabase Standard Webhook signature
-    const body = await req.text();
-    const wh = new Webhook(hookSecret);
-    const headers: Record<string, string> = {};
-    headers["webhook-id"] = req.headers.get("webhook-id") || "";
-    headers["webhook-timestamp"] = req.headers.get("webhook-timestamp") || "";
-    headers["webhook-signature"] = req.headers.get("webhook-signature") || "";
-
-    const payload = wh.verify(body, headers) as {
-      user: { email: string; id: string };
-      email_data: {
-        token: string;
-        token_hash: string;
-        redirect_to: string;
-        email_action_type: string;
-        site_url: string;
-        token_new?: string;
-        token_hash_new?: string;
-      };
-    };
-
-    const recipient = payload.user?.email ?? "";
-    const emailAction = payload.email_data?.email_action_type ?? "";
-    const token = payload.email_data?.token ?? "";
-    const tokenHash = payload.email_data?.token_hash ?? "";
-    const redirectTo = payload.email_data?.redirect_to || SITE_URL;
-    const siteUrl = payload.email_data?.site_url || SITE_URL;
-
-    // Build confirmation URL for link-based actions
-    const confirmationUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=${emailAction}&redirect_to=${encodeURIComponent(redirectTo)}`;
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) {
+      throw new Error("LOVABLE_API_KEY not configured");
+    }
 
     let subject = "";
     let html = "";
 
-    switch (emailAction) {
+    switch (actionType) {
       case "signup": {
         subject = `Dein Bestätigungscode – ${SITE_NAME}`;
-        html = await renderAsync(
-          SignupEmail({ token, siteName: SITE_NAME })
-        );
+        html = await renderAsync(SignupEmail({ token, siteName: SITE_NAME }));
         break;
       }
       case "recovery": {
         subject = `Passwort zurücksetzen – ${SITE_NAME}`;
-        html = await renderAsync(
-          RecoveryEmail({ confirmationUrl, siteName: SITE_NAME })
-        );
+        html = await renderAsync(RecoveryEmail({ confirmationUrl, siteName: SITE_NAME }));
         break;
       }
       case "invite": {
         subject = `Einladung zu ${SITE_NAME}`;
-        html = await renderAsync(
-          InviteEmail({ confirmationUrl, siteName: SITE_NAME })
-        );
+        html = await renderAsync(InviteEmail({ confirmationUrl, siteName: SITE_NAME }));
         break;
       }
+      case "magiclink":
       case "magic_link": {
         subject = `Dein Login-Link – ${SITE_NAME}`;
-        html = await renderAsync(
-          MagicLinkEmail({ confirmationUrl, siteName: SITE_NAME })
-        );
+        html = await renderAsync(MagicLinkEmail({ confirmationUrl, siteName: SITE_NAME }));
         break;
       }
       case "email_change": {
         subject = `E-Mail-Änderung bestätigen – ${SITE_NAME}`;
-        html = await renderAsync(
-          EmailChangeEmail({ confirmationUrl, siteName: SITE_NAME })
-        );
+        html = await renderAsync(EmailChangeEmail({ confirmationUrl, siteName: SITE_NAME }));
         break;
       }
       case "reauthentication": {
         subject = `Bestätigungscode – ${SITE_NAME}`;
-        html = await renderAsync(
-          ReauthenticationEmail({ token, siteName: SITE_NAME })
-        );
+        html = await renderAsync(ReauthenticationEmail({ token, siteName: SITE_NAME }));
         break;
       }
       default: {
-        console.warn(`Unknown email action: ${emailAction}`);
+        console.warn(`Unknown email action: ${actionType}`);
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -116,15 +140,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send via Lovable Email API
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    if (!runId) {
+      throw new Error("Missing run_id in webhook payload");
     }
 
     await sendLovableEmail(
       {
-        run_id: crypto.randomUUID(),
+        run_id: runId,
         to: recipient,
         from: `Spy-Secret <noreply@spy-secret.com>`,
         subject,
@@ -132,7 +154,7 @@ Deno.serve(async (req) => {
         text: subject,
         purpose: "transactional",
       },
-      { apiKey, apiBaseUrl: "https://api.lovable.dev" },
+      { apiKey, apiBaseUrl },
     );
 
     return new Response(JSON.stringify({ success: true }), {
@@ -140,10 +162,17 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    if (error instanceof WebhookError) {
+      return new Response(
+        JSON.stringify({ error: error.message, code: error.code }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     console.error("Auth email hook error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });
