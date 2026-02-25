@@ -6,25 +6,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import spyLogoGif from "@/assets/spy-logo-animated.gif";
 
-type Phase = "gif" | "steps";
 const STEPS = 3;
 
 export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<Phase>("gif");
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
-
-  // GIF plays for 2.5s, then whole screen swipes up
-  useEffect(() => {
-    const timer = setTimeout(() => setPhase("steps"), 2500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleNext = useCallback(() => {
     if (step >= STEPS - 1) {
@@ -38,7 +30,7 @@ export default function Onboarding() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientY);
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null || phase !== "steps") return;
+    if (touchStart === null) return;
     const diff = touchStart - e.changedTouches[0].clientY;
     if (diff > 60) handleNext();
     if (diff < -60 && step > 0) setStep(s => s - 1);
@@ -53,47 +45,7 @@ export default function Onboarding() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <AnimatePresence mode="wait">
-        {/* ── PHASE 1: GIF fullscreen, no box, blends with black bg ── */}
-        {phase === "gif" && (
-          <motion.div
-            key="gif-intro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ y: "-100%", transition: { duration: 0.7, ease: [0.76, 0, 0.24, 1] } }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="absolute inset-0 z-50 bg-background flex items-center justify-center"
-          >
-            {/* Subtle glow behind */}
-            <motion.div
-              animate={{ opacity: [0, 0.35, 0.2], scale: [0.8, 1.15, 1] }}
-              transition={{ duration: 2.2, ease: "easeOut" }}
-              className="absolute w-[350px] h-[350px] rounded-full"
-              style={{
-                background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
-              }}
-            />
-            {/* GIF – no container, no border, just the image blending with black */}
-            <motion.img
-              src={spyLogoGif}
-              alt="Spy-Secret"
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative z-10 h-48 w-48 object-contain"
-            />
-          </motion.div>
-        )}
-
-        {/* ── PHASE 2: Step explanations ── */}
-        {phase === "steps" && (
-          <motion.div
-            key="steps"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex-1 flex flex-col relative"
-          >
+      <div className="flex-1 flex flex-col relative">
             {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none">
               <motion.div
@@ -189,9 +141,7 @@ export default function Onboarding() {
                 </Link>
               </p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
     </div>
   );
 }

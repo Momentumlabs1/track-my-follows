@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import logoSquare from "@/assets/logo-square.png";
+import spyLogoGif from "@/assets/spy-logo-animated.gif";
 
 export default function Splash() {
   const { user, loading } = useAuth();
@@ -45,9 +45,9 @@ export default function Splash() {
       <div className="relative flex flex-col items-center">
         {/* Logo with bounce-in */}
         <motion.img
-          src={logoSquare}
+          src={spyLogoGif}
           alt="Spy-Secret"
-          className="h-28 w-28 drop-shadow-[0_0_40px_hsl(338,100%,58%,0.4)] mb-6"
+          className="h-36 w-36 object-contain mb-6"
           initial={{ opacity: 0, scale: 0.3, rotate: -20 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
           transition={{
