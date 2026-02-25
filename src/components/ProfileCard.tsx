@@ -1,7 +1,5 @@
-import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
@@ -18,49 +16,35 @@ interface ProfileCardProps {
   onTap: () => void;
   onAssignSpy: () => void;
   index: number;
+  isDragging?: boolean;
 }
 
-export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: ProfileCardProps) {
+export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: ProfileCardProps) {
   const { t } = useTranslation();
-  const [dragOver, setDragOver] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = "move";
-    if (!hasSpy) setDragOver(true);
-  };
-
-  const handleDragLeave = () => setDragOver(false);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-    const data = e.dataTransfer.getData("text/plain");
-    if (!hasSpy && data === "spy") {
-      onAssignSpy();
-    }
-  };
 
   return (
     <motion.div
-      ref={cardRef}
+      data-profile-id={profile.id}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={dragOver ? "ring-2 ring-primary rounded-2xl transition-all" : "transition-all"}
+      className="transition-all"
     >
+      {/* Pulsing ring hint during drag for non-spy cards */}
+      {isDragging && !hasSpy && (
+        <motion.div
+          className="absolute inset-0 rounded-2xl border-2 border-primary/40 pointer-events-none"
+          animate={{ opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 1.2, repeat: Infinity }}
+        />
+      )}
+
       <button
         onClick={onTap}
         className="native-card p-4 w-full text-start"
       >
         <div className="flex items-center gap-3">
-          {/* Avatar with Spy badge */}
+          {/* Avatar */}
           <div className="relative flex-shrink-0">
             <InstagramAvatar
               src={profile.avatar_url}
@@ -68,22 +52,12 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
               fallbackInitials={profile.username}
               size={48}
             />
-            {hasSpy && (
-              <div className="absolute -top-2 -end-2">
-                <SpyIcon size={26} glow />
-              </div>
-            )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="text-[14px] font-bold text-foreground truncate">@{profile.username}</p>
-              {hasSpy && (
-                <span className="text-[9px] font-extrabold text-primary gradient-pink text-primary-foreground px-1.5 py-0.5 rounded-full">
-                  SPY
-                </span>
-              )}
             </div>
             <p className="text-[11px] text-muted-foreground">
               {formatCount(profile.follower_count ?? 0)} {t("dashboard.followers")} · {formatCount(profile.following_count ?? 0)} {t("dashboard.following")}
@@ -106,20 +80,6 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
       </button>
-
-      {/* Assign Spy drop zone / button (only when no spy) */}
-      {!hasSpy && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onAssignSpy(); }}
-          className={`w-full mt-1 py-2 rounded-xl border border-dashed text-[11px] font-medium transition-colors flex items-center justify-center gap-1.5 ${
-            dragOver
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-primary/20 text-primary/60 hover:bg-primary/5"
-          }`}
-        >
-          <SpyIcon size={14} /> {t("spy.assign_spy_here")}
-        </button>
-      )}
     </motion.div>
   );
 }
