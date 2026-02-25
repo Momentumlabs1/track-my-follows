@@ -17,9 +17,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET");
-    if (!hookSecret) {
+    const rawHookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET")?.trim();
+    if (!rawHookSecret) {
       throw new Error("SEND_EMAIL_HOOK_SECRET not configured");
+    }
+
+    // Supabase UI can show secrets as "v1,whsec_..."; standardwebhooks expects "whsec_..."
+    const hookSecret = rawHookSecret.includes(",")
+      ? rawHookSecret.split(",").pop()?.trim() ?? ""
+      : rawHookSecret;
+    if (!hookSecret.startsWith("whsec_")) {
+      throw new Error("Invalid SEND_EMAIL_HOOK_SECRET format");
     }
 
     // Verify Supabase Standard Webhook signature
