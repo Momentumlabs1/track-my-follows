@@ -1,5 +1,5 @@
-import { Webhook } from "@lovable.dev/webhooks-js";
-import { Resend } from "@lovable.dev/email-js";
+import { parseEmailWebhookPayload, sendLovableEmail } from "@lovable.dev/email-js";
+import { verifyWebhookRequest, type EmailWebhookPayload } from "@lovable.dev/webhooks-js";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
 import { SignupEmail } from "../_shared/email-templates/signup.tsx";
 import { RecoveryEmail } from "../_shared/email-templates/recovery.tsx";
@@ -16,31 +16,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const webhookSecret = Deno.env.get("LOVABLE_API_KEY");
-    if (!webhookSecret) {
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const wh = new Webhook(webhookSecret);
-    const body = await req.text();
-    const headers: Record<string, string> = {};
-    req.headers.forEach((v, k) => (headers[k] = v));
+    const { body } = await verifyWebhookRequest<EmailWebhookPayload>({
+      req,
+      secret: apiKey,
+    });
 
-    const payload = wh.verify(body, headers) as any;
+    const payload = parseEmailWebhookPayload(body);
+    if (payload.version !== "1") {
+      throw new Error(`Unsupported payload version: ${payload.version}`);
+    }
+    if (!payload.run_id) {
+      throw new Error("Missing run_id");
+    }
 
-    const { email_data, email_action } = payload;
-    const { token, token_hash, redirect_to, email_change_new } = email_data || {};
-    const recipient = email_data?.email || "";
-    const confirmationUrl = email_data?.confirmation_url || redirect_to || "";
+    const apiBaseUrl = payload.data?.api_base_url ?? "https://api.lovable.dev";
+    const recipient = payload.data?.email ?? "";
+    const token = payload.data?.token ?? "";
+    const confirmationUrl = payload.data?.confirmation_url ?? "";
+    const emailAction = payload.data?.email_action_type ?? "";
 
     let subject = "";
     let html = "";
 
-    switch (email_action?.action) {
+    switch (emailAction) {
       case "signup": {
         subject = `Dein Bestätigungscode – ${SITE_NAME}`;
         html = await renderAsync(
-          SignupEmail({ token: token || token_hash || "", siteName: SITE_NAME })
+          SignupEmail({ token, siteName: SITE_NAME })
         );
         break;
       }
@@ -75,12 +82,12 @@ Deno.serve(async (req) => {
       case "reauthentication": {
         subject = `Bestätigungscode – ${SITE_NAME}`;
         html = await renderAsync(
-          ReauthenticationEmail({ token: token || token_hash || "", siteName: SITE_NAME })
+          ReauthenticationEmail({ token, siteName: SITE_NAME })
         );
         break;
       }
       default: {
-        console.warn(`Unknown email action: ${email_action?.action}`);
+        console.warn(`Unknown email action: ${emailAction}`);
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -88,21 +95,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send email via Lovable email API
-    const callbackUrl = email_action?.callback_url;
-    if (!callbackUrl) {
-      throw new Error("No callback_url in payload");
-    }
-
-    const resend = new Resend(webhookSecret);
-    await resend.emails.send(
+    await sendLovableEmail(
       {
+        run_id: payload.run_id,
+        to: recipient,
         from: `Spy-Secret <noreply@notify.spy-secret.com>`,
-        to: [recipient],
         subject,
         html,
+        text: subject,
+        purpose: "transactional",
       },
-      { callbackUrl }
+      { apiKey, apiBaseUrl },
     );
 
     return new Response(JSON.stringify({ success: true }), {
