@@ -96,23 +96,54 @@ const Dashboard = () => {
               {t("simple.tracking_count", { count: profiles.length })}
             </p>
           )}
-          {latestEvent && (
-            <div className="mt-3 rounded-xl bg-primary/10 px-4 py-3">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{t("simple.hot_right_now")} 🔥</p>
-              <p className="text-[13px] font-semibold text-foreground">
-                @{latestEvent.target_username} — {latestEvent.event_type === "follow" || latestEvent.event_type === "new_following"
+        </motion.div>
+      </div>
+
+      {/* Hot Alert Card */}
+      {latestEvent && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="mx-4 mb-2"
+        >
+          <div className="relative overflow-hidden rounded-2xl gradient-pink p-[1px]">
+            <div className="rounded-2xl bg-background/95 backdrop-blur-sm p-4">
+              <div className="absolute top-0 end-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="flex items-center gap-1.5 mb-2">
+                <motion.span
+                  className="text-lg"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  🔥
+                </motion.span>
+                <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+                  {t("simple.hot_right_now")}
+                </span>
+              </div>
+              <p className="text-[15px] font-bold text-foreground">
+                <span className="text-primary">@{latestEvent.target_username}</span>
+                {" "}
+                {latestEvent.event_type === "follow" || latestEvent.event_type === "new_following"
                   ? t("events.newFollowing")
                   : t("events.hasUnfollowed")}
               </p>
+              {latestEvent.target_display_name && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">{latestEvent.target_display_name}</p>
+              )}
             </div>
-          )}
-          {!latestEvent && profiles.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("events.no_events_subtitle")}
-            </p>
-          )}
+          </div>
         </motion.div>
-      </div>
+      )}
+      {!latestEvent && profiles.length > 0 && (
+        <div className="mx-4 mb-2">
+          <div className="rounded-2xl bg-muted/50 p-4 flex items-center gap-3">
+            <span className="text-2xl">😴</span>
+            <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
+          </div>
+        </div>
+      )}
 
       {/* Story-style profile scroller */}
       {profiles.length > 0 && (
