@@ -1,7 +1,6 @@
 {
   "imports": {
     "@lovable.dev/email-js": "npm:@lovable.dev/email-js@latest",
-    "@lovable.dev/webhooks-js": "npm:@lovable.dev/webhooks-js@latest",
     "react": "npm:react@18.3.1",
     "react-dom": "npm:react-dom@18.3.1",
     "@react-email/components": "npm:@react-email/components@0.0.22"
