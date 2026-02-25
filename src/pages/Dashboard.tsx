@@ -49,7 +49,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { plan } = useSubscription();
+  const { plan, showPaywall } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const [spyDragging, setSpyDragging] = useState(false);
@@ -182,7 +182,48 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Spy Assignment Card + Draggable Spy */}
+      {/* Spy of the Day – only for Free users, greyed out, clickable → paywall */}
+      {!isPro && profiles.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mx-4 mb-3"
+        >
+          <button
+            onClick={() => {
+              haptic.light();
+              showPaywall("spy_of_the_day");
+            }}
+            className="w-full text-start relative overflow-hidden rounded-2xl border border-muted-foreground/20 p-[1px]"
+          >
+            <div className="rounded-2xl bg-muted/40 p-4 opacity-60 grayscale">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-lg">📋</span>
+                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t("simple.spy_of_the_day")}</span>
+                <span className="ms-auto text-[9px] font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">PRO</span>
+              </div>
+              {latestEvent && latestInfo ? (
+                <>
+                  <p className="text-[15px] font-bold text-muted-foreground leading-snug">
+                    <span>@{latestInfo.username}</span> {latestInfo.verb}
+                  </p>
+                  {latestEvent.tracked_profiles?.username && (
+                    <p className="text-[11px] text-muted-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
+              )}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-background/30 rounded-2xl">
+              <span className="text-[12px] font-bold text-primary flex items-center gap-1.5">🔒 {t("paywall.unlock_spy", "Spy freischalten")}</span>
+            </div>
+          </button>
+        </motion.div>
+      )}
+
+      {/* Spy Assignment Card + Draggable Spy (Pro only) */}
       {isPro && (
         <div className="flex items-start gap-3 mx-4 mb-4">
           <div className="flex-1">
@@ -204,8 +245,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Spy of the Day */}
-      {latestEvent && latestInfo && (
+      {/* Spy of the Day for Pro users */}
+      {isPro && latestEvent && latestInfo && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -230,7 +271,7 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {!latestEvent && profiles.length > 0 && (
+      {isPro && !latestEvent && profiles.length > 0 && (
         <div className="mx-4 mb-2">
           <div className="rounded-2xl bg-muted/50 p-4 flex items-center gap-3">
             <span className="text-2xl">😴</span>
