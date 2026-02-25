@@ -186,26 +186,28 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* ═══════ SPY DES TAGES – Full-width pink banner (Pro) ═══════ */}
+      {/* ═══════ SPY DES TAGES – Card with pink bg (Pro) ═══════ */}
       {isPro && latestEvent && latestInfo && (
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="gradient-pink px-5 py-4 mb-4"
+          className="mx-4 mb-4"
         >
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-lg">📋</span>
-            <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
-              {t("simple.spy_of_the_day")}
-            </span>
+          <div className="gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-lg">📋</span>
+              <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
+                {t("simple.spy_of_the_day")}
+              </span>
+            </div>
+            <p className="text-[15px] font-bold text-primary-foreground leading-snug">
+              <span className="opacity-90">@{latestInfo.username}</span> {latestInfo.verb}
+            </p>
+            {latestEvent.tracked_profiles?.username && (
+              <p className="text-[11px] text-primary-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
+            )}
           </div>
-          <p className="text-[15px] font-bold text-primary-foreground leading-snug">
-            <span className="opacity-90">@{latestInfo.username}</span> {latestInfo.verb}
-          </p>
-          {latestEvent.tracked_profiles?.username && (
-            <p className="text-[11px] text-primary-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
-          )}
         </motion.div>
       )}
 
@@ -214,17 +216,19 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="gradient-pink px-5 py-4 mb-4"
+          className="mx-4 mb-4"
         >
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-lg">📋</span>
-            <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
-              {t("simple.spy_of_the_day")}
-            </span>
+          <div className="gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)]">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-lg">📋</span>
+              <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
+                {t("simple.spy_of_the_day")}
+              </span>
+            </div>
+            <p className="text-[13px] text-primary-foreground/60 font-medium flex items-center gap-2">
+              <span className="text-xl">😴</span> {t("simple.no_activity_today")}
+            </p>
           </div>
-          <p className="text-[13px] text-primary-foreground/60 font-medium flex items-center gap-2">
-            <span className="text-xl">😴</span> {t("simple.no_activity_today")}
-          </p>
         </motion.div>
       )}
 
@@ -234,16 +238,16 @@ const Dashboard = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="mb-4"
+          className="mx-4 mb-4"
         >
           <button
             onClick={() => {
               haptic.light();
               showPaywall("spy_of_the_day");
             }}
-            className="w-full text-start relative overflow-hidden"
+            className="w-full text-start relative overflow-hidden rounded-2xl"
           >
-            <div className="gradient-pink px-5 py-4 opacity-40 grayscale">
+            <div className="gradient-pink rounded-2xl px-5 py-4 opacity-40 grayscale">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-lg">📋</span>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest">
@@ -257,7 +261,7 @@ const Dashboard = () => {
                 <p className="text-[13px] font-medium">{t("simple.no_activity_today")}</p>
               )}
             </div>
-            <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/30 rounded-2xl">
               <span className="text-[12px] font-bold text-primary flex items-center gap-1.5">🔒 {t("paywall.unlock_spy", "Spy freischalten")}</span>
             </div>
           </button>
