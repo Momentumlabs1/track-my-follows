@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
+import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
@@ -43,13 +44,13 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
         className="mx-4 mb-4"
       >
         <div className="native-card p-5 border border-dashed border-primary/30 text-center">
-          <motion.span
-            className="text-3xl block mb-2"
+          <motion.div
+            className="block mb-2"
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            🕵️
-          </motion.span>
+            <SpyIcon size={36} />
+          </motion.div>
           <p className="text-[14px] font-bold text-foreground">{t("spy.assign_your_spy")}</p>
           <p className="text-[12px] text-muted-foreground mt-1">{t("spy.spy_description")}</p>
         </div>
@@ -71,13 +72,12 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
-              <motion.span
-                className="text-lg"
+            <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                🕵️
-              </motion.span>
+                <SpyIcon size={22} />
+              </motion.div>
               <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
                 {t("spy.spy_watching")}
               </span>
@@ -112,7 +112,7 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
             onClick={onMoveSpy}
             className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors"
           >
-            🔄 {t("spy.move_spy")}
+            <SpyIcon size={14} className="inline" /> {t("spy.move_spy")}
           </button>
         </div>
       </div>

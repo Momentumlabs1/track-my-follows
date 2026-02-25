@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { haptic } from "@/lib/native";
 import logoSquare from "@/assets/logo-square.png";
+import { SpyIcon } from "@/components/SpyIcon";
 
 // Unified event type for the feed
 export interface UnifiedFeedEvent {
@@ -170,7 +171,7 @@ const Dashboard = () => {
 
         {/* Greeting */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <h1 className="text-2xl font-extrabold text-foreground">🕵️ Hey {displayName}!</h1>
+          <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2"><SpyIcon size={28} /> Hey {displayName}!</h1>
           {profiles.length > 0 && (
             <p className="text-sm text-muted-foreground mt-0.5">
               {t("simple.tracking_count", { count: profiles.length })}
@@ -199,7 +200,7 @@ const Dashboard = () => {
             <div className="rounded-2xl bg-background/95 backdrop-blur-sm p-4">
               <div className="absolute top-0 end-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               <div className="flex items-center gap-1.5 mb-2">
-                <motion.span className="text-lg" animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>🕵️</motion.span>
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}><SpyIcon size={22} /></motion.div>
                 <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">{t("simple.spy_of_the_day")}</span>
               </div>
               <p className="text-[15px] font-bold text-foreground leading-snug">

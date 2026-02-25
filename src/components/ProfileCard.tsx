@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
+import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
@@ -41,7 +42,7 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
               size={48}
             />
             {hasSpy && (
-              <div className="absolute -top-1 -end-1 text-sm">🕵️</div>
+              <div className="absolute -top-1 -end-1"><SpyIcon size={18} /></div>
             )}
           </div>
 
@@ -83,7 +84,7 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
           onClick={(e) => { e.stopPropagation(); onAssignSpy(); }}
           className="w-full mt-1 py-2 rounded-xl border border-dashed border-primary/20 text-primary/60 text-[11px] font-medium hover:bg-primary/5 transition-colors"
         >
-          🕵️ {t("spy.assign_spy_here")}
+          <SpyIcon size={14} className="inline" /> {t("spy.assign_spy_here")}
         </button>
       )}
     </motion.div>

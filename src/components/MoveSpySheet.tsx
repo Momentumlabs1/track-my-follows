@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
+import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
@@ -18,7 +19,7 @@ export function MoveSpySheet({ open, onOpenChange, profiles, currentSpyId, onMov
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl pb-8">
         <SheetHeader className="text-center mb-4">
-          <div className="text-3xl mb-1">🕵️</div>
+          <div className="mb-1"><SpyIcon size={36} /></div>
           <SheetTitle className="text-[16px] font-extrabold">{t("spy.move_your_spy")}</SheetTitle>
           <p className="text-[12px] text-muted-foreground">{t("spy.choose_profile_to_watch")}</p>
         </SheetHeader>
@@ -52,7 +53,7 @@ export function MoveSpySheet({ open, onOpenChange, profiles, currentSpyId, onMov
                   {profile.id === currentSpyId ? t("spy.currently_watching") : t("spy.tap_to_assign")}
                 </p>
               </div>
-              {profile.id === currentSpyId && <span className="text-lg">🕵️</span>}
+              {profile.id === currentSpyId && <SpyIcon size={22} />}
             </button>
           ))}
         </div>
