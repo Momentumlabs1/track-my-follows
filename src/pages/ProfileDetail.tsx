@@ -232,7 +232,7 @@ const ProfileDetail = () => {
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex items-center gap-2">
-          {hasSpy && <SpyIcon size={18} />}
+          {hasSpy && <SpyIcon size={22} glow />}
           <span className="text-[13px] font-bold text-muted-foreground">@{profile.username}</span>
         </div>
         <div className="flex items-center gap-0">
@@ -261,7 +261,7 @@ const ProfileDetail = () => {
                 </div>
               </div>
               {hasSpy && (
-                <div className="absolute -top-1 -end-1"><SpyIcon size={24} /></div>
+                <div className="absolute -top-2 -end-2"><SpyIcon size={32} glow /></div>
               )}
             </div>
             <p className="text-[15px] font-bold text-foreground mt-2">@{profile.username}</p>
@@ -321,7 +321,7 @@ const ProfileDetail = () => {
             onClick={() => setMoveSpyOpen(true)}
             className="w-full native-card p-4 border border-dashed border-primary/30 flex items-center gap-3"
           >
-            <SpyIcon size={28} />
+            <SpyIcon size={40} glow />
             <div className="flex-1 text-start">
               <p className="text-[13px] font-bold text-foreground">{t("spy.assign_spy_here")}</p>
               <p className="text-[11px] text-muted-foreground">{t("spy.spy_required_description")}</p>
