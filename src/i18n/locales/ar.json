@@ -227,8 +227,14 @@
     "email_placeholder": "بريدك الإلكتروني",
     "password_placeholder": "كلمة المرور",
     "login_success": "مرحباً بعودتك! 💕",
-    "signup_success": "تم إنشاء الحساب! 🎉",
-    "free_note": "لا حاجة لاشتراك. ابدأ مجاناً."
+    "signup_success": "تحقق من بريدك! 📬",
+    "free_note": "لا حاجة لاشتراك. ابدأ مجاناً.",
+    "verify_title": "تحقق من بريدك الإلكتروني",
+    "verify_subtitle": "أرسلنا رمزًا مكونًا من 6 أرقام إلى {{email}}",
+    "verify_button": "تأكيد",
+    "verified_success": "تم التحقق! مرحباً! 🎉",
+    "resend_code": "لم تحصل على رمز؟ إعادة الإرسال",
+    "code_resent": "تم إعادة إرسال الرمز! 📬"
   },
   "onboarding": {
     "slide1_title": "الثقة جيدة.",
