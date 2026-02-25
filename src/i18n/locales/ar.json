@@ -61,6 +61,7 @@
     "lost_follower": "فقد متابع",
     "unfollowed": "ألغى المتابعة",
     "no_new_events": "لم يتم اكتشاف متابعات جديدة بعد",
+    "no_new_followers": "لم يتم اكتشاف متابعين جدد بعد",
     "no_gone_events": "لم يتم اكتشاف إلغاء متابعات بعد",
     "will_update": "سيتم التحديث في الفحص التالي",
     "start_scan": "ابدأ فحصاً لاكتشاف النشاط",
@@ -77,6 +78,13 @@
   "profile": {
     "followed": "متابَع",
     "unfollowed": "إلغاء المتابعة",
+    "follows_new": "يتابع حديثاً",
+    "new_followers": "متابعون جدد",
+    "unfollowed_tab": "إلغاء المتابعة",
+    "insights_tab": "إحصائيات",
+    "unfollowed_by_them": "ألغى المتابعة",
+    "lost_followers_title": "فقد متابعين",
+    "tap_check_to_scan": "اضغط 'فحص إلغاء المتابعات' أعلاه",
     "recentFollowing": "يتابع حديثاً",
     "newFollowers": "متابعون جدد",
     "hasUnfollowed": "ألغى المتابعة",
@@ -121,7 +129,9 @@
     "no_events": "لم يتم اكتشاف أي نشاط بعد",
     "no_events_subtitle": "سنُعلمك عندما يحدث شيء",
     "upgrade_to_reveal": "🔒 ترقية للكشف",
-    "mutual": "يتابعان بعضهما"
+    "mutual": "يتابعان بعضهما",
+    "follows_now": "يتابع الآن",
+    "new_follower_of": "متابع جديد لـ"
   },
   "category": {
     "influencer": "مؤثر",
@@ -155,7 +165,7 @@
     "upgrade": "ترقية 💎",
     "manage_subscription": "إدارة الاشتراك",
     "manage_in_app_store": "إدارة اشتراكك في متجر التطبيقات",
-    "restore_purchases": "استعادة المشتريات",
+    "restore_purchases": "Käufe wiederherstellen",
     "subscription_restored": "تم استعادة الاشتراك! ✅",
     "no_subscription_found": "لم يتم العثور على اشتراك نشط",
     "notifications": "الإشعارات 🔔",
@@ -267,7 +277,8 @@
     "pro_only": "Pro: كشف إلغاء المتابعة",
     "limit_reached": "لم تتبقى فحوصات اليوم",
     "unfollows_detected": "إلغاء متابعات تم اكتشافها",
-    "no_unfollows": "لم يتم اكتشاف إلغاء متابعات"
+    "no_unfollows": "لم يتم اكتشاف إلغاء متابعات",
+    "resets_midnight": "يتم التجديد عند منتصف الليل"
   },
   "scan_status": {
     "auto_hourly": "كل ساعة",

@@ -12,6 +12,7 @@ interface FollowingUser {
   full_name?: string;
   follower_count?: number;
   is_private?: boolean;
+  is_verified?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -79,20 +80,21 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
     full_name: typeof raw.full_name === "string" ? raw.full_name : undefined,
     follower_count: followerCount,
     is_private: typeof raw.is_private === "boolean" ? raw.is_private : undefined,
+    is_verified: typeof raw.is_verified === "boolean" ? raw.is_verified : undefined,
   };
 }
 
 // ── Full pagination fetch ──
-async function fetchAllFollowing(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
+async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
   let page = 0;
-  while (page < 50) { // safety limit
-    let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
+  while (page < 50) {
+    let url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
-    if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
+    if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
     const parsed = parseChunkResponse(await res.json());
     for (const raw of parsed.users) { const u = mapFollowingUser(raw); if (u) allUsers.push(u); }
     nextMaxId = parsed.nextMaxId;
@@ -185,13 +187,15 @@ Deno.serve(async (req) => {
       last_scanned_at: new Date().toISOString(),
     }).eq("id", profile.id);
 
-    // ── FULL SCAN: all pages ──
-    console.log(`[unfollow-check] Starting full scan for ${profile.username}...`);
+    // ══════════════════════════════════════════════
+    // PART 1: FOLLOWING FULL SCAN (who they unfollowed)
+    // ══════════════════════════════════════════════
+    console.log(`[unfollow-check] Starting full following scan for ${profile.username}...`);
     await sleep(500);
-    const allFollowings = await fetchAllFollowing(igUserId, hikerApiKey);
+    const allFollowings = await fetchAll("following", igUserId, hikerApiKey);
     console.log(`[unfollow-check] ${profile.username}: ${allFollowings.length} total followings fetched`);
 
-    // ── Compare with DB ──
+    // Compare with DB
     const { data: dbFollowings } = await supabase
       .from("profile_followings")
       .select("*")
@@ -199,14 +203,14 @@ Deno.serve(async (req) => {
       .eq("direction", "following")
       .eq("is_current", true);
 
-    const currentApiIds = new Set(allFollowings.map((u) => u.pk));
-    const dbMap = new Map((dbFollowings || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
-    const existingIds = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
+    const currentFollowingApiIds = new Set(allFollowings.map((u) => u.pk));
+    const dbFollowingMap = new Map((dbFollowings || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
+    const existingFollowingIds = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
 
-    // ── Detect unfollows ──
+    // Detect unfollows (in DB but not in API)
     let unfollowsFound = 0;
-    for (const [userId, ex] of dbMap) {
-      if (!currentApiIds.has(userId)) {
+    for (const [userId, ex] of dbFollowingMap) {
+      if (!currentFollowingApiIds.has(userId)) {
         unfollowsFound++;
         const e = ex as Record<string, unknown>;
         await supabase.from("profile_followings").update({ is_current: false }).eq("id", e.id as string);
@@ -224,14 +228,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Detect new follows missed by smart-scan ──
+    // Detect new follows missed by smart-scan
     let newFollowsFound = 0;
     const now = Date.now();
     const lastTs = profile.last_scanned_at ? new Date(profile.last_scanned_at).getTime() : now - 60 * 60 * 1000;
     const spanMs = Math.max(now - lastTs, 60_000);
 
     for (const f of allFollowings) {
-      if (!existingIds.has(f.pk)) {
+      if (!existingFollowingIds.has(f.pk)) {
         newFollowsFound++;
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
         await supabase.from("profile_followings").insert({
@@ -251,21 +255,95 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ══════════════════════════════════════════════
+    // PART 2: FOLLOWER FULL SCAN (who unfollowed them)
+    // ══════════════════════════════════════════════
+    console.log(`[unfollow-check] Starting full follower scan for ${profile.username}...`);
+    await sleep(1000);
+    const allFollowers = await fetchAll("followers", igUserId, hikerApiKey);
+    console.log(`[unfollow-check] ${profile.username}: ${allFollowers.length} total followers fetched`);
+
+    // Compare with DB
+    const { data: dbFollowers } = await supabase
+      .from("profile_followers")
+      .select("*")
+      .eq("tracked_profile_id", profile.id)
+      .eq("is_current", true);
+
+    const currentFollowerApiIds = new Set(allFollowers.map((u) => u.pk));
+    const existingFollowerIds = new Set((dbFollowers || []).map((f: Record<string, unknown>) => f.follower_user_id as string));
+
+    // Lost followers (in DB but not in API)
+    let lostFollowers = 0;
+    for (const dbF of (dbFollowers || [])) {
+      const f = dbF as Record<string, unknown>;
+      const fUserId = f.follower_user_id as string;
+      if (!currentFollowerApiIds.has(fUserId)) {
+        lostFollowers++;
+        await supabase.from("profile_followers").update({ is_current: false }).eq("id", f.id as string);
+        await supabase.from("follower_events").insert({
+          profile_id: profile.id,
+          instagram_user_id: fUserId,
+          username: f.follower_username as string,
+          full_name: (f.follower_display_name as string) || null,
+          profile_pic_url: (f.follower_avatar_url as string) || null,
+          event_type: "lost",
+          detected_at: new Date().toISOString(),
+          gender_tag: detectGender(f.follower_display_name as string | null),
+        });
+      }
+    }
+
+    // New followers missed by smart-scan
+    let newFollowersFound = 0;
+    for (const f of allFollowers) {
+      if (!existingFollowerIds.has(f.pk)) {
+        newFollowersFound++;
+        const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
+        await supabase.from("profile_followers").insert({
+          tracked_profile_id: profile.id,
+          follower_user_id: f.pk,
+          follower_username: f.username,
+          follower_avatar_url: f.profile_pic_url || null,
+          follower_display_name: f.full_name || null,
+          follower_follower_count: f.follower_count || null,
+          follower_is_verified: f.is_verified || false,
+          follower_is_private: f.is_private || false,
+          first_seen_at: ts,
+        });
+        await supabase.from("follower_events").insert({
+          profile_id: profile.id,
+          instagram_user_id: f.pk,
+          username: f.username,
+          full_name: f.full_name || null,
+          profile_pic_url: f.profile_pic_url || null,
+          is_verified: f.is_verified || false,
+          follower_count: f.follower_count || null,
+          event_type: "gained",
+          detected_at: ts,
+          gender_tag: detectGender(f.full_name),
+          category: categorizeFollow(f.follower_count, f.is_private),
+        });
+      }
+    }
+
     // ── Log the check ──
     await supabase.from("unfollow_checks").insert({
       tracked_profile_id: profileId,
       user_id: user.id,
-      unfollows_found: unfollowsFound,
-      new_follows_found: newFollowsFound,
+      unfollows_found: unfollowsFound + lostFollowers,
+      new_follows_found: newFollowsFound + newFollowersFound,
     });
 
     const remaining = 2 - ((count || 0) + 1);
-    console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${remaining} checks remaining`);
+    console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${lostFollowers} lost followers, ${newFollowsFound} new follows, ${newFollowersFound} new followers, ${remaining} checks remaining`);
 
     return new Response(JSON.stringify({
       success: true,
       unfollows_found: unfollowsFound,
+      lost_followers: lostFollowers,
       new_follows_found: newFollowsFound,
+      new_followers_found: newFollowersFound,
       checks_remaining: remaining,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {

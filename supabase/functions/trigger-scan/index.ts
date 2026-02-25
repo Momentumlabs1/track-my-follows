@@ -12,11 +12,11 @@ interface FollowingUser {
   full_name?: string;
   follower_count?: number;
   is_private?: boolean;
+  is_verified?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// ── Gender detection ──
 const FEMALE_NAMES = new Set(["anna","maria","laura","lisa","sarah","sophie","julia","lena","hannah","emma","lea","mia","nina","jana","alina","lara","clara","elena","melanie","nadine","stefanie","christina","katharina","alexandra","bianca","daniela","jessica","sandra","sabrina","tamara","vanessa","jennifer","michaela","verena","denise","jasmin","carina","manuela","martina","petra","silvia","claudia","monika","amelie","charlotte","luisa","emily","ashley","samantha","brittany","taylor","olivia","madison","chloe","grace","natalie","victoria","amber","nicole","rachel","megan","kate","rebecca","amanda","stephanie","heather","lauren","bella","sophia","ava","isabella","harper","ella","scarlett","aria","lily","zoe","riley","michelle","tiffany","ayse","fatma","emine","hatice","zeynep","elif","merve","busra","esra","tugba","selin","dilara","nur","buse","ceren","irem","gamze","gizem","pinar","derya","defne","carmen","lucia","paula","sofia","valentina","camila","gabriela","andrea","ana","rosa","adriana","diana","carolina","alejandra","fatima","aisha","maryam","layla","sara","nour","hana","amira","dina","rania","yasmin","lina","maya","nadia","salma","sana","zahra","khadija","reem","zara","dana","natasha","katya","olga","tatiana","irina","svetlana","marina","daria","polina","anastasia","kristina","milena","ivana","jelena","vera"]);
 const MALE_NAMES = new Set(["max","lukas","leon","paul","jonas","felix","david","moritz","julian","niklas","tobias","daniel","stefan","michael","thomas","alexander","christian","florian","markus","patrick","dominik","sebastian","bernhard","wolfgang","franz","josef","andreas","martin","peter","hans","karl","helmut","gerhard","manfred","manuel","ben","tim","james","john","robert","william","richard","joseph","charles","christopher","matthew","anthony","mark","donald","steven","andrew","brian","joshua","kevin","jason","ryan","jacob","ethan","noah","liam","mason","logan","alex","tyler","brandon","dylan","connor","luke","jack","owen","chris","mehmet","mustafa","ahmet","ali","hasan","ibrahim","murat","ismail","osman","yusuf","emre","burak","serkan","volkan","cem","baris","arda","kerem","kaan","can","hakan","mohammed","muhammad","ahmed","omar","khalid","hassan","hussein","saif","amir","tariq","youssef","karim","nabil","bilal","hamza","abdullah","nasser","samir","walid","faisal","rami","ivan","vladimir","sergei","dmitri","alexei","nikola","milan","dragan","boris","andrej","marko","pavel","oleg","nikolai"]);
 
@@ -40,7 +40,6 @@ function categorizeFollow(followerCount: number | null | undefined, isPrivate: b
   return "normal";
 }
 
-// ── API response parsing ──
 function toRecordArray(raw: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(raw)) return [];
   return raw.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null);
@@ -79,22 +78,21 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
     full_name: typeof raw.full_name === "string" ? raw.full_name : undefined,
     follower_count: followerCount,
     is_private: typeof raw.is_private === "boolean" ? raw.is_private : undefined,
+    is_verified: typeof raw.is_verified === "boolean" ? raw.is_verified : undefined,
   };
 }
 
-// ── Fetch page 1 only (quick scan) ──
-async function fetchFollowingPage1(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
+async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
+  const url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
   const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
-  if (!res.ok) { const text = await res.text(); throw new Error(`Following fetch failed: ${res.status} ${text}`); }
+  if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
   const parsed = parseChunkResponse(await res.json());
   const users: FollowingUser[] = [];
   for (const raw of parsed.users) { const u = mapFollowingUser(raw); if (u) users.push(u); }
   return users;
 }
 
-// ── Sync new follows only (no unfollow detection) ──
 async function syncNewFollows(
   supabase: ReturnType<typeof createClient>,
   profileId: string,
@@ -138,7 +136,58 @@ async function syncNewFollows(
   return newEntries.length;
 }
 
-// ── Main: manual refresh for a single profile ──
+async function syncNewFollowers(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+  currentFollowers: FollowingUser[],
+  lastScannedAt: string | null,
+) {
+  const { data: existing } = await supabase
+    .from("profile_followers")
+    .select("follower_user_id")
+    .eq("tracked_profile_id", profileId)
+    .eq("is_current", true);
+
+  const existingIds = new Set((existing || []).map((f: Record<string, unknown>) => f.follower_user_id as string));
+  const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
+  if (newEntries.length === 0) return 0;
+
+  const now = Date.now();
+  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
+  const spanMs = Math.max(now - lastTs, 60_000);
+  const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
+
+  for (let i = 0; i < newEntries.length; i++) {
+    const f = newEntries[i];
+    const ts = randomTs[i].toISOString();
+    await supabase.from("profile_followers").insert({
+      tracked_profile_id: profileId,
+      follower_user_id: f.pk,
+      follower_username: f.username,
+      follower_avatar_url: f.profile_pic_url || null,
+      follower_display_name: f.full_name || null,
+      follower_follower_count: f.follower_count || null,
+      follower_is_verified: f.is_verified || false,
+      follower_is_private: f.is_private || false,
+      first_seen_at: ts,
+    });
+    await supabase.from("follower_events").insert({
+      profile_id: profileId,
+      instagram_user_id: f.pk,
+      username: f.username,
+      full_name: f.full_name || null,
+      profile_pic_url: f.profile_pic_url || null,
+      is_verified: f.is_verified || false,
+      follower_count: f.follower_count || null,
+      event_type: "gained",
+      detected_at: ts,
+      gender_tag: detectGender(f.full_name),
+      category: categorizeFollow(f.follower_count, f.is_private),
+    });
+  }
+  return newEntries.length;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -183,7 +232,6 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const profile of profiles) {
-      // Fetch user info
       const userInfoRes = await fetch(
         `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
         { headers: { "x-access-key": hikerApiKey } },
@@ -195,7 +243,6 @@ Deno.serve(async (req) => {
       const userInfo = await userInfoRes.json();
       const igUserId = String(userInfo.pk || userInfo.id);
 
-      // Update profile metadata
       await supabase.from("tracked_profiles").update({
         previous_follower_count: profile.follower_count || 0,
         previous_following_count: profile.following_count || 0,
@@ -207,13 +254,18 @@ Deno.serve(async (req) => {
         initial_scan_done: true,
       }).eq("id", profile.id);
 
-      // Quick scan: page 1 only
+      // Call 1: Following page 1
       await sleep(500);
-      const followingUsers = await fetchFollowingPage1(igUserId, hikerApiKey);
-      const newCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at);
+      const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at);
 
-      console.log(`[trigger-scan] ${profile.username}: ${followingUsers.length} on page 1, ${newCount} new follows`);
-      results.push({ username: profile.username, new_follows: newCount });
+      // Call 2: Follower page 1
+      await sleep(1000);
+      const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
+      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at);
+
+      console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
+      results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });
     }
 
     return new Response(JSON.stringify({ results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

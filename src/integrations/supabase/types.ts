@@ -76,6 +76,115 @@ export type Database = {
           },
         ]
       }
+      follower_events: {
+        Row: {
+          category: string | null
+          detected_at: string
+          event_type: string
+          follower_count: number | null
+          full_name: string | null
+          gender_tag: string | null
+          id: string
+          instagram_user_id: string
+          is_read: boolean
+          is_verified: boolean | null
+          profile_id: string
+          profile_pic_url: string | null
+          username: string
+        }
+        Insert: {
+          category?: string | null
+          detected_at?: string
+          event_type: string
+          follower_count?: number | null
+          full_name?: string | null
+          gender_tag?: string | null
+          id?: string
+          instagram_user_id: string
+          is_read?: boolean
+          is_verified?: boolean | null
+          profile_id: string
+          profile_pic_url?: string | null
+          username: string
+        }
+        Update: {
+          category?: string | null
+          detected_at?: string
+          event_type?: string
+          follower_count?: number | null
+          full_name?: string | null
+          gender_tag?: string | null
+          id?: string
+          instagram_user_id?: string
+          is_read?: boolean
+          is_verified?: boolean | null
+          profile_id?: string
+          profile_pic_url?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follower_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_followers: {
+        Row: {
+          first_seen_at: string
+          follower_avatar_url: string | null
+          follower_display_name: string | null
+          follower_follower_count: number | null
+          follower_is_private: boolean | null
+          follower_is_verified: boolean | null
+          follower_user_id: string | null
+          follower_username: string
+          id: string
+          is_current: boolean
+          last_seen_at: string
+          tracked_profile_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          follower_avatar_url?: string | null
+          follower_display_name?: string | null
+          follower_follower_count?: number | null
+          follower_is_private?: boolean | null
+          follower_is_verified?: boolean | null
+          follower_user_id?: string | null
+          follower_username: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          tracked_profile_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          follower_avatar_url?: string | null
+          follower_display_name?: string | null
+          follower_follower_count?: number | null
+          follower_is_private?: boolean | null
+          follower_is_verified?: boolean | null
+          follower_user_id?: string | null
+          follower_username?: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          tracked_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_followers_tracked_profile_id_fkey"
+            columns: ["tracked_profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_followings: {
         Row: {
           direction: string
