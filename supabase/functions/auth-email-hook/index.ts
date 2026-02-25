@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
       {
         run_id: runId,
         to: recipient,
-        from: `Spy-Secret <noreply@spy-secret.com>`,
+        from: `Spy-Secret <noreply@notify.spy-secret.com>`,
         subject,
         html,
         text: subject,
