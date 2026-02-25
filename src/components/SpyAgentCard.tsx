@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -48,13 +48,17 @@ export function SpyAgentCard({
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const [dropSuccess, setDropSuccess] = useState(false);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const lastHitCheck = useRef(0);
 
-  const findProfileUnderPoint = useCallback((x: number, y: number, dragEl: HTMLElement): string | null => {
-    const prev = dragEl.style.pointerEvents;
-    dragEl.style.pointerEvents = "none";
+  const findProfileUnderPoint = useCallback((x: number, y: number): string | null => {
+    const el = dragRef.current;
+    if (!el) return null;
+    const prev = el.style.pointerEvents;
+    el.style.pointerEvents = "none";
     const els = document.elementsFromPoint(x, y);
-    dragEl.style.pointerEvents = prev;
-    const target = els.map((el) => el.closest("[data-profile-id]")).find(Boolean);
+    el.style.pointerEvents = prev;
+    const target = els.map((e) => e.closest("[data-profile-id]")).find(Boolean);
     return target?.getAttribute("data-profile-id") || null;
   }, []);
 
@@ -146,6 +150,7 @@ export function SpyAgentCard({
         {/* Draggable Spy */}
         <div className="flex-shrink-0 flex flex-col items-center pt-6">
           <motion.div
+            ref={dragRef}
             drag
             dragSnapToOrigin
             dragElastic={0.15}
@@ -157,15 +162,16 @@ export function SpyAgentCard({
             }}
             whileHover={{ scale: 1.08 }}
             onDragStart={() => onDragStateChange(true)}
-            onDrag={(e, info) => {
-              const dragEl = e.target as HTMLElement;
-              const hovered = findProfileUnderPoint(info.point.x, info.point.y, dragEl);
+            onDrag={(_e, info) => {
+              const now = Date.now();
+              if (now - lastHitCheck.current < 80) return;
+              lastHitCheck.current = now;
+              const hovered = findProfileUnderPoint(info.point.x, info.point.y);
               onHoverProfileChange(hovered);
             }}
-            onDragEnd={(e, info) => {
+            onDragEnd={(_e, info) => {
               onDragStateChange(false);
-              const dragEl = e.target as HTMLElement;
-              const profileId = findProfileUnderPoint(info.point.x, info.point.y, dragEl);
+              const profileId = findProfileUnderPoint(info.point.x, info.point.y);
               if (profileId && profileId !== spyProfile.id) {
                 setDropSuccess(true);
                 setTimeout(() => setDropSuccess(false), 600);
