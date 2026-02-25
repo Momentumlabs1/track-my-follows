@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, Info } from "lucide-react";
+import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
 import { useAuth } from "@/contexts/AuthContext";
 import logoSquare from "@/assets/logo-square.png";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -445,16 +446,33 @@ const ProfileDetail = () => {
 
         {activeTab === "unfollowed" && (
           <div className="space-y-4">
+            {/* Spy Scan CTA */}
+            {hasSpy && (
+              <UnfollowCheckButton profileId={profile.id} />
+            )}
+
+            {/* Info banner */}
             <div className="native-card p-3 flex items-start gap-2.5">
               <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
-              </p>
+              <div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
+                </p>
+                {hasSpy && (
+                  <p className="text-[10px] text-primary/70 font-medium mt-1">
+                    🕵️ {t("unfollow_check.spy_hint", "Du kannst 2× täglich einen manuellen Scan starten")}
+                  </p>
+                )}
+              </div>
             </div>
 
+            {/* Unfollowed by them (they stopped following someone) */}
             {unfollowedByThem.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2">{t("profile.unfollowed_by_them")}</p>
+                <p className="section-header px-1 mb-2 flex items-center gap-1.5">
+                  <span className="text-destructive">🚩</span> {t("profile.unfollowed_by_them")}
+                  <span className="text-[10px] bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full font-bold tabular-nums">{unfollowedByThem.length}</span>
+                </p>
                 <div className="native-card overflow-hidden">
                   {unfollowedByThem.map((e, i) => (
                     <EventRow
@@ -472,9 +490,13 @@ const ProfileDetail = () => {
               </div>
             )}
 
+            {/* Lost followers (someone unfollowed the tracked profile) */}
             {lostFollowerEvents.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2">{t("profile.lost_followers_title")}</p>
+                <p className="section-header px-1 mb-2 flex items-center gap-1.5">
+                  <span className="text-orange-400">↓</span> {t("profile.lost_followers_title")}
+                  <span className="text-[10px] bg-orange-400/15 text-orange-400 px-1.5 py-0.5 rounded-full font-bold tabular-nums">{lostFollowerEvents.length}</span>
+                </p>
                 <div className="native-card overflow-hidden">
                   {lostFollowerEvents.map((e, i) => (
                     <EventRow
@@ -485,7 +507,7 @@ const ProfileDetail = () => {
                       detectedAt={e.detected_at}
                       timeAgo={timeAgo}
                       index={i}
-                      badge={<span className="text-[8px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full font-bold">↓</span>}
+                      badge={<span className="text-[8px] bg-orange-400/20 text-orange-400 px-1.5 py-0.5 rounded-full font-bold">↓</span>}
                     />
                   ))}
                 </div>
