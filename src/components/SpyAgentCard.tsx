@@ -54,7 +54,7 @@ export function SpyAgentCard({
         animate={{ opacity: 1, scale: 1 }}
         className="mx-4 mb-4"
       >
-        <div className="native-card p-6 border border-dashed border-primary/30 text-center">
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-card/60 p-6 text-center">
           <motion.div
             className="flex justify-center mb-3"
             animate={{ rotate: [0, 10, -10, 0] }}
@@ -76,9 +76,26 @@ export function SpyAgentCard({
       transition={{ duration: 0.4, delay: 0.1 }}
       className="mx-4 mb-4 relative"
     >
-      <div className="native-card p-4 relative overflow-visible">
+      {/* Card – lighter/brighter when spy is home, dims when dragging */}
+      <motion.div
+        animate={{
+          opacity: isDragging ? 0.5 : 1,
+          scale: isDragging ? 0.97 : 1,
+        }}
+        transition={{ duration: 0.25 }}
+        className="relative overflow-visible rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-secondary/40 p-4 shadow-[0_0_30px_-8px_hsl(var(--primary)/0.15)]"
+      >
+        {/* Subtle glow behind card when spy is home */}
+        {!isDragging && (
+          <motion.div
+            className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none"
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+        )}
+
         {/* Header */}
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="relative flex items-center gap-1.5 mb-3">
           <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
             {t("spy.spy_watching")}
           </span>
@@ -86,22 +103,26 @@ export function SpyAgentCard({
           <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
         </div>
 
-        {/* Profile info */}
+        {/* Profile info – animates when profile changes */}
         <AnimatePresence mode="wait">
           <motion.div
             key={spyProfile.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-center gap-3 mb-3"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="relative flex items-center gap-3 mb-3"
           >
-            <InstagramAvatar
-              src={spyProfile.avatar_url}
-              alt={spyProfile.username}
-              fallbackInitials={spyProfile.username}
-              size={48}
-            />
+            <div className="relative">
+              <div className="ring-2 ring-primary/30 rounded-full p-[2px]">
+                <InstagramAvatar
+                  src={spyProfile.avatar_url}
+                  alt={spyProfile.username}
+                  fallbackInitials={spyProfile.username}
+                  size={48}
+                />
+              </div>
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>
               <p className="text-[11px] text-muted-foreground">
@@ -114,46 +135,51 @@ export function SpyAgentCard({
           </motion.div>
         </AnimatePresence>
 
-        {/* Move Spy Button (fallback) */}
+        {/* Move Spy Button (fallback for non-drag) */}
         <button
           onClick={onMoveSpy}
-          className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+          className="relative w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
         >
           <SpyIcon size={16} /> {t("spy.move_spy")}
         </button>
+      </motion.div>
 
-        {/* Draggable Spy Icon – overlapping sticker */}
-        <motion.div
-          drag
-          dragSnapToOrigin
-          dragElastic={0.2}
-          dragMomentum={false}
-          whileDrag={{ scale: 1.25, zIndex: 9999 }}
-          onDragStart={() => onDragStateChange(true)}
-          onDragEnd={(_, info) => {
-            onDragStateChange(false);
-            const el = document.elementFromPoint(info.point.x, info.point.y);
-            const dropTarget = el?.closest("[data-profile-id]");
-            if (dropTarget) {
-              const profileId = dropTarget.getAttribute("data-profile-id");
-              if (profileId && profileId !== spyProfile.id) {
-                setDropSuccess(true);
-                setTimeout(() => setDropSuccess(false), 600);
-                onDragMoveSpy(profileId);
-              }
+      {/* Draggable Spy Icon – overlapping sticker, top-right */}
+      <motion.div
+        drag
+        dragSnapToOrigin
+        dragElastic={0.15}
+        dragMomentum={false}
+        whileDrag={{
+          scale: 1.3,
+          zIndex: 9999,
+          filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.6))",
+        }}
+        whileHover={{ scale: 1.1 }}
+        onDragStart={() => onDragStateChange(true)}
+        onDragEnd={(_, info) => {
+          onDragStateChange(false);
+          const el = document.elementFromPoint(info.point.x, info.point.y);
+          const dropTarget = el?.closest("[data-profile-id]");
+          if (dropTarget) {
+            const profileId = dropTarget.getAttribute("data-profile-id");
+            if (profileId && profileId !== spyProfile.id) {
+              setDropSuccess(true);
+              setTimeout(() => setDropSuccess(false), 600);
+              onDragMoveSpy(profileId);
             }
-          }}
-          className="absolute -top-4 -right-2 cursor-grab active:cursor-grabbing touch-none select-none z-50"
-          style={{ pointerEvents: "auto" }}
+          }
+        }}
+        className="absolute -top-4 -right-2 cursor-grab active:cursor-grabbing touch-none select-none z-50"
+        style={{ pointerEvents: "auto" }}
+      >
+        <motion.div
+          animate={dropSuccess ? { scale: [1, 1.5, 1], rotate: [0, 15, -15, 0] } : {}}
+          transition={{ duration: 0.5 }}
         >
-          <motion.div
-            animate={dropSuccess ? { scale: [1, 1.4, 1] } : {}}
-            transition={{ duration: 0.4 }}
-          >
-            <SpyIcon size={52} glow />
-          </motion.div>
+          <SpyIcon size={56} glow />
         </motion.div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
