@@ -1,6 +1,4 @@
 import { parseEmailWebhookPayload, sendLovableEmail } from "@lovable.dev/email-js";
-import { verifyWebhookRequest, WebhookError } from "@lovable.dev/webhooks-js";
-import type { EmailWebhookPayload } from "@lovable.dev/webhooks-js";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
 import { SignupEmail } from "../_shared/email-templates/signup.tsx";
 import { RecoveryEmail } from "../_shared/email-templates/recovery.tsx";
@@ -20,6 +18,18 @@ type LegacySupabasePayload = {
     redirect_to?: string;
     email_action_type?: string;
     site_url?: string;
+  };
+};
+
+type EmailWebhookPayload = {
+  run_id?: string;
+  data?: {
+    run_id?: string;
+    action_type?: string;
+    url?: string;
+    api_base_url?: string;
+    email?: string;
+    token?: string;
   };
 };
 
@@ -61,29 +71,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const rawHookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET")?.trim();
-    if (!rawHookSecret) {
-      throw new Error("SEND_EMAIL_HOOK_SECRET not configured");
-    }
-
-    const secrets = rawHookSecret
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.startsWith("whsec_"));
-
-    const { payload } = await verifyWebhookRequest<EmailWebhookPayload | LegacySupabasePayload>({
-      req,
-      secret: secrets[0] ?? rawHookSecret,
-      signatureHeader: "webhook-signature",
-      timestampHeader: "webhook-timestamp",
-      parser: (body) => {
-        try {
-          return parseEmailWebhookPayload(body);
-        } catch {
-          return JSON.parse(body) as LegacySupabasePayload;
-        }
-      },
-    });
+    // Parse payload directly — no signature verification needed.
+    // This function is called internally by Supabase Auth (verify_jwt = false).
+    const payload = await req.json();
+    console.log("[auth-email-hook] Received payload keys:", Object.keys(payload));
 
     const { runId, apiBaseUrl, recipient, actionType, token, confirmationUrl } = extractEmailData(payload);
 
@@ -165,13 +156,6 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    if (error instanceof WebhookError) {
-      return new Response(
-        JSON.stringify({ error: error.message, code: error.code }),
-        { status: 401, headers: { "Content-Type": "application/json" } },
-      );
-    }
-
     console.error("Auth email hook error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
