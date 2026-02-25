@@ -188,48 +188,29 @@ const ProfileDetail = () => {
       >
         <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="relative">
-          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">
-            {t("profile_detail.agent_report")}
-          </p>
-          <h2 className="text-lg font-extrabold text-foreground mb-3">
+          <h2 className="text-lg font-extrabold text-foreground mb-1">
             {t("dashboard.hello")}, {spyName} 🕵️
           </h2>
+          <p className="text-[12px] text-muted-foreground mb-3">
+            Here's what <span className="font-bold text-foreground">@{profile.username}</span> did today
+          </p>
 
-          <div className="flex gap-3 mb-3">
-            <div className="flex-1 rounded-xl bg-primary/10 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <Eye className="h-3.5 w-3.5 text-primary" />
-                <span className="text-lg font-extrabold text-foreground tabular-nums">{todayFollows}</span>
-              </div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.new_today")}</p>
-            </div>
-            <div className="flex-1 rounded-xl bg-destructive/10 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-                <span className="text-lg font-extrabold text-foreground tabular-nums">{todayUnfollows}</span>
-              </div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.unfollows_today")}</p>
-            </div>
-            <div className="flex-1 rounded-xl bg-accent/10 p-3 text-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <Flame className="h-3.5 w-3.5 text-accent" />
-                <span className="text-lg font-extrabold text-foreground tabular-nums">{suspicionAnalysis.overallScore}</span>
-              </div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase">{t("profile_detail.suspicion")}</p>
-            </div>
-          </div>
-
-          {hottestToday ? (
-            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2">
-              <span className="text-sm">🔥</span>
-              <p className="text-[12px] text-foreground font-semibold flex-1">
-                {t("profile_detail.hottest_activity")}: <span className="text-primary">@{hottestToday.target_username}</span>
+          {todayFollows > 0 || todayUnfollows > 0 ? (
+            <div className="rounded-xl bg-primary/10 px-4 py-3">
+              <p className="text-[13px] font-semibold text-foreground">
+                🔥 {t("simple.new_follows_today", { count: todayFollows })}
+                {todayUnfollows > 0 && (
+                  <span className="text-destructive"> · {todayUnfollows} unfollows</span>
+                )}
               </p>
+              {suspicionAnalysis.genderStats.femalePercent > 60 && (
+                <p className="text-[12px] text-primary font-medium mt-0.5">♀ Mostly women</p>
+              )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-              <span className="text-sm">😴</span>
-              <p className="text-[12px] text-muted-foreground">{t("profile_detail.no_activity_today")}</p>
+            <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-4 py-3">
+              <span className="text-lg">😴</span>
+              <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
             </div>
           )}
         </div>

@@ -89,12 +89,22 @@ const Dashboard = () => {
           transition={{ duration: 0.4 }}
         >
           <h1 className="text-2xl font-extrabold text-foreground">
-            {t("dashboard.hello")}, {displayName} 👋
+            🕵️ Hey {displayName}!
           </h1>
-          {latestEvent && (
-            <p className="text-sm text-primary font-semibold mt-1">
-              🔥 {t("dashboard.hot_alert")}: @{latestEvent.target_username}
+          {profiles.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {t("simple.tracking_count", { count: profiles.length })}
             </p>
+          )}
+          {latestEvent && (
+            <div className="mt-3 rounded-xl bg-primary/10 px-4 py-3">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{t("simple.hot_right_now")} 🔥</p>
+              <p className="text-[13px] font-semibold text-foreground">
+                @{latestEvent.target_username} — {latestEvent.event_type === "follow" || latestEvent.event_type === "new_following"
+                  ? t("events.newFollowing")
+                  : t("events.hasUnfollowed")}
+              </p>
+            </div>
           )}
           {!latestEvent && profiles.length > 0 && (
             <p className="text-sm text-muted-foreground mt-1">

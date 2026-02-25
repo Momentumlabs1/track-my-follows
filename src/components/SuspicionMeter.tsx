@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
+import type { SuspicionBreakdown, FactorLevel } from "@/lib/suspicionAnalysis";
 import { SuspicionGauge } from "@/components/SuspicionGauge";
 
 interface SuspicionMeterProps {
@@ -8,20 +8,26 @@ interface SuspicionMeterProps {
   weeklyScores?: number[];
 }
 
+const levelEmoji: Record<FactorLevel, string> = {
+  safe: "🟢",
+  warning: "🟡",
+  danger: "🔴",
+};
+
+const levelBg: Record<FactorLevel, string> = {
+  safe: "bg-brand-green/10",
+  warning: "bg-brand-yellow/10",
+  danger: "bg-destructive/10",
+};
+
 export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) {
   const { t } = useTranslation();
   const { overallScore, factors, genderStats } = analysis;
 
-  const getBarColor = (ratio: number) => {
-    if (ratio > 0.6) return "gradient-danger";
-    if (ratio > 0.3) return "bg-brand-yellow";
-    return "gradient-safe";
-  };
-
-  const getBarEmoji = (ratio: number) => {
-    if (ratio > 0.6) return "🔴";
-    if (ratio > 0.3) return "🟡";
-    return "🟢";
+  const getGenderVerdict = () => {
+    if (genderStats.femalePercent > 70) return t("simple.mostly_women");
+    if (genderStats.femalePercent < 40) return t("simple.mostly_men");
+    return t("simple.balanced");
   };
 
   return (
@@ -31,42 +37,29 @@ export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) 
         <SuspicionGauge score={overallScore} weeklyScores={weeklyScores} />
       </div>
 
-      {/* Factors */}
-      <div className="native-card p-4 space-y-4">
-        <p className="section-header">{t("suspicion.factors_title")}</p>
-        {factors.map((factor, i) => {
-          const ratio = factor.score / factor.maxScore;
-          return (
-            <motion.div
-              key={factor.name}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.08 }}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[13px] font-semibold text-foreground">{factor.name}</span>
-                <span className="text-[12px] font-bold text-muted-foreground flex items-center gap-1">
-                  {factor.score}/{factor.maxScore} {getBarEmoji(ratio)}
-                </span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className={`h-full rounded-full ${getBarColor(ratio)}`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${ratio * 100}%` }}
-                  transition={{ duration: 0.6, delay: 0.5 + i * 0.1 }}
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">{factor.description}</p>
-            </motion.div>
-          );
-        })}
+      {/* Factors – simple emoji + text list */}
+      <div className="native-card p-4 space-y-2.5">
+        <p className="section-header">{t("simple.what_we_found")}</p>
+        {factors.map((factor, i) => (
+          <motion.div
+            key={factor.name}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 + i * 0.06 }}
+            className={`flex items-start gap-3 rounded-xl px-3.5 py-3 ${levelBg[factor.level]}`}
+          >
+            <span className="text-lg leading-none mt-0.5">{levelEmoji[factor.level]}</span>
+            <p className="text-[13px] font-semibold text-foreground leading-snug">
+              {factor.simpleLabel}
+            </p>
+          </motion.div>
+        ))}
       </div>
 
       {/* Gender split bar */}
       {genderStats.total > 0 && (
         <div className="native-card p-4">
-          <p className="section-header mb-3">{t("suspicion.gender_title")}</p>
+          <p className="section-header mb-3">{t("simple.who_they_follow")}</p>
           <div className="flex items-center gap-4 mb-3">
             <div className="flex-1 text-center">
               <span className="text-2xl font-extrabold text-primary">♀ {genderStats.femalePercent}%</span>
@@ -78,7 +71,7 @@ export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) 
             </div>
           </div>
           {/* Split bar */}
-          <div className="h-3 rounded-full overflow-hidden flex">
+          <div className="h-3.5 rounded-full overflow-hidden flex">
             <motion.div
               className="h-full gradient-pink"
               initial={{ width: 0 }}
@@ -92,8 +85,12 @@ export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) 
               transition={{ duration: 0.8, delay: 0.5 }}
             />
           </div>
+          {/* Verdict sentence */}
+          <p className="text-[13px] font-semibold text-foreground mt-3 text-center">
+            {getGenderVerdict()}
+          </p>
           {genderStats.unknown > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-2 text-center">
+            <p className="text-[10px] text-muted-foreground mt-1 text-center">
               {t("suspicion.not_detected", { count: genderStats.unknown })}
             </p>
           )}

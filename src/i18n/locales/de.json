@@ -322,5 +322,27 @@
     "per_month": "/Monat",
     "top_agent": "Top-Agent 🔍",
     "current": "Aktueller Plan"
+  },
+  "simple": {
+    "mostly_men": "Hauptsächlich Männer – sieht normal aus 👍",
+    "mostly_women": "Hauptsächlich Frauen – verdächtig! ⚠️",
+    "balanced": "Ausgewogener Mix – nichts Auffälliges",
+    "who_they_follow": "Wem folgt er/sie",
+    "what_we_found": "Was wir gefunden haben",
+    "very_active": "Sehr aktiv – {{count}} neue Follows in 7 Tagen!",
+    "normal_activity": "Normale Aktivität",
+    "low_activity": "Kaum aktiv zuletzt",
+    "some_churn": "Etwas Follow/Unfollow-Muster",
+    "no_churn": "Keine Follow/Unfollow-Spielchen",
+    "high_churn": "Viel Follow & Unfollow – verdächtig!",
+    "normal_ratio": "Normales Follower-Verhältnis",
+    "high_ratio": "Folgt viel mehr als ihm folgen",
+    "no_night": "Keine Nachtaktivität",
+    "some_night": "Etwas Nachtaktivität 🌙",
+    "lots_night": "Viel Nachtaktivität! 🌙",
+    "new_follows_today": "{{count}} neue Follows heute",
+    "no_activity_today": "Alles ruhig heute 😴",
+    "tracking_count": "Du trackst {{count}} Profile",
+    "hot_right_now": "Gerade heiß"
   }
 }

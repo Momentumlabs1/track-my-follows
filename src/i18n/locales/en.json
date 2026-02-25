@@ -322,5 +322,27 @@
     "per_month": "/month",
     "top_agent": "Top Agent 🔍",
     "current": "Current Plan"
+  },
+  "simple": {
+    "mostly_men": "Mostly men – looks normal 👍",
+    "mostly_women": "Mostly women – suspicious! ⚠️",
+    "balanced": "Balanced mix – nothing unusual",
+    "who_they_follow": "Who they follow",
+    "what_we_found": "What we found",
+    "very_active": "Very active – {{count}} new follows in 7 days!",
+    "normal_activity": "Normal activity level",
+    "low_activity": "Barely active lately",
+    "some_churn": "Some follow/unfollow patterns",
+    "no_churn": "No follow/unfollow games",
+    "high_churn": "Lots of follow & unfollow – suspicious!",
+    "normal_ratio": "Normal follower ratio",
+    "high_ratio": "Follows way more than followers",
+    "no_night": "No late-night activity",
+    "some_night": "Some late-night follows 🌙",
+    "lots_night": "Lots of late-night follows! 🌙",
+    "new_follows_today": "{{count}} new follows today",
+    "no_activity_today": "All quiet today 😴",
+    "tracking_count": "You're tracking {{count}} profiles",
+    "hot_right_now": "Hot right now"
   }
 }
