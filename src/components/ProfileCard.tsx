@@ -22,20 +22,38 @@ interface ProfileCardProps {
 export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: ProfileCardProps) {
   const { t } = useTranslation();
 
+  // During drag: current spy card gets strong highlight, others get subtle invite
+  const isDropTarget = isDragging && !hasSpy;
+  const isCurrentSpy = isDragging && hasSpy;
+
   return (
     <motion.div
       data-profile-id={profile.id}
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="transition-all"
+      animate={{
+        opacity: 1,
+        y: 0,
+        scale: isDropTarget ? 1.02 : isCurrentSpy ? 0.97 : 1,
+      }}
+      transition={{ delay: isDragging ? 0 : index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
+      className="relative transition-all"
     >
-      {/* Pulsing ring hint during drag for non-spy cards */}
-      {isDragging && !hasSpy && (
+      {/* Drop target glow ring for non-spy cards during drag */}
+      {isDropTarget && (
         <motion.div
-          className="absolute inset-0 rounded-2xl border-2 border-primary/40 pointer-events-none"
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
+          className="absolute -inset-[2px] rounded-2xl border-2 border-primary/50 pointer-events-none z-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.9, 0.4] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Current spy card dimmed during drag */}
+      {isCurrentSpy && (
+        <motion.div
+          className="absolute inset-0 rounded-2xl bg-muted/40 pointer-events-none z-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
         />
       )}
 
@@ -46,12 +64,17 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging }: Profi
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <InstagramAvatar
-              src={profile.avatar_url}
-              alt={profile.username}
-              fallbackInitials={profile.username}
-              size={48}
-            />
+            <motion.div
+              animate={isDropTarget ? { rotate: [0, -3, 3, 0] } : {}}
+              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <InstagramAvatar
+                src={profile.avatar_url}
+                alt={profile.username}
+                fallbackInitials={profile.username}
+                size={48}
+              />
+            </motion.div>
           </div>
 
           {/* Info */}
