@@ -204,8 +204,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Spy of the Day (when no spy card, or for free users) */}
-      {!isPro && latestEvent && latestInfo && (
+      {/* Spy of the Day */}
+      {latestEvent && latestInfo && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -230,7 +230,7 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {!latestEvent && profiles.length > 0 && !isPro && (
+      {!latestEvent && profiles.length > 0 && (
         <div className="mx-4 mb-2">
           <div className="rounded-2xl bg-muted/50 p-4 flex items-center gap-3">
             <span className="text-2xl">😴</span>
