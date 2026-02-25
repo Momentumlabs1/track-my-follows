@@ -3,7 +3,7 @@ import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Lock } from "lucide-react";
-import type { FollowEvent } from "@/hooks/useTrackedProfiles";
+import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -25,7 +25,7 @@ function formatCount(n: number): string {
 }
 
 interface EventFeedItemProps {
-  event: FollowEvent;
+  event: UnifiedFeedEvent;
   index: number;
 }
 
@@ -33,22 +33,35 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const { shouldBlur, showPaywall } = useSubscription();
-  const isFollow = event.event_type === "follow";
   const profileUsername = event.tracked_profiles?.username ?? "???";
 
-  const ev = event as Record<string, unknown>;
-  const genderTag = ev.gender_tag as string | undefined;
-  const isMutual = ev.is_mutual as boolean | undefined;
-  const category = ev.category as string | undefined;
-  const followerCount = ev.target_follower_count as number | undefined;
-  const isPrivate = ev.target_is_private as boolean | undefined;
+  // Determine display values based on event source
+  const isFollowSource = event.source === "follow";
+  const targetUsername = isFollowSource ? (event.target_username || "???") : (event.username || "???");
+  const targetAvatar = isFollowSource ? event.target_avatar_url : event.profile_pic_url;
+  const targetDisplayName = isFollowSource ? event.target_display_name : event.full_name;
+  const genderTag = event.gender_tag;
+  const isMutual = event.is_mutual;
+  const category = event.category;
+  const followerCount = isFollowSource ? event.target_follower_count : event.follower_count;
+  const isPrivate = event.target_is_private;
 
-  const getEventVerb = () => {
-    if (isFollow && event.direction === "following") return t("events.newFollowing");
-    if (isFollow && event.direction === "follower") return t("events.newFollower");
-    if (!isFollow && event.direction === "following") return t("events.hasUnfollowed");
-    return t("events.lostFollower");
+  // Event verb & color
+  const getEventInfo = () => {
+    if (isFollowSource) {
+      if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
+        return { verb: t("events.hasUnfollowed"), color: "text-destructive", icon: "🚩", accent: "border-s-destructive" };
+      }
+      return { verb: t("events.follows_now"), color: "text-primary", icon: "→", accent: "border-s-primary" };
+    }
+    // follower event
+    if (event.event_type === "lost") {
+      return { verb: t("events.lostFollower"), color: "text-destructive", icon: "↓", accent: "border-s-destructive" };
+    }
+    return { verb: t("events.new_follower_of"), color: "text-blue-400", icon: "←", accent: "border-s-blue-400" };
   };
+
+  const eventInfo = getEventInfo();
 
   const getGenderColor = () => {
     if (genderTag === "female") return "gradient-pink";
@@ -61,7 +74,7 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
-      className="native-card p-4"
+      className={`native-card p-4 border-s-2 ${eventInfo.accent}`}
     >
       {/* Header: Tracked profile + verb + time */}
       <div className="flex items-center gap-2 mb-3">
@@ -74,8 +87,8 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         <span className="text-[12px] font-semibold text-muted-foreground">
           {profileUsername}
         </span>
-        <span className={`text-[12px] font-medium ${isFollow ? "text-primary" : "text-destructive"}`}>
-          {getEventVerb()}
+        <span className={`text-[12px] font-medium ${eventInfo.color}`}>
+          {eventInfo.verb}
         </span>
         <span className="text-[11px] text-muted-foreground ms-auto">
           {timeAgo(event.detected_at)}
@@ -88,9 +101,9 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         <div className="relative flex-shrink-0">
           <div className={shouldBlur ? "blur-md" : ""}>
             <InstagramAvatar
-              src={event.target_avatar_url}
-              alt={event.target_username}
-              fallbackInitials={event.target_username}
+              src={targetAvatar}
+              alt={targetUsername}
+              fallbackInitials={targetUsername}
               size={50}
             />
           </div>
@@ -104,15 +117,15 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
         {/* Info */}
         <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
           <a
-            href={`https://instagram.com/${event.target_username}`}
+            href={`https://instagram.com/${targetUsername}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[14px] font-bold text-foreground hover:text-primary transition-colors block"
           >
-            @{event.target_username}
+            @{targetUsername}
           </a>
-          {event.target_display_name && (
-            <p className="text-[12px] text-muted-foreground truncate">{event.target_display_name}</p>
+          {targetDisplayName && (
+            <p className="text-[12px] text-muted-foreground truncate">{targetDisplayName}</p>
           )}
 
           {/* Badges */}

@@ -1,10 +1,9 @@
 import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import logoSquare from "@/assets/logo-square.png";
-import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
 import { ScanStatus } from "@/components/ScanStatus";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
@@ -279,7 +278,7 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
-      {/* Gender Breakdown – right below profile card */}
+      {/* Gender Breakdown */}
       {suspicionAnalysis.genderStats.total > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
           <GenderCard genderStats={suspicionAnalysis.genderStats} />
@@ -380,8 +379,13 @@ const ProfileDetail = () => {
 
         {activeTab === "unfollowed" && (
           <div className="space-y-4">
-            {/* Unfollow Check Button */}
-            <UnfollowCheckButton profileId={id!} />
+            {/* Auto-detection info banner */}
+            <div className="native-card p-3 flex items-start gap-2.5">
+              <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {t("profile.unfollows_detected_automatically", "Entfolgungen werden automatisch alle 4 Stunden geprüft. Tracking aktiv seit")} {new Date(profile.created_at).toLocaleDateString()}
+              </p>
+            </div>
 
             {/* Section: Unfollowed by them */}
             {unfollowedByThem.length > 0 && (
@@ -427,9 +431,9 @@ const ProfileDetail = () => {
 
             {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
               <div className="native-card p-5 text-center">
-                <span className="text-4xl block mb-3">🔍</span>
-                <p className="text-[13px] font-bold text-foreground mb-1">{t("profile.tap_check_to_scan", "Tippe oben auf 'Unfollows prüfen'")}</p>
-                <p className="text-[11px] text-muted-foreground">{t("profile.unfollowedEmptyDesc")}</p>
+                <span className="text-4xl block mb-3">✨</span>
+                <p className="text-[13px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet", "Noch keine Entfolgungen erkannt")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.unfollows_auto_detected", "Entfolgungen werden automatisch erkannt")}</p>
               </div>
             )}
           </div>
