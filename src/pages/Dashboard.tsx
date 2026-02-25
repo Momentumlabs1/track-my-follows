@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Loader2, RefreshCw } from "lucide-react";
-import { DraggableSpy } from "@/components/DraggableSpy";
-import { SpyAssignmentCard } from "@/components/SpyAssignmentCard";
+import { SpyAgentCard } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { EventFeedItem } from "@/components/EventFeedItem";
@@ -17,7 +16,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { haptic } from "@/lib/native";
 import logoSquare from "@/assets/logo-square.png";
-import { SpyIcon } from "@/components/SpyIcon";
 
 // Unified event type for the feed
 export interface UnifiedFeedEvent {
@@ -171,9 +169,14 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* Greeting */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2"><SpyIcon size={28} /> Hey {displayName}!</h1>
+        {/* Greeting – clean, no spy icon */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6"
+        >
+          <h1 className="text-2xl font-extrabold text-foreground">Hey {displayName}!</h1>
           {profiles.length > 0 && (
             <p className="text-sm text-muted-foreground mt-0.5">
               {t("simple.tracking_count", { count: profiles.length })}
@@ -182,102 +185,93 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Spy of the Day – only for Free users, greyed out, clickable → paywall */}
+      {/* ═══════ SPY DES TAGES – Full-width pink banner (Pro) ═══════ */}
+      {isPro && latestEvent && latestInfo && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="gradient-pink px-5 py-4 mb-4"
+        >
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-lg">📋</span>
+            <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
+              {t("simple.spy_of_the_day")}
+            </span>
+          </div>
+          <p className="text-[15px] font-bold text-primary-foreground leading-snug">
+            <span className="opacity-90">@{latestInfo.username}</span> {latestInfo.verb}
+          </p>
+          {latestEvent.tracked_profiles?.username && (
+            <p className="text-[11px] text-primary-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
+          )}
+        </motion.div>
+      )}
+
+      {isPro && !latestEvent && profiles.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="gradient-pink px-5 py-4 mb-4"
+        >
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-lg">📋</span>
+            <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
+              {t("simple.spy_of_the_day")}
+            </span>
+          </div>
+          <p className="text-[13px] text-primary-foreground/60 font-medium flex items-center gap-2">
+            <span className="text-xl">😴</span> {t("simple.no_activity_today")}
+          </p>
+        </motion.div>
+      )}
+
+      {/* ═══════ SPY DES TAGES – Free users (greyed out + lock) ═══════ */}
       {!isPro && profiles.length > 0 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="mx-4 mb-3"
+          className="mb-4"
         >
           <button
             onClick={() => {
               haptic.light();
               showPaywall("spy_of_the_day");
             }}
-            className="w-full text-start relative overflow-hidden rounded-2xl border border-muted-foreground/20 p-[1px]"
+            className="w-full text-start relative overflow-hidden"
           >
-            <div className="rounded-2xl bg-muted/40 p-4 opacity-60 grayscale">
+            <div className="gradient-pink px-5 py-4 opacity-40 grayscale">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-lg">📋</span>
-                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t("simple.spy_of_the_day")}</span>
-                <span className="ms-auto text-[9px] font-bold text-muted-foreground bg-muted rounded-full px-2 py-0.5">PRO</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                  {t("simple.spy_of_the_day")}
+                </span>
+                <span className="ms-auto text-[9px] font-bold bg-background/20 rounded-full px-2 py-0.5">PRO</span>
               </div>
               {latestEvent && latestInfo ? (
-                <>
-                  <p className="text-[15px] font-bold text-muted-foreground leading-snug">
-                    <span>@{latestInfo.username}</span> {latestInfo.verb}
-                  </p>
-                  {latestEvent.tracked_profiles?.username && (
-                    <p className="text-[11px] text-muted-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
-                  )}
-                </>
+                <p className="text-[15px] font-bold leading-snug">@{latestInfo.username} {latestInfo.verb}</p>
               ) : (
-                <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
+                <p className="text-[13px] font-medium">{t("simple.no_activity_today")}</p>
               )}
             </div>
-            <div className="absolute inset-0 flex items-center justify-center bg-background/30 rounded-2xl">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/30">
               <span className="text-[12px] font-bold text-primary flex items-center gap-1.5">🔒 {t("paywall.unlock_spy", "Spy freischalten")}</span>
             </div>
           </button>
         </motion.div>
       )}
 
-      {/* Spy Assignment Card + Draggable Spy (Pro only) */}
+      {/* ═══════ SPY AGENT CARD (Pro only) ═══════ */}
       {isPro && (
-        <div className="flex items-start gap-3 mx-4 mb-4">
-          <div className="flex-1">
-            <SpyAssignmentCard
-              spyProfile={spyProfile}
-              onMoveSpy={() => setMoveSpyOpen(true)}
-              isDragging={spyDragging}
-            />
-          </div>
-          {spyProfile && (
-            <div className="flex-shrink-0 pt-2">
-              <DraggableSpy
-                onDragStart={() => setSpyDragging(true)}
-                onDragEnd={() => setSpyDragging(false)}
-              />
-              <p className="text-[9px] text-muted-foreground text-center mt-1 select-none">Drag me!</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Spy of the Day for Pro users */}
-      {isPro && latestEvent && latestInfo && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="mx-4 mb-2"
-        >
-          <div className="relative overflow-hidden rounded-2xl gradient-pink p-[1px]">
-            <div className="rounded-2xl bg-background/95 backdrop-blur-sm p-4">
-              <div className="absolute top-0 end-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <div className="flex items-center gap-1.5 mb-2">
-                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}><SpyIcon size={22} /></motion.div>
-                <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">{t("simple.spy_of_the_day")}</span>
-              </div>
-              <p className="text-[15px] font-bold text-foreground leading-snug">
-                <span className="text-primary">@{latestInfo.username}</span> {latestInfo.verb}
-              </p>
-              {latestEvent.tracked_profiles?.username && (
-                <p className="text-[11px] text-muted-foreground mt-1">📍 {latestEvent.tracked_profiles.username}</p>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {isPro && !latestEvent && profiles.length > 0 && (
-        <div className="mx-4 mb-2">
-          <div className="rounded-2xl bg-muted/50 p-4 flex items-center gap-3">
-            <span className="text-2xl">😴</span>
-            <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
-          </div>
-        </div>
+        <SpyAgentCard
+          spyProfile={spyProfile}
+          onMoveSpy={() => setMoveSpyOpen(true)}
+          onDragMoveSpy={handleMoveSpy}
+          isDragging={spyDragging}
+          onDragStateChange={setSpyDragging}
+        />
       )}
 
       {/* Profile Cards */}
@@ -292,6 +286,7 @@ const Dashboard = () => {
               onTap={() => navigate(`/profile/${profile.id}`)}
               onAssignSpy={() => handleMoveSpy(profile.id)}
               index={i}
+              isDragging={spyDragging}
             />
           ))}
           <button
