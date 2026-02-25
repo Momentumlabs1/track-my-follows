@@ -186,9 +186,9 @@ const ProfileDetail = () => {
   };
 
   // Follower/following deltas
-  const followerDelta = profile?.previous_follower_count != null
+  const followerDelta = (profile?.previous_follower_count != null && profile.previous_follower_count > 0)
     ? (profile.follower_count ?? 0) - profile.previous_follower_count : null;
-  const followingDelta = profile?.previous_following_count != null
+  const followingDelta = (profile?.previous_following_count != null && profile.previous_following_count > 0)
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
   // Tab lock logic: Free = paywall, Pro without spy = spy required
