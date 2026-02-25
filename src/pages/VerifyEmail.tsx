@@ -19,6 +19,7 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [rateLimitNotice, setRateLimitNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!email) {
@@ -63,20 +64,27 @@ const VerifyEmail = () => {
 
   const handleResend = async () => {
     if (cooldown > 0) return;
+
+    setRateLimitNotice(null);
     setResending(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
     });
+
     if (error) {
       if (error.message?.toLowerCase().includes("rate limit")) {
+        setCooldown(COOLDOWN_SECONDS);
+        setRateLimitNotice(t("auth.resend_rate_limit_active", { seconds: COOLDOWN_SECONDS }));
         toast.error(t("auth.rate_limited"));
       } else {
         toast.error(error.message);
       }
-    } else {
-      toast.success(t("auth.code_resent"));
+      setResending(false);
+      return;
     }
+
+    toast.success(t("auth.code_resent"));
     setCooldown(COOLDOWN_SECONDS);
     setResending(false);
   };
@@ -110,7 +118,7 @@ const VerifyEmail = () => {
                 {t("auth.verify_title")}
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {t("auth.verify_subtitle", { email })}
+                {t("auth.verify_subtitle_neutral", { email })}
               </p>
             </div>
 
@@ -126,6 +134,12 @@ const VerifyEmail = () => {
                 </InputOTPGroup>
               </InputOTP>
             </div>
+
+            {rateLimitNotice ? (
+              <div className="w-full rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                {rateLimitNotice}
+              </div>
+            ) : null}
 
             <button
               onClick={handleVerify}

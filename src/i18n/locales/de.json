@@ -233,14 +233,18 @@
     "no_account": "Noch kein Konto? Registrieren",
     "already_have_account": "Schon ein Konto? Einloggen",
     "rate_limited": "Zu viele Anfragen – bitte warte 1 Minute und versuche es erneut.",
+    "signup_cooldown_active": "E-Mail-Limit aktiv. Bitte warte {{seconds}} Sekunden.",
+    "signup_waiting": "Bitte {{seconds}}s warten",
     "email_not_confirmed_action": "E-Mail noch nicht bestätigt – prüfe deinen Posteingang oder fordere einen neuen Code an.",
     "free_note": "Kein Abo nötig. Starte kostenlos.",
     "verify_title": "Prüfe deine E-Mail",
     "verify_subtitle": "Wir haben einen 6-stelligen Code an {{email}} gesendet",
+    "verify_subtitle_neutral": "Gib den 6-stelligen Code für {{email}} ein. Falls nichts ankommt, sende den Code erneut.",
     "verify_button": "Bestätigen",
     "verified_success": "Verifiziert! Willkommen! 🎉",
     "resend_code": "Keinen Code erhalten? Erneut senden",
     "resend_cooldown": "Erneut senden in {{seconds}}s",
+    "resend_rate_limit_active": "Server-Limit aktiv: Bitte {{seconds}} Sekunden warten, dann erneut senden.",
     "code_resent": "Code erneut gesendet! 📬"
   },
   "onboarding": {

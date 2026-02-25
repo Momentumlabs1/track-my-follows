@@ -233,14 +233,18 @@
     "no_account": "ليس لديك حساب؟ سجل الآن",
     "already_have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
     "rate_limited": "طلبات كثيرة جداً – يرجى الانتظار دقيقة والمحاولة مرة أخرى.",
+    "signup_cooldown_active": "تم تفعيل حد البريد الآن. يرجى الانتظار {{seconds}} ثانية.",
+    "signup_waiting": "انتظر {{seconds}}ث",
     "email_not_confirmed_action": "لم يتم تأكيد البريد بعد – تحقق من صندوق الوارد أو اطلب رمزاً جديداً.",
     "free_note": "لا حاجة لاشتراك. ابدأ مجاناً.",
     "verify_title": "تحقق من بريدك الإلكتروني",
     "verify_subtitle": "أرسلنا رمزًا مكونًا من 6 أرقام إلى {{email}}",
+    "verify_subtitle_neutral": "أدخل الرمز المكوّن من 6 أرقام لـ {{email}}. إذا لم يصلك شيء، أعد الإرسال.",
     "verify_button": "تأكيد",
     "verified_success": "تم التحقق! مرحباً! 🎉",
     "resend_code": "لم تحصل على رمز؟ إعادة الإرسال",
     "resend_cooldown": "إعادة الإرسال في {{seconds}} ثانية",
+    "resend_rate_limit_active": "حد الخادم مفعل: انتظر {{seconds}} ثانية ثم أعد الإرسال.",
     "code_resent": "تم إعادة إرسال الرمز! 📬"
   },
   "onboarding": {
