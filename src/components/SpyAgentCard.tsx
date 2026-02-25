@@ -162,16 +162,19 @@ export function SpyAgentCard({
             }}
             whileHover={{ scale: 1.08 }}
             onDragStart={() => onDragStateChange(true)}
-            onDrag={(_e, info) => {
+            onDrag={() => {
               const now = Date.now();
               if (now - lastHitCheck.current < 80) return;
               lastHitCheck.current = now;
-              const hovered = findProfileUnderPoint(info.point.x, info.point.y);
+              const rect = dragRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              const hovered = findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
               onHoverProfileChange(hovered);
             }}
-            onDragEnd={(_e, info) => {
+            onDragEnd={() => {
               onDragStateChange(false);
-              const profileId = findProfileUnderPoint(info.point.x, info.point.y);
+              const rect = dragRef.current?.getBoundingClientRect();
+              const profileId = rect ? findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
               if (profileId && profileId !== spyProfile.id) {
                 setDropSuccess(true);
                 setTimeout(() => setDropSuccess(false), 600);
@@ -185,7 +188,7 @@ export function SpyAgentCard({
               animate={dropSuccess ? { scale: [1, 1.5, 1], rotate: [0, 15, -15, 0] } : {}}
               transition={{ duration: 0.5 }}
             >
-              <SpyIcon size={72} glow />
+              <SpyIcon size={96} glow />
             </motion.div>
           </motion.div>
           <p className="text-[9px] text-muted-foreground/60 mt-1 select-none text-center">
