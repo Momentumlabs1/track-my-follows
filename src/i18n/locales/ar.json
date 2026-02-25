@@ -33,6 +33,7 @@
     "step_2": "جاري البحث عن الحساب...",
     "step_3": "جاري جلب البيانات بشكل مجهول...",
     "step_4": "جاري تحليل المتابعات الأخيرة...",
+    "step_baseline": "جاري إنشاء خط الأساس...",
     "step_5": "جاري الإنهاء وتأمين البيانات..."
   },
   "profile_detail": {
@@ -115,7 +116,11 @@
     "spy_moved": "🕵️ تم نقل الجاسوس!",
     "your_profiles": "حساباتك",
     "latest_activity": "آخر نشاط",
-    "profile_too_large": "هذا الحساب يتابع حسابات كثيرة (>10,000). كشف إلغاء المتابعة غير متاح."
+    "profile_too_large": "هذا الحساب يتابع حسابات كثيرة (>10,000). كشف إلغاء المتابعة غير متاح.",
+    "unfollows_detected": "إلغاء متابعات مكتشفة",
+    "tap_to_reveal_hint": "افتح الملف الشخصي لمعرفة من ألغى المتابعة",
+    "reveal_now": "اكشف الآن",
+    "unfollow_hint_explanation": "لاحظ جاسوسنا أن الأرقام لا تتطابق. استخدم فحص إلغاء المتابعة لمعرفة من ألغى المتابعة."
   },
   "suspicion": {
     "score_label": "مؤشر الشك",
@@ -158,7 +163,7 @@
     "new_follower_of": "متابع جديد لـ"
   },
   "category": { "influencer": "مؤثر", "celebrity": "مشهور", "private": "خاص" },
-  "gender": { "female": "نساء", "male": "رجال", "unknown": "غير معروف" },
+  "gender": { "female": "نساء", "male": "رجال", "unknown": "غير معروف", "confidence_high": "ثقة عالية", "confidence_medium": "ثقة متوسطة", "confidence_low": "الجاسوس مرهق", "based_on_sample": "بناءً على {{count}} من {{total}} حساب تم تحليله" },
   "insights": {
     "title": "إحصائيات",
     "activity_heatmap": "خريطة النشاط",

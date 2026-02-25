@@ -214,6 +214,7 @@ Deno.serve(async (req) => {
         unfollowsFound++;
         const e = ex as Record<string, unknown>;
         await supabase.from("profile_followings").update({ is_current: false }).eq("id", e.id as string);
+        const unfollowGender = detectGender(e.following_display_name as string | null);
         await supabase.from("follow_events").insert({
           tracked_profile_id: profile.id,
           event_type: "unfollow",
@@ -222,8 +223,13 @@ Deno.serve(async (req) => {
           target_display_name: (e.following_display_name as string) || null,
           direction: "following",
           notification_sent: false,
-          gender_tag: detectGender(e.following_display_name as string | null),
+          gender_tag: unfollowGender,
           category: "normal",
+        });
+        // Gender-Count dekrementieren
+        await supabase.rpc("decrement_gender_count", {
+          p_profile_id: profile.id,
+          p_gender: unfollowGender,
         });
       }
     }
@@ -238,10 +244,14 @@ Deno.serve(async (req) => {
       if (!existingFollowingIds.has(f.pk)) {
         newFollowsFound++;
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
+        const newGenderTag = detectGender(f.full_name);
+        const newCategory = categorizeFollow(f.follower_count, f.is_private);
         await supabase.from("profile_followings").insert({
           tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
           following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
           first_seen_at: ts, direction: "following",
+          gender_tag: newGenderTag,
+          category: newCategory,
         });
         await supabase.from("follow_events").insert({
           tracked_profile_id: profile.id, event_type: "follow", target_username: f.username,
@@ -326,6 +336,12 @@ Deno.serve(async (req) => {
         });
       }
     }
+
+    // ── Reset pending hint + update last_following_count ──
+    await supabase.from("tracked_profiles").update({
+      pending_unfollow_hint: 0,
+      last_following_count: allFollowings.length,
+    }).eq("id", profile.id);
 
     // ── Log the check ──
     await supabase.from("unfollow_checks").insert({

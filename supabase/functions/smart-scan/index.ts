@@ -146,10 +146,14 @@ async function syncNewFollows(
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
     const ts = randomTs[i].toISOString();
+    const genderTag = detectGender(f.full_name);
+    const category = categorizeFollow(f.follower_count, f.is_private);
     await supabaseClient.from("profile_followings").insert({
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
       following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
       first_seen_at: ts, direction: "following",
+      gender_tag: genderTag,
+      category: category,
     });
     await supabaseClient.from("follow_events").insert({
       tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
@@ -159,6 +163,11 @@ async function syncNewFollows(
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
+    });
+    // Gender-Count live updaten
+    await supabaseClient.rpc("increment_gender_count", {
+      p_profile_id: profileId,
+      p_gender: genderTag,
     });
   }
   return newEntries.length;
@@ -328,16 +337,20 @@ async function performSpyScan(
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null);
 
-  // ── SMART UNFOLLOW DETECTION ──
+  // ── SMART UNFOLLOW DETECTION (sammelt Hints, KEIN Full-Scan!) ──
   let unfollowsDetected = 0;
   const lastFollowingCount = profile.last_following_count as number | null;
   if (profile.baseline_complete && lastFollowingCount !== null && lastFollowingCount !== undefined) {
     const expectedCount = lastFollowingCount + newFollowCount;
     const missingCount = expectedCount - actualFollowingCount;
     if (missingCount > 0) {
-      console.log(`[SPY UNFOLLOW] ${username}: ${missingCount} unfollows (expected ${expectedCount}, actual ${actualFollowingCount})`);
+      console.log(`[SPY HINT] ${username}: +${missingCount} unfollows detected (hint, no full-scan)`);
       unfollowsDetected = missingCount;
-      await performFollowingFullScan(supabaseClient, profileId, igUserId, hikerApiKey);
+      // Hint in DB sammeln (wird beim manuellen unfollow-check auf 0 zurückgesetzt)
+      const currentHint = (profile.pending_unfollow_hint as number) || 0;
+      await supabaseClient.from("tracked_profiles").update({
+        pending_unfollow_hint: currentHint + missingCount,
+      }).eq("id", profileId);
     }
   }
 
@@ -346,14 +359,14 @@ async function performSpyScan(
   const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
   const newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers, profile.last_scanned_at as string | null);
 
-  // ── SMART FOLLOWER LOSS DETECTION ──
+  // ── SMART FOLLOWER LOSS DETECTION (Hint only, no full-scan) ──
   const lastFollowerCount = profile.last_follower_count as number | null;
   if (lastFollowerCount !== null && lastFollowerCount !== undefined) {
     const expectedFollowerCount = lastFollowerCount + newFollowerCount;
     const lostCount = expectedFollowerCount - actualFollowerCount;
     if (lostCount > 0) {
-      console.log(`[SPY FOLLOWER-LOSS] ${username}: ~${lostCount} followers lost`);
-      await performFollowerFullScan(supabaseClient, profileId, igUserId, hikerApiKey);
+      console.log(`[SPY FOLLOWER-HINT] ${username}: ~${lostCount} followers lost (hint only)`);
+      // Follower loss will be revealed in the next manual unfollow-check
     }
   }
 

@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.auth-email-hook]
 verify_jwt = false
+
+[functions.create-baseline]
+verify_jwt = false

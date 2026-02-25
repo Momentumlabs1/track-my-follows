@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 function useTimeAgo() {
@@ -46,6 +47,7 @@ export function SpyAgentCard({
   onHoverProfileChange,
 }: SpyAgentCardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const timeAgo = useTimeAgo();
   const [dropSuccess, setDropSuccess] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
@@ -145,6 +147,27 @@ export function SpyAgentCard({
           >
             <SpyIcon size={16} /> {t("spy.move_spy")}
           </button>
+
+          {/* Unfollow Hint */}
+          {(spyProfile.pending_unfollow_hint ?? 0) > 0 && (
+            <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-sm">⚠️</span>
+                <span className="text-[12px] font-bold text-destructive">
+                  ~{spyProfile.pending_unfollow_hint} {t("spy.unfollows_detected")}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mb-2">
+                {t("spy.tap_to_reveal_hint")}
+              </p>
+              <button
+                onClick={() => navigate(`/profile/${spyProfile.id}`)}
+                className="w-full py-2 rounded-lg bg-destructive/20 text-destructive text-[11px] font-bold"
+              >
+                🔍 {t("spy.reveal_now")}
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Draggable Spy */}
