@@ -61,6 +61,7 @@
     "lost_follower": "Follower weg",
     "unfollowed": "Entfolgt",
     "no_new_events": "Noch keine neuen Follows erkannt",
+    "no_new_followers": "Noch keine neuen Follower erkannt",
     "no_gone_events": "Noch keine Unfollows erkannt",
     "will_update": "Wird beim nächsten Scan aktualisiert",
     "start_scan": "Starte einen Scan um Aktivität zu erkennen",
@@ -77,6 +78,13 @@
   "profile": {
     "followed": "Gefolgt",
     "unfollowed": "Entfolgt",
+    "follows_new": "Folgt neu",
+    "new_followers": "Neue Follower",
+    "unfollowed_tab": "Entfolgt",
+    "insights_tab": "Insights",
+    "unfollowed_by_them": "Hat entfolgt",
+    "lost_followers_title": "Follower verloren",
+    "tap_check_to_scan": "Tippe oben auf 'Unfollows prüfen'",
     "recentFollowing": "Folgt neu",
     "newFollowers": "Neue Follower",
     "hasUnfollowed": "Hat entfolgt",
@@ -121,7 +129,9 @@
     "no_events": "Noch keine Aktivität erkannt",
     "no_events_subtitle": "Wir benachrichtigen dich sobald etwas passiert",
     "upgrade_to_reveal": "Upgrade zum Anzeigen",
-    "mutual": "Gegenseitig"
+    "mutual": "Gegenseitig",
+    "follows_now": "folgt jetzt",
+    "new_follower_of": "neuer Follower von"
   },
   "category": {
     "influencer": "Influencer",
@@ -267,7 +277,8 @@
     "pro_only": "Pro: Unfollow-Erkennung",
     "limit_reached": "Keine Checks mehr heute",
     "unfollows_detected": "Unfollows erkannt",
-    "no_unfollows": "Keine Unfollows erkannt"
+    "no_unfollows": "Keine Unfollows erkannt",
+    "resets_midnight": "Setzt sich um Mitternacht zurück"
   },
   "scan_status": {
     "auto_hourly": "Stündlich",

@@ -61,6 +61,7 @@
     "lost_follower": "Lost Follower",
     "unfollowed": "Unfollowed",
     "no_new_events": "No new follows detected yet",
+    "no_new_followers": "No new followers detected yet",
     "no_gone_events": "No unfollows detected yet",
     "will_update": "Will be updated on next scan",
     "start_scan": "Start a scan to detect activity",
@@ -77,6 +78,13 @@
   "profile": {
     "followed": "Followed",
     "unfollowed": "Unfollowed",
+    "follows_new": "Follows new",
+    "new_followers": "New followers",
+    "unfollowed_tab": "Unfollowed",
+    "insights_tab": "Insights",
+    "unfollowed_by_them": "Has unfollowed",
+    "lost_followers_title": "Lost followers",
+    "tap_check_to_scan": "Tap 'Check Unfollows' above to scan",
     "recentFollowing": "Follows new",
     "newFollowers": "New followers",
     "hasUnfollowed": "Has unfollowed",
@@ -121,7 +129,9 @@
     "no_events": "No activity detected yet",
     "no_events_subtitle": "We'll notify you when something happens",
     "upgrade_to_reveal": "Upgrade to reveal",
-    "mutual": "Mutual"
+    "mutual": "Mutual",
+    "follows_now": "now follows",
+    "new_follower_of": "new follower of"
   },
   "category": {
     "influencer": "Influencer",
@@ -267,7 +277,8 @@
     "pro_only": "Pro: Unfollow Detection",
     "limit_reached": "No checks remaining today",
     "unfollows_detected": "unfollows detected",
-    "no_unfollows": "No unfollows detected"
+    "no_unfollows": "No unfollows detected",
+    "resets_midnight": "Resets at midnight"
   },
   "scan_status": {
     "auto_hourly": "Hourly",
