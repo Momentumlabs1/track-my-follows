@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import logoSquare from "@/assets/logo-square.png";
+import { SpyIcon } from "@/components/SpyIcon";
 import { ScanStatus } from "@/components/ScanStatus";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
@@ -231,7 +232,7 @@ const ProfileDetail = () => {
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex items-center gap-2">
-          {hasSpy && <span className="text-sm">🕵️</span>}
+          {hasSpy && <SpyIcon size={18} />}
           <span className="text-[13px] font-bold text-muted-foreground">@{profile.username}</span>
         </div>
         <div className="flex items-center gap-0">
@@ -260,7 +261,7 @@ const ProfileDetail = () => {
                 </div>
               </div>
               {hasSpy && (
-                <div className="absolute -top-1 -end-1 text-xl">🕵️</div>
+                <div className="absolute -top-1 -end-1"><SpyIcon size={24} /></div>
               )}
             </div>
             <p className="text-[15px] font-bold text-foreground mt-2">@{profile.username}</p>
@@ -320,7 +321,7 @@ const ProfileDetail = () => {
             onClick={() => setMoveSpyOpen(true)}
             className="w-full native-card p-4 border border-dashed border-primary/30 flex items-center gap-3"
           >
-            <span className="text-2xl">🕵️</span>
+            <SpyIcon size={28} />
             <div className="flex-1 text-start">
               <p className="text-[13px] font-bold text-foreground">{t("spy.assign_spy_here")}</p>
               <p className="text-[11px] text-muted-foreground">{t("spy.spy_required_description")}</p>
@@ -346,7 +347,7 @@ const ProfileDetail = () => {
               </button>
             ) : (
               <button onClick={() => setMoveSpyOpen(true)} className="bg-primary/90 text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
-                🕵️ {t("spy.spy_required")}
+                <SpyIcon size={14} /> {t("spy.spy_required")}
               </button>
             )}
           </div>
@@ -387,7 +388,7 @@ const ProfileDetail = () => {
               )}
               {tab.locked && (
                 <span className="text-[10px]">
-                  {tab.lockType === "paywall" ? "🔒" : "🕵️"}
+                  {tab.lockType === "paywall" ? "🔒" : <SpyIcon size={12} />}
                 </span>
               )}
             </button>
