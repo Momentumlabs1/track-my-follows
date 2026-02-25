@@ -87,6 +87,22 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
             <p className="text-[11px] text-muted-foreground">
               {formatCount(profile.follower_count ?? 0)} {t("dashboard.followers")} · {formatCount(profile.following_count ?? 0)} {t("dashboard.following")}
             </p>
+            {/* Gender Mini-Bar */}
+            {(() => {
+              const total = (profile.gender_female_count || 0) + (profile.gender_male_count || 0) + (profile.gender_unknown_count || 0);
+              if (total === 0) return null;
+              const fPct = Math.round(((profile.gender_female_count || 0) / total) * 100);
+              const mPct = Math.round(((profile.gender_male_count || 0) / total) * 100);
+              return (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex h-1 flex-1 rounded-full overflow-hidden bg-muted">
+                    <div className="h-full bg-primary" style={{ width: `${fPct}%` }} />
+                    <div className="h-full bg-blue-400" style={{ width: `${mPct}%` }} />
+                  </div>
+                  <span className="text-[9px] text-muted-foreground tabular-nums">♀{fPct}% ♂{mPct}%</span>
+                </div>
+              );
+            })()}
             <div className="flex items-center gap-1.5 mt-0.5">
               {hasSpy ? (
                 <>

@@ -33,6 +33,7 @@
     "step_2": "Searching user profile...",
     "step_3": "Fetching profile data anonymously...",
     "step_4": "Analyzing recent follows...",
+    "step_baseline": "Creating baseline...",
     "step_5": "Finalizing & securing data..."
   },
   "profile_detail": {
@@ -115,7 +116,11 @@
     "spy_moved": "🕵️ Spy moved!",
     "your_profiles": "Your profiles",
     "latest_activity": "Latest activity",
-    "profile_too_large": "This profile follows too many accounts (>10,000). Unfollow detection is not available."
+    "profile_too_large": "This profile follows too many accounts (>10,000). Unfollow detection is not available.",
+    "unfollows_detected": "unfollows detected",
+    "tap_to_reveal_hint": "Open the profile to see who unfollowed",
+    "reveal_now": "Reveal now",
+    "unfollow_hint_explanation": "Our spy noticed the numbers don't add up. Use the unfollow check to see who unfollowed."
   },
   "suspicion": {
     "score_label": "Suspicion Score",
@@ -158,7 +163,7 @@
     "new_follower_of": "new follower of"
   },
   "category": { "influencer": "Influencer", "celebrity": "Celebrity", "private": "Private" },
-  "gender": { "female": "Women", "male": "Men", "unknown": "Unknown" },
+  "gender": { "female": "Women", "male": "Men", "unknown": "Unknown", "confidence_high": "High confidence", "confidence_medium": "Medium confidence", "confidence_low": "Spy is overwhelmed", "based_on_sample": "Based on {{count}} of {{total}} analyzed accounts" },
   "insights": {
     "title": "Insights",
     "activity_heatmap": "Activity Heatmap",

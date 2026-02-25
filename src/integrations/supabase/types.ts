@@ -187,36 +187,42 @@ export type Database = {
       }
       profile_followings: {
         Row: {
+          category: string | null
           direction: string
           first_seen_at: string
           following_avatar_url: string | null
           following_display_name: string | null
           following_user_id: string
           following_username: string
+          gender_tag: string | null
           id: string
           is_current: boolean
           last_seen_at: string
           tracked_profile_id: string
         }
         Insert: {
+          category?: string | null
           direction?: string
           first_seen_at?: string
           following_avatar_url?: string | null
           following_display_name?: string | null
           following_user_id: string
           following_username: string
+          gender_tag?: string | null
           id?: string
           is_current?: boolean
           last_seen_at?: string
           tracked_profile_id: string
         }
         Update: {
+          category?: string | null
           direction?: string
           first_seen_at?: string
           following_avatar_url?: string | null
           following_display_name?: string | null
           following_user_id?: string
           following_username?: string
+          gender_tag?: string | null
           id?: string
           is_current?: boolean
           last_seen_at?: string
@@ -356,6 +362,11 @@ export type Database = {
           display_name: string | null
           follower_count: number | null
           following_count: number | null
+          gender_confidence: string | null
+          gender_female_count: number | null
+          gender_male_count: number | null
+          gender_sample_size: number | null
+          gender_unknown_count: number | null
           has_spy: boolean | null
           id: string
           initial_scan_done: boolean | null
@@ -363,6 +374,7 @@ export type Database = {
           last_follower_count: number | null
           last_following_count: number | null
           last_scanned_at: string | null
+          pending_unfollow_hint: number | null
           previous_follower_count: number | null
           previous_following_count: number | null
           spy_assigned_at: string | null
@@ -377,6 +389,11 @@ export type Database = {
           display_name?: string | null
           follower_count?: number | null
           following_count?: number | null
+          gender_confidence?: string | null
+          gender_female_count?: number | null
+          gender_male_count?: number | null
+          gender_sample_size?: number | null
+          gender_unknown_count?: number | null
           has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
@@ -384,6 +401,7 @@ export type Database = {
           last_follower_count?: number | null
           last_following_count?: number | null
           last_scanned_at?: string | null
+          pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
           spy_assigned_at?: string | null
@@ -398,6 +416,11 @@ export type Database = {
           display_name?: string | null
           follower_count?: number | null
           following_count?: number | null
+          gender_confidence?: string | null
+          gender_female_count?: number | null
+          gender_male_count?: number | null
+          gender_sample_size?: number | null
+          gender_unknown_count?: number | null
           has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
@@ -405,6 +428,7 @@ export type Database = {
           last_follower_count?: number | null
           last_following_count?: number | null
           last_scanned_at?: string | null
+          pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
           spy_assigned_at?: string | null
@@ -494,9 +518,17 @@ export type Database = {
         Args: { _user_id: string }
         Returns: number
       }
+      decrement_gender_count: {
+        Args: { p_gender: string; p_profile_id: string }
+        Returns: undefined
+      }
       delete_own_account: { Args: never; Returns: undefined }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
       get_user_limits: { Args: { p_user_id: string }; Returns: Json }
+      increment_gender_count: {
+        Args: { p_gender: string; p_profile_id: string }
+        Returns: undefined
+      }
       move_spy: {
         Args: { p_new_profile_id: string; p_user_id: string }
         Returns: undefined

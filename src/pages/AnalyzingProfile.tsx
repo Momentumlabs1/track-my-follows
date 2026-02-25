@@ -20,13 +20,14 @@ const AnalyzingProfile = () => {
     t("analyzing.step_1"),
     t("analyzing.step_2"),
     t("analyzing.step_3"),
+    t("analyzing.step_baseline"),
     t("analyzing.step_4"),
     t("analyzing.step_5"),
   ];
 
   useEffect(() => {
-    const t1 = setTimeout(() => { setCurrentStep(1); setProgress(20); }, 1200);
-    const t2 = setTimeout(() => { setCurrentStep(2); setProgress(40); }, 2500);
+    const t1 = setTimeout(() => { setCurrentStep(1); setProgress(15); }, 1200);
+    const t2 = setTimeout(() => { setCurrentStep(2); setProgress(30); }, 2500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -43,9 +44,20 @@ const AnalyzingProfile = () => {
         });
         if (res.error) throw res.error;
 
-        setCurrentStep(3); setProgress(70);
-        await new Promise(r => setTimeout(r, 800));
-        setCurrentStep(4); setProgress(90);
+        // ── BASELINE ERSTELLEN ──
+        setCurrentStep(3); setProgress(60);
+
+        const baselineRes = await supabase.functions.invoke("create-baseline", {
+          body: { profileId },
+        });
+
+        if (baselineRes.error) {
+          console.warn("Baseline creation failed:", baselineRes.error);
+          // Don't abort – profile works without baseline,
+          // only unfollow detection won't be available
+        }
+
+        setCurrentStep(4); setProgress(85);
         await new Promise(r => setTimeout(r, 600));
         setCurrentStep(5); setProgress(100);
 
