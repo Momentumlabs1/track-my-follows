@@ -44,7 +44,7 @@ const Login = () => {
           return;
         }
         toast.success(t("auth.signup_success"));
-        navigate("/dashboard");
+        navigate("/verify-email", { state: { email } });
         return;
       }
       toast.error(loginError.message);
