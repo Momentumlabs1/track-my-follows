@@ -41,9 +41,8 @@ const Login = () => {
         if (signUpError) {
           // If signup says "already registered", email exists but not confirmed
           if (signUpError.message?.toLowerCase().includes("already registered") || signUpError.message?.toLowerCase().includes("already been registered")) {
-            // Resend confirmation and redirect to verify page
-            await supabase.auth.resend({ type: "signup", email });
-            toast.info(t("auth.email_not_confirmed_resend", "E-Mail noch nicht bestätigt – neuer Code wurde gesendet."));
+            // Weiter zur Verify-Seite ohne automatisches Resend (vermeidet Rate-Limit-Spam)
+            toast.info(t("auth.email_not_confirmed_action", "E-Mail noch nicht bestätigt – prüfe deinen Posteingang oder fordere auf der nächsten Seite einen neuen Code an."));
             navigate("/verify-email", { state: { email } });
             setLoading(false);
             return;
@@ -56,10 +55,9 @@ const Login = () => {
         navigate("/verify-email", { state: { email } });
         return;
       }
-      // Email not confirmed → resend code and go to verify page
+      // Email not confirmed → zur Verify-Seite leiten, Resend dort explizit auslösen
       if (loginError.message?.toLowerCase().includes("email not confirmed")) {
-        await supabase.auth.resend({ type: "signup", email });
-        toast.info(t("auth.email_not_confirmed_resend", "E-Mail noch nicht bestätigt – neuer Code wurde gesendet."));
+        toast.info(t("auth.email_not_confirmed_action", "E-Mail noch nicht bestätigt – prüfe deinen Posteingang oder fordere auf der nächsten Seite einen neuen Code an."));
         navigate("/verify-email", { state: { email } });
         setLoading(false);
         return;

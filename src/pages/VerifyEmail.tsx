@@ -59,7 +59,11 @@ const VerifyEmail = () => {
       email,
     });
     if (error) {
-      toast.error(error.message);
+      if (error.message?.toLowerCase().includes("rate limit")) {
+        toast.error(t("auth.resend_rate_limited", "Zu viele Anfragen – bitte warte kurz und versuche es dann erneut."));
+      } else {
+        toast.error(error.message);
+      }
     } else {
       toast.success(t("auth.code_resent"));
     }
