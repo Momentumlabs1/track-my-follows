@@ -39,12 +39,29 @@ const Login = () => {
         // User doesn't exist → auto signup
         const { error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) {
+          // If signup says "already registered", email exists but not confirmed
+          if (signUpError.message?.toLowerCase().includes("already registered") || signUpError.message?.toLowerCase().includes("already been registered")) {
+            // Resend confirmation and redirect to verify page
+            await supabase.auth.resend({ type: "signup", email });
+            toast.info(t("auth.email_not_confirmed_resend", "E-Mail noch nicht bestätigt – neuer Code wurde gesendet."));
+            navigate("/verify-email", { state: { email } });
+            setLoading(false);
+            return;
+          }
           toast.error(signUpError.message);
           setLoading(false);
           return;
         }
         toast.success(t("auth.signup_success"));
         navigate("/verify-email", { state: { email } });
+        return;
+      }
+      // Email not confirmed → resend code and go to verify page
+      if (loginError.message?.toLowerCase().includes("email not confirmed")) {
+        await supabase.auth.resend({ type: "signup", email });
+        toast.info(t("auth.email_not_confirmed_resend", "E-Mail noch nicht bestätigt – neuer Code wurde gesendet."));
+        navigate("/verify-email", { state: { email } });
+        setLoading(false);
         return;
       }
       toast.error(loginError.message);
