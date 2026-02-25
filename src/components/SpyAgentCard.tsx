@@ -147,10 +147,17 @@ export function SpyAgentCard({
             }}
             whileHover={{ scale: 1.08 }}
             onDragStart={() => onDragStateChange(true)}
-            onDragEnd={(_, info) => {
+            onDragEnd={(e, info) => {
               onDragStateChange(false);
-              const el = document.elementFromPoint(info.point.x, info.point.y);
-              const dropTarget = el?.closest("[data-profile-id]");
+              // Hide the dragged element so elementFromPoint finds what's underneath
+              const dragEl = e.target as HTMLElement;
+              const prev = dragEl.style.pointerEvents;
+              dragEl.style.pointerEvents = "none";
+              const els = document.elementsFromPoint(info.point.x, info.point.y);
+              dragEl.style.pointerEvents = prev;
+              const dropTarget = els
+                .map((el) => el.closest("[data-profile-id]"))
+                .find(Boolean);
               if (dropTarget) {
                 const profileId = dropTarget.getAttribute("data-profile-id");
                 if (profileId && profileId !== spyProfile.id) {
