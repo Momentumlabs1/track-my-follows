@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       {
         run_id: payload.run_id,
         to: recipient,
-        from: `Spy-Secret <noreply@notify.spy-secret.com>`,
+        from: `Spy-Secret <noreply@spy-secret.com>`,
         subject,
         html,
         text: subject,
