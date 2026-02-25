@@ -52,45 +52,6 @@ export function SuspicionMeter({ analysis, weeklyScores }: SuspicionMeterProps) 
         ))}
       </div>
 
-      {/* Gender split */}
-      {genderStats.total > 0 && (
-        <div className="native-card p-4">
-          <p className="section-header mb-3">{t("simple.who_they_follow")}</p>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 flex items-center gap-2">
-              <span className="text-xl font-extrabold text-primary">♀ {genderStats.femalePercent}%</span>
-              <span className="text-[11px] text-muted-foreground">{genderStats.female}</span>
-            </div>
-            <div className="flex-1 flex items-center justify-end gap-2">
-              <span className="text-[11px] text-muted-foreground">{genderStats.male}</span>
-              <span className="text-xl font-extrabold text-blue-400">♂ {genderStats.total > 0 ? 100 - genderStats.femalePercent : 0}%</span>
-            </div>
-          </div>
-          {/* Split bar */}
-          <div className="h-2 rounded-full overflow-hidden flex bg-muted">
-            <motion.div
-              className="h-full gradient-pink"
-              initial={{ width: 0 }}
-              animate={{ width: `${genderStats.femalePercent}%` }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            />
-            <motion.div
-              className="h-full bg-blue-400"
-              initial={{ width: 0 }}
-              animate={{ width: `${100 - genderStats.femalePercent}%` }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            />
-          </div>
-          <p className="text-[12px] font-medium text-muted-foreground mt-2.5 text-center">
-            {getGenderVerdict()}
-          </p>
-          {genderStats.unknown > 0 && (
-            <p className="text-[10px] text-muted-foreground/60 mt-0.5 text-center">
-              {t("suspicion.not_detected", { count: genderStats.unknown })}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
