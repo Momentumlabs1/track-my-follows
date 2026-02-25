@@ -5,12 +5,41 @@ import { ProfileStoryRing } from "@/components/ProfileStoryRing";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
 import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/native";
 import logoSquare from "@/assets/logo-square.png";
+
+// Unified event type for the feed
+export interface UnifiedFeedEvent {
+  id: string;
+  tracked_profile_id: string;
+  detected_at: string;
+  is_read: boolean;
+  source: "follow" | "follower";
+  event_type: string;
+  // follow_events fields
+  target_username?: string;
+  target_avatar_url?: string | null;
+  target_display_name?: string | null;
+  target_follower_count?: number | null;
+  target_is_private?: boolean | null;
+  direction?: string;
+  gender_tag?: string | null;
+  is_mutual?: boolean | null;
+  category?: string | null;
+  // follower_events fields
+  username?: string;
+  full_name?: string | null;
+  profile_pic_url?: string | null;
+  follower_count?: number | null;
+  is_verified?: boolean;
+  // tracked profile info
+  tracked_profiles?: { username: string; avatar_url: string | null } | null;
+}
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -20,7 +49,8 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
-  const { data: events = [], isLoading: eventsLoading } = useFollowEvents();
+  const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
+  const { data: followerEventsRaw = [] } = useFollowerEvents();
 
   const isLoading = profilesLoading || eventsLoading;
 
@@ -31,13 +61,62 @@ const Dashboard = () => {
     setRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
     await queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+    await queryClient.invalidateQueries({ queryKey: ["follower_events"] });
     setRefreshing(false);
   };
 
+  // Build unified feed: merge follow_events + follower_events
+  const allEvents: UnifiedFeedEvent[] = useMemo(() => {
+    const fromFollows: UnifiedFeedEvent[] = followEventsRaw.map((e) => ({
+      id: e.id,
+      tracked_profile_id: e.tracked_profile_id,
+      detected_at: e.detected_at,
+      is_read: e.is_read,
+      source: "follow" as const,
+      event_type: e.event_type,
+      target_username: e.target_username,
+      target_avatar_url: e.target_avatar_url,
+      target_display_name: e.target_display_name,
+      target_follower_count: e.target_follower_count,
+      target_is_private: e.target_is_private,
+      direction: e.direction,
+      gender_tag: (e as Record<string, unknown>).gender_tag as string | null,
+      is_mutual: (e as Record<string, unknown>).is_mutual as boolean | null,
+      category: (e as Record<string, unknown>).category as string | null,
+      tracked_profiles: e.tracked_profiles,
+    }));
+
+    // Map follower events: we need to find the tracked profile username
+    const profileMap = new Map(profiles.map((p) => [p.id, p]));
+    const fromFollowers: UnifiedFeedEvent[] = followerEventsRaw.map((e) => {
+      const tp = profileMap.get(e.profile_id);
+      return {
+        id: e.id,
+        tracked_profile_id: e.profile_id,
+        detected_at: e.detected_at,
+        is_read: e.is_read,
+        source: "follower" as const,
+        event_type: e.event_type,
+        username: e.username,
+        full_name: e.full_name,
+        profile_pic_url: e.profile_pic_url,
+        follower_count: e.follower_count,
+        is_verified: e.is_verified,
+        gender_tag: e.gender_tag,
+        category: e.category,
+        tracked_profiles: tp ? { username: tp.username, avatar_url: tp.avatar_url } : null,
+      };
+    });
+
+    return [...fromFollows, ...fromFollowers].sort(
+      (a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()
+    );
+  }, [followEventsRaw, followerEventsRaw, profiles]);
+
   const groupedEvents = useMemo(() => {
-    const groups: { date: string; events: typeof events }[] = [];
+    const groups: { date: string; events: UnifiedFeedEvent[] }[] = [];
     let currentDate = "";
-    for (const event of events) {
+    for (const event of allEvents) {
       const eventDate = new Date(event.detected_at).toDateString();
       if (eventDate !== currentDate) {
         currentDate = eventDate;
@@ -46,21 +125,34 @@ const Dashboard = () => {
       groups[groups.length - 1].events.push(event);
     }
     return groups;
-  }, [events]);
+  }, [allEvents]);
 
   const profilesWithNewEvents = useMemo(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     const ids = new Set<string>();
-    events.forEach((e) => {
+    allEvents.forEach((e) => {
       if (new Date(e.detected_at).getTime() > cutoff) {
         ids.add(e.tracked_profile_id);
       }
     });
     return ids;
-  }, [events]);
+  }, [allEvents]);
 
   // Latest hot event
-  const latestEvent = events.length > 0 ? events[0] : null;
+  const latestEvent = allEvents.length > 0 ? allEvents[0] : null;
+
+  // Get display info for the latest event
+  const getLatestEventInfo = () => {
+    if (!latestEvent) return null;
+    if (latestEvent.source === "follow") {
+      const verb = latestEvent.event_type === "unfollow" ? t("events.hasUnfollowed") : t("events.newFollowing");
+      return { username: latestEvent.target_username || "???", verb };
+    }
+    const verb = latestEvent.event_type === "lost" ? t("events.lostFollower") : t("events.newFollower");
+    return { username: latestEvent.username || "???", verb };
+  };
+
+  const latestInfo = getLatestEventInfo();
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +192,7 @@ const Dashboard = () => {
       </div>
 
       {/* Spy des Tages */}
-      {latestEvent && (
+      {latestEvent && latestInfo && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -123,11 +215,8 @@ const Dashboard = () => {
                 </span>
               </div>
               <p className="text-[15px] font-bold text-foreground leading-snug">
-                <span className="text-primary">@{latestEvent.target_username}</span>
-                {" "}
-                {latestEvent.event_type === "follow" || latestEvent.event_type === "new_following"
-                  ? t("events.newFollowing")
-                  : t("events.hasUnfollowed")}
+                <span className="text-primary">@{latestInfo.username}</span>
+                {" "}{latestInfo.verb}
               </p>
               {latestEvent.tracked_profiles?.username && (
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -177,7 +266,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : events.length > 0 ? (
+        ) : allEvents.length > 0 ? (
           <div className="space-y-3">
             {groupedEvents.map((group, gi) => (
               <div key={group.date}>
