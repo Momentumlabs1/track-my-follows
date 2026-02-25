@@ -15,7 +15,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [signupCooldown, setSignupCooldown] = useState(0);
   const navigate = useNavigate();
 
@@ -39,53 +38,61 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (isSignUp && signupCooldown > 0) {
-      toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
+    // Try login first
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (!loginError) {
+      toast.success(t("auth.login_success"));
+      navigate("/dashboard");
       return;
     }
 
-    setLoading(true);
+    // If "email not confirmed" → redirect to verify
+    if (loginError.message?.toLowerCase().includes("email not confirmed")) {
+      toast.info(t("auth.email_not_confirmed_action"));
+      navigate("/verify-email", { state: { email } });
+      setLoading(false);
+      return;
+    }
 
-    if (isSignUp) {
-      // Explicit signup
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        if (error.message?.toLowerCase().includes("rate limit") || error.message?.toLowerCase().includes("over_email_send_rate_limit")) {
+    // If invalid credentials → try signup
+    if (loginError.message?.toLowerCase().includes("invalid") || loginError.message?.toLowerCase().includes("invalid login credentials")) {
+      if (signupCooldown > 0) {
+        toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
+        setLoading(false);
+        return;
+      }
+
+      const { error: signupError } = await supabase.auth.signUp({ email, password });
+
+      if (signupError) {
+        if (signupError.message?.toLowerCase().includes("rate limit") || signupError.message?.toLowerCase().includes("over_email_send_rate_limit")) {
           setSignupCooldown(SIGNUP_COOLDOWN_SECONDS);
           toast.error(t("auth.signup_cooldown_active", { seconds: SIGNUP_COOLDOWN_SECONDS }));
-        } else if (error.message?.toLowerCase().includes("already registered") || error.message?.toLowerCase().includes("already been registered")) {
+        } else if (signupError.message?.toLowerCase().includes("already registered") || signupError.message?.toLowerCase().includes("already been registered")) {
           toast.info(t("auth.email_not_confirmed_action"));
           navigate("/verify-email", { state: { email } });
         } else {
-          toast.error(error.message);
+          toast.error(signupError.message);
         }
         setLoading(false);
         return;
       }
+
       toast.success(t("auth.signup_success"));
       navigate("/verify-email", { state: { email } });
-    } else {
-      // Login only
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message?.toLowerCase().includes("email not confirmed")) {
-          toast.info(t("auth.email_not_confirmed_action"));
-          navigate("/verify-email", { state: { email } });
-          setLoading(false);
-          return;
-        }
-        if (error.message?.toLowerCase().includes("rate limit")) {
-          toast.error(t("auth.rate_limited"));
-        } else {
-          toast.error(t("auth.invalid_credentials"));
-        }
-        setLoading(false);
-        return;
-      }
-      toast.success(t("auth.login_success"));
-      navigate("/dashboard");
+      return;
     }
+
+    // Rate limit or other login error
+    if (loginError.message?.toLowerCase().includes("rate limit")) {
+      toast.error(t("auth.rate_limited"));
+    } else {
+      toast.error(t("auth.invalid_credentials"));
+    }
+    setLoading(false);
   };
 
   return (
@@ -167,32 +174,21 @@ const Login = () => {
               </div>
               <button
                 type="submit"
-                disabled={loading || (isSignUp && signupCooldown > 0)}
+                disabled={loading || signupCooldown > 0}
                 className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {isSignUp && signupCooldown > 0
+                    {signupCooldown > 0
                       ? t("auth.signup_waiting", { seconds: signupCooldown })
-                      : isSignUp
-                        ? t("auth.signup_button")
-                        : t("auth.continue_button")}
+                      : t("auth.continue_button")}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>
             </form>
-
-            {/* Toggle Login/Signup */}
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isSignUp ? t("auth.already_have_account") : t("auth.no_account")}
-            </button>
 
             <p className="text-center text-[12px] text-muted-foreground/70 mt-3">
               {t("auth.free_note")}
