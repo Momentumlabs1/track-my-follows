@@ -1,53 +1,74 @@
 
-Zustand jetzt (warum du weiter Supabase-Links bekommst)
-- Das Setup ist aktuell noch nicht aktiv für dieses Projekt.
-- Belege aus den Logs:
-  - Auth-Log zeigt weiterhin `mail_from: noreply@mail.app.supabase.io` bei Signup.
-  - Es gibt keine erfolgreichen (`200`) Aufrufe auf `auth-email-hook` für echte Sendeszenarien.
-- Belege aus Domain-Status:
-  - Domain ist verifiziert.
-  - Aber: Für dieses Projekt ist noch **keine Custom Email Domain aktiv gesetzt** (`get_project_custom_domain` = none).
+Ja — Ursache ist jetzt klar und reproduzierbar.
 
-Das bedeutet: Supabase nutzt weiter den Default-Mailer + Default-Template (mit Link), statt eurer gebrandeten Hook-Templates.
+## Diagnose (harte Beweise)
 
-Umsetzungsplan (konkret)
-1) Projekt-Domain für Auth-Mails aktivieren
-- In Cloud/Email die verifizierte Domain diesem Projekt als Sender-Domain zuweisen.
-- Ohne diesen Schritt bleibt Supabase beim Standardversand.
+1. Ich habe den Flow live getestet:
+   - `POST /auth/v1/token?grant_type=password` → `400 invalid_credentials` (normal beim ersten Versuch)
+   - direkt danach `POST /auth/v1/signup` → `429 over_email_send_rate_limit`
+   - Response: `"email rate limit exceeded"`
 
-2) Sender-Adresse mit aktiver Domain abgleichen
-- Prüfen, welche Domain in Email-Settings wirklich aktiv ist.
-- Falls aktiv `spy-secret.com` (nicht `notify.spy-secret.com`), dann `from` im Hook auf die aktive Domain angleichen (z. B. `noreply@spy-secret.com`), damit keine Domain-Mismatch-Probleme auftreten.
+2. Der `auth-email-hook` wird aktuell nicht produktiv von Auth-Events getroffen:
+   - Edge-Logs zeigen nur Boot/Shutdown.
+   - In `function_edge_logs` sind nur manuelle Testcalls mit `401 Missing webhook timestamp` sichtbar.
 
-3) Auth-Email-Hook Setup einmal sauber reconciliieren
-- Sicherstellen, dass `auth-email-hook` als Auth-Mail-Flow verwendet wird (nicht nur als deployte Funktion vorhanden).
-- Danach Hook erneut testen.
+3. In `auth.users` gibt es `confirmation_sent_at` bei mehreren Nutzern (also Versandversuche gab es grundsätzlich), aber der aktuelle Flow läuft jetzt in Rate-Limit.
 
-4) E2E-Verifikation (entscheidend)
-- Neues Konto mit frischer E-Mail anlegen.
-- Erwartung:
-  - Absender = eure Domain
-  - Inhalt = euer Template
-  - Signup-Mail enthält den 6-stelligen Code (kein Supabase-Standardlink-Layout).
-- Parallel in Logs prüfen:
-  - Auth-Log darf nicht mehr `mail.app.supabase.io` als Sender zeigen.
-  - Edge-Function-Log muss erfolgreiche Verarbeitungen zeigen.
+## Root Cause (kompakt)
 
-Technische Details (für dich transparent)
+Es sind zwei Probleme gleichzeitig:
+
+- Primär: Der aktuelle „Smart Auth“ in `Login.tsx` macht bei `invalid_credentials` automatisch `signUp()`. Das kann bei normalen Login-Fehleingaben massenhaft Signup/Email-Requests erzeugen und den globalen Email-Limiter triggern.
+- Sekundär/infra: Der Hook-Pfad ist nicht sauber verifizierbar (keine echten Auth-getriggerten Hook-Requests in Logs). Das müssen wir nach dem Rate-Limit-Fix eindeutig sichtbar machen.
+
+## Umsetzungsplan (direkter Fix)
+
+1. `src/pages/Login.tsx` hart entschärfen
+   - Auto-`signUp()` bei `invalid_credentials` komplett entfernen.
+   - Login und Registrierung explizit trennen:
+     - `handleLogin` nur `signInWithPassword`
+     - `handleSignUp` nur bei explizitem „Konto erstellen“
+   - `429 over_email_send_rate_limit` gezielt abfangen und klare Message zeigen.
+
+2. `src/pages/VerifyEmail.tsx` gegen Spam absichern
+   - Resend-Cooldown (z. B. 60s) einbauen.
+   - Cooldown-Status sichtbar machen („erneut senden in XXs“).
+   - Button während Cooldown deaktivieren.
+
+3. `src/i18n/locales/de.json`, `en.json`, `ar.json`
+   - Neue Keys für:
+     - falsche Login-Daten (ohne Auto-Signup)
+     - explizite Registrierung
+     - Rate-Limit-Hinweis mit klarer Warte-Info
+     - Resend-Cooldown-Text
+
+4. `supabase/config.toml`
+   - `[functions.auth-email-hook] verify_jwt = false` ergänzen (Webhook-Functions müssen ohne User-JWT erreichbar sein).
+
+5. `supabase/functions/auth-email-hook/index.ts`
+   - Diagnostik verbessern (maskierte Email + actionType + runId vorhanden ja/nein loggen), damit wir bei einem einzigen Testversuch sofort sehen, ob Auth den Hook wirklich aufruft.
+
+## Validierungsplan (End-to-End, nur 1 Versuch)
+
 ```text
-Aktueller Flow:
-Signup -> Supabase Default mailer -> Default template (Link)
-
-Ziel-Flow:
-Signup -> auth-email-hook -> custom template -> send via Lovable Email API -> branded sender domain
+Neuer Account (1x) 
+ -> /auth/v1/signup darf NICHT 429 sein
+ -> Hook-Logs müssen POST-Request zeigen
+ -> Mail kommt von notify.spy-secret.com
+ -> OTP-Verifizierung klappt
+ -> Login danach klappt ohne neue Signup-Requests
 ```
 
-Warum es trotz Code noch nicht wirkt:
-- Die Dateien/Funktion existieren zwar, aber der aktive Projekt-Email-Setup-Status ist der Gatekeeper.
-- Solange keine Projekt-Domain aktiv ist, bleibt Supabase beim Default-Mailer.
+## Technische Details (für Entwickler)
 
-Akzeptanzkriterien (Done)
-- 1) Signup-Mail kommt von eurer Domain
-- 2) Mail-Body ist euer Spy-Secret-Template
-- 3) Code-basiertes Signup (6-stellig) funktioniert im Verify-Screen
-- 4) Kein `mail.app.supabase.io` mehr in neuen Auth-Logs
+- Aktueller Fehler ist reproduzierbar auf API-Ebene: `x-sb-error-code: over_email_send_rate_limit`.
+- Die vorherige Änderung (kein Auto-Resend im Login) war richtig, aber nicht ausreichend:
+  - Auto-`signUp` bei `invalid_credentials` bleibt ein Multiplikator für Email-Limits.
+- Ohne Trennung von Login/Signup bleibt das Problem wiederholbar, selbst wenn Domain/Hook korrekt sind.
+
+## Reihenfolge für schnellsten Erfolg
+
+1) Smart-Auth entkoppeln (Login != Signup)  
+2) Cooldown auf Resend  
+3) `verify_jwt = false` für `auth-email-hook`  
+4) 1 kontrollierter End-to-End-Test mit frischer Email und sofortige Log-Prüfung
