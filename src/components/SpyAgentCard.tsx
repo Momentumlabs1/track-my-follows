@@ -151,9 +151,9 @@ export function SpyAgentCard({
             dragElastic={0.15}
             dragMomentum={false}
             whileDrag={{
-              scale: 1.3,
+              scale: 1.12,
               zIndex: 9999,
-              filter: "drop-shadow(0 0 24px hsl(var(--primary) / 0.6))",
+              filter: "drop-shadow(0 0 18px hsl(var(--primary) / 0.5))",
             }}
             whileHover={{ scale: 1.08 }}
             onDragStart={() => onDragStateChange(true)}

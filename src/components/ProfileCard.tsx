@@ -35,7 +35,7 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
       animate={{
         opacity: 1,
         y: 0,
-        scale: isDropTarget ? 1.03 : isCurrentSpy ? 0.97 : 1,
+        scale: isDropTarget ? 1.02 : isCurrentSpy ? 0.98 : 1,
       }}
       transition={{ delay: isDragging ? 0 : index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
       className="relative transition-all"
