@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import spyLogoGif from "@/assets/spy-logo-animated.gif";
 
 const slides = [
   {
@@ -95,8 +96,12 @@ export default function Onboarding() {
                 >
                   {/* Glow ring */}
                   <div className={`absolute inset-0 rounded-[28px] blur-2xl opacity-40 bg-primary/30 scale-125`} />
-                  <div className={`relative h-28 w-28 rounded-[28px] bg-[hsl(var(--card))]/80 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center shadow-2xl ${slide.glowColor}`}>
-                    <span className="text-6xl drop-shadow-lg">{slide.icon}</span>
+                  <div className={`relative h-28 w-28 rounded-[28px] bg-[hsl(var(--card))]/80 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center shadow-2xl ${slide.glowColor} overflow-hidden`}>
+                    {slide.key === "1" ? (
+                      <img src={spyLogoGif} alt="Spy" className="h-24 w-24 object-contain" />
+                    ) : (
+                      <span className="text-6xl drop-shadow-lg">{slide.icon}</span>
+                    )}
                   </div>
                 </motion.div>
 
