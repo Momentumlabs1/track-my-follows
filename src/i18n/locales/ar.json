@@ -1,16 +1,8 @@
 {
   "app_name": "TrackIQ",
-  "splash": {
-    "subtitle": "اعرف من يتابعون"
-  },
-  "tabs": {
-    "whats_new": "ما الجديد؟",
-    "profiles": "الحسابات"
-  },
-  "feed": {
-    "today": "اليوم",
-    "yesterday": "أمس"
-  },
+  "splash": { "subtitle": "اعرف من يتابعون" },
+  "tabs": { "whats_new": "ما الجديد؟", "profiles": "الحسابات" },
+  "feed": { "today": "اليوم", "yesterday": "أمس" },
   "dashboard": {
     "just_now": "الآن",
     "minutes_ago": "منذ {{count}} د",
@@ -87,7 +79,7 @@
     "tap_check_to_scan": "اضغط 'فحص إلغاء المتابعات' أعلاه",
     "no_unfollows_yet": "لم يتم اكتشاف إلغاء متابعات بعد",
     "unfollows_auto_detected": "يتم اكتشاف إلغاء المتابعات تلقائياً",
-    "unfollows_detected_automatically": "يتم فحص إلغاء المتابعات تلقائياً كل 4 ساعات. التتبع نشط منذ",
+    "unfollows_detected_automatically": "يتم فحص إلغاء المتابعات تلقائياً كل ساعة. التتبع نشط منذ",
     "recentFollowing": "يتابع حديثاً",
     "newFollowers": "متابعون جدد",
     "hasUnfollowed": "ألغى المتابعة",
@@ -95,6 +87,35 @@
     "unfollowedEmptyTitle": "المقارنة تبدأ الآن",
     "unfollowedEmptyDesc": "بدءاً من الفحص القادم ستظهر هنا من ألغى المتابعة.",
     "noEventsYet": "لا توجد أحداث بعد"
+  },
+  "spy": {
+    "spy_watching": "الجاسوس يراقب",
+    "spy_active": "الجاسوس نشط",
+    "assign_your_spy": "عيّن جاسوسك",
+    "spy_description": "جاسوسك يراقب حساباً واحداً على مدار الساعة بتحليل كامل",
+    "move_spy": "نقل الجاسوس",
+    "move_your_spy": "نقل جاسوسك",
+    "choose_profile_to_watch": "اختر الحساب الذي تريد مراقبته",
+    "currently_watching": "قيد المراقبة حالياً",
+    "tap_to_assign": "اضغط لتعيين الجاسوس",
+    "assign_spy_here": "عيّن الجاسوس هنا",
+    "spy_required": "مطلوب جاسوس",
+    "spy_required_description": "عيّن جاسوسك على هذا الحساب لتفعيل تتبع المتابعين وكشف إلغاء المتابعة والإحصائيات التفصيلية.",
+    "basic_monitoring": "مراقبة أساسية",
+    "spy_auto_assigned": "تم تعيين جاسوسك تلقائياً!",
+    "creating_baseline": "جاري تحليل الحساب...",
+    "spy_now_watching": "جاسوسك يراقب الآن",
+    "active": "نشط",
+    "basic": "أساسي",
+    "day": "يوم",
+    "every_hour": "كل ساعة",
+    "every_4h": "كل 4 ساعات",
+    "last_scan": "آخر فحص",
+    "next_scan": "الفحص التالي",
+    "spy_moved": "🕵️ تم نقل الجاسوس!",
+    "your_profiles": "حساباتك",
+    "latest_activity": "آخر نشاط",
+    "profile_too_large": "هذا الحساب يتابع حسابات كثيرة (>10,000). كشف إلغاء المتابعة غير متاح."
   },
   "suspicion": {
     "score_label": "مؤشر الشك",
@@ -136,16 +157,8 @@
     "follows_now": "يتابع الآن",
     "new_follower_of": "متابع جديد لـ"
   },
-  "category": {
-    "influencer": "مؤثر",
-    "celebrity": "مشهور",
-    "private": "خاص"
-  },
-  "gender": {
-    "female": "نساء",
-    "male": "رجال",
-    "unknown": "غير معروف"
-  },
+  "category": { "influencer": "مؤثر", "celebrity": "مشهور", "private": "خاص" },
+  "gender": { "female": "نساء", "male": "رجال", "unknown": "غير معروف" },
   "insights": {
     "title": "إحصائيات",
     "activity_heatmap": "خريطة النشاط",
@@ -168,7 +181,7 @@
     "upgrade": "ترقية 💎",
     "manage_subscription": "إدارة الاشتراك",
     "manage_in_app_store": "إدارة اشتراكك في متجر التطبيقات",
-    "restore_purchases": "Käufe wiederherstellen",
+    "restore_purchases": "استعادة المشتريات",
     "subscription_restored": "تم استعادة الاشتراك! ✅",
     "no_subscription_found": "لم يتم العثور على اشتراك نشط",
     "notifications": "الإشعارات 🔔",
@@ -300,15 +313,8 @@
     "no_unfollows": "لم يتم اكتشاف إلغاء متابعات",
     "resets_midnight": "يتم التجديد عند منتصف الليل"
   },
-  "scan_status": {
-    "auto_hourly": "كل ساعة",
-    "once_daily": "1×/يوم"
-  },
-  "nav": {
-    "dashboard": "الرئيسية",
-    "add": "إضافة",
-    "settings": "الإعدادات"
-  },
+  "scan_status": { "auto_hourly": "كل ساعة", "once_daily": "1×/يوم" },
+  "nav": { "dashboard": "الرئيسية", "add": "إضافة", "settings": "الإعدادات" },
   "landing": {
     "beta_badge": "مهمة بيتا سرية 🕵️",
     "hero_line1": "الثقة جيدة.",
