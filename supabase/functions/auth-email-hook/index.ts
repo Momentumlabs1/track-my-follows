@@ -87,6 +87,9 @@ Deno.serve(async (req) => {
 
     const { runId, apiBaseUrl, recipient, actionType, token, confirmationUrl } = extractEmailData(payload);
 
+    const maskedEmail = recipient ? recipient.replace(/(.{2})(.*)(@.*)/, "$1***$3") : "MISSING";
+    console.log(`[auth-email-hook] actionType=${actionType} recipient=${maskedEmail} runId=${runId ? "present" : "MISSING"}`);
+
     if (!recipient) {
       throw new Error("Missing recipient email in webhook payload");
     }

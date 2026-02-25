@@ -13,6 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
 
   const handleSocialLogin = async (provider: "apple" | "google") => {
@@ -27,48 +28,48 @@ const Login = () => {
     }
   };
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Smart Auth: try login first, fallback to signup
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (loginError) {
-      if (loginError.message?.includes("Invalid login credentials")) {
-        // User doesn't exist → auto signup
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) {
-          // If signup says "already registered", email exists but not confirmed
-          if (signUpError.message?.toLowerCase().includes("already registered") || signUpError.message?.toLowerCase().includes("already been registered")) {
-            // Weiter zur Verify-Seite ohne automatisches Resend (vermeidet Rate-Limit-Spam)
-            toast.info(t("auth.email_not_confirmed_action", "E-Mail noch nicht bestätigt – prüfe deinen Posteingang oder fordere auf der nächsten Seite einen neuen Code an."));
-            navigate("/verify-email", { state: { email } });
-            setLoading(false);
-            return;
-          }
-          toast.error(signUpError.message);
-          setLoading(false);
-          return;
+    if (isSignUp) {
+      // Explicit signup
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        if (error.message?.toLowerCase().includes("rate limit") || error.message?.toLowerCase().includes("over_email_send_rate_limit")) {
+          toast.error(t("auth.rate_limited"));
+        } else if (error.message?.toLowerCase().includes("already registered") || error.message?.toLowerCase().includes("already been registered")) {
+          toast.info(t("auth.email_not_confirmed_action"));
+          navigate("/verify-email", { state: { email } });
+        } else {
+          toast.error(error.message);
         }
-        toast.success(t("auth.signup_success"));
-        navigate("/verify-email", { state: { email } });
-        return;
-      }
-      // Email not confirmed → zur Verify-Seite leiten, Resend dort explizit auslösen
-      if (loginError.message?.toLowerCase().includes("email not confirmed")) {
-        toast.info(t("auth.email_not_confirmed_action", "E-Mail noch nicht bestätigt – prüfe deinen Posteingang oder fordere auf der nächsten Seite einen neuen Code an."));
-        navigate("/verify-email", { state: { email } });
         setLoading(false);
         return;
       }
-      toast.error(loginError.message);
-      setLoading(false);
-      return;
+      toast.success(t("auth.signup_success"));
+      navigate("/verify-email", { state: { email } });
+    } else {
+      // Login only
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message?.toLowerCase().includes("email not confirmed")) {
+          toast.info(t("auth.email_not_confirmed_action"));
+          navigate("/verify-email", { state: { email } });
+          setLoading(false);
+          return;
+        }
+        if (error.message?.toLowerCase().includes("rate limit")) {
+          toast.error(t("auth.rate_limited"));
+        } else {
+          toast.error(t("auth.invalid_credentials"));
+        }
+        setLoading(false);
+        return;
+      }
+      toast.success(t("auth.login_success"));
+      navigate("/dashboard");
     }
-
-    toast.success(t("auth.login_success"));
-    navigate("/dashboard");
   };
 
   return (
@@ -136,8 +137,8 @@ const Login = () => {
               <div className="flex-1 h-px bg-border/50" />
             </div>
 
-            {/* Email fallback */}
-            <form onSubmit={handleEmailAuth} className="space-y-3">
+            {/* Email form */}
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div className="relative">
                 <Mail className="absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input type="email" placeholder={t("auth.email_placeholder")} value={email} onChange={e => setEmail(e.target.value)} required
@@ -149,9 +150,18 @@ const Login = () => {
                   className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
               <button type="submit" disabled={loading} className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t("auth.continue_button")} <ArrowRight className="h-4 w-4" /></>}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{isSignUp ? t("auth.signup_button") : t("auth.continue_button")} <ArrowRight className="h-4 w-4" /></>}
               </button>
             </form>
+
+            {/* Toggle Login/Signup */}
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isSignUp ? t("auth.already_have_account") : t("auth.no_account")}
+            </button>
 
             <p className="text-center text-[12px] text-muted-foreground/70 mt-3">
               {t("auth.free_note")}
