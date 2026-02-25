@@ -6,21 +6,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import spyLogoGif from "@/assets/spy-logo-animated.gif";
 
-type Phase = "intro" | "steps";
+type Phase = "gif" | "steps";
 const STEPS = 3;
 
 export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [phase, setPhase] = useState<Phase>("gif");
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
 
-  // Auto-transition: intro → steps after 2.5s
+  // GIF plays for 2.5s, then whole screen swipes up
   useEffect(() => {
     const timer = setTimeout(() => setPhase("steps"), 2500);
     return () => clearTimeout(timer);
@@ -54,44 +54,34 @@ export default function Onboarding() {
       onTouchEnd={handleTouchEnd}
     >
       <AnimatePresence mode="wait">
-        {/* ── PHASE 1: Full-screen logo intro ── */}
-        {phase === "intro" && (
+        {/* ── PHASE 1: GIF fullscreen, no box, blends with black bg ── */}
+        {phase === "gif" && (
           <motion.div
-            key="intro"
+            key="gif-intro"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ y: "-100%", opacity: 0 }}
-            transition={{
-              opacity: { duration: 1.2, ease: "easeOut" },
-              y: { duration: 0.7, ease: [0.76, 0, 0.24, 1] },
-            }}
+            exit={{ y: "-100%", transition: { duration: 0.7, ease: [0.76, 0, 0.24, 1] } }}
+            transition={{ duration: 1, ease: "easeOut" }}
             className="absolute inset-0 z-50 bg-background flex items-center justify-center"
           >
-            {/* Ambient glow behind logo */}
+            {/* Subtle glow behind */}
             <motion.div
-              animate={{ opacity: [0, 0.4, 0.25], scale: [0.8, 1.1, 1] }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="absolute w-[400px] h-[400px] rounded-full"
+              animate={{ opacity: [0, 0.35, 0.2], scale: [0.8, 1.15, 1] }}
+              transition={{ duration: 2.2, ease: "easeOut" }}
+              className="absolute w-[350px] h-[350px] rounded-full"
               style={{
-                background: "radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)",
+                background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
               }}
             />
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
+            {/* GIF – no container, no border, just the image blending with black */}
+            <motion.img
+              src={spyLogoGif}
+              alt="Spy-Secret"
+              initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="relative"
-            >
-              {/* Pulse ring */}
-              <motion.div
-                animate={{ scale: [1, 1.8], opacity: [0.3, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                className="absolute inset-0 rounded-[36px] border border-primary/30"
-              />
-              <div className="h-40 w-40 rounded-[36px] bg-background/80 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center shadow-2xl shadow-primary/20 overflow-hidden">
-                <img src={spyLogoGif} alt="Spy" className="h-32 w-32 object-contain" />
-              </div>
-            </motion.div>
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 h-48 w-48 object-contain"
+            />
           </motion.div>
         )}
 
@@ -123,9 +113,7 @@ export default function Onboarding() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex justify-center pt-14 pb-4 relative z-10"
             >
-              <div className="h-16 w-16 rounded-2xl bg-background/80 backdrop-blur-xl border border-white/[0.06] flex items-center justify-center shadow-lg shadow-primary/10 overflow-hidden">
-                <img src={spyLogoGif} alt="Spy" className="h-12 w-12 object-contain" />
-              </div>
+              <img src={spyLogoGif} alt="Spy" className="h-14 w-14 object-contain" />
             </motion.div>
 
             {/* Step content */}
@@ -174,7 +162,6 @@ export default function Onboarding() {
 
             {/* Bottom controls */}
             <div className="fixed bottom-0 inset-x-0 z-30 bg-gradient-to-t from-background via-background/95 to-transparent pt-16 pb-[calc(env(safe-area-inset-bottom)+16px)] px-6">
-              {/* Progress dots */}
               <div className="flex items-center justify-center gap-1.5 mb-5">
                 {Array.from({ length: STEPS }).map((_, i) => (
                   <motion.div
@@ -186,7 +173,6 @@ export default function Onboarding() {
                 ))}
               </div>
 
-              {/* CTA */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleNext}
