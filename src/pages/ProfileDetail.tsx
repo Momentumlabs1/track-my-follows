@@ -13,9 +13,12 @@ import { SuspicionMeter } from "@/components/SuspicionMeter";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { GenderBreakdownChart } from "@/components/GenderBreakdownChart";
 import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
+import { SpyRequiredOverlay } from "@/components/SpyRequiredOverlay";
+import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMoveSpy } from "@/hooks/useSpyProfile";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -83,9 +86,11 @@ const ProfileDetail = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>("new_follows");
   const [isScanning, setIsScanning] = useState(false);
+  const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
+  const moveSpy = useMoveSpy();
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEvents = [], isLoading: eventsLoading } = useFollowEvents(id);
@@ -94,7 +99,9 @@ const ProfileDetail = () => {
   const deleteProfile = useDeleteTrackedProfile();
 
   const profile = profiles.find((p) => p.id === id);
+  const hasSpy = profile?.has_spy === true;
   const isLoading = profilesLoading || eventsLoading;
+  const isPro = plan === "pro";
 
   const suspicionAnalysis = analyzeSuspicion(
     followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
@@ -171,17 +178,32 @@ const ProfileDetail = () => {
     deleteProfile.mutate(id, { onSuccess: () => navigate("/dashboard", { replace: true }) });
   };
 
+  const handleAssignSpy = () => {
+    if (!id) return;
+    moveSpy.mutate(id);
+  };
+
   // Follower/following deltas
   const followerDelta = profile?.previous_follower_count != null
     ? (profile.follower_count ?? 0) - profile.previous_follower_count : null;
   const followingDelta = profile?.previous_following_count != null
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
+  // Tab lock logic: Free = paywall, Pro without spy = spy required
+  const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
+    if (tabId === "new_follows") {
+      return { locked: plan === "free", lockType: plan === "free" ? "paywall" : null };
+    }
+    if (plan === "free") return { locked: true, lockType: "paywall" };
+    if (!hasSpy) return { locked: true, lockType: "spy" };
+    return { locked: false, lockType: null };
+  };
+
   const tabs = [
-    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, icon: "💘", locked: false },
-    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, icon: "👥", locked: false },
-    { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, icon: "💔", locked: plan !== "pro" },
-    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, icon: "📊", locked: plan !== "pro" },
+    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, icon: "💘", ...getTabLock("new_follows") },
+    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, icon: "👥", ...getTabLock("new_followers") },
+    { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, icon: "💔", ...getTabLock("unfollowed") },
+    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, icon: "📊", ...getTabLock("insights") },
   ];
 
   if (isLoading) {
@@ -209,7 +231,7 @@ const ProfileDetail = () => {
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={logoSquare} alt="" className="h-5 w-5 opacity-60" />
+          {hasSpy && <span className="text-sm">🕵️</span>}
           <span className="text-[13px] font-bold text-muted-foreground">@{profile.username}</span>
         </div>
         <div className="flex items-center gap-0">
@@ -229,23 +251,36 @@ const ProfileDetail = () => {
       {/* Profile Card */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-4 pt-2 pb-4">
         <div className="native-card p-5">
-          {/* Avatar centered */}
+          {/* Avatar centered with spy badge */}
           <div className="flex flex-col items-center mb-4">
-            <div className="avatar-ring p-[2.5px]">
-              <div className="rounded-full bg-background p-[2px]">
-                <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={72} />
+            <div className="relative">
+              <div className="avatar-ring p-[2.5px]">
+                <div className="rounded-full bg-background p-[2px]">
+                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={72} />
+                </div>
               </div>
+              {hasSpy && (
+                <div className="absolute -top-1 -end-1 text-xl">🕵️</div>
+              )}
             </div>
             <p className="text-[15px] font-bold text-foreground mt-2">@{profile.username}</p>
             {profile.display_name && (
               <p className="text-[12px] text-muted-foreground">{profile.display_name}</p>
             )}
-            <div className="flex items-center gap-2 mt-1">
-              <ScanStatus lastScannedAt={profile.last_scanned_at} />
-              <span className="text-[10px] text-muted-foreground">
-                · {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
-              </span>
-            </div>
+            {/* Status label */}
+            {hasSpy ? (
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[10px] font-semibold text-green-400">{t("spy.spy_active")} · {t("spy.every_hour")}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 mt-1">
+                <ScanStatus lastScannedAt={profile.last_scanned_at} />
+                <span className="text-[10px] text-muted-foreground">
+                  · {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Stats */}
@@ -278,6 +313,22 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
+      {/* Assign Spy CTA (Pro without Spy) */}
+      {isPro && !hasSpy && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
+          <button
+            onClick={() => setMoveSpyOpen(true)}
+            className="w-full native-card p-4 border border-dashed border-primary/30 flex items-center gap-3"
+          >
+            <span className="text-2xl">🕵️</span>
+            <div className="flex-1 text-start">
+              <p className="text-[13px] font-bold text-foreground">{t("spy.assign_spy_here")}</p>
+              <p className="text-[11px] text-muted-foreground">{t("spy.spy_required_description")}</p>
+            </div>
+          </button>
+        </motion.div>
+      )}
+
       {/* Gender Breakdown */}
       {suspicionAnalysis.genderStats.total > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
@@ -287,14 +338,20 @@ const ProfileDetail = () => {
 
       {/* Suspicion Meter */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
-        {!canUseStats && (
+        {(!canUseStats || (!hasSpy && isPro)) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-            <button onClick={() => showPaywall("stats")} className="gradient-pink text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
-              <Lock className="h-3.5 w-3.5" /> {t("profile_detail.pro_required")}
-            </button>
+            {!isPro ? (
+              <button onClick={() => showPaywall("stats")} className="gradient-pink text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
+                <Lock className="h-3.5 w-3.5" /> {t("profile_detail.pro_required")}
+              </button>
+            ) : (
+              <button onClick={() => setMoveSpyOpen(true)} className="bg-primary/90 text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
+                🕵️ {t("spy.spy_required")}
+              </button>
+            )}
           </div>
         )}
-        <div className={!canUseStats ? "blur-md pointer-events-none" : ""}>
+        <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
           <SuspicionMeter analysis={suspicionAnalysis} weeklyScores={weeklyScores} />
         </div>
       </motion.div>
@@ -306,7 +363,11 @@ const ProfileDetail = () => {
             <button
               key={tab.id}
               onClick={() => {
-                if (tab.locked) { showPaywall(tab.id === "unfollowed" ? "unfollows" : "stats"); return; }
+                if (tab.locked) {
+                  if (tab.lockType === "paywall") showPaywall(tab.id === "unfollowed" ? "unfollows" : "stats");
+                  else if (tab.lockType === "spy") setMoveSpyOpen(true);
+                  return;
+                }
                 setActiveTab(tab.id);
               }}
               className={`flex-shrink-0 px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 flex items-center gap-1.5 min-h-[40px] ${
@@ -324,7 +385,11 @@ const ProfileDetail = () => {
                   {tab.count}
                 </span>
               )}
-              {tab.locked && <Lock className="h-3 w-3" />}
+              {tab.locked && (
+                <span className="text-[10px]">
+                  {tab.lockType === "paywall" ? "🔒" : "🕵️"}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -379,18 +444,16 @@ const ProfileDetail = () => {
 
         {activeTab === "unfollowed" && (
           <div className="space-y-4">
-            {/* Auto-detection info banner */}
             <div className="native-card p-3 flex items-start gap-2.5">
               <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {t("profile.unfollows_detected_automatically", "Entfolgungen werden automatisch alle 4 Stunden geprüft. Tracking aktiv seit")} {new Date(profile.created_at).toLocaleDateString()}
+                {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
               </p>
             </div>
 
-            {/* Section: Unfollowed by them */}
             {unfollowedByThem.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2">{t("profile.unfollowed_by_them", "Hat entfolgt")}</p>
+                <p className="section-header px-1 mb-2">{t("profile.unfollowed_by_them")}</p>
                 <div className="native-card overflow-hidden">
                   {unfollowedByThem.map((e, i) => (
                     <EventRow
@@ -408,10 +471,9 @@ const ProfileDetail = () => {
               </div>
             )}
 
-            {/* Section: Lost followers */}
             {lostFollowerEvents.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2">{t("profile.lost_followers_title", "Follower verloren")}</p>
+                <p className="section-header px-1 mb-2">{t("profile.lost_followers_title")}</p>
                 <div className="native-card overflow-hidden">
                   {lostFollowerEvents.map((e, i) => (
                     <EventRow
@@ -432,8 +494,8 @@ const ProfileDetail = () => {
             {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
               <div className="native-card p-5 text-center">
                 <span className="text-4xl block mb-3">✨</span>
-                <p className="text-[13px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet", "Noch keine Entfolgungen erkannt")}</p>
-                <p className="text-[11px] text-muted-foreground">{t("profile.unfollows_auto_detected", "Entfolgungen werden automatisch erkannt")}</p>
+                <p className="text-[13px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("profile.unfollows_auto_detected")}</p>
               </div>
             )}
           </div>
@@ -460,6 +522,15 @@ const ProfileDetail = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Move Spy Sheet */}
+      <MoveSpySheet
+        open={moveSpyOpen}
+        onOpenChange={setMoveSpyOpen}
+        profiles={profiles}
+        currentSpyId={profiles.find((p) => p.has_spy)?.id || null}
+        onMove={(profileId) => moveSpy.mutate(profileId)}
+      />
     </div>
   );
 };
@@ -503,7 +574,7 @@ function EventRow({
   );
 }
 
-// ── Event List (for new follows / new followers tabs) ──
+// ── Event List ──
 interface EventItem {
   id: string;
   username: string;

@@ -1,16 +1,8 @@
 {
   "app_name": "TrackIQ",
-  "splash": {
-    "subtitle": "See who they follow"
-  },
-  "tabs": {
-    "whats_new": "What's new?",
-    "profiles": "Profiles"
-  },
-  "feed": {
-    "today": "Today",
-    "yesterday": "Yesterday"
-  },
+  "splash": { "subtitle": "See who they follow" },
+  "tabs": { "whats_new": "What's new?", "profiles": "Profiles" },
+  "feed": { "today": "Today", "yesterday": "Yesterday" },
   "dashboard": {
     "just_now": "Just now",
     "minutes_ago": "{{count}}m ago",
@@ -87,7 +79,7 @@
     "tap_check_to_scan": "Tap 'Check Unfollows' above to scan",
     "no_unfollows_yet": "No unfollows detected yet",
     "unfollows_auto_detected": "Unfollows are detected automatically",
-    "unfollows_detected_automatically": "Unfollows are checked automatically every 4 hours. Tracking active since",
+    "unfollows_detected_automatically": "Unfollows are checked automatically every hour. Tracking active since",
     "recentFollowing": "Follows new",
     "newFollowers": "New followers",
     "hasUnfollowed": "Has unfollowed",
@@ -95,6 +87,35 @@
     "unfollowedEmptyTitle": "Comparison starts now",
     "unfollowedEmptyDesc": "Starting from the next scan, you'll see here who unfollowed or was unfollowed.",
     "noEventsYet": "No events yet"
+  },
+  "spy": {
+    "spy_watching": "Spy watching",
+    "spy_active": "Spy active",
+    "assign_your_spy": "Assign your spy",
+    "spy_description": "Your spy monitors one profile around the clock with full analysis",
+    "move_spy": "Move spy",
+    "move_your_spy": "Move your spy",
+    "choose_profile_to_watch": "Choose the profile you want to monitor",
+    "currently_watching": "Currently watching",
+    "tap_to_assign": "Tap to assign spy",
+    "assign_spy_here": "Assign spy here",
+    "spy_required": "Spy required",
+    "spy_required_description": "Assign your spy to this profile to enable follower tracking, unfollow detection and detailed insights.",
+    "basic_monitoring": "Basic monitoring",
+    "spy_auto_assigned": "Your spy was automatically assigned!",
+    "creating_baseline": "Analyzing profile...",
+    "spy_now_watching": "Your spy is now watching",
+    "active": "Active",
+    "basic": "Basic",
+    "day": "day",
+    "every_hour": "Every hour",
+    "every_4h": "Every 4h",
+    "last_scan": "Last scan",
+    "next_scan": "Next scan",
+    "spy_moved": "🕵️ Spy moved!",
+    "your_profiles": "Your profiles",
+    "latest_activity": "Latest activity",
+    "profile_too_large": "This profile follows too many accounts (>10,000). Unfollow detection is not available."
   },
   "suspicion": {
     "score_label": "Suspicion Score",
@@ -136,16 +157,8 @@
     "follows_now": "now follows",
     "new_follower_of": "new follower of"
   },
-  "category": {
-    "influencer": "Influencer",
-    "celebrity": "Celebrity",
-    "private": "Private"
-  },
-  "gender": {
-    "female": "Women",
-    "male": "Men",
-    "unknown": "Unknown"
-  },
+  "category": { "influencer": "Influencer", "celebrity": "Celebrity", "private": "Private" },
+  "gender": { "female": "Women", "male": "Men", "unknown": "Unknown" },
   "insights": {
     "title": "Insights",
     "activity_heatmap": "Activity Heatmap",
@@ -300,15 +313,8 @@
     "no_unfollows": "No unfollows detected",
     "resets_midnight": "Resets at midnight"
   },
-  "scan_status": {
-    "auto_hourly": "Hourly",
-    "once_daily": "1×/day"
-  },
-  "nav": {
-    "dashboard": "Home",
-    "add": "Add",
-    "settings": "Settings"
-  },
+  "scan_status": { "auto_hourly": "Hourly", "once_daily": "1×/day" },
+  "nav": { "dashboard": "Home", "add": "Add", "settings": "Settings" },
   "landing": {
     "beta_badge": "Secret Beta Mission 🕵️",
     "hero_line1": "Trust is good.",

@@ -114,7 +114,7 @@ async function fetchAllPages(endpoint: string, userId: string, hikerApiKey: stri
     nextMaxId = parsed.nextMaxId;
     page++;
     if (nextMaxId) await sleep(500);
-  } while (nextMaxId && page < 200); // safety limit
+  } while (nextMaxId && page < 200);
 
   return allUsers;
 }
@@ -218,7 +218,7 @@ async function syncNewFollowers(
   return newEntries.length;
 }
 
-// ── FOLLOWING FULL-SCAN: detect who was unfollowed ──
+// ── FOLLOWING FULL-SCAN ──
 async function performFollowingFullScan(
   supabaseClient: ReturnType<typeof createClient>,
   profileId: string,
@@ -261,7 +261,7 @@ async function performFollowingFullScan(
   return unfollowed.length;
 }
 
-// ── FOLLOWER FULL-SCAN: detect who unfollowed them ──
+// ── FOLLOWER FULL-SCAN ──
 async function performFollowerFullScan(
   supabaseClient: ReturnType<typeof createClient>,
   profileId: string,
@@ -300,6 +300,122 @@ async function performFollowerFullScan(
   return lostFollowers.length;
 }
 
+// ═══════════════════════════════════════════════════════
+// SPY SCAN: Full program (Following + Follower + Unfollow Detection)
+// Only for profiles with has_spy = true
+// ═══════════════════════════════════════════════════════
+async function performSpyScan(
+  supabaseClient: ReturnType<typeof createClient>,
+  profile: Record<string, unknown>,
+  hikerApiKey: string,
+) {
+  const profileId = profile.id as string;
+  const username = profile.username as string;
+
+  // Get user info (for actual counts + avatar)
+  const userInfoRes = await fetch(
+    `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
+    { headers: { "x-access-key": hikerApiKey } },
+  );
+  if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
+  const userInfo = await userInfoRes.json();
+  const igUserId = String(userInfo.pk || userInfo.id);
+  const actualFollowingCount = userInfo.following_count ?? 0;
+  const actualFollowerCount = userInfo.follower_count ?? 0;
+
+  // ── CALL 1: Following page 1 ──
+  await sleep(500);
+  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null);
+
+  // ── SMART UNFOLLOW DETECTION ──
+  let unfollowsDetected = 0;
+  const lastFollowingCount = profile.last_following_count as number | null;
+  if (profile.baseline_complete && lastFollowingCount !== null && lastFollowingCount !== undefined) {
+    const expectedCount = lastFollowingCount + newFollowCount;
+    const missingCount = expectedCount - actualFollowingCount;
+    if (missingCount > 0) {
+      console.log(`[SPY UNFOLLOW] ${username}: ${missingCount} unfollows (expected ${expectedCount}, actual ${actualFollowingCount})`);
+      unfollowsDetected = missingCount;
+      await performFollowingFullScan(supabaseClient, profileId, igUserId, hikerApiKey);
+    }
+  }
+
+  // ── CALL 2: Follower page 1 ──
+  await sleep(1000);
+  const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
+  const newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers, profile.last_scanned_at as string | null);
+
+  // ── SMART FOLLOWER LOSS DETECTION ──
+  const lastFollowerCount = profile.last_follower_count as number | null;
+  if (lastFollowerCount !== null && lastFollowerCount !== undefined) {
+    const expectedFollowerCount = lastFollowerCount + newFollowerCount;
+    const lostCount = expectedFollowerCount - actualFollowerCount;
+    if (lostCount > 0) {
+      console.log(`[SPY FOLLOWER-LOSS] ${username}: ~${lostCount} followers lost`);
+      await performFollowerFullScan(supabaseClient, profileId, igUserId, hikerApiKey);
+    }
+  }
+
+  // ── Update profile ──
+  await supabaseClient.from("tracked_profiles").update({
+    previous_follower_count: profile.follower_count || 0,
+    previous_following_count: profile.following_count || 0,
+    last_following_count: actualFollowingCount,
+    last_follower_count: actualFollowerCount,
+    avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+    display_name: userInfo.full_name || null,
+    follower_count: actualFollowerCount,
+    following_count: actualFollowingCount,
+    last_scanned_at: new Date().toISOString(),
+    initial_scan_done: true,
+  }).eq("id", profileId);
+
+  console.log(`[SPY-SCAN] ${username}: ${newFollowCount} new follows, ${newFollowerCount} new followers, ${unfollowsDetected} unfollows`);
+  return { new_follows: newFollowCount, new_followers: newFollowerCount, unfollows_detected: unfollowsDetected };
+}
+
+// ═══════════════════════════════════════════════════════
+// BASIC SCAN: Only Following page 1 (for non-spy profiles)
+// 1 API call, no unfollow detection
+// ═══════════════════════════════════════════════════════
+async function performBasicScan(
+  supabaseClient: ReturnType<typeof createClient>,
+  profile: Record<string, unknown>,
+  hikerApiKey: string,
+) {
+  const profileId = profile.id as string;
+  const username = profile.username as string;
+
+  const userInfoRes = await fetch(
+    `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
+    { headers: { "x-access-key": hikerApiKey } },
+  );
+  if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
+  const userInfo = await userInfoRes.json();
+  const igUserId = String(userInfo.pk || userInfo.id);
+  const actualFollowingCount = userInfo.following_count ?? 0;
+  const actualFollowerCount = userInfo.follower_count ?? 0;
+
+  await sleep(500);
+  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null);
+
+  await supabaseClient.from("tracked_profiles").update({
+    previous_follower_count: profile.follower_count || 0,
+    previous_following_count: profile.following_count || 0,
+    avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+    display_name: userInfo.full_name || null,
+    follower_count: actualFollowerCount,
+    following_count: actualFollowingCount,
+    last_scanned_at: new Date().toISOString(),
+    initial_scan_done: true,
+  }).eq("id", profileId);
+
+  console.log(`[BASIC-SCAN] ${username}: ${newFollowCount} new follows`);
+  return { new_follows: newFollowCount, new_followers: 0, unfollows_detected: 0 };
+}
+
 // ── Main handler ──
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -323,106 +439,50 @@ Deno.serve(async (req) => {
     }
 
     // Get subscription status for each user
-    const userIds = [...new Set(profiles.map((p) => p.user_id))];
+    const userIds = [...new Set(profiles.map((p: Record<string, unknown>) => p.user_id))];
     const { data: subs } = await supabaseClient.from("subscriptions").select("user_id, plan_type, status").in("user_id", userIds);
-    const subMap = new Map((subs || []).map((s) => [s.user_id, s]));
+    const subMap = new Map((subs || []).map((s: Record<string, unknown>) => [s.user_id, s]));
 
-    const results: Array<{ username: string; new_follows: number; new_followers: number; unfollows_detected: number; skipped?: boolean; error?: string }> = [];
+    const results: Array<{ username: string; scan_type: string; new_follows: number; new_followers: number; unfollows_detected: number; skipped?: boolean; error?: string }> = [];
 
     for (const profile of profiles) {
       try {
-        const sub = subMap.get(profile.user_id);
-        const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status || "");
+        const sub = subMap.get(profile.user_id) as Record<string, unknown> | undefined;
+        const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status as string || "");
+        const hasSpy = profile.has_spy === true && isPro;
 
-        // FREE: skip if already scanned today
-        if (!isPro) {
-          const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at) : null;
+        if (hasSpy) {
+          // ═══ SPY PROFILE: Scan every hour ═══
+          const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at as string) : null;
+          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+          if (lastScan && lastScan > oneHourAgo) {
+            results.push({ username: profile.username as string, scan_type: "spy", new_follows: 0, new_followers: 0, unfollows_detected: 0, skipped: true });
+            continue;
+          }
+
+          const res = await performSpyScan(supabaseClient, profile, hikerApiKey);
+          results.push({ username: profile.username as string, scan_type: "spy", ...res });
+
+        } else {
+          // ═══ NON-SPY: Basic scan 1x/day ═══
+          const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at as string) : null;
           if (lastScan) {
             const today = new Date().toISOString().split("T")[0];
             const lastScanDate = lastScan.toISOString().split("T")[0];
             if (lastScanDate === today) {
-              results.push({ username: profile.username, new_follows: 0, new_followers: 0, unfollows_detected: 0, skipped: true });
+              results.push({ username: profile.username as string, scan_type: "basic", new_follows: 0, new_followers: 0, unfollows_detected: 0, skipped: true });
               continue;
             }
           }
+
+          const res = await performBasicScan(supabaseClient, profile, hikerApiKey);
+          results.push({ username: profile.username as string, scan_type: "basic", ...res });
         }
-
-        // ═══ CALL 1: Fetch user info (gratis – needed for actual counts) ═══
-        await sleep(500);
-        const userInfoRes = await fetch(
-          `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-          { headers: { "x-access-key": hikerApiKey } },
-        );
-        if (!userInfoRes.ok) {
-          results.push({ username: profile.username, new_follows: 0, new_followers: 0, unfollows_detected: 0, error: `User info: ${userInfoRes.status}` });
-          continue;
-        }
-        const userInfo = await userInfoRes.json();
-        const igUserId = String(userInfo.pk || userInfo.id);
-        const actualFollowingCount = userInfo.following_count ?? 0;
-        const actualFollowerCount = userInfo.follower_count ?? 0;
-
-        // ═══ CALL 2: Following page 1 ═══
-        await sleep(500);
-        const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-        const newFollowCount = await syncNewFollows(supabaseClient, profile.id, followingUsers, profile.last_scanned_at);
-
-        // ═══ SMART UNFOLLOW DETECTION (0 extra API calls!) ═══
-        let unfollowsDetected = 0;
-        if (profile.baseline_complete && profile.previous_following_count !== null && profile.previous_following_count !== undefined) {
-          const previousCount = profile.previous_following_count;
-          const expectedCount = previousCount + newFollowCount;
-          const missingCount = expectedCount - actualFollowingCount;
-
-          if (missingCount > 0) {
-            console.log(`[UNFOLLOW DETECTED] ${profile.username}: ${missingCount} unfollows (expected ${expectedCount}, actual ${actualFollowingCount})`);
-            unfollowsDetected = missingCount;
-
-            // Full-Scan only for Pro users
-            if (isPro) {
-              await performFollowingFullScan(supabaseClient, profile.id, igUserId, hikerApiKey);
-            }
-          }
-        }
-
-        // ═══ CALL 3: Follower page 1 ═══
-        await sleep(1000);
-        const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
-        const newFollowerCount = await syncNewFollowers(supabaseClient, profile.id, followerUsers, profile.last_scanned_at);
-
-        // ═══ SMART FOLLOWER LOSS DETECTION (0 extra API calls!) ═══
-        if (profile.previous_follower_count !== null && profile.previous_follower_count !== undefined) {
-          const prevFollowerCount = profile.previous_follower_count;
-          const expectedFollowerCount = prevFollowerCount + newFollowerCount;
-          const lostFollowersCount = expectedFollowerCount - actualFollowerCount;
-
-          if (lostFollowersCount > 0) {
-            console.log(`[FOLLOWER LOSS] ${profile.username}: ~${lostFollowersCount} followers lost`);
-            if (isPro) {
-              await performFollowerFullScan(supabaseClient, profile.id, igUserId, hikerApiKey);
-            }
-          }
-        }
-
-        // ═══ Update profile metadata ═══
-        await supabaseClient.from("tracked_profiles").update({
-          previous_follower_count: profile.follower_count || 0,
-          previous_following_count: profile.following_count || 0,
-          avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-          display_name: userInfo.full_name || null,
-          follower_count: actualFollowerCount,
-          following_count: actualFollowingCount,
-          last_scanned_at: new Date().toISOString(),
-          initial_scan_done: true,
-        }).eq("id", profile.id);
-
-        console.log(`[smart-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers, ${unfollowsDetected} unfollows detected`);
-        results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount, unfollows_detected: unfollowsDetected });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[smart-scan] Error for ${profile.username}:`, msg);
-        results.push({ username: profile.username, new_follows: 0, new_followers: 0, unfollows_detected: 0, error: msg });
-        if (msg.includes("402")) break; // API credits exhausted
+        results.push({ username: profile.username as string, scan_type: "unknown", new_follows: 0, new_followers: 0, unfollows_detected: 0, error: msg });
+        if (msg.includes("402")) break;
       }
 
       await sleep(1000);

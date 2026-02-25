@@ -305,6 +305,7 @@ export type Database = {
           plan_type: string
           revenuecat_app_user_id: string | null
           revenuecat_entitlement: string | null
+          spy_count: number
           status: string
           store: string | null
           trial_end: string | null
@@ -321,6 +322,7 @@ export type Database = {
           plan_type?: string
           revenuecat_app_user_id?: string | null
           revenuecat_entitlement?: string | null
+          spy_count?: number
           status?: string
           store?: string | null
           trial_end?: string | null
@@ -337,6 +339,7 @@ export type Database = {
           plan_type?: string
           revenuecat_app_user_id?: string | null
           revenuecat_entitlement?: string | null
+          spy_count?: number
           status?: string
           store?: string | null
           trial_end?: string | null
@@ -353,12 +356,16 @@ export type Database = {
           display_name: string | null
           follower_count: number | null
           following_count: number | null
+          has_spy: boolean | null
           id: string
           initial_scan_done: boolean | null
           is_active: boolean
+          last_follower_count: number | null
+          last_following_count: number | null
           last_scanned_at: string | null
           previous_follower_count: number | null
           previous_following_count: number | null
+          spy_assigned_at: string | null
           updated_at: string
           user_id: string
           username: string
@@ -370,12 +377,16 @@ export type Database = {
           display_name?: string | null
           follower_count?: number | null
           following_count?: number | null
+          has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
           is_active?: boolean
+          last_follower_count?: number | null
+          last_following_count?: number | null
           last_scanned_at?: string | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
+          spy_assigned_at?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -387,12 +398,16 @@ export type Database = {
           display_name?: string | null
           follower_count?: number | null
           following_count?: number | null
+          has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
           is_active?: boolean
+          last_follower_count?: number | null
+          last_following_count?: number | null
           last_scanned_at?: string | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
+          spy_assigned_at?: string | null
           updated_at?: string
           user_id?: string
           username?: string
@@ -482,6 +497,10 @@ export type Database = {
       delete_own_account: { Args: never; Returns: undefined }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
       get_user_limits: { Args: { p_user_id: string }; Returns: Json }
+      move_spy: {
+        Args: { p_new_profile_id: string; p_user_id: string }
+        Returns: undefined
+      }
       owns_tracked_profile: {
         Args: { _tracked_profile_id: string; _user_id: string }
         Returns: boolean
