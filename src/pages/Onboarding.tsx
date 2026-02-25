@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import spyLogoGif from "@/assets/spy-logo-animated.gif";
+import logoWide from "@/assets/logo-wide.png";
 
 const STEPS = 3;
 
@@ -78,7 +79,7 @@ export default function Onboarding() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="flex justify-center pt-14 pb-4 relative z-10"
           >
-            <img src={spyLogoGif} alt="Spy" className="h-12 w-12 object-contain" />
+            <img src={logoWide} alt="Spy-Secret" className="h-8 object-contain" />
           </motion.div>
         )}
 
