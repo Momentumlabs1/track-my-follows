@@ -233,14 +233,18 @@
     "no_account": "No account? Sign up",
     "already_have_account": "Already have an account? Log in",
     "rate_limited": "Too many requests – please wait 1 minute and try again.",
+    "signup_cooldown_active": "Email limit is active. Please wait {{seconds}} seconds.",
+    "signup_waiting": "Wait {{seconds}}s",
     "email_not_confirmed_action": "Email not confirmed yet – check your inbox or request a new code.",
     "free_note": "No subscription needed. Start free.",
     "verify_title": "Check your email",
     "verify_subtitle": "We sent a 6-digit code to {{email}}",
+    "verify_subtitle_neutral": "Enter the 6-digit code for {{email}}. If nothing arrives, resend the code.",
     "verify_button": "Verify",
     "verified_success": "Verified! Welcome! 🎉",
     "resend_code": "Didn't get a code? Resend",
     "resend_cooldown": "Resend in {{seconds}}s",
+    "resend_rate_limit_active": "Server limit active: wait {{seconds}} seconds, then resend.",
     "code_resent": "Code resent! 📬"
   },
   "onboarding": {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logoWide from "@/assets/logo-wide.png";
 
+const SIGNUP_COOLDOWN_SECONDS = 90;
+
 const Login = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
@@ -14,6 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [signupCooldown, setSignupCooldown] = useState(0);
   const navigate = useNavigate();
 
   const handleSocialLogin = async (provider: "apple" | "google") => {
@@ -28,8 +31,20 @@ const Login = () => {
     }
   };
 
+  useEffect(() => {
+    if (signupCooldown <= 0) return;
+    const timer = setTimeout(() => setSignupCooldown((current) => current - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [signupCooldown]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSignUp && signupCooldown > 0) {
+      toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
+      return;
+    }
+
     setLoading(true);
 
     if (isSignUp) {
@@ -37,7 +52,8 @@ const Login = () => {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
         if (error.message?.toLowerCase().includes("rate limit") || error.message?.toLowerCase().includes("over_email_send_rate_limit")) {
-          toast.error(t("auth.rate_limited"));
+          setSignupCooldown(SIGNUP_COOLDOWN_SECONDS);
+          toast.error(t("auth.signup_cooldown_active", { seconds: SIGNUP_COOLDOWN_SECONDS }));
         } else if (error.message?.toLowerCase().includes("already registered") || error.message?.toLowerCase().includes("already been registered")) {
           toast.info(t("auth.email_not_confirmed_action"));
           navigate("/verify-email", { state: { email } });
@@ -149,8 +165,23 @@ const Login = () => {
                 <input type="password" placeholder={t("auth.password_placeholder")} value={password} onChange={e => setPassword(e.target.value)} required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
-              <button type="submit" disabled={loading} className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{isSignUp ? t("auth.signup_button") : t("auth.continue_button")} <ArrowRight className="h-4 w-4" /></>}
+              <button
+                type="submit"
+                disabled={loading || (isSignUp && signupCooldown > 0)}
+                className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    {isSignUp && signupCooldown > 0
+                      ? t("auth.signup_waiting", { seconds: signupCooldown })
+                      : isSignUp
+                        ? t("auth.signup_button")
+                        : t("auth.continue_button")}
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </form>
 
