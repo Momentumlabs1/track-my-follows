@@ -30,9 +30,10 @@ function nextScanIn(lastScannedAt: string | null): string {
 interface SpyAssignmentCardProps {
   spyProfile: TrackedProfile | null;
   onMoveSpy: () => void;
+  isDragging?: boolean;
 }
 
-export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardProps) {
+export function SpyAssignmentCard({ spyProfile, onMoveSpy, isDragging }: SpyAssignmentCardProps) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
 
@@ -41,15 +42,15 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mx-4 mb-4"
+        className="mb-4"
       >
-        <div className="native-card p-5 border border-dashed border-primary/30 text-center">
+        <div className="native-card p-6 border border-dashed border-primary/30 text-center">
           <motion.div
-            className="block mb-2"
+            className="flex justify-center mb-3"
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <SpyIcon size={36} />
+            <SpyIcon size={72} glow />
           </motion.div>
           <p className="text-[14px] font-bold text-foreground">{t("spy.assign_your_spy")}</p>
           <p className="text-[12px] text-muted-foreground mt-1">{t("spy.spy_description")}</p>
@@ -63,28 +64,31 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
-      className="mx-4 mb-4"
+      className="mb-4"
     >
       <div className="relative overflow-hidden rounded-2xl gradient-pink p-[1px]">
         <div className="rounded-2xl bg-background/95 backdrop-blur-sm p-4">
-          <div className="absolute top-0 end-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute top-0 end-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
+          {/* Header with big spy icon */}
+          <div className="flex items-center gap-3 mb-3">
             <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <SpyIcon size={22} />
-              </motion.div>
-              <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+              animate={{ 
+                rotate: [0, 6, -6, 0],
+                scale: isDragging ? [1, 1.1, 1] : 1,
+              }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            >
+              <SpyIcon size={52} glow />
+            </motion.div>
+            <div className="flex-1">
+              <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest block">
                 {t("spy.spy_watching")}
               </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
+              </div>
             </div>
           </div>
 
@@ -110,9 +114,9 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy }: SpyAssignmentCardPr
           {/* Move Spy Button */}
           <button
             onClick={onMoveSpy}
-            className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors"
+            className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
           >
-            <SpyIcon size={14} className="inline" /> {t("spy.move_spy")}
+            <SpyIcon size={16} /> {t("spy.move_spy")}
           </button>
         </div>
       </div>

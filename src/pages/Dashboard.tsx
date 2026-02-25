@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Loader2, RefreshCw } from "lucide-react";
+import { DraggableSpy } from "@/components/DraggableSpy";
 import { SpyAssignmentCard } from "@/components/SpyAssignmentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
@@ -51,6 +52,7 @@ const Dashboard = () => {
   const { plan } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
+  const [spyDragging, setSpyDragging] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
@@ -180,12 +182,26 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Spy Assignment Card */}
+      {/* Spy Assignment Card + Draggable Spy */}
       {isPro && (
-        <SpyAssignmentCard
-          spyProfile={spyProfile}
-          onMoveSpy={() => setMoveSpyOpen(true)}
-        />
+        <div className="flex items-start gap-3 mx-4 mb-4">
+          <div className="flex-1">
+            <SpyAssignmentCard
+              spyProfile={spyProfile}
+              onMoveSpy={() => setMoveSpyOpen(true)}
+              isDragging={spyDragging}
+            />
+          </div>
+          {spyProfile && (
+            <div className="flex-shrink-0 pt-2">
+              <DraggableSpy
+                onDragStart={() => setSpyDragging(true)}
+                onDragEnd={() => setSpyDragging(false)}
+              />
+              <p className="text-[9px] text-muted-foreground text-center mt-1 select-none">Drag me!</p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Spy of the Day (when no spy card, or for free users) */}

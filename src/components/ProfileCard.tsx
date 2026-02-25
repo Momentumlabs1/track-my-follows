@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -21,12 +22,36 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: ProfileCardProps) {
   const { t } = useTranslation();
+  const [dragOver, setDragOver] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (hasSpy) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => setDragOver(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!hasSpy && e.dataTransfer.getData("text/plain") === "spy") {
+      onAssignSpy();
+    }
+  };
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={dragOver ? "ring-2 ring-primary rounded-2xl transition-all" : "transition-all"}
     >
       <button
         onClick={onTap}
@@ -42,7 +67,9 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
               size={48}
             />
             {hasSpy && (
-              <div className="absolute -top-1 -end-1"><SpyIcon size={18} /></div>
+              <div className="absolute -top-2 -end-2">
+                <SpyIcon size={26} glow />
+              </div>
             )}
           </div>
 
@@ -78,13 +105,17 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
         </div>
       </button>
 
-      {/* Assign Spy button (only when no spy) */}
+      {/* Assign Spy drop zone / button (only when no spy) */}
       {!hasSpy && (
         <button
           onClick={(e) => { e.stopPropagation(); onAssignSpy(); }}
-          className="w-full mt-1 py-2 rounded-xl border border-dashed border-primary/20 text-primary/60 text-[11px] font-medium hover:bg-primary/5 transition-colors"
+          className={`w-full mt-1 py-2 rounded-xl border border-dashed text-[11px] font-medium transition-colors flex items-center justify-center gap-1.5 ${
+            dragOver
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-primary/20 text-primary/60 hover:bg-primary/5"
+          }`}
         >
-          <SpyIcon size={14} className="inline" /> {t("spy.assign_spy_here")}
+          <SpyIcon size={14} /> {t("spy.assign_spy_here")}
         </button>
       )}
     </motion.div>
