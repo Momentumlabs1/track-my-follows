@@ -2,29 +2,28 @@
 
 ## Problem-Analyse
 
-Zwei zusammenhängende Bugs im Drag-and-Drop des Spy-Elements:
+Aus dem Screenshot ist klar erkennbar: Der Spy schwebt visuell über **@mtlabs.ai**, aber das Highlighting ist auf **@strichabi** (eine Karte darunter). Das liegt daran, dass `info.point` die **Cursor/Finger-Position** liefert — nicht die **visuelle Mitte des Spy-Icons**. Da das Icon 72px groß ist, kann der Cursor weit vom visuellen Zentrum entfernt sein (z.B. am oberen Rand des Icons), während `elementsFromPoint` dann die falsche Karte darunter findet.
 
-### 1. Ruckeln (Jank)
-Der `onDrag`-Callback feuert bei **jedem einzelnen Frame** (~60x/Sekunde) und ruft jedes Mal `document.elementsFromPoint()` + DOM-Traversal auf. Das ist teuer und verursacht Frame-Drops.
-
-### 2. Versetztes Highlighting
-`e.target` im `onDrag`/`onDragEnd`-Callback zeigt auf das **innere** `motion.div` (das mit der `dropSuccess`-Animation), nicht auf den äußeren Drag-Container. Wenn `findProfileUnderPoint` nur auf dem inneren Element `pointer-events: none` setzt, blockiert der **äußere Container** weiterhin `elementsFromPoint()` — dadurch wird die falsche oder gar keine ProfileCard erkannt, und das Highlighting erscheint versetzt oder springt.
-
-### Lösung
+## Lösung
 
 **Datei: `src/components/SpyAgentCard.tsx`**
 
-1. **Ref statt `e.target`**: Einen `useRef` auf den äußeren draggbaren `motion.div` setzen. In `findProfileUnderPoint` wird dann `pointer-events: none` auf diesen Ref gesetzt — nicht auf `e.target`. So wird die gesamte Drag-Fläche korrekt ausgeblendet und `elementsFromPoint` findet die richtige ProfileCard.
+### 1. Hit-Detection auf Element-Mitte umstellen
+Statt `info.point` (Cursor-Position) wird die **Bounding Box des dragRef-Elements** verwendet. `dragRef.current.getBoundingClientRect()` liefert die aktuelle visuelle Position des Spy-Icons, und dessen Mittelpunkt wird für `elementsFromPoint` genutzt.
 
-2. **`onDrag` throttlen**: Die Hit-Detection auf maximal alle ~80ms beschränken (per Timestamp-Check), statt bei jedem Frame. Das reduziert DOM-Queries um ~80% und eliminiert das Ruckeln.
+Konkret in `onDrag` und `onDragEnd`:
+```typescript
+// Statt: info.point.x, info.point.y
+// Neu:
+const rect = dragRef.current!.getBoundingClientRect();
+const cx = rect.left + rect.width / 2;
+const cy = rect.top + rect.height / 2;
+const hovered = findProfileUnderPoint(cx, cy);
+```
 
-3. **`e.target`-Zugriffe entfernen**: `onDrag` und `onDragEnd` verwenden nur noch den Ref, nicht mehr `e.target`.
+### 2. Spy-Icon größer machen
+- Draggable SpyIcon: `size={72}` → `size={96}`
+- Der Glow-Effekt skaliert automatisch mit
 
-Konkret werden in `SpyAgentCard.tsx` folgende Änderungen gemacht:
-- `useRef<HTMLDivElement>` hinzufügen, auf den äußeren `motion.div` (Zeile 148) binden
-- `findProfileUnderPoint` anpassen: statt `dragEl`-Parameter den Ref verwenden
-- `onDrag`: Timestamp-basiertes Throttling (letzte Ausführung merken, nur alle 80ms erneut ausführen)
-- `onDragEnd`: Ref statt `e.target` für die finale Drop-Erkennung
-
-Keine Änderungen an `ProfileCard.tsx` nötig — das Highlighting dort ist korrekt implementiert und reagiert nur auf den `isHovered`-State.
+Keine weiteren Dateien betroffen.
 
