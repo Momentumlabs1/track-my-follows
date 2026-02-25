@@ -371,6 +371,7 @@
     "new_follows_today": "{{count}} متابعات جديدة اليوم",
     "no_activity_today": "كل شيء هادئ اليوم 😴",
     "tracking_count": "أنت تتتبع {{count}} حسابات",
-    "hot_right_now": "ساخن الآن"
+    "hot_right_now": "ساخن الآن",
+    "spy_of_the_day": "جاسوس اليوم"
   }
 }

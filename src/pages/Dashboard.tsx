@@ -99,7 +99,7 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* Hot Alert Card */}
+      {/* Spy des Tages */}
       {latestEvent && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -113,13 +113,13 @@ const Dashboard = () => {
               <div className="flex items-center gap-1.5 mb-2">
                 <motion.span
                   className="text-lg"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
-                  🔥
+                  🕵️
                 </motion.span>
                 <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
-                  {t("simple.hot_right_now")}
+                  {t("simple.spy_of_the_day")}
                 </span>
               </div>
               <p className="text-[15px] font-bold text-foreground leading-snug">

@@ -371,6 +371,7 @@
     "new_follows_today": "{{count}} new follows today",
     "no_activity_today": "All quiet today 😴",
     "tracking_count": "You're tracking {{count}} profiles",
-    "hot_right_now": "Hot right now"
+    "hot_right_now": "Hot right now",
+    "spy_of_the_day": "Spy of the Day"
   }
 }
