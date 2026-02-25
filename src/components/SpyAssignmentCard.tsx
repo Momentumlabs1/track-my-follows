@@ -70,35 +70,23 @@ export function SpyAssignmentCard({ spyProfile, onMoveSpy, isDragging }: SpyAssi
         <div className="rounded-2xl bg-background/95 backdrop-blur-sm p-4">
           <div className="absolute top-0 end-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-          {/* Header with big spy icon */}
-          <div className="flex items-center gap-3 mb-3">
-            <motion.div
-              animate={{ 
-                rotate: [0, 6, -6, 0],
-                scale: isDragging ? [1, 1.1, 1] : 1,
-              }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            >
-              <SpyIcon size={52} glow />
-            </motion.div>
-            <div className="flex-1">
-              <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest block">
-                {t("spy.spy_watching")}
-              </span>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
-              </div>
-            </div>
+          {/* Header */}
+          <div className="flex items-center gap-1.5 mb-3">
+            <SpyIcon size={18} glow />
+            <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+              {t("spy.spy_watching")}
+            </span>
+            <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse ms-auto" />
+            <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
           </div>
 
-          {/* Profile */}
+          {/* Profile info with avatar */}
           <div className="flex items-center gap-3 mb-3">
             <InstagramAvatar
               src={spyProfile.avatar_url}
               alt={spyProfile.username}
               fallbackInitials={spyProfile.username}
-              size={44}
+              size={48}
             />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>

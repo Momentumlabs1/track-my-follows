@@ -14,6 +14,17 @@ export function DraggableSpy({ onDragStart, onDragEnd }: DraggableSpyProps) {
   const handleNativeDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("text/plain", "spy");
     e.dataTransfer.effectAllowed = "move";
+
+    // Create a drag image from the spy icon
+    const img = new Image();
+    img.src = new URL("@/assets/spy-icon.png", import.meta.url).href;
+    // Use a transparent drag image and let CSS handle visuals
+    try {
+      e.dataTransfer.setDragImage(ref.current!, 32, 32);
+    } catch {
+      // fallback
+    }
+
     setIsDragging(true);
     onDragStart?.();
   };
@@ -30,13 +41,14 @@ export function DraggableSpy({ onDragStart, onDragEnd }: DraggableSpyProps) {
         scale: isDragging ? 1.15 : 1,
       }}
       whileHover={{ scale: 1.08 }}
-      className="cursor-grab active:cursor-grabbing select-none"
+      className="cursor-grab active:cursor-grabbing select-none touch-none"
       title="Drag onto a profile to assign"
     >
       <div
-        draggable
+        draggable="true"
         onDragStart={handleNativeDragStart}
         onDragEnd={handleNativeDragEnd}
+        style={{ WebkitUserDrag: "element" } as React.CSSProperties}
       >
         <SpyIcon size={64} glow />
       </div>
