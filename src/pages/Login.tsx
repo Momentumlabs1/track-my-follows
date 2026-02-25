@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logoWide from "@/assets/logo-wide.png";
 
-const SIGNUP_COOLDOWN_SECONDS = 90;
+const SIGNUP_COOLDOWN_SECONDS = 0;
 
 const Login = () => {
   const { t } = useTranslation();
