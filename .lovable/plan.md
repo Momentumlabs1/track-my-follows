@@ -1,32 +1,30 @@
 
 
-## Problem
+## Problem-Analyse
 
-Die `auth-email-hook` Edge Function blockiert seit Stunden jede Registrierung. Der Fehler ist klar in den Auth-Logs:
+Zwei zusammenhängende Bugs im Drag-and-Drop des Spy-Elements:
 
-```text
-"Hook errored out"
-"error": "500: Hook requires authorization token"
-"hook": "https://bqqmfajowxzkdcvmrtyd.supabase.co/functions/v1/auth-email-hook"
-```
+### 1. Ruckeln (Jank)
+Der `onDrag`-Callback feuert bei **jedem einzelnen Frame** (~60x/Sekunde) und ruft jedes Mal `document.elementsFromPoint()` + DOM-Traversal auf. Das ist teuer und verursacht Frame-Drops.
 
-**Was passiert:** Supabase Auth ruft bei jedem Signup die Edge Function auf → die Signaturprüfung (`verifyWebhookRequest`) schlägt fehl → Function gibt 401 zurück → Supabase bricht den gesamten Signup mit 500 ab.
+### 2. Versetztes Highlighting
+`e.target` im `onDrag`/`onDragEnd`-Callback zeigt auf das **innere** `motion.div` (das mit der `dropSuccess`-Animation), nicht auf den äußeren Drag-Container. Wenn `findProfileUnderPoint` nur auf dem inneren Element `pointer-events: none` setzt, blockiert der **äußere Container** weiterhin `elementsFromPoint()` — dadurch wird die falsche oder gar keine ProfileCard erkannt, und das Highlighting erscheint versetzt oder springt.
 
-## Lösung: Signaturprüfung entfernen
+### Lösung
 
-Die `verifyWebhookRequest`-Funktion aus `@lovable.dev/webhooks-js` ist nicht kompatibel mit dem Format, das Supabase Auth an den Hook sendet. Statt weiter daran herumzuschrauben, entferne ich die Signaturprüfung komplett und parse den Body direkt als JSON.
+**Datei: `src/components/SpyAgentCard.tsx`**
 
-**Warum ist das sicher?** Die Function hat `verify_jwt = false` in `config.toml` und wird ausschließlich intern von Supabase Auth aufgerufen -- nicht von externen Clients. Das ist das Standard-Pattern für Supabase Auth Hooks.
+1. **Ref statt `e.target`**: Einen `useRef` auf den äußeren draggbaren `motion.div` setzen. In `findProfileUnderPoint` wird dann `pointer-events: none` auf diesen Ref gesetzt — nicht auf `e.target`. So wird die gesamte Drag-Fläche korrekt ausgeblendet und `elementsFromPoint` findet die richtige ProfileCard.
 
-### Änderung in `supabase/functions/auth-email-hook/index.ts`
+2. **`onDrag` throttlen**: Die Hit-Detection auf maximal alle ~80ms beschränken (per Timestamp-Check), statt bei jedem Frame. Das reduziert DOM-Queries um ~80% und eliminiert das Ruckeln.
 
-- `verifyWebhookRequest` und `WebhookError` Imports entfernen
-- Den gesamten Signatur-Verifizierungs-Block (Zeilen 67-87) ersetzen durch einfaches `await req.json()`
-- Den `WebhookError`-Catch-Block entfernen
-- `SEND_EMAIL_HOOK_SECRET` wird nicht mehr benötigt
-- `extractEmailData` und der Rest der Logik (Template-Rendering, E-Mail-Versand) bleibt unverändert
+3. **`e.target`-Zugriffe entfernen**: `onDrag` und `onDragEnd` verwenden nur noch den Ref, nicht mehr `e.target`.
 
-### Ergebnis
+Konkret werden in `SpyAgentCard.tsx` folgende Änderungen gemacht:
+- `useRef<HTMLDivElement>` hinzufügen, auf den äußeren `motion.div` (Zeile 148) binden
+- `findProfileUnderPoint` anpassen: statt `dragEl`-Parameter den Ref verwenden
+- `onDrag`: Timestamp-basiertes Throttling (letzte Ausführung merken, nur alle 80ms erneut ausführen)
+- `onDragEnd`: Ref statt `e.target` für die finale Drop-Erkennung
 
-Signup → Supabase Auth ruft Hook auf → Hook parst Payload direkt → rendert E-Mail-Template → sendet über Lovable Email API → Signup erfolgreich.
+Keine Änderungen an `ProfileCard.tsx` nötig — das Highlighting dort ist korrekt implementiert und reagiert nur auf den `isHovered`-State.
 
