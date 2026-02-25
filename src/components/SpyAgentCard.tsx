@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -34,6 +34,7 @@ interface SpyAgentCardProps {
   onDragMoveSpy: (profileId: string) => void;
   isDragging: boolean;
   onDragStateChange: (dragging: boolean) => void;
+  onHoverProfileChange: (profileId: string | null) => void;
 }
 
 export function SpyAgentCard({
@@ -42,10 +43,20 @@ export function SpyAgentCard({
   onDragMoveSpy,
   isDragging,
   onDragStateChange,
+  onHoverProfileChange,
 }: SpyAgentCardProps) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const [dropSuccess, setDropSuccess] = useState(false);
+
+  const findProfileUnderPoint = useCallback((x: number, y: number, dragEl: HTMLElement): string | null => {
+    const prev = dragEl.style.pointerEvents;
+    dragEl.style.pointerEvents = "none";
+    const els = document.elementsFromPoint(x, y);
+    dragEl.style.pointerEvents = prev;
+    const target = els.map((el) => el.closest("[data-profile-id]")).find(Boolean);
+    return target?.getAttribute("data-profile-id") || null;
+  }, []);
 
   if (!spyProfile) {
     return (
@@ -71,9 +82,8 @@ export function SpyAgentCard({
 
   return (
     <div className="mx-4 mb-4">
-      {/* Layout: Card left, Spy right – side by side */}
       <div className="flex items-start gap-3">
-        {/* Card – takes remaining space */}
+        {/* Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{
@@ -94,7 +104,7 @@ export function SpyAgentCard({
             </div>
           </div>
 
-          {/* Profile info – animates on swap */}
+          {/* Profile info */}
           <AnimatePresence mode="wait">
             <motion.div
               key={spyProfile.id}
@@ -124,7 +134,7 @@ export function SpyAgentCard({
             </motion.div>
           </AnimatePresence>
 
-          {/* Move Spy fallback button */}
+          {/* Move Spy button */}
           <button
             onClick={onMoveSpy}
             className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
@@ -133,7 +143,7 @@ export function SpyAgentCard({
           </button>
         </motion.div>
 
-        {/* Draggable Spy – sits to the right of the card, vertically centered */}
+        {/* Draggable Spy */}
         <div className="flex-shrink-0 flex flex-col items-center pt-6">
           <motion.div
             drag
@@ -147,25 +157,21 @@ export function SpyAgentCard({
             }}
             whileHover={{ scale: 1.08 }}
             onDragStart={() => onDragStateChange(true)}
+            onDrag={(e, info) => {
+              const dragEl = e.target as HTMLElement;
+              const hovered = findProfileUnderPoint(info.point.x, info.point.y, dragEl);
+              onHoverProfileChange(hovered);
+            }}
             onDragEnd={(e, info) => {
               onDragStateChange(false);
-              // Hide the dragged element so elementFromPoint finds what's underneath
               const dragEl = e.target as HTMLElement;
-              const prev = dragEl.style.pointerEvents;
-              dragEl.style.pointerEvents = "none";
-              const els = document.elementsFromPoint(info.point.x, info.point.y);
-              dragEl.style.pointerEvents = prev;
-              const dropTarget = els
-                .map((el) => el.closest("[data-profile-id]"))
-                .find(Boolean);
-              if (dropTarget) {
-                const profileId = dropTarget.getAttribute("data-profile-id");
-                if (profileId && profileId !== spyProfile.id) {
-                  setDropSuccess(true);
-                  setTimeout(() => setDropSuccess(false), 600);
-                  onDragMoveSpy(profileId);
-                }
+              const profileId = findProfileUnderPoint(info.point.x, info.point.y, dragEl);
+              if (profileId && profileId !== spyProfile.id) {
+                setDropSuccess(true);
+                setTimeout(() => setDropSuccess(false), 600);
+                onDragMoveSpy(profileId);
               }
+              onHoverProfileChange(null);
             }}
             className="cursor-grab active:cursor-grabbing touch-none select-none z-50"
           >

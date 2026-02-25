@@ -51,6 +51,7 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const [spyDragging, setSpyDragging] = useState(false);
+  const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
@@ -270,7 +271,11 @@ const Dashboard = () => {
           onMoveSpy={() => setMoveSpyOpen(true)}
           onDragMoveSpy={handleMoveSpy}
           isDragging={spyDragging}
-          onDragStateChange={setSpyDragging}
+          onDragStateChange={(dragging) => {
+            setSpyDragging(dragging);
+            if (!dragging) setHoveredProfileId(null);
+          }}
+          onHoverProfileChange={setHoveredProfileId}
         />
       )}
 
@@ -287,6 +292,7 @@ const Dashboard = () => {
               onAssignSpy={() => handleMoveSpy(profile.id)}
               index={i}
               isDragging={spyDragging}
+              isHovered={hoveredProfileId === profile.id}
             />
           ))}
           <button
