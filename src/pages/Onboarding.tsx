@@ -13,18 +13,27 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [gifLoaded, setGifLoaded] = useState(false);
   const [phase, setPhase] = useState<"splash" | "steps">("splash");
   const [step, setStep] = useState(0);
+
+  // Preload GIF before showing anything
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setGifLoaded(true);
+    img.src = spyLogoGif;
+  }, []);
 
   useEffect(() => {
     if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
 
-  // Splash phase: show for 2.5s then swipe up
+  // Splash phase: show for 2.5s AFTER gif loaded, then swipe up
   useEffect(() => {
+    if (!gifLoaded) return;
     const timer = setTimeout(() => setPhase("steps"), 2500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [gifLoaded]);
 
   const handleNext = useCallback(() => {
     if (step >= STEPS - 1) {
@@ -44,7 +53,7 @@ export default function Onboarding() {
     setTouchStart(null);
   };
 
-  if (loading) return null;
+  if (loading || !gifLoaded) return <div className="min-h-[100dvh] bg-background" />;
 
   return (
     <div
