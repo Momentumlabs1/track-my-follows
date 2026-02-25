@@ -122,19 +122,17 @@ const Dashboard = () => {
                   {t("simple.hot_right_now")}
                 </span>
               </div>
-              <p className="text-[15px] font-bold text-foreground">
-                {latestEvent.tracked_profiles?.username && (
-                  <span className="text-muted-foreground">@{latestEvent.tracked_profiles.username}</span>
-                )}
+              <p className="text-[15px] font-bold text-foreground leading-snug">
+                <span className="text-primary">@{latestEvent.target_username}</span>
                 {" "}
                 {latestEvent.event_type === "follow" || latestEvent.event_type === "new_following"
                   ? t("events.newFollowing")
                   : t("events.hasUnfollowed")}
-                {" "}
-                <span className="text-primary">@{latestEvent.target_username}</span>
               </p>
-              {latestEvent.target_display_name && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">{latestEvent.target_display_name}</p>
+              {latestEvent.tracked_profiles?.username && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  📍 {latestEvent.tracked_profiles.username}
+                </p>
               )}
             </div>
           </div>
