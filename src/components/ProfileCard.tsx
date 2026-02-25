@@ -26,18 +26,20 @@ export function ProfileCard({ profile, hasSpy, onTap, onAssignSpy, index }: Prof
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (hasSpy) return;
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
-    setDragOver(true);
+    if (!hasSpy) setDragOver(true);
   };
 
   const handleDragLeave = () => setDragOver(false);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOver(false);
-    if (!hasSpy && e.dataTransfer.getData("text/plain") === "spy") {
+    const data = e.dataTransfer.getData("text/plain");
+    if (!hasSpy && data === "spy") {
       onAssignSpy();
     }
   };
