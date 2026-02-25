@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, X, Info, Flame, Eye } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, BarChart3, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import logoSquare from "@/assets/logo-square.png";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
@@ -140,9 +140,7 @@ const ProfileDetail = () => {
   const followingDelta = (profile as Record<string, unknown>).previous_following_count != null
     ? (profile.following_count ?? 0) - ((profile as Record<string, unknown>).previous_following_count as number) : null;
 
-  const spyName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Agent";
-
-  // Today's activity summary
+  // Today's activity
   const todayFollows = events.filter((e) => {
     const isToday = new Date(e.detected_at).toDateString() === new Date().toDateString();
     return isToday && (e.event_type === "follow" || e.event_type === "new_following");
@@ -151,20 +149,19 @@ const ProfileDetail = () => {
     const isToday = new Date(e.detected_at).toDateString() === new Date().toDateString();
     return isToday && (e.event_type === "unfollow" || e.event_type === "unfollowed");
   }).length;
-  const hottestToday = events.find((e) => new Date(e.detected_at).toDateString() === new Date().toDateString()) ?? null;
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      {/* Header */}
+      {/* Header – minimal, tight */}
       <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={logoSquare} alt="Spy-Secret" className="h-6 w-6" />
-          <span className="text-sm font-extrabold text-foreground">Spy<span className="text-primary">Secret</span></span>
+          <img src={logoSquare} alt="" className="h-5 w-5 opacity-60" />
+          <span className="text-[13px] font-bold text-muted-foreground">@{profile.username}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0">
           <button
             onClick={() => {
               if (!canUseStats) { showPaywall("stats"); return; }
@@ -174,105 +171,101 @@ const ProfileDetail = () => {
           >
             <BarChart3 className="h-5 w-5" />
           </button>
-          <button onClick={handleDelete} className="p-2 -me-2 text-destructive min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Trash2 className="h-5 w-5" />
+          <button onClick={handleDelete} className="p-2 -me-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Trash2 className="h-4.5 w-4.5" />
           </button>
         </div>
       </div>
 
-      {/* Mini Dashboard – Welcome + Today's Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-4 mb-4 native-card p-4 overflow-hidden relative"
-      >
-        <div className="absolute top-0 end-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="relative">
-          <h2 className="text-lg font-extrabold text-foreground mb-1">
-            {t("dashboard.hello")}, {spyName} 🕵️
-          </h2>
-          <p className="text-[12px] text-muted-foreground mb-3">
-            Here's what <span className="font-bold text-foreground">@{profile.username}</span> did today
-          </p>
+      {/* Profile card – Instagram-style */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-4 pt-2 pb-4">
+        <div className="native-card p-5">
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div className="avatar-ring p-[2.5px] flex-shrink-0">
+              <div className="rounded-full bg-background p-[2px]">
+                <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={64} />
+              </div>
+            </div>
+            
+            {/* Stats inline – like Instagram */}
+            <div className="flex-1 grid grid-cols-2 gap-2">
+              <div className="text-center">
+                <div className="flex items-baseline justify-center gap-0.5">
+                  <span className="text-lg font-extrabold tabular-nums">{(profile.follower_count ?? 0).toLocaleString()}</span>
+                  {followerDelta !== null && followerDelta !== 0 && (
+                    <span className={`text-[9px] font-bold ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
+                      {followerDelta > 0 ? <TrendingUp className="h-2.5 w-2.5 inline" /> : <TrendingDown className="h-2.5 w-2.5 inline" />}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">{t("dashboard.followers")}</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-baseline justify-center gap-0.5">
+                  <span className="text-lg font-extrabold tabular-nums">{(profile.following_count ?? 0).toLocaleString()}</span>
+                  {followingDelta !== null && followingDelta !== 0 && (
+                    <span className={`text-[9px] font-bold ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
+                      {followingDelta > 0 ? <TrendingUp className="h-2.5 w-2.5 inline" /> : <TrendingDown className="h-2.5 w-2.5 inline" />}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">{t("dashboard.following")}</p>
+              </div>
+            </div>
+          </div>
 
-          {todayFollows > 0 || todayUnfollows > 0 ? (
-            <div className="rounded-xl bg-primary/10 px-4 py-3">
-              <p className="text-[13px] font-semibold text-foreground">
+          {/* Name + scan status */}
+          <div className="mt-3">
+            {profile.display_name && (
+              <p className="text-[13px] font-semibold text-foreground">{profile.display_name}</p>
+            )}
+            <div className="flex items-center gap-2 mt-1">
+              <ScanStatus lastScannedAt={profile.last_scanned_at} />
+              <span className="text-[10px] text-muted-foreground">
+                · {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
+              </span>
+            </div>
+          </div>
+
+          {/* Today banner – compact inline */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            {todayFollows > 0 || todayUnfollows > 0 ? (
+              <p className="text-[12px] font-semibold text-foreground">
                 🔥 {t("simple.new_follows_today", { count: todayFollows })}
                 {todayUnfollows > 0 && (
                   <span className="text-destructive"> · {todayUnfollows} unfollows</span>
                 )}
               </p>
-              {suspicionAnalysis.genderStats.femalePercent > 60 && (
-                <p className="text-[12px] text-primary font-medium mt-0.5">♀ Mostly women</p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-4 py-3">
-              <span className="text-lg">😴</span>
-              <p className="text-[13px] text-muted-foreground font-medium">{t("simple.no_activity_today")}</p>
-            </div>
-          )}
+            ) : (
+              <p className="text-[12px] text-muted-foreground">😴 {t("simple.no_activity_today")}</p>
+            )}
+          </div>
         </div>
       </motion.div>
 
-      {/* Profile header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-col items-center px-4 py-3">
-        {/* Avatar with gradient ring */}
-        <div className="avatar-ring p-[3px] mb-3">
-          <div className="rounded-full bg-background p-[2px]">
-            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
-          </div>
-        </div>
-        <a
-          href={`https://instagram.com/${profile.username}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-lg font-extrabold text-foreground hover:text-primary transition-colors"
+      {/* Action buttons – scan + unfollow check, side by side */}
+      <div className="px-4 mb-4 flex gap-2">
+        <button
+          onClick={handleScan}
+          disabled={isScanning}
+          className="flex-1 pill-btn-primary py-3 justify-center text-[13px] min-h-[44px] disabled:opacity-50 active:scale-[0.97] transition-transform"
         >
-          @{profile.username}
-        </a>
-        {profile.display_name && (
-          <p className="text-[13px] text-muted-foreground mt-0.5">{profile.display_name}</p>
-        )}
-        <p className="text-[11px] text-muted-foreground mt-1">
-          {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
-        </p>
-        <div className="mt-1">
-          <ScanStatus lastScannedAt={profile.last_scanned_at} />
+          {isFreeAndScanned ? (
+            <><Lock className="h-4 w-4" /> {t("paywall.scanLocked")}</>
+          ) : isScanning ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> {t("profile_detail.scanning")}</>
+          ) : (
+            <><RefreshCw className="h-4 w-4" /> {t("profile_detail.scan_now")}</>
+          )}
+        </button>
+        <div className="flex-1">
+          <UnfollowCheckButton profileId={id!} />
         </div>
-      </motion.div>
-
-      {/* Stats pills */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-4 flex gap-3 justify-center mb-4">
-        <div className="native-card px-5 py-3 text-center flex-1">
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-xl font-extrabold tabular-nums">{(profile.follower_count ?? 0).toLocaleString()}</span>
-            {followerDelta !== null && followerDelta !== 0 && (
-              <span className={`text-[10px] font-bold flex items-center gap-0.5 ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
-                {followerDelta > 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                {followerDelta > 0 ? `+${followerDelta}` : followerDelta}
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] font-medium text-muted-foreground">{t("dashboard.followers")}</p>
-        </div>
-        <div className="native-card px-5 py-3 text-center flex-1">
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-xl font-extrabold tabular-nums">{(profile.following_count ?? 0).toLocaleString()}</span>
-            {followingDelta !== null && followingDelta !== 0 && (
-              <span className={`text-[10px] font-bold flex items-center gap-0.5 ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
-                {followingDelta > 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                {followingDelta > 0 ? `+${followingDelta}` : followingDelta}
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] font-medium text-muted-foreground">{t("dashboard.following")}</p>
-        </div>
-      </motion.div>
+      </div>
 
       {/* Suspicion Meter */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-4 mb-4 relative">
         {!canUseStats && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             <button onClick={() => showPaywall("stats")} className="gradient-pink text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
@@ -298,7 +291,6 @@ const ProfileDetail = () => {
             <GenderBreakdownChart events={events} />
             <WeeklyActivityChart events={events} />
 
-            {/* "Needs time" message */}
             {profile.created_at && (Date.now() - new Date(profile.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 && (
               <div className="native-card p-4 flex items-center gap-3">
                 <span className="text-2xl">⏳</span>
@@ -316,30 +308,8 @@ const ProfileDetail = () => {
         )}
       </AnimatePresence>
 
-      {/* Scan Button */}
-      <div className="px-4 mb-3">
-        <button
-          onClick={handleScan}
-          disabled={isScanning}
-          className="w-full pill-btn-primary py-3.5 justify-center text-[14px] min-h-[44px] disabled:opacity-50 active:scale-[0.98] transition-transform"
-        >
-          {isFreeAndScanned ? (
-            <><Lock className="h-4 w-4" /> {t("paywall.scanLocked")}</>
-          ) : isScanning ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> {t("profile_detail.scanning")}</>
-          ) : (
-            <><RefreshCw className="h-4 w-4" /> {t("profile_detail.scan_now")}</>
-          )}
-        </button>
-      </div>
-
-      {/* Unfollow Check Button */}
-      <div className="px-4 mb-5">
-        <UnfollowCheckButton profileId={id!} />
-      </div>
-
-      {/* Segmented Control */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="px-4">
+      {/* Segmented Control + Feed */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="px-4">
         <div className="segmented-control mb-4">
           <button
             onClick={() => setMainTab("followed")}
@@ -359,7 +329,6 @@ const ProfileDetail = () => {
           </button>
         </div>
 
-        {/* Empty state for unfollowed tab - first scan */}
         {mainTab === "unfollowed" && isFirstScanPhase && displayEvents.length === 0 ? (
           <div className="native-card p-5 text-center">
             <Info className="h-8 w-8 text-primary mx-auto mb-3" />
@@ -367,8 +336,8 @@ const ProfileDetail = () => {
             <p className="text-[12px] text-muted-foreground">{t("profile.unfollowedEmptyDesc")}</p>
           </div>
         ) : (
-          /* Event list */
-          <div className="space-y-2">
+          /* Event list – iOS grouped style */
+          <div className="native-card overflow-hidden">
             {displayEvents.length > 0 ? displayEvents.map((event, i) => {
               const ev = event as Record<string, unknown>;
               const genderTag = ev.gender_tag as string | undefined;
@@ -379,28 +348,33 @@ const ProfileDetail = () => {
               return (
                 <motion.div
                   key={event.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="native-card p-3.5 flex items-center gap-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.02 }}
+                  className="native-cell relative"
                 >
                   <div className={`relative flex-shrink-0 ${shouldBlur ? "blur-md" : ""}`}>
-                    <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={44} />
+                    <InstagramAvatar src={event.target_avatar_url} alt={event.target_username} fallbackInitials={event.target_username} size={42} />
                     {genderTag && genderTag !== "unknown" && (
-                      <div className={`absolute -bottom-0.5 -end-0.5 h-4 w-4 rounded-full flex items-center justify-center text-[8px] text-white ${genderTag === "female" ? "gradient-pink" : "bg-blue-500"}`}>
+                      <div className={`absolute -bottom-0.5 -end-0.5 h-4 w-4 rounded-full flex items-center justify-center text-[8px] text-white ${genderTag === "female" ? "gradient-pink" : "bg-blue-400"}`}>
                         {genderTag === "female" ? "♀" : "♂"}
                       </div>
                     )}
                   </div>
                   <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
-                    <a
-                      href={`https://instagram.com/${event.target_username}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[13px] font-bold text-foreground hover:text-primary transition-colors"
-                    >
-                      @{event.target_username}
-                    </a>
+                    <div className="flex items-baseline gap-1.5">
+                      <a
+                        href={`https://instagram.com/${event.target_username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[13px] font-bold text-foreground hover:text-primary transition-colors"
+                      >
+                        @{event.target_username}
+                      </a>
+                      {!event.is_read && !shouldBlur && (
+                        <span className="h-1.5 w-1.5 rounded-full gradient-pink flex-shrink-0" />
+                      )}
+                    </div>
                     {event.target_display_name && (
                       <p className="text-[11px] text-muted-foreground truncate">{event.target_display_name}</p>
                     )}
@@ -415,7 +389,7 @@ const ProfileDetail = () => {
                   {shouldBlur && (
                     <button
                       onClick={() => showPaywall("blur")}
-                      className="absolute inset-0 flex items-center justify-center rounded-2xl"
+                      className="absolute inset-0 flex items-center justify-center"
                     >
                       <span className="gradient-pink text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                         <Lock className="h-3 w-3 inline me-1" />{t("events.upgrade_to_reveal")}
@@ -425,7 +399,7 @@ const ProfileDetail = () => {
                 </motion.div>
               );
             }) : (
-              <div className="text-center py-12">
+              <div className="text-center py-12 px-4">
                 <span className="text-4xl block mb-3">{mainTab === "unfollowed" ? "🔍" : "✨"}</span>
                 <p className="text-[13px] text-muted-foreground">{mainTab === "unfollowed" ? t("profile_detail.no_gone_events") : t("profile_detail.no_new_events")}</p>
                 <p className="text-[11px] text-muted-foreground mt-1">{profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}</p>
