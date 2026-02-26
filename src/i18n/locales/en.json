@@ -398,5 +398,16 @@
     "tracking_count": "You're tracking {{count}} profiles",
     "hot_right_now": "Hot right now",
     "spy_of_the_day": "Spy of the Day"
+  },
+  "welcome": {
+    "title": "Welcome to Spy-Secret! 🕵️",
+    "subtitle": "Your secret agent is ready.",
+    "point_1": "See who they really follow – 100% anonymous",
+    "point_2": "Track 1 profile for free with daily updates",
+    "point_3": "Upgrade to Pro for hourly scans & full insights",
+    "cta": "Let's go! 🚀"
+  },
+  "paywall": {
+    "unlock_spy_agent": "🔒 Unlock Spy Agent"
   }
 }

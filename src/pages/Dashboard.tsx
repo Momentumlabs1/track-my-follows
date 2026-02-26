@@ -1,11 +1,13 @@
 import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Loader2, RefreshCw, ChevronRight } from "lucide-react";
+import { Plus, Loader2, RefreshCw, ChevronRight, Lock } from "lucide-react";
 import { SpyAgentCard } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
+import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { SpyIcon } from "@/components/SpyIcon";
 import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
@@ -127,10 +129,16 @@ const Dashboard = () => {
       };
     });
 
-    return [...fromFollows, ...fromFollowers]
+    // Free users: only follower events (no follow/unfollow events)
+    const combinedEvents = [...fromFollows, ...fromFollowers];
+    const filteredEvents = isPro
+      ? combinedEvents
+      : combinedEvents.filter((e) => e.source === "follower");
+
+    return filteredEvents
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
       .slice(0, 100);
-  }, [followEventsRaw, followerEventsRaw, profiles]);
+  }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
 
   const groupedEvents = useMemo(() => {
     const groups: { date: string; events: UnifiedFeedEvent[] }[] = [];
@@ -161,7 +169,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Welcome Dialog for first-time users */}
+      <WelcomeDialog />
+      
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
@@ -284,8 +294,8 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* ═══════ SPY AGENT CARD (Pro only) ═══════ */}
-      {isPro && (
+      {/* ═══════ SPY AGENT CARD ═══════ */}
+      {isPro ? (
         <SpyAgentCard
           spyProfile={spyProfile}
           onMoveSpy={() => setMoveSpyOpen(true)}
@@ -294,6 +304,59 @@ const Dashboard = () => {
           onDragStateChange={handleDragStateChange}
           onHoverProfileChange={setHoveredProfileId}
         />
+      ) : (
+        /* Locked Spy Agent for Free users */
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="mx-4 mb-4"
+        >
+          <button
+            onClick={() => {
+              haptic.light();
+              showPaywall("spy_agent");
+            }}
+            className="w-full text-start relative overflow-hidden rounded-2xl"
+          >
+            {/* Blurred / greyed out version */}
+            <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 opacity-40 grayscale blur-[2px] pointer-events-none select-none">
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+                  {t("spy.spy_watching")}
+                </span>
+                <div className="ms-auto flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-green-400" />
+                  <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-12 w-12 rounded-full bg-muted" />
+                <div className="flex-1">
+                  <div className="h-4 w-24 rounded bg-muted mb-1" />
+                  <div className="h-3 w-32 rounded bg-muted/60" />
+                </div>
+              </div>
+              <div className="h-10 w-full rounded-xl bg-muted/40" />
+            </div>
+
+            {/* Lock overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-[1px] rounded-2xl">
+              <div className="flex items-center gap-3">
+                <SpyIcon size={48} />
+                <div>
+                  <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5 text-primary" />
+                    {t("paywall.unlock_spy_agent", "🔒 Spy Agent freischalten")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {t("spy.spy_description")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </button>
+        </motion.div>
       )}
 
       {/* Profile Cards */}
