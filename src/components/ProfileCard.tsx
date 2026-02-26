@@ -42,19 +42,24 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       viewport={{ once: true }}
       className="relative will-change-transform"
     >
-      {/* Spy highlight: gradient border + glow */}
+      {/* Spy highlight: gradient border + strong pink glow */}
       {isSpyHighlighted && (
-        <div
-          className="absolute -inset-[2px] rounded-2xl pointer-events-none z-10"
-          style={{
-            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))",
-            mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-            maskComposite: "exclude",
-            WebkitMaskComposite: "xor",
-            padding: "2px",
-            borderRadius: "1rem",
-          }}
-        />
+        <>
+          <div
+            className="absolute -inset-[2px] rounded-2xl pointer-events-none z-10"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)))",
+              mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              maskComposite: "exclude",
+              WebkitMaskComposite: "xor",
+              padding: "2px",
+              borderRadius: "1rem",
+            }}
+          />
+          <div className="absolute -inset-[2px] rounded-2xl pointer-events-none z-[9] blur-md opacity-40"
+            style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}
+          />
+        </>
       )}
 
       {/* Drop target pulsing border */}
@@ -77,7 +82,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className={`native-card p-4 w-full text-start ${isSpyHighlighted ? "bg-primary/5 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.25)]" : ""}`}
+        className={`native-card p-4 w-full text-start ${isSpyHighlighted ? "!bg-primary/[0.08] shadow-[0_0_28px_-4px_hsl(var(--primary)/0.35)]" : ""}`}
       >
         <div className="flex items-center gap-3">
           {/* Avatar with SpyIcon badge */}
