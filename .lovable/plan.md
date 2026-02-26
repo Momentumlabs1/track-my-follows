@@ -1,28 +1,43 @@
 
+Kurzdiagnose
+- Nein: der 6-stellige Code wird von Supabase Auth generiert, nicht vom Frontend.
+- Wahrscheinliche Fehlerquellen im aktuellen Code: falsches Routing in den Verify-Flow bei „already registered“, veralteter Code ohne automatisches Fresh-Resend, fehlende E-Mail-Normalisierung/robuste Fehlerbehandlung.
 
-## AnalyzingProfile Redesign
+Umsetzungsplan
+1) Login-Flow absichern (`src/pages/Login.tsx`)
+- E-Mail vor jedem Auth-Call normalisieren (`trim().toLowerCase()`).
+- „already registered“-Branch umbauen: nicht blind auf `/verify-email` leiten.
+- Stattdessen gezielt `auth.resend({ type: "signup" })` testen:
+  - wenn erfolgreich → `/verify-email` mit frischem Code
+  - wenn nicht erfolgreich → als normales Login-Problem behandeln (falsches Passwort/Account-Zustand).
+- In allen frühen Returns `setLoading(false)` konsistent setzen.
 
-### Dateien
+2) Verify-Flow robuster machen (`src/pages/VerifyEmail.tsx`)
+- E-Mail nicht nur aus `location.state`, zusätzlich aus Query-Param (`?email=`) lesen.
+- OTP-Eingabe härten: nur Ziffern akzeptieren/säubern, vor Verify trimmen.
+- Doppelte Verify-Requests verhindern (Auto-Submit entschärfen oder entfernen; eindeutiger Submit-Trigger).
+- Fehlercodes gezielt behandeln (`otp_expired`, `invalid token`): klare UX + optional automatisches Resend.
+- Bei erfolgreichem Resend deutlicher Hinweis: nur der neueste Code ist gültig.
 
-**1. `src/index.css`** — `.gradient-bg` Utility hinzufügen (1 Zeile)
+3) Navigation stabilisieren (`src/pages/Login.tsx`, `src/pages/VerifyEmail.tsx`)
+- Beim Redirect immer auch Query-Param setzen (`/verify-email?email=...`) als Fallback gegen State-Verlust (Reload/Neustart/App-Wechsel).
 
-**2. `src/i18n/locales/de.json`** — analyzing-Section erweitern:
-- `step_1` / `step_1_desc`: "Sichere Verbindung" / "Anonymer Zugang über Proxy-Server"
-- `step_2` / `step_2_desc`: "Profil wird gesucht" / "Instagram-Datenbank wird durchsucht"
-- `step_3` / `step_3_desc`: "Profildaten abrufen" / "Follower, Following & Profilinfos"
-- `step_baseline` / `step_baseline_desc`: "Baseline erstellen" / "Komplette Analyse aller Followings – nicht nur der letzten"
-- `step_4` / `step_4_desc`: "Geschlechteranalyse" / "Spy analysiert ob mehr Frauen oder Männer gefolgt werden"
-- `step_5` / `step_5_desc`: "Abschluss" / "Daten werden verschlüsselt gespeichert"
-- `full_analysis_note`: "Dies ist eine Gesamtanalyse des Accounts und aller Follower – nicht nur der letzten Aktivitäten."
+4) Texte ergänzen (`src/i18n/locales/de.json`, `src/i18n/locales/en.json`)
+- Neue Auth-Messages für:
+  - „nur letzter Code gültig“
+  - „Code abgelaufen, neuer Code gesendet“
+  - „Account existiert, bitte Passwort prüfen oder Reset nutzen“
 
-**3. `src/i18n/locales/en.json`** — Gleiche Keys auf Englisch
+5) Reproduzierbares Debugging einbauen (temporär)
+- In Login/Verify strukturierte `console.info` mit anonymisierten Daten (kein Token im Log): auth-step, normalized email hash, error code/message.
+- Danach End-to-End prüfen: neuer Account, bestehender unbestätigter Account, bestehender bestätigter Account.
 
-**4. `src/pages/AnalyzingProfile.tsx`** — Komplett überarbeitet:
-- SpyIcon (32px) springt von Step zu Step (positioniert neben dem aktuellen Step via `layoutId` oder absolute Position mit framer-motion `animate`)
-- Username groß mit `@` in Primary-Farbe
-- Profilbild bleibt (wird nach Analyse vom echten Bild ersetzt) — mit gradient-ring
-- Steps als `native-card` mit Primary-Border wenn aktiv, grün wenn done
-- Jeder Step hat Titel + Beschreibung (desc in muted-foreground, kleiner)
-- Progress-Bar mit `gradient-bg` Klasse
-- Info-Hinweis unten als dezenter Text mit Shield-Icon
-
+Technische Details
+- Betroffene Dateien:
+  - `src/pages/Login.tsx`
+  - `src/pages/VerifyEmail.tsx`
+  - `src/i18n/locales/de.json`
+  - `src/i18n/locales/en.json`
+- Keine DB-Migration erforderlich.
+- Keine Änderung an Supabase-Tabellen/RLS erforderlich.
+- Dashboard-Check bleibt: `Authentication -> Providers -> Email -> Email OTP Expiration = 600`.
