@@ -470,20 +470,28 @@ const ProfileDetail = () => {
         )}
 
         {activeTab === "unfollowed" && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Unfollow Hint Banner */}
             {(profile.pending_unfollow_hint ?? 0) > 0 && (
-              <div className="native-card p-3 border border-destructive/20 bg-destructive/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm">⚠️</span>
-                  <span className="text-[12px] font-bold text-destructive">
-                    ~{profile.pending_unfollow_hint} {t("spy.unfollows_detected")}
-                  </span>
+              <motion.div 
+                initial={{ opacity: 0, y: 6 }} 
+                animate={{ opacity: 1, y: 0 }}
+                className="native-card p-3.5 border border-destructive/25 bg-destructive/5"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm">⚠️</span>
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-bold text-destructive">
+                      ~{profile.pending_unfollow_hint} {t("spy.unfollows_detected")}
+                    </span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {t("spy.unfollow_hint_explanation")}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  {t("spy.unfollow_hint_explanation")}
-                </p>
-              </div>
+              </motion.div>
             )}
 
             {/* Spy Scan CTA */}
@@ -491,22 +499,16 @@ const ProfileDetail = () => {
               <UnfollowCheckButton profileId={profile.id} />
             )}
 
-            {/* Info banner */}
-            <div className="native-card p-3 flex items-start gap-2.5">
-              <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
-                </p>
-                {hasSpy && (
-                  <p className="text-[10px] text-primary/70 font-medium mt-1">
-                    🕵️ {t("unfollow_check.spy_hint", "Du kannst 2× täglich einen manuellen Scan starten")}
-                  </p>
-                )}
-              </div>
+            {/* Info banner - compact */}
+            <div className="flex items-center gap-2 px-1">
+              <Info className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
+                {hasSpy && <> · 🕵️ {t("unfollow_check.spy_hint", "2× täglich manueller Scan")}</>}
+              </p>
             </div>
 
-            {/* Unfollowed by them (they stopped following someone) */}
+            {/* Unfollowed by them */}
             {unfollowedByThem.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2 flex items-center gap-1.5">
@@ -530,7 +532,7 @@ const ProfileDetail = () => {
               </div>
             )}
 
-            {/* Lost followers (someone unfollowed the tracked profile) */}
+            {/* Lost followers */}
             {lostFollowerEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2 flex items-center gap-1.5">
@@ -554,12 +556,20 @@ const ProfileDetail = () => {
               </div>
             )}
 
+            {/* Empty state */}
             {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
-              <div className="native-card p-5 text-center">
-                <span className="text-4xl block mb-3">✨</span>
-                <p className="text-[13px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet")}</p>
-                <p className="text-[11px] text-muted-foreground">{t("profile.unfollows_auto_detected")}</p>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="native-card p-6 text-center"
+              >
+                <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-muted mb-3">
+                  <span className="text-2xl">✨</span>
+                </div>
+                <p className="text-[14px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet")}</p>
+                <p className="text-[11px] text-muted-foreground max-w-[200px] mx-auto">{t("profile.unfollows_auto_detected")}</p>
+              </motion.div>
             )}
           </div>
         )}
