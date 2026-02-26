@@ -142,11 +142,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If we have a runId (Lovable format), use Lovable Email API
-    if (runId) {
+    // Send email via Lovable Email API
+    // Both Lovable format (with run_id) and Supabase format (without run_id) use the same API
+    console.log(`[auth-email-hook] Sending email to ${maskedEmail}, runId=${runId ? "present" : "none (Supabase format)"}`);
+    
+    try {
       await sendLovableEmail(
         {
-          run_id: runId,
+          ...(runId ? { run_id: runId } : {}),
           to: recipient,
           from: `Spy-Secret <noreply@notify.spy-secret.com>`,
           subject,
@@ -156,11 +159,10 @@ Deno.serve(async (req) => {
         },
         { apiKey, apiBaseUrl },
       );
-    } else {
-      // Supabase format - still try to send via Lovable Email API without run_id
-      console.log("[auth-email-hook] No run_id available (Supabase format), skipping email send - Supabase will use default mailer");
-      // Return success so Supabase doesn't block the auth flow
-      // Supabase's built-in mailer will handle sending the email
+      console.log(`[auth-email-hook] Email sent successfully to ${maskedEmail}`);
+    } catch (emailError) {
+      console.error(`[auth-email-hook] Email send failed:`, emailError);
+      // Still return 200 so Supabase auth flow is not blocked
     }
 
     return new Response(JSON.stringify({ success: true }), {
