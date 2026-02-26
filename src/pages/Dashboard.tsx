@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Loader2, RefreshCw, ChevronRight } from "lucide-react";
 import { SpyAgentCard } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
@@ -195,7 +195,7 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* ═══════ SPY DES TAGES – Card with pink bg (Pro) ═══════ */}
+      {/* ═══════ SPY DES TAGES – Card with pink bg (Pro) – clickable ═══════ */}
       {isPro && latestEvent && latestInfo && (
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -203,12 +203,19 @@ const Dashboard = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mx-4 mb-4"
         >
-          <div className="gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)]">
+          <button
+            onClick={() => {
+              haptic.light();
+              navigate(`/profile/${latestEvent.tracked_profile_id}`);
+            }}
+            className="w-full text-start gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)] active:scale-[0.98] transition-transform"
+          >
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-lg">📋</span>
               <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
                 {t("simple.spy_of_the_day")}
               </span>
+              <ChevronRight className="h-4 w-4 text-primary-foreground/50 ms-auto rtl:rotate-180" />
             </div>
             <p className="text-[15px] font-bold text-primary-foreground leading-snug">
               <span className="opacity-90">@{latestInfo.username}</span> {latestInfo.verb}
@@ -216,7 +223,7 @@ const Dashboard = () => {
             {latestEvent.tracked_profiles?.username && (
               <p className="text-[11px] text-primary-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
             )}
-          </div>
+          </button>
         </motion.div>
       )}
 
