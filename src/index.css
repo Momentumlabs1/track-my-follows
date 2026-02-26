@@ -106,6 +106,10 @@
 }
 
 @layer utilities {
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(338 100% 58%), hsl(345 100% 71%));
+  }
+
   .gradient-pink {
     background: linear-gradient(135deg, hsl(338 100% 58%), hsl(345 100% 71%));
   }

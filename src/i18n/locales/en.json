@@ -28,13 +28,20 @@
     "plan_counter": "{{current}}/{{max}}"
   },
   "analyzing": {
-    "title": "Analyzing Follows",
-    "step_1": "Connecting to Instagram servers...",
-    "step_2": "Searching user profile...",
-    "step_3": "Fetching profile data anonymously...",
-    "step_4": "Analyzing recent follows...",
-    "step_baseline": "Creating baseline...",
-    "step_5": "Finalizing & securing data..."
+    "title": "Analyzing Account",
+    "step_1": "Secure Connection",
+    "step_1_desc": "Anonymous access via proxy server",
+    "step_2": "Searching Profile",
+    "step_2_desc": "Scanning Instagram database",
+    "step_3": "Fetching Profile Data",
+    "step_3_desc": "Followers, following & profile info",
+    "step_baseline": "Creating Baseline",
+    "step_baseline_desc": "Full analysis of all followings – not just recent ones",
+    "step_4": "Gender Analysis",
+    "step_4_desc": "Spy analyzes gender ratio of followed accounts",
+    "step_5": "Finishing Up",
+    "step_5_desc": "Data is being encrypted and stored",
+    "full_analysis_note": "This is a full analysis of the account and all followers – not just recent activity."
   },
   "profile_detail": {
     "tracking_since": "Tracking since {{date}}",
