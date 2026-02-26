@@ -54,6 +54,7 @@ export function SpyAgentCard({
   const [spyPhase, setSpyPhase] = useState<SpyPhase>("idle");
   const dragRef = useRef<HTMLDivElement>(null);
   const lastHitCheck = useRef(0);
+  const lastHoveredId = useRef<string | null>(null);
 
   // Reset phase when spy profile changes (data arrived)
   useEffect(() => {
@@ -213,7 +214,10 @@ export function SpyAgentCard({
               const rect = dragRef.current?.getBoundingClientRect();
               if (!rect) return;
               const hovered = findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-              onHoverProfileChange(hovered);
+              if (hovered !== lastHoveredId.current) {
+                lastHoveredId.current = hovered;
+                onHoverProfileChange(hovered);
+              }
             }}
             onDragEnd={() => {
               onDragStateChange(false);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,7 @@ interface ProfileCardProps {
   isHovered?: boolean;
 }
 
-export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHovered }: ProfileCardProps) {
+export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHovered }: ProfileCardProps) {
   const { t } = useTranslation();
 
   const isDropTarget = isHovered === true;
@@ -35,8 +36,9 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
         y: 0,
         scale: isDropTarget ? 1.02 : isCurrentSpy ? 0.98 : 1,
       }}
-      transition={{ delay: isDragging ? 0 : index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
-      className="relative transition-all"
+      transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
+      viewport={{ once: true }}
+      className="relative transition-[transform] will-change-transform"
     >
       {isDropTarget && (
         <motion.div
@@ -136,4 +138,4 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
       </button>
     </motion.div>
   );
-}
+});
