@@ -327,7 +327,16 @@
     "limit_reached": "Keine Checks mehr heute",
     "unfollows_detected": "Unfollows erkannt",
     "no_unfollows": "Keine Unfollows erkannt",
-    "resets_midnight": "Setzt sich um Mitternacht zurück"
+    "resets_midnight": "Setzt sich um Mitternacht zurück",
+    "phase_following": "🔍 Following-Liste wird gescannt...",
+    "phase_followers": "🔍 Follower-Liste wird gescannt...",
+    "phase_evaluating": "📊 Ergebnisse werden ausgewertet...",
+    "timeout": "Scan hat zu lange gedauert. Bitte erneut versuchen.",
+    "has_unfollowed": "hat entfolgt",
+    "lost_followers": "Follower verloren",
+    "new_activity_found": "neue Aktivität gefunden",
+    "new_follows": "neue Follows",
+    "new_followers": "neue Follower"
   },
   "scan_status": { "auto_hourly": "Stündlich", "once_daily": "1×/Tag" },
   "nav": { "dashboard": "Home", "add": "Hinzufügen", "settings": "Einstellungen" },

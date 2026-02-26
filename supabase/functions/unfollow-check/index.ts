@@ -84,7 +84,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Full pagination fetch ──
+// ── Full pagination fetch – reduced sleep from 800ms to 300ms ──
 async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
@@ -100,9 +100,20 @@ async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): 
     nextMaxId = parsed.nextMaxId;
     page++;
     if (!nextMaxId || parsed.users.length === 0) break;
-    await sleep(800);
+    await sleep(300); // reduced from 800ms
   }
   return allUsers;
+}
+
+// ── Batch insert helper (chunks of 500) ──
+async function batchInsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[]) {
+  if (rows.length === 0) return;
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const { error } = await supabase.from(table).insert(chunk);
+    if (error) console.error(`[unfollow-check] Batch insert error on ${table}:`, error.message);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -188,34 +199,47 @@ Deno.serve(async (req) => {
     }).eq("id", profile.id);
 
     // ══════════════════════════════════════════════
-    // PART 1: FOLLOWING FULL SCAN (who they unfollowed)
+    // PARALLEL SCAN: Following + Followers simultaneously
     // ══════════════════════════════════════════════
-    console.log(`[unfollow-check] Starting full following scan for ${profile.username}...`);
-    await sleep(500);
-    const allFollowings = await fetchAll("following", igUserId, hikerApiKey);
-    console.log(`[unfollow-check] ${profile.username}: ${allFollowings.length} total followings fetched`);
+    console.log(`[unfollow-check] Starting PARALLEL scan for ${profile.username}...`);
+    
+    const [allFollowings, allFollowers] = await Promise.all([
+      fetchAll("following", igUserId, hikerApiKey),
+      fetchAll("followers", igUserId, hikerApiKey),
+    ]);
+    
+    console.log(`[unfollow-check] ${profile.username}: ${allFollowings.length} followings, ${allFollowers.length} followers fetched`);
 
-    // Compare with DB
-    const { data: dbFollowings } = await supabase
-      .from("profile_followings")
-      .select("*")
-      .eq("tracked_profile_id", profile.id)
-      .eq("direction", "following")
-      .eq("is_current", true);
+    // ── Load DB state for both in parallel ──
+    const [{ data: dbFollowings }, { data: dbFollowers }] = await Promise.all([
+      supabase.from("profile_followings").select("*").eq("tracked_profile_id", profile.id).eq("direction", "following").eq("is_current", true),
+      supabase.from("profile_followers").select("*").eq("tracked_profile_id", profile.id).eq("is_current", true),
+    ]);
 
+    const now = Date.now();
+    const lastTs = profile.last_scanned_at ? new Date(profile.last_scanned_at).getTime() : now - 60 * 60 * 1000;
+    const spanMs = Math.max(now - lastTs, 60_000);
+
+    // ══════════════════════════════════════════════
+    // PART 1: FOLLOWING – detect unfollows + new follows (batched)
+    // ══════════════════════════════════════════════
     const currentFollowingApiIds = new Set(allFollowings.map((u) => u.pk));
     const dbFollowingMap = new Map((dbFollowings || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
     const existingFollowingIds = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
 
     // Detect unfollows (in DB but not in API)
     let unfollowsFound = 0;
+    const unfollowUpdateIds: string[] = [];
+    const unfollowEvents: Record<string, unknown>[] = [];
+    const genderDecrements: string[] = [];
+
     for (const [userId, ex] of dbFollowingMap) {
       if (!currentFollowingApiIds.has(userId)) {
         unfollowsFound++;
         const e = ex as Record<string, unknown>;
-        await supabase.from("profile_followings").update({ is_current: false }).eq("id", e.id as string);
+        unfollowUpdateIds.push(e.id as string);
         const unfollowGender = detectGender(e.following_display_name as string | null);
-        await supabase.from("follow_events").insert({
+        unfollowEvents.push({
           tracked_profile_id: profile.id,
           event_type: "unfollow",
           target_username: e.following_username as string,
@@ -226,19 +250,14 @@ Deno.serve(async (req) => {
           gender_tag: unfollowGender,
           category: "normal",
         });
-        // Gender-Count dekrementieren
-        await supabase.rpc("decrement_gender_count", {
-          p_profile_id: profile.id,
-          p_gender: unfollowGender,
-        });
+        genderDecrements.push(unfollowGender);
       }
     }
 
-    // Detect new follows missed by smart-scan
+    // Detect new follows
     let newFollowsFound = 0;
-    const now = Date.now();
-    const lastTs = profile.last_scanned_at ? new Date(profile.last_scanned_at).getTime() : now - 60 * 60 * 1000;
-    const spanMs = Math.max(now - lastTs, 60_000);
+    const newFollowingRows: Record<string, unknown>[] = [];
+    const newFollowEvents: Record<string, unknown>[] = [];
 
     for (const f of allFollowings) {
       if (!existingFollowingIds.has(f.pk)) {
@@ -246,19 +265,17 @@ Deno.serve(async (req) => {
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
         const newGenderTag = detectGender(f.full_name);
         const newCategory = categorizeFollow(f.follower_count, f.is_private);
-        await supabase.from("profile_followings").insert({
+        newFollowingRows.push({
           tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
           following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
           first_seen_at: ts, direction: "following",
-          gender_tag: newGenderTag,
-          category: newCategory,
+          gender_tag: newGenderTag, category: newCategory,
         });
-        await supabase.from("follow_events").insert({
+        newFollowEvents.push({
           tracked_profile_id: profile.id, event_type: "follow", target_username: f.username,
           target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
           detected_at: ts, direction: "following", notification_sent: false,
-          gender_tag: detectGender(f.full_name),
-          category: categorizeFollow(f.follower_count, f.is_private),
+          gender_tag: newGenderTag, category: newCategory,
           target_follower_count: f.follower_count || null,
           target_is_private: f.is_private || false,
         });
@@ -266,32 +283,22 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════
-    // PART 2: FOLLOWER FULL SCAN (who unfollowed them)
+    // PART 2: FOLLOWERS – detect lost + new (batched)
     // ══════════════════════════════════════════════
-    console.log(`[unfollow-check] Starting full follower scan for ${profile.username}...`);
-    await sleep(1000);
-    const allFollowers = await fetchAll("followers", igUserId, hikerApiKey);
-    console.log(`[unfollow-check] ${profile.username}: ${allFollowers.length} total followers fetched`);
-
-    // Compare with DB
-    const { data: dbFollowers } = await supabase
-      .from("profile_followers")
-      .select("*")
-      .eq("tracked_profile_id", profile.id)
-      .eq("is_current", true);
-
     const currentFollowerApiIds = new Set(allFollowers.map((u) => u.pk));
     const existingFollowerIds = new Set((dbFollowers || []).map((f: Record<string, unknown>) => f.follower_user_id as string));
 
-    // Lost followers (in DB but not in API)
     let lostFollowers = 0;
+    const lostFollowerUpdateIds: string[] = [];
+    const lostFollowerEvents: Record<string, unknown>[] = [];
+
     for (const dbF of (dbFollowers || [])) {
       const f = dbF as Record<string, unknown>;
       const fUserId = f.follower_user_id as string;
       if (!currentFollowerApiIds.has(fUserId)) {
         lostFollowers++;
-        await supabase.from("profile_followers").update({ is_current: false }).eq("id", f.id as string);
-        await supabase.from("follower_events").insert({
+        lostFollowerUpdateIds.push(f.id as string);
+        lostFollowerEvents.push({
           profile_id: profile.id,
           instagram_user_id: fUserId,
           username: f.follower_username as string,
@@ -304,16 +311,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // New followers missed by smart-scan
     let newFollowersFound = 0;
+    const newFollowerRows: Record<string, unknown>[] = [];
+    const newFollowerEvents: Record<string, unknown>[] = [];
+
     for (const f of allFollowers) {
       if (!existingFollowerIds.has(f.pk)) {
         newFollowersFound++;
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
-        await supabase.from("profile_followers").insert({
+        newFollowerRows.push({
           tracked_profile_id: profile.id,
-          follower_user_id: f.pk,
-          follower_username: f.username,
+          follower_user_id: f.pk, follower_username: f.username,
           follower_avatar_url: f.profile_pic_url || null,
           follower_display_name: f.full_name || null,
           follower_follower_count: f.follower_count || null,
@@ -321,20 +329,46 @@ Deno.serve(async (req) => {
           follower_is_private: f.is_private || false,
           first_seen_at: ts,
         });
-        await supabase.from("follower_events").insert({
+        newFollowerEvents.push({
           profile_id: profile.id,
-          instagram_user_id: f.pk,
-          username: f.username,
+          instagram_user_id: f.pk, username: f.username,
           full_name: f.full_name || null,
           profile_pic_url: f.profile_pic_url || null,
           is_verified: f.is_verified || false,
           follower_count: f.follower_count || null,
-          event_type: "gained",
-          detected_at: ts,
+          event_type: "gained", detected_at: ts,
           gender_tag: detectGender(f.full_name),
           category: categorizeFollow(f.follower_count, f.is_private),
         });
       }
+    }
+
+    // ══════════════════════════════════════════════
+    // BATCH DB OPERATIONS – all at once
+    // ══════════════════════════════════════════════
+    console.log(`[unfollow-check] Batching DB ops: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${lostFollowers} lost, ${newFollowersFound} new followers`);
+
+    // Mark unfollowed followings as not current (batch update by IDs)
+    if (unfollowUpdateIds.length > 0) {
+      await supabase.from("profile_followings").update({ is_current: false }).in("id", unfollowUpdateIds);
+    }
+
+    // Mark lost followers as not current
+    if (lostFollowerUpdateIds.length > 0) {
+      await supabase.from("profile_followers").update({ is_current: false }).in("id", lostFollowerUpdateIds);
+    }
+
+    // Batch inserts in parallel
+    await Promise.all([
+      batchInsert(supabase, "follow_events", [...unfollowEvents, ...newFollowEvents]),
+      batchInsert(supabase, "profile_followings", newFollowingRows),
+      batchInsert(supabase, "follower_events", [...lostFollowerEvents, ...newFollowerEvents]),
+      batchInsert(supabase, "profile_followers", newFollowerRows),
+    ]);
+
+    // Gender count decrements (must be sequential RPCs)
+    for (const g of genderDecrements) {
+      await supabase.rpc("decrement_gender_count", { p_profile_id: profile.id, p_gender: g });
     }
 
     // ── Reset pending hint + update last_following_count ──
