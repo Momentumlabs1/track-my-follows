@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
+import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
@@ -41,9 +42,19 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       viewport={{ once: true }}
       className="relative will-change-transform"
     >
-      {/* Highlight border for spy-active profile (persistent) */}
+      {/* Spy highlight: gradient border + glow */}
       {isSpyHighlighted && (
-        <div className="absolute -inset-[2px] rounded-2xl border-2 border-primary/50 pointer-events-none z-10" />
+        <div
+          className="absolute -inset-[2px] rounded-2xl pointer-events-none z-10"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))",
+            mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+            maskComposite: "exclude",
+            WebkitMaskComposite: "xor",
+            padding: "2px",
+            borderRadius: "1rem",
+          }}
+        />
       )}
 
       {/* Drop target pulsing border */}
@@ -66,10 +77,10 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="native-card p-4 w-full text-start"
+        className={`native-card p-4 w-full text-start ${isSpyHighlighted ? "bg-primary/5 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.25)]" : ""}`}
       >
         <div className="flex items-center gap-3">
-          {/* Avatar */}
+          {/* Avatar with SpyIcon badge */}
           <div className="relative flex-shrink-0">
             <motion.div
               animate={isDropTarget ? { rotate: [0, -4, 4, 0] } : { rotate: 0 }}
@@ -82,6 +93,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                 size={48}
               />
             </motion.div>
+            {/* SpyIcon overlay badge */}
+            {isSpyHighlighted && (
+              <div className="absolute -top-1 -right-1 z-20 bg-card rounded-full p-[2px] shadow-sm">
+                <SpyIcon size={16} glow />
+              </div>
+            )}
           </div>
 
           {/* Info */}

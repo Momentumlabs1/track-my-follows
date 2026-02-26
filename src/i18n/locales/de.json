@@ -406,7 +406,9 @@
     "no_activity_today": "Alles ruhig heute 😴",
     "tracking_count": "Du trackst {{count}} Profile",
     "hot_right_now": "Gerade heiß",
-    "spy_of_the_day": "Spy des Tages"
+    "spy_of_the_day": "Spy des Tages",
+    "spy_of_the_day_subtitle": "Letzte Aktivität deines Spys",
+    "spy_of_the_day_subtitle_at": "bei"
   },
   "welcome": {
     "title": "Willkommen bei Spy-Secret! 🕵️",
