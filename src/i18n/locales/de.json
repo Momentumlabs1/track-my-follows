@@ -29,12 +29,19 @@
   },
   "analyzing": {
     "title": "Analyse läuft",
-    "step_1": "Verbindung wird hergestellt...",
-    "step_2": "Profil wird gesucht...",
-    "step_3": "Profildaten werden anonym abgerufen...",
-    "step_4": "Letzte Follows werden analysiert...",
-    "step_baseline": "Baseline wird erstellt...",
-    "step_5": "Abschluss & Datensicherung..."
+    "step_1": "Sichere Verbindung",
+    "step_1_desc": "Anonymer Zugang über Proxy-Server",
+    "step_2": "Profil wird gesucht",
+    "step_2_desc": "Instagram-Datenbank wird durchsucht",
+    "step_3": "Profildaten abrufen",
+    "step_3_desc": "Follower, Following & Profilinfos",
+    "step_baseline": "Baseline erstellen",
+    "step_baseline_desc": "Komplette Analyse aller Followings – nicht nur der letzten",
+    "step_4": "Geschlechteranalyse",
+    "step_4_desc": "Spy analysiert ob mehr Frauen oder Männer gefolgt werden",
+    "step_5": "Abschluss",
+    "step_5_desc": "Daten werden verschlüsselt gespeichert",
+    "full_analysis_note": "Dies ist eine Gesamtanalyse des Accounts und aller Follower – nicht nur der letzten Aktivitäten."
   },
   "profile_detail": {
     "tracking_since": "Tracking seit {{date}}",

@@ -1,11 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Check, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, Loader2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { SpyIcon } from "@/components/SpyIcon";
+
+const STEP_KEYS = [
+  { title: "step_1", desc: "step_1_desc" },
+  { title: "step_2", desc: "step_2_desc" },
+  { title: "step_3", desc: "step_3_desc" },
+  { title: "step_baseline", desc: "step_baseline_desc" },
+  { title: "step_4", desc: "step_4_desc" },
+  { title: "step_5", desc: "step_5_desc" },
+];
 
 const AnalyzingProfile = () => {
   const { t } = useTranslation();
@@ -15,15 +25,6 @@ const AnalyzingProfile = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const scanStarted = useRef(false);
-
-  const steps = [
-    t("analyzing.step_1"),
-    t("analyzing.step_2"),
-    t("analyzing.step_3"),
-    t("analyzing.step_baseline"),
-    t("analyzing.step_4"),
-    t("analyzing.step_5"),
-  ];
 
   useEffect(() => {
     const t1 = setTimeout(() => { setCurrentStep(1); setProgress(15); }, 1200);
@@ -44,7 +45,6 @@ const AnalyzingProfile = () => {
         });
         if (res.error) throw res.error;
 
-        // ── BASELINE ERSTELLEN ──
         setCurrentStep(3); setProgress(60);
 
         const baselineRes = await supabase.functions.invoke("create-baseline", {
@@ -53,8 +53,6 @@ const AnalyzingProfile = () => {
 
         if (baselineRes.error) {
           console.warn("Baseline creation failed:", baselineRes.error);
-          // Don't abort – profile works without baseline,
-          // only unfollow detection won't be available
         }
 
         setCurrentStep(4); setProgress(85);
@@ -76,12 +74,10 @@ const AnalyzingProfile = () => {
   }, [currentStep, profileId, navigate, queryClient, t]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center pt-16 px-6">
-      <h1 className="text-xl font-extrabold text-foreground">{t("analyzing.title")}</h1>
-      <p className="text-[13px] text-muted-foreground mt-1">@{username}</p>
-
-      <div className="my-8">
-        <div className="h-28 w-28 rounded-full p-[3px] bg-gradient-to-br from-primary to-accent">
+    <div className="min-h-screen bg-background flex flex-col items-center pt-12 px-5 pb-8">
+      {/* Avatar with gradient ring */}
+      <div className="mb-4">
+        <div className="h-24 w-24 rounded-full p-[3px] bg-gradient-to-br from-primary to-accent">
           <img
             src={`https://ui-avatars.com/api/?name=${username}&background=random&size=200`}
             alt={username}
@@ -90,32 +86,104 @@ const AnalyzingProfile = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-xs mb-8">
+      {/* Username */}
+      <h1 className="text-lg font-bold text-foreground">
+        <span className="text-primary">@</span>{username}
+      </h1>
+      <p className="text-[12px] text-muted-foreground mt-0.5 font-medium">{t("analyzing.title")}</p>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-xs mt-6 mb-6">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <motion.div className="h-full gradient-bg rounded-full" animate={{ width: `${progress}%` }} transition={{ duration: 0.5, ease: "easeOut" }} />
+          <motion.div
+            className="h-full gradient-bg rounded-full"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          />
         </div>
-        <p className="text-[12px] text-muted-foreground text-center mt-2 font-medium">{progress}%</p>
+        <p className="text-[11px] text-muted-foreground text-center mt-1.5 font-semibold tabular-nums">
+          {progress}%
+        </p>
       </div>
 
-      <div className="w-full max-w-sm space-y-3">
-        {steps.map((step, i) => {
+      {/* Steps */}
+      <div className="w-full max-w-sm space-y-2.5">
+        {STEP_KEYS.map((step, i) => {
           const isDone = i < currentStep;
           const isCurrent = i === currentStep;
+
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: i <= currentStep ? 1 : 0.4, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.3 }}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${isDone ? "bg-green-50 border border-green-200" : isCurrent ? "bg-card border border-primary/20" : "bg-muted border border-transparent"}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: i <= currentStep ? 1 : 0.35, y: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.3 }}
+              className={`native-card relative px-4 py-3 flex items-start gap-3 transition-colors ${
+                isCurrent
+                  ? "border-primary/40 ring-1 ring-primary/20"
+                  : isDone
+                  ? "border-green-500/30"
+                  : ""
+              }`}
             >
-              <div className={`flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center ${isDone ? "bg-green-500 text-white" : isCurrent ? "bg-primary/10" : "bg-muted-foreground/10"}`}>
-                {isDone ? <Check className="h-3.5 w-3.5" /> : isCurrent ? <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" /> : <span className="text-[10px] text-muted-foreground font-bold">{i + 1}</span>}
+              {/* SpyIcon jumps to current step */}
+              <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center relative">
+                {isDone ? (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="h-7 w-7 rounded-full bg-green-500 flex items-center justify-center"
+                  >
+                    <Check className="h-3.5 w-3.5 text-primary-foreground" />
+                  </motion.div>
+                ) : isCurrent ? (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`spy-${i}`}
+                      layoutId="spy-indicator"
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    >
+                      <SpyIcon size={28} glow />
+                    </motion.div>
+                  </AnimatePresence>
+                ) : (
+                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-[10px] text-muted-foreground font-bold">{i + 1}</span>
+                  </div>
+                )}
               </div>
-              <span className={`text-[13px] ${isDone ? "text-green-700 font-medium" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>{step}</span>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[13px] font-semibold ${
+                    isDone ? "text-green-500" : isCurrent ? "text-foreground" : "text-muted-foreground"
+                  }`}>
+                    {t(`analyzing.${step.title}`)}
+                  </span>
+                  {isCurrent && (
+                    <Loader2 className="h-3 w-3 text-primary animate-spin" />
+                  )}
+                </div>
+                <p className={`text-[11px] mt-0.5 ${
+                  isCurrent ? "text-muted-foreground" : "text-muted-foreground/60"
+                }`}>
+                  {t(`analyzing.${step.desc}`)}
+                </p>
+              </div>
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Full analysis note */}
+      <div className="mt-6 flex items-start gap-2 max-w-sm px-2">
+        <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          {t("analyzing.full_analysis_note")}
+        </p>
       </div>
     </div>
   );
