@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Loader2, RefreshCw, ChevronRight, Lock } from "lucide-react";
+import { Plus, Loader2, RefreshCw, ChevronRight, Lock, UserMinus, UserPlus, UserX, UserCheck } from "lucide-react";
 import { SpyAgentCard } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
@@ -205,37 +205,91 @@ const Dashboard = () => {
         </motion.div>
       </div>
 
-      {/* ═══════ SPY DES TAGES – Card with pink bg (Pro) – clickable ═══════ */}
-      {isPro && latestEvent && latestInfo && (
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mx-4 mb-4"
-        >
-          <button
-            onClick={() => {
-              haptic.light();
-              navigate(`/profile/${latestEvent.tracked_profile_id}`);
-            }}
-            className="w-full text-start gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)] active:scale-[0.98] transition-transform"
+      {/* ═══════ SPY DES TAGES – Redesigned with event badges ═══════ */}
+      {isPro && latestEvent && latestInfo && (() => {
+        const eventType = latestEvent.source === "follow"
+          ? latestEvent.event_type === "unfollow" ? "unfollow" : "new_follow"
+          : latestEvent.event_type === "lost" ? "lost_follower" : "new_follower";
+        const badgeConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+          unfollow: { label: t("events.unfollowed"), icon: <UserMinus className="h-3 w-3" />, className: "bg-destructive/15 text-destructive" },
+          lost_follower: { label: t("events.lost_follower"), icon: <UserX className="h-3 w-3" />, className: "bg-orange-500/15 text-orange-500" },
+          new_follow: { label: t("events.now_following"), icon: <UserPlus className="h-3 w-3" />, className: "bg-green-500/15 text-green-500" },
+          new_follower: { label: t("events.new_follower"), icon: <UserCheck className="h-3 w-3" />, className: "bg-blue-500/15 text-blue-500" },
+        };
+        const badge = badgeConfig[eventType];
+        const avatarUrl = latestEvent.source === "follow" ? latestEvent.target_avatar_url : latestEvent.profile_pic_url;
+        const displayUsername = latestInfo.username;
+        const trackedUsername = latestEvent.tracked_profiles?.username;
+        const timeAgo = (() => {
+          const diff = Date.now() - new Date(latestEvent.detected_at).getTime();
+          const mins = Math.floor(diff / 60000);
+          if (mins < 1) return t("dashboard.just_now");
+          if (mins < 60) return t("dashboard.minutes_ago", { count: mins });
+          const hrs = Math.floor(mins / 60);
+          if (hrs < 24) return t("dashboard.hours_ago", { count: hrs });
+          return t("dashboard.days_ago", { count: Math.floor(hrs / 24) });
+        })();
+
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mx-4 mb-4"
           >
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-lg">📋</span>
-              <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
-                {t("simple.spy_of_the_day")}
-              </span>
-              <ChevronRight className="h-4 w-4 text-primary-foreground/50 ms-auto rtl:rotate-180" />
-            </div>
-            <p className="text-[15px] font-bold text-primary-foreground leading-snug">
-              <span className="opacity-90">@{latestInfo.username}</span> {latestInfo.verb}
-            </p>
-            {latestEvent.tracked_profiles?.username && (
-              <p className="text-[11px] text-primary-foreground/60 mt-1">📍 {latestEvent.tracked_profiles.username}</p>
-            )}
-          </button>
-        </motion.div>
-      )}
+            <button
+              onClick={() => {
+                haptic.light();
+                navigate(`/profile/${latestEvent.tracked_profile_id}`);
+              }}
+              className="w-full text-start native-card p-4 border border-primary/15 active:scale-[0.98] transition-transform"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-1.5">
+                  <SpyIcon size={18} />
+                  <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
+                    {t("simple.spy_of_the_day")}
+                  </span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover bg-muted" />
+                  ) : (
+                    <div className="h-11 w-11 rounded-full gradient-pink flex items-center justify-center text-primary-foreground text-sm font-bold">
+                      {displayUsername.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>
+                      {badge.icon} {badge.label}
+                    </span>
+                  </div>
+                  <p className="text-[14px] font-bold text-foreground truncate">
+                    @{displayUsername} <span className="font-normal text-muted-foreground">{latestInfo.verb}</span>
+                  </p>
+                  {trackedUsername && (
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {t("simple.spy_of_the_day_subtitle_at", "bei")} @{trackedUsername}
+                    </p>
+                  )}
+                </div>
+
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+              </div>
+            </button>
+          </motion.div>
+        );
+      })()}
 
       {isPro && !latestEvent && profiles.length > 0 && (
         <motion.div
@@ -244,21 +298,21 @@ const Dashboard = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mx-4 mb-4"
         >
-          <div className="gradient-pink rounded-2xl px-5 py-4 shadow-[0_4px_24px_-4px_hsl(338_100%_58%/0.35)]">
+          <div className="native-card p-4 border border-primary/15">
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-lg">📋</span>
-              <span className="text-[10px] font-extrabold text-primary-foreground/80 uppercase tracking-widest">
+              <SpyIcon size={18} />
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
                 {t("simple.spy_of_the_day")}
               </span>
             </div>
-            <p className="text-[13px] text-primary-foreground/60 font-medium flex items-center gap-2">
+            <p className="text-[13px] text-muted-foreground font-medium flex items-center gap-2">
               <span className="text-xl">😴</span> {t("simple.no_activity_today")}
             </p>
           </div>
         </motion.div>
       )}
 
-      {/* ═══════ SPY DES TAGES – Free users (greyed out + lock) ═══════ */}
+      {/* ═══════ SPY DES TAGES – Free users (locked) ═══════ */}
       {!isPro && profiles.length > 0 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -273,22 +327,26 @@ const Dashboard = () => {
             }}
             className="w-full text-start relative overflow-hidden rounded-2xl"
           >
-            <div className="gradient-pink rounded-2xl px-5 py-4 opacity-40 grayscale">
+            <div className="native-card p-4 opacity-40 grayscale blur-[1px]">
               <div className="flex items-center gap-1.5 mb-2">
-                <span className="text-lg">📋</span>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                <SpyIcon size={18} />
+                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
                   {t("simple.spy_of_the_day")}
                 </span>
-                <span className="ms-auto text-[9px] font-bold bg-background/20 rounded-full px-2 py-0.5">PRO</span>
+                <span className="ms-auto text-[9px] font-bold bg-primary/10 text-primary rounded-full px-2 py-0.5">PRO</span>
               </div>
-              {latestEvent && latestInfo ? (
-                <p className="text-[15px] font-bold leading-snug">@{latestInfo.username} {latestInfo.verb}</p>
-              ) : (
-                <p className="text-[13px] font-medium">{t("simple.no_activity_today")}</p>
-              )}
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-full bg-muted" />
+                <div className="flex-1">
+                  <div className="h-3 w-20 rounded bg-muted mb-1.5" />
+                  <div className="h-3 w-32 rounded bg-muted/60" />
+                </div>
+              </div>
             </div>
             <div className="absolute inset-0 flex items-center justify-center bg-background/30 rounded-2xl">
-              <span className="text-[12px] font-bold text-primary flex items-center gap-1.5">🔒 {t("paywall.unlock_spy", "Spy freischalten")}</span>
+              <span className="text-[12px] font-bold text-primary flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5" /> {t("paywall.unlock_spy", "Spy freischalten")}
+              </span>
             </div>
           </button>
         </motion.div>
