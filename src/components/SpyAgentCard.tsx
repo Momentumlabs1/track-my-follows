@@ -1,10 +1,12 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
+
+type SpyPhase = "idle" | "flying" | "returning";
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -49,9 +51,22 @@ export function SpyAgentCard({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const timeAgo = useTimeAgo();
-  const [dropSuccess, setDropSuccess] = useState(false);
+  const [spyPhase, setSpyPhase] = useState<SpyPhase>("idle");
   const dragRef = useRef<HTMLDivElement>(null);
   const lastHitCheck = useRef(0);
+
+  // Reset phase when spy profile changes (data arrived)
+  useEffect(() => {
+    if (spyPhase === "flying") {
+      // Profile data updated → transition to returning
+      const timer = setTimeout(() => setSpyPhase("returning"), 200);
+      return () => clearTimeout(timer);
+    }
+    if (spyPhase === "returning") {
+      const timer = setTimeout(() => setSpyPhase("idle"), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [spyProfile?.id, spyPhase]);
 
   const findProfileUnderPoint = useCallback((x: number, y: number): string | null => {
     const el = dragRef.current;
@@ -86,6 +101,12 @@ export function SpyAgentCard({
     );
   }
 
+  const spyIconVariants = {
+    idle: { scale: 1, y: 0, opacity: 1 },
+    flying: { scale: 0.3, y: -80, opacity: 0 },
+    returning: { scale: 1, y: 0, opacity: 1 },
+  };
+
   return (
     <div className="mx-4 mb-4">
       <div className="flex items-start gap-3">
@@ -110,14 +131,14 @@ export function SpyAgentCard({
             </div>
           </div>
 
-          {/* Profile info */}
+          {/* Profile info with refined transitions */}
           <AnimatePresence mode="wait">
             <motion.div
               key={spyProfile.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
               className="flex items-center gap-3 mb-3"
             >
               <div className="ring-2 ring-primary/25 rounded-full p-[2px]">
@@ -174,7 +195,7 @@ export function SpyAgentCard({
         <div className="flex-shrink-0 flex flex-col items-center pt-6">
           <motion.div
             ref={dragRef}
-            drag
+            drag={spyPhase === "idle"}
             dragSnapToOrigin
             dragElastic={0.15}
             dragMomentum={false}
@@ -183,7 +204,7 @@ export function SpyAgentCard({
               zIndex: 9999,
               filter: "drop-shadow(0 0 18px hsl(var(--primary) / 0.5))",
             }}
-            whileHover={{ scale: 1.08 }}
+            whileHover={spyPhase === "idle" ? { scale: 1.08 } : undefined}
             onDragStart={() => onDragStateChange(true)}
             onDrag={() => {
               const now = Date.now();
@@ -199,8 +220,7 @@ export function SpyAgentCard({
               const rect = dragRef.current?.getBoundingClientRect();
               const profileId = rect ? findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
               if (profileId && profileId !== spyProfile.id) {
-                setDropSuccess(true);
-                setTimeout(() => setDropSuccess(false), 600);
+                setSpyPhase("flying");
                 onDragMoveSpy(profileId);
               }
               onHoverProfileChange(null);
@@ -208,8 +228,15 @@ export function SpyAgentCard({
             className="cursor-grab active:cursor-grabbing touch-none select-none z-50"
           >
             <motion.div
-              animate={dropSuccess ? { scale: [1, 1.5, 1], rotate: [0, 15, -15, 0] } : {}}
-              transition={{ duration: 0.5 }}
+              animate={spyPhase}
+              variants={spyIconVariants}
+              transition={
+                spyPhase === "flying"
+                  ? { duration: 0.4, ease: [0.6, 0, 0.4, 1] }
+                  : spyPhase === "returning"
+                  ? { duration: 0.45, ease: [0, 0.6, 0.4, 1], delay: 0.15 }
+                  : { duration: 0.3 }
+              }
             >
               <SpyIcon size={96} glow />
             </motion.div>

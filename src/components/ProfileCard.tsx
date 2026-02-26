@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
@@ -23,9 +23,7 @@ interface ProfileCardProps {
 export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHovered }: ProfileCardProps) {
   const { t } = useTranslation();
 
-  // Only the hovered card gets the strong highlight
   const isDropTarget = isHovered === true;
-  // Current spy card dims during any drag
   const isCurrentSpy = isDragging && hasSpy;
 
   return (
@@ -40,7 +38,6 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
       transition={{ delay: isDragging ? 0 : index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
       className="relative transition-all"
     >
-      {/* Strong highlight ring ONLY on hovered card */}
       {isDropTarget && (
         <motion.div
           className="absolute -inset-[3px] rounded-2xl border-2 border-primary pointer-events-none z-10"
@@ -50,7 +47,6 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
         />
       )}
 
-      {/* Current spy card dimmed */}
       {isCurrentSpy && (
         <motion.div
           className="absolute inset-0 rounded-2xl bg-muted/40 pointer-events-none z-10"
@@ -103,18 +99,35 @@ export function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHover
                 </div>
               );
             })()}
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {hasSpy ? (
-                <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-                  <span className="text-[10px] text-green-400 font-medium">{t("spy.active")} · {t("spy.every_hour")}</span>
-                </>
-              ) : (
-                <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                  <span className="text-[10px] text-muted-foreground">{t("spy.basic")} · 1×/{t("spy.day")}</span>
-                </>
-              )}
+            {/* Spy Status with animated transition */}
+            <div className="flex items-center gap-1.5 mt-0.5 h-4 overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                {hasSpy ? (
+                  <motion.div
+                    key="spy-active"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                    <span className="text-[10px] text-green-400 font-medium">{t("spy.active")} · {t("spy.every_hour")}</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="spy-basic"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                    <span className="text-[10px] text-muted-foreground">{t("spy.basic")} · 1×/{t("spy.day")}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
