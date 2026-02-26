@@ -1,4 +1,4 @@
-import { sendLovableEmail } from "@lovable.dev/email-js";
+import { Resend } from "npm:resend@4.1.2";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
 import { SignupEmail } from "../_shared/email-templates/signup.tsx";
 import { RecoveryEmail } from "../_shared/email-templates/recovery.tsx";
@@ -93,9 +93,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY not configured");
     }
 
     let subject = "";
@@ -142,27 +142,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Send email via Lovable Email API
-    // Both Lovable format (with run_id) and Supabase format (without run_id) use the same API
-    console.log(`[auth-email-hook] Sending email to ${maskedEmail}, runId=${runId ? "present" : "none (Supabase format)"}`);
+    const resend = new Resend(resendApiKey);
+    
+    console.log(`[auth-email-hook] Sending email via Resend to ${maskedEmail}`);
     
     try {
-      await sendLovableEmail(
-        {
-          ...(runId ? { run_id: runId } : {}),
-          to: recipient,
-          from: `Spy-Secret <noreply@notify.spy-secret.com>`,
-          subject,
-          html,
-          text: subject,
-          purpose: "transactional",
-        },
-        { apiKey, apiBaseUrl },
-      );
-      console.log(`[auth-email-hook] Email sent successfully to ${maskedEmail}`);
+      const { data, error: sendError } = await resend.emails.send({
+        from: "Spy-Secret <noreply@notify.spy-secret.com>",
+        to: [recipient],
+        subject,
+        html,
+      });
+
+      if (sendError) {
+        console.error(`[auth-email-hook] Resend error:`, sendError);
+      } else {
+        console.log(`[auth-email-hook] Email sent successfully via Resend, id: ${data?.id}`);
+      }
     } catch (emailError) {
       console.error(`[auth-email-hook] Email send failed:`, emailError);
-      // Still return 200 so Supabase auth flow is not blocked
     }
 
     return new Response(JSON.stringify({ success: true }), {
