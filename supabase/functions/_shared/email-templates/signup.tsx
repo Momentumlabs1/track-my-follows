@@ -39,7 +39,7 @@ export const SignupEmail = ({
           </Section>
 
           <Text style={paragraphSmall}>
-            Der Code ist 60 Minuten gültig. Falls du dich nicht registriert hast,
+            Der Code ist 10 Minuten gültig. Falls du dich nicht registriert hast,
             kannst du diese E-Mail ignorieren.
           </Text>
 
