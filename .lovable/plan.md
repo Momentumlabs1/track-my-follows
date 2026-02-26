@@ -1,45 +1,67 @@
 
 
-## Analyse: Spy-Drop Animation aufräumen
+## Plan: Logo einbinden und Email-Templates professionalisieren
 
-### Aktueller Zustand
-Wenn man den Spy auf ein Profil dropt, passiert:
-1. `dropSuccess` → kleiner Scale+Rotate-Bounce auf dem SpyIcon (Zeile 211)
-2. `onDragMoveSpy(profileId)` → ruft `moveSpy.mutate()` auf → Query wird invalidiert
-3. Die SpyAgentCard hat `AnimatePresence mode="wait"` auf dem Profil-Info-Block (Zeile 114-141), getriggert durch `key={spyProfile.id}`
-4. Die ProfileCard zeigt nur einen statischen grünen/grauen Dot-Wechsel — kein Übergangseffekt
+### Problem
+Die Templates nutzen aktuell einen Text-basierten "SpySecret"-Block statt des echten Logos. Das Design ist funktional, aber nicht professionell genug (kein Logo-Bild, kein Card-Layout, kein visuelles Gewicht).
 
-**Probleme:**
-- Der Drop-Erfolg ist nur ein kurzer Scale-Bounce auf dem Spy — kein richtiges visuelles Feedback
-- Wenn `spyProfile` wechselt, springt die Card einfach auf den neuen Account — kein "hochfliegen" oder sanfter Übergang
-- Die alte Spy-ProfileCard verliert einfach ihren grünen Dot, die neue bekommt ihn — kein Übergangseffekt
+### Umsetzung
 
-### Plan
+**1. Logo in `public/` kopieren**
+- `src/assets/logo-wide.png` nach `public/email-logo.png` kopieren, damit es per URL erreichbar ist
+- Referenz-URL: `https://track-my-follows.lovable.app/email-logo.png`
 
-**Datei: `src/components/SpyAgentCard.tsx`**
+**2. Alle 6 Email-Templates upgraden**
 
-1. **Drop-Animation cleanen**: Beim erfolgreichen Drop den Spy-Icon nach oben "wegfliegen" lassen (scale down + translateY nach oben + fade out), statt nur wackeln. Dafür `dropSuccess`-State nutzen um eine `motion.div`-Animation auszulösen: `{ scale: 0, y: -60, opacity: 0 }` über ~400ms, danach zurück-animieren.
+Gemeinsame Design-Verbesserungen in allen Templates:
+- **Logo als `<Img>`** statt Text-Block: `logo-wide.png` zentriert oben, ca. 180px breit
+- **Card-Layout**: Weisser Container mit `border-radius: 20px`, leichtem Schatten (`box-shadow`) und Padding auf hellgrauem Body (`#f4f4f5`)
+- **Spy-Icon** als subtiles Element im Footer (🕵️)
+- **Professionellerer Footer**: App-Name, Tagline, ggf. Link zu Impressum/Datenschutz
+- **Konsistentere Typografie**: Etwas grössere Abstände, klarere Hierarchie
 
-2. **Profil-Übergang verbessern**: Die bestehende `AnimatePresence` (Zeile 114) hat schon `mode="wait"` und exit/enter-Animationen. Diese verfeinern:
-   - **Exit** (altes Profil): Nach oben sliden + fade out (`y: -20, opacity: 0`)
-   - **Enter** (neues Profil): Von unten reinsliden (`y: 20 → 0, opacity: 0 → 1`)
-   - Etwas längere Duration (~0.4s) für einen smootheren Übergang
+Betroffene Dateien:
+- `supabase/functions/_shared/email-templates/signup.tsx`
+- `supabase/functions/_shared/email-templates/recovery.tsx`
+- `supabase/functions/_shared/email-templates/magic-link.tsx`
+- `supabase/functions/_shared/email-templates/invite.tsx`
+- `supabase/functions/_shared/email-templates/email-change.tsx`
+- `supabase/functions/_shared/email-templates/reauthentication.tsx`
 
-3. **Spy-Icon Reset**: Nach dem "Wegfliegen" den Spy smooth zurück-einblenden mit einer kurzen Verzögerung (~500ms), damit es so wirkt als würde er sich zum neuen Profil "teleportieren"
+**3. Edge Function deployen**
+- `auth-email-hook` neu deployen, damit die aktualisierten Templates live gehen
 
-**Datei: `src/components/ProfileCard.tsx`**
-
-4. **Spy-Status Übergang**: Wenn `hasSpy` wechselt, den grünen Dot und Text mit einem kurzen Fade animieren statt hart zu switchen. `AnimatePresence` um den Spy-Status-Block (Zeile 106-118) wrappen.
-
-### Technische Details
+### Template-Struktur (neu)
 
 ```text
-Timeline nach Drop:
-  0ms    → Spy-Icon fliegt weg (scale 0, y -60, opacity 0)
-  200ms  → Altes Profil in Card slidet nach oben raus  
-  400ms  → Neues Profil slidet von unten rein
-  500ms  → Spy-Icon blendet zurück ein (scale 1, opacity 1)
+┌─────────────────────────────────┐  ← #f4f4f5 body bg
+│                                 │
+│  ┌───────────────────────────┐  │  ← white card, rounded-20px, shadow
+│  │                           │  │
+│  │     [ LOGO-WIDE.PNG ]     │  │  ← echtes Logo-Bild, 180px
+│  │                           │  │
+│  │   ─────────────────────   │  │  ← subtle divider
+│  │                           │  │
+│  │   Bestätige deine E-Mail  │  │  ← heading
+│  │   Gib diesen Code ein...  │  │  ← body text
+│  │                           │  │
+│  │   ┌───────────────────┐   │  │
+│  │   │    6 8 2 8 9 0    │   │  │  ← gradient code box
+│  │   └───────────────────┘   │  │
+│  │                           │  │
+│  │   60 Min gültig...        │  │
+│  │                           │  │
+│  │   ─────────────────────   │  │
+│  │   🕵️ Spy-Secret           │  │
+│  │   Dein geheimer Agent     │  │
+│  └───────────────────────────┘  │
+│                                 │
+└─────────────────────────────────┘
 ```
 
-Alle Animationen über Framer Motion `animate`-Prop gesteuert, keine CSS keyframes nötig. `dropSuccess`-State wird auf einen erweiterten State umgebaut (`"idle" | "flying" | "returning"`) um die Phasen zu steuern.
+### Was sich NICHT andert
+- Email-Versandlogik in `index.ts` (Resend)
+- Deutsche Texte und Agent-Tonfall
+- Farben (#FF2D78 Pink, #000 Schwarz)
+- `deno.json` Imports
 
