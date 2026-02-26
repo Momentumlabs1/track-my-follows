@@ -273,7 +273,11 @@
     "resend_code": "Keinen Code erhalten? Erneut senden",
     "resend_cooldown": "Erneut senden in {{seconds}}s",
     "resend_rate_limit_active": "Server-Limit aktiv: Bitte {{seconds}} Sekunden warten, dann erneut senden.",
-    "code_resent": "Code erneut gesendet! 📬"
+    "code_resent": "Neuer Code gesendet! 📬 Nur dieser Code ist gültig.",
+    "code_expired": "Code abgelaufen – bitte fordere einen neuen an.",
+    "code_invalid": "Ungültiger Code – bitte prüfe und versuche es erneut.",
+    "only_latest_code_valid": "Nur der zuletzt gesendete Code ist gültig. Ältere Codes funktionieren nicht mehr.",
+    "account_exists_check_password": "Dieses Konto existiert bereits. Bitte prüfe dein Passwort."
   },
   "onboarding": {
     "slide1_title": "Vertrauen ist gut.",

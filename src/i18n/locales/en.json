@@ -273,7 +273,11 @@
     "resend_code": "Didn't get a code? Resend",
     "resend_cooldown": "Resend in {{seconds}}s",
     "resend_rate_limit_active": "Server limit active: wait {{seconds}} seconds, then resend.",
-    "code_resent": "Code resent! 📬"
+    "code_resent": "New code sent! 📬 Only this code is valid.",
+    "code_expired": "Code expired – please request a new one.",
+    "code_invalid": "Invalid code – please check and try again.",
+    "only_latest_code_valid": "Only the most recently sent code is valid. Older codes no longer work.",
+    "account_exists_check_password": "This account already exists. Please check your password."
   },
   "onboarding": {
     "slide1_title": "Trust is good.",

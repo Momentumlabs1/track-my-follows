@@ -9,6 +9,8 @@ import logoWide from "@/assets/logo-wide.png";
 
 const SIGNUP_COOLDOWN_SECONDS = 0;
 
+const normalizeEmail = (e: string) => e.trim().toLowerCase();
+
 const Login = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
@@ -17,6 +19,12 @@ const Login = () => {
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [signupCooldown, setSignupCooldown] = useState(0);
   const navigate = useNavigate();
+
+  const navigateToVerify = (normalizedEmail: string) => {
+    navigate(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`, {
+      state: { email: normalizedEmail },
+    });
+  };
 
   const handleSocialLogin = async (provider: "apple" | "google") => {
     setSocialLoading(provider);
@@ -38,10 +46,16 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedEmail = normalizeEmail(email);
     setLoading(true);
 
+    console.info("[auth] login attempt", { email: normalizedEmail.slice(0, 3) + "***" });
+
     // Try login first
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
     if (!loginError) {
       toast.success(t("auth.login_success"));
@@ -49,31 +63,54 @@ const Login = () => {
       return;
     }
 
-    // If "email not confirmed" → redirect to verify
+    console.info("[auth] login failed", { code: loginError.message });
+
+    // If "email not confirmed" → resend fresh code, then redirect
     if (loginError.message?.toLowerCase().includes("email not confirmed")) {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: normalizedEmail,
+      });
+      if (resendError) {
+        console.info("[auth] resend on unconfirmed failed", { code: resendError.message });
+      }
       toast.info(t("auth.email_not_confirmed_action"));
-      navigate("/verify-email", { state: { email } });
+      navigateToVerify(normalizedEmail);
       setLoading(false);
       return;
     }
 
     // If invalid credentials → try signup
-    if (loginError.message?.toLowerCase().includes("invalid") || loginError.message?.toLowerCase().includes("invalid login credentials")) {
+    if (
+      loginError.message?.toLowerCase().includes("invalid") ||
+      loginError.message?.toLowerCase().includes("invalid login credentials")
+    ) {
       if (signupCooldown > 0) {
         toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
         setLoading(false);
         return;
       }
 
-      const { error: signupError } = await supabase.auth.signUp({ email, password });
+      const { error: signupError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+      });
 
       if (signupError) {
-        if (signupError.message?.toLowerCase().includes("rate limit") || signupError.message?.toLowerCase().includes("over_email_send_rate_limit")) {
+        console.info("[auth] signup failed", { code: signupError.message });
+
+        if (
+          signupError.message?.toLowerCase().includes("rate limit") ||
+          signupError.message?.toLowerCase().includes("over_email_send_rate_limit")
+        ) {
           setSignupCooldown(SIGNUP_COOLDOWN_SECONDS);
           toast.error(t("auth.signup_cooldown_active", { seconds: SIGNUP_COOLDOWN_SECONDS }));
-        } else if (signupError.message?.toLowerCase().includes("already registered") || signupError.message?.toLowerCase().includes("already been registered")) {
-          toast.info(t("auth.email_not_confirmed_action"));
-          navigate("/verify-email", { state: { email } });
+        } else if (
+          signupError.message?.toLowerCase().includes("already registered") ||
+          signupError.message?.toLowerCase().includes("already been registered")
+        ) {
+          // Account exists but password is wrong → don't blindly redirect
+          toast.error(t("auth.account_exists_check_password"));
         } else {
           toast.error(signupError.message);
         }
@@ -81,8 +118,10 @@ const Login = () => {
         return;
       }
 
+      console.info("[auth] signup success, redirecting to verify");
       toast.success(t("auth.signup_success"));
-      navigate("/verify-email", { state: { email } });
+      navigateToVerify(normalizedEmail);
+      setLoading(false);
       return;
     }
 
