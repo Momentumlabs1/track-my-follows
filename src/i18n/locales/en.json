@@ -420,5 +420,7 @@
   },
   "paywall": {
     "unlock_spy_agent": "🔒 Unlock Spy Agent"
-  }
+  },
+  "gender_analysis_running": "Gender analysis running in background...",
+  "preliminary_data": "Preliminary"
 }

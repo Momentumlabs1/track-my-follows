@@ -1,13 +1,17 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/badge";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 interface GenderBreakdownChartProps {
   events: FollowEvent[];
+  baselineComplete?: boolean;
+  genderSampleSize?: number;
 }
 
-export function GenderBreakdownChart({ events }: GenderBreakdownChartProps) {
+export function GenderBreakdownChart({ events, baselineComplete = true, genderSampleSize = 0 }: GenderBreakdownChartProps) {
   const { t } = useTranslation();
 
   const stats = useMemo(() => {
@@ -26,11 +30,28 @@ export function GenderBreakdownChart({ events }: GenderBreakdownChartProps) {
     };
   }, [events]);
 
+  // If baseline not complete and no sample data yet, show spinner
+  if (!baselineComplete && genderSampleSize === 0) {
+    return (
+      <div className="native-card p-4 flex items-center gap-2 justify-center">
+        <Loader2 className="w-4 h-4 animate-spin text-accent" />
+        <span className="text-xs text-muted-foreground">{t("gender_analysis_running")}</span>
+      </div>
+    );
+  }
+
   if (stats.total === 0) return null;
 
   return (
     <div className="native-card p-4">
-      <p className="section-header mb-3">{t("insights.genderBreakdown")}</p>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="section-header">{t("insights.genderBreakdown")}</p>
+        {!baselineComplete && genderSampleSize > 0 && (
+          <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5">
+            {t("preliminary_data")}
+          </Badge>
+        )}
+      </div>
 
       {/* Big numbers */}
       <div className="flex items-center gap-3 mb-3">

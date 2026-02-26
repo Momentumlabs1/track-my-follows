@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
 import { useAuth } from "@/contexts/AuthContext";
 import logoSquare from "@/assets/logo-square.png";
@@ -353,6 +354,16 @@ const ProfileDetail = () => {
               <p className="text-[11px] text-muted-foreground">{t("spy.spy_required_description")}</p>
             </div>
           </button>
+        </motion.div>
+      )}
+
+      {/* Baseline running indicator */}
+      {!profile.baseline_complete && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
+            <Loader2 className="w-3 h-3 animate-spin text-accent" />
+            <span className="text-accent text-xs">{t("gender_analysis_running")}</span>
+          </div>
         </motion.div>
       )}
 
