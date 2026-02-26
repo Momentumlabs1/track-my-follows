@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Loader2, Mail, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,12 +14,20 @@ const VerifyEmail = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const email = (location.state as any)?.email || "";
+  const [searchParams] = useSearchParams();
+
+  // Read email from state OR query param (fallback for page reload)
+  const email =
+    (location.state as any)?.email ||
+    searchParams.get("email") ||
+    "";
+
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [rateLimitNotice, setRateLimitNotice] = useState<string | null>(null);
+  const verifyingRef = useRef(false);
 
   useEffect(() => {
     if (!email) {
@@ -35,19 +43,36 @@ const VerifyEmail = () => {
   }, [cooldown]);
 
   const handleVerify = useCallback(async () => {
-    if (code.length !== 6 || loading) return;
+    const cleanCode = code.replace(/\D/g, "").trim();
+    if (cleanCode.length !== 6 || loading || verifyingRef.current) return;
+
+    verifyingRef.current = true;
     setLoading(true);
 
+    console.info("[auth] verifyOtp", { email: email.slice(0, 3) + "***", codeLen: cleanCode.length });
+
     const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
+      email: email.trim().toLowerCase(),
+      token: cleanCode,
       type: "signup",
     });
 
     if (error) {
-      toast.error(error.message);
+      console.info("[auth] verifyOtp error", { msg: error.message });
+
+      // Handle expired/invalid token specifically
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("expired") || msg.includes("otp_expired")) {
+        toast.error(t("auth.code_expired"));
+      } else if (msg.includes("invalid") || msg.includes("token")) {
+        toast.error(t("auth.code_invalid"));
+      } else {
+        toast.error(error.message);
+      }
+
       setCode("");
       setLoading(false);
+      verifyingRef.current = false;
       return;
     }
 
@@ -57,7 +82,8 @@ const VerifyEmail = () => {
 
   // Auto-submit when 6 digits entered
   useEffect(() => {
-    if (code.length === 6) {
+    const cleanCode = code.replace(/\D/g, "");
+    if (cleanCode.length === 6 && !verifyingRef.current) {
       handleVerify();
     }
   }, [code, handleVerify]);
@@ -69,7 +95,7 @@ const VerifyEmail = () => {
     setResending(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email,
+      email: email.trim().toLowerCase(),
     });
 
     if (error) {
@@ -85,8 +111,10 @@ const VerifyEmail = () => {
     }
 
     toast.success(t("auth.code_resent"));
+    setRateLimitNotice(t("auth.only_latest_code_valid"));
     setCooldown(COOLDOWN_SECONDS);
     setResending(false);
+    setCode("");
   };
 
   if (!email) return null;
@@ -143,7 +171,7 @@ const VerifyEmail = () => {
 
             <button
               onClick={handleVerify}
-              disabled={code.length !== 6 || loading}
+              disabled={code.replace(/\D/g, "").length !== 6 || loading}
               className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-40"
             >
               {loading ? (
