@@ -1,27 +1,28 @@
 
 
-## Plan: Dashboard Scroll & Drag Performance Fix
+## AnalyzingProfile Redesign
 
-### Root Causes
-1. **ProfileCard**: `viewport={{ once: true }}` has NO effect because it's paired with `initial`/`animate` instead of `whileInView`. Elements re-animate every time React re-renders them.
-2. **Inline arrows break memo**: `onTap={() => handleProfileTap(profile.id)}` and `onAssignSpy={() => handleMoveSpy(profile.id)}` create new functions every render, defeating `React.memo`.
-3. **Ref warning**: Console errors for ProfileCard and DaySeparator — `memo` components receiving refs without `forwardRef`.
+### Dateien
 
-### Changes
+**1. `src/index.css`** — `.gradient-bg` Utility hinzufügen (1 Zeile)
 
-**1. `ProfileCard.tsx`**
-- Replace `initial`/`animate` with `whileInView` + `viewport={{ once: true }}` for the entry animation
-- Keep `animate` only for drag-related scale changes (conditional)
-- Remove `transition-[transform]` CSS class (conflicts with framer)
+**2. `src/i18n/locales/de.json`** — analyzing-Section erweitern:
+- `step_1` / `step_1_desc`: "Sichere Verbindung" / "Anonymer Zugang über Proxy-Server"
+- `step_2` / `step_2_desc`: "Profil wird gesucht" / "Instagram-Datenbank wird durchsucht"
+- `step_3` / `step_3_desc`: "Profildaten abrufen" / "Follower, Following & Profilinfos"
+- `step_baseline` / `step_baseline_desc`: "Baseline erstellen" / "Komplette Analyse aller Followings – nicht nur der letzten"
+- `step_4` / `step_4_desc`: "Geschlechteranalyse" / "Spy analysiert ob mehr Frauen oder Männer gefolgt werden"
+- `step_5` / `step_5_desc`: "Abschluss" / "Daten werden verschlüsselt gespeichert"
+- `full_analysis_note`: "Dies ist eine Gesamtanalyse des Accounts und aller Follower – nicht nur der letzten Aktivitäten."
 
-**2. `Dashboard.tsx`**
-- Create stable `onTap`/`onAssignSpy` callbacks using `useCallback` with profile ID maps, or pass profile ID as prop and let card call back
-- Wrap `handleMoveSpy` in `useCallback`
-- Limit event feed to 100 events max via `useMemo` slice
+**3. `src/i18n/locales/en.json`** — Gleiche Keys auf Englisch
 
-**3. `EventFeedItem.tsx`**
-- Already correct with `whileInView` + `viewport={{ once: true }}` — no changes needed
-
-**4. `DaySeparator.tsx`**
-- Wrap in `memo` to prevent re-renders
+**4. `src/pages/AnalyzingProfile.tsx`** — Komplett überarbeitet:
+- SpyIcon (32px) springt von Step zu Step (positioniert neben dem aktuellen Step via `layoutId` oder absolute Position mit framer-motion `animate`)
+- Username groß mit `@` in Primary-Farbe
+- Profilbild bleibt (wird nach Analyse vom echten Bild ersetzt) — mit gradient-ring
+- Steps als `native-card` mit Primary-Border wenn aktiv, grün wenn done
+- Jeder Step hat Titel + Beschreibung (desc in muted-foreground, kleiner)
+- Progress-Bar mit `gradient-bg` Klasse
+- Info-Hinweis unten als dezenter Text mit Shield-Icon
 
