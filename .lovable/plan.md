@@ -1,32 +1,27 @@
 
 
-## Plan: Dashboard Performance & Scroll-Fixes
+## Plan: Dashboard Scroll & Drag Performance Fix
 
-### Problem
-1. **Elemente verschwinden beim Scrollen** – Jede `motion.div` in `ProfileCard` und `EventFeedItem` hat `initial={{ opacity: 0, y: 12 }}`. Wenn Elemente aus dem Viewport scrollen und zurückkommen, spielt framer-motion die Einblend-Animation erneut ab (opacity 0 → 1), was als "Verschwinden" wahrgenommen wird.
-2. **Ruckeln beim Drag** – `spyDragging` und `hoveredProfileId` State-Änderungen lösen Re-Renders des gesamten Dashboards aus, inkl. aller ProfileCards und EventFeedItems.
+### Root Causes
+1. **ProfileCard**: `viewport={{ once: true }}` has NO effect because it's paired with `initial`/`animate` instead of `whileInView`. Elements re-animate every time React re-renders them.
+2. **Inline arrows break memo**: `onTap={() => handleProfileTap(profile.id)}` and `onAssignSpy={() => handleMoveSpy(profile.id)}` create new functions every render, defeating `React.memo`.
+3. **Ref warning**: Console errors for ProfileCard and DaySeparator — `memo` components receiving refs without `forwardRef`.
 
-### Umsetzung
+### Changes
 
-**1. `ProfileCard.tsx` – `React.memo` + Scroll-Fix**
-- Component in `React.memo` wrappen
-- `initial` auf `false` setzen wenn `isDragging` aktiv, sonst Animation nur beim ersten Mount abspielen (via `useRef` Flag)
-- Oder: `initial` komplett durch `whileInView` ersetzen mit `once: true` – damit animiert es nur einmal
+**1. `ProfileCard.tsx`**
+- Replace `initial`/`animate` with `whileInView` + `viewport={{ once: true }}` for the entry animation
+- Keep `animate` only for drag-related scale changes (conditional)
+- Remove `transition-[transform]` CSS class (conflicts with framer)
 
-**2. `EventFeedItem.tsx` – `React.memo` + einmalige Animation**
-- `React.memo` wrappen
-- `initial={{ opacity: 0, y: 12 }}` → Viewport-basiert mit `viewport={{ once: true }}` statt `initial/animate`, damit Items nicht bei Re-Scroll verschwinden
+**2. `Dashboard.tsx`**
+- Create stable `onTap`/`onAssignSpy` callbacks using `useCallback` with profile ID maps, or pass profile ID as prop and let card call back
+- Wrap `handleMoveSpy` in `useCallback`
+- Limit event feed to 100 events max via `useMemo` slice
 
-**3. `SpyAgentCard.tsx` – Drag-Performance**
-- `onDrag` Throttling von 80ms auf 60ms ist okay, aber `onHoverProfileChange` sollte nur feuern wenn sich der Wert ändert (deduplizieren mit `useRef`)
+**3. `EventFeedItem.tsx`**
+- Already correct with `whileInView` + `viewport={{ once: true }}` — no changes needed
 
-**4. `Dashboard.tsx` – State-Isolation**
-- `setHoveredProfileId` und `setSpyDragging` Callbacks mit `useCallback` wrappen
-- ProfileCard `onTap` mit `useCallback` statt inline Arrow
-
-### Betroffene Dateien
-- `src/components/ProfileCard.tsx`
-- `src/components/EventFeedItem.tsx`
-- `src/components/SpyAgentCard.tsx`
-- `src/pages/Dashboard.tsx`
+**4. `DaySeparator.tsx`**
+- Wrap in `memo` to prevent re-renders
 
