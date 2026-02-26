@@ -27,6 +27,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
   const isDropTarget = isHovered === true;
   const isCurrentSpy = isDragging && hasSpy;
+  const isSpyHighlighted = !isDragging && hasSpy;
 
   return (
     <motion.div
@@ -40,6 +41,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       viewport={{ once: true }}
       className="relative will-change-transform"
     >
+      {/* Highlight border for spy-active profile (persistent) */}
+      {isSpyHighlighted && (
+        <div className="absolute -inset-[2px] rounded-2xl border-2 border-primary/50 pointer-events-none z-10" />
+      )}
+
+      {/* Drop target pulsing border */}
       {isDropTarget && (
         <motion.div
           className="absolute -inset-[3px] rounded-2xl border-2 border-primary pointer-events-none z-10"

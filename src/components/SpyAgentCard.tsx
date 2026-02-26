@@ -4,6 +4,7 @@ import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 type SpyPhase = "idle" | "flying" | "returning";
@@ -132,7 +133,7 @@ export function SpyAgentCard({
             </div>
           </div>
 
-          {/* Profile info with refined transitions */}
+          {/* Profile info – clickable to navigate to profile */}
           <AnimatePresence mode="wait">
             <motion.div
               key={spyProfile.id}
@@ -140,25 +141,30 @@ export function SpyAgentCard({
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="flex items-center gap-3 mb-3"
             >
-              <div className="ring-2 ring-primary/25 rounded-full p-[2px]">
-                <InstagramAvatar
-                  src={spyProfile.avatar_url}
-                  alt={spyProfile.username}
-                  fallbackInitials={spyProfile.username}
-                  size={48}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {t("spy.last_scan")}: {timeAgo(spyProfile.last_scanned_at)}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {t("spy.next_scan")}: {nextScanIn(spyProfile.last_scanned_at)}
-                </p>
-              </div>
+              <button
+                onClick={() => navigate(`/profile/${spyProfile.id}`)}
+                className="flex items-center gap-3 mb-3 w-full text-start rounded-xl p-2 -mx-2 hover:bg-primary/5 transition-colors"
+              >
+                <div className="ring-2 ring-primary/40 rounded-full p-[2px]">
+                  <InstagramAvatar
+                    src={spyProfile.avatar_url}
+                    alt={spyProfile.username}
+                    fallbackInitials={spyProfile.username}
+                    size={48}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("spy.last_scan")}: {timeAgo(spyProfile.last_scanned_at)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("spy.next_scan")}: {nextScanIn(spyProfile.last_scanned_at)}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+              </button>
             </motion.div>
           </AnimatePresence>
 
