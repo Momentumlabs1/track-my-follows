@@ -72,6 +72,10 @@ const Dashboard = () => {
     navigate(`/profile/${profileId}`);
   }, [navigate]);
 
+  const handleMoveSpy = useCallback((profileId: string) => {
+    moveSpy.mutate(profileId);
+  }, [moveSpy]);
+
   const handleRefresh = async () => {
     haptic.light();
     setRefreshing(true);
@@ -79,10 +83,6 @@ const Dashboard = () => {
     await queryClient.invalidateQueries({ queryKey: ["follow_events"] });
     await queryClient.invalidateQueries({ queryKey: ["follower_events"] });
     setRefreshing(false);
-  };
-
-  const handleMoveSpy = (profileId: string) => {
-    moveSpy.mutate(profileId);
   };
 
   // Build unified feed
@@ -127,9 +127,9 @@ const Dashboard = () => {
       };
     });
 
-    return [...fromFollows, ...fromFollowers].sort(
-      (a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()
-    );
+    return [...fromFollows, ...fromFollowers]
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
+      .slice(0, 100);
   }, [followEventsRaw, followerEventsRaw, profiles]);
 
   const groupedEvents = useMemo(() => {
@@ -297,9 +297,10 @@ const Dashboard = () => {
             <ProfileCard
               key={profile.id}
               profile={profile}
+              profileId={profile.id}
               hasSpy={profile.has_spy === true}
-              onTap={() => handleProfileTap(profile.id)}
-              onAssignSpy={() => handleMoveSpy(profile.id)}
+              onTap={handleProfileTap}
+              onAssignSpy={handleMoveSpy}
               index={i}
               isDragging={spyDragging}
               isHovered={hoveredProfileId === profile.id}

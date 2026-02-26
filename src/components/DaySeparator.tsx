@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DaySeparatorProps {
   date: string;
 }
 
-export function DaySeparator({ date }: DaySeparatorProps) {
+export const DaySeparator = memo(function DaySeparator({ date }: DaySeparatorProps) {
   const { t } = useTranslation();
 
   const formatDay = (dateStr: string) => {
@@ -29,4 +30,4 @@ export function DaySeparator({ date }: DaySeparatorProps) {
       </span>
     </div>
   );
-}
+});

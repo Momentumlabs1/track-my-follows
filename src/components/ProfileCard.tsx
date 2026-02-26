@@ -14,14 +14,15 @@ function formatCount(n: number): string {
 interface ProfileCardProps {
   profile: TrackedProfile;
   hasSpy: boolean;
-  onTap: () => void;
-  onAssignSpy: () => void;
+  profileId: string;
+  onTap: (profileId: string) => void;
+  onAssignSpy: (profileId: string) => void;
   index: number;
   isDragging?: boolean;
   isHovered?: boolean;
 }
 
-export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, onTap, index, isDragging, isHovered }: ProfileCardProps) {
+export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered }: ProfileCardProps) {
   const { t } = useTranslation();
 
   const isDropTarget = isHovered === true;
@@ -31,14 +32,13 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, onTap, i
     <motion.div
       data-profile-id={profile.id}
       initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
       animate={{
-        opacity: 1,
-        y: 0,
         scale: isDropTarget ? 1.02 : isCurrentSpy ? 0.98 : 1,
       }}
       transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
       viewport={{ once: true }}
-      className="relative transition-[transform] will-change-transform"
+      className="relative will-change-transform"
     >
       {isDropTarget && (
         <motion.div
@@ -58,7 +58,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, onTap, i
       )}
 
       <button
-        onClick={onTap}
+        onClick={() => onTap(profileId)}
         className="native-card p-4 w-full text-start"
       >
         <div className="flex items-center gap-3">
