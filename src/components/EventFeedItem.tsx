@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
@@ -29,13 +30,12 @@ interface EventFeedItemProps {
   index: number;
 }
 
-export function EventFeedItem({ event, index }: EventFeedItemProps) {
+export const EventFeedItem = memo(function EventFeedItem({ event, index }: EventFeedItemProps) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const { shouldBlur, showPaywall } = useSubscription();
   const profileUsername = event.tracked_profiles?.username ?? "???";
 
-  // Determine display values based on event source
   const isFollowSource = event.source === "follow";
   const targetUsername = isFollowSource ? (event.target_username || "???") : (event.username || "???");
   const targetAvatar = isFollowSource ? event.target_avatar_url : event.profile_pic_url;
@@ -46,7 +46,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
   const followerCount = isFollowSource ? event.target_follower_count : event.follower_count;
   const isPrivate = event.target_is_private;
 
-  // Event verb & color
   const getEventInfo = () => {
     if (isFollowSource) {
       if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
@@ -54,7 +53,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       }
       return { verb: t("events.follows_now"), color: "text-primary", icon: "→", accent: "border-s-primary" };
     }
-    // follower event
     if (event.event_type === "lost") {
       return { verb: t("events.lostFollower"), color: "text-destructive", icon: "↓", accent: "border-s-destructive" };
     }
@@ -72,8 +70,9 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-20px" }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.3 }}
       className={`native-card p-4 border-s-2 ${eventInfo.accent}`}
     >
       {/* Header: Tracked profile + verb + time */}
@@ -97,7 +96,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
 
       {/* Main: Target profile */}
       <div className="flex items-center gap-3 relative">
-        {/* Avatar with gender ring */}
         <div className="relative flex-shrink-0">
           <div className={shouldBlur ? "blur-md" : ""}>
             <InstagramAvatar
@@ -114,7 +112,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
           )}
         </div>
 
-        {/* Info */}
         <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
           <a
             href={`https://instagram.com/${targetUsername}`}
@@ -128,7 +125,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
             <p className="text-[12px] text-muted-foreground truncate">{targetDisplayName}</p>
           )}
 
-          {/* Badges */}
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {isMutual && (
               <span className="tag-red">🔄 {t("events.mutual")}</span>
@@ -148,7 +144,6 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
           </div>
         </div>
 
-        {/* Blur overlay */}
         {shouldBlur && (
           <button
             onClick={() => showPaywall("blur")}
@@ -162,4 +157,4 @@ export function EventFeedItem({ event, index }: EventFeedItemProps) {
       </div>
     </motion.div>
   );
-}
+});

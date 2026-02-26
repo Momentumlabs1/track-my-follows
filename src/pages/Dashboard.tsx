@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Loader2, RefreshCw } from "lucide-react";
 import { SpyAgentCard } from "@/components/SpyAgentCard";
@@ -62,6 +62,15 @@ const Dashboard = () => {
   const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "User";
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
+
+  const handleDragStateChange = useCallback((dragging: boolean) => {
+    setSpyDragging(dragging);
+    if (!dragging) setHoveredProfileId(null);
+  }, []);
+
+  const handleProfileTap = useCallback((profileId: string) => {
+    navigate(`/profile/${profileId}`);
+  }, [navigate]);
 
   const handleRefresh = async () => {
     haptic.light();
@@ -275,10 +284,7 @@ const Dashboard = () => {
           onMoveSpy={() => setMoveSpyOpen(true)}
           onDragMoveSpy={handleMoveSpy}
           isDragging={spyDragging}
-          onDragStateChange={(dragging) => {
-            setSpyDragging(dragging);
-            if (!dragging) setHoveredProfileId(null);
-          }}
+          onDragStateChange={handleDragStateChange}
           onHoverProfileChange={setHoveredProfileId}
         />
       )}
@@ -292,7 +298,7 @@ const Dashboard = () => {
               key={profile.id}
               profile={profile}
               hasSpy={profile.has_spy === true}
-              onTap={() => navigate(`/profile/${profile.id}`)}
+              onTap={() => handleProfileTap(profile.id)}
               onAssignSpy={() => handleMoveSpy(profile.id)}
               index={i}
               isDragging={spyDragging}
