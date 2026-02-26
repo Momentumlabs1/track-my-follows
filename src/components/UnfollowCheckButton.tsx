@@ -160,103 +160,129 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const totalNew = result ? result.new_follows_found + result.new_followers_found : 0;
 
   return (
-    <div className="space-y-2">
-      <motion.button
-        onClick={handleCheck}
-        disabled={isDisabled}
-        whileTap={{ scale: 0.97 }}
-        className={`w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-[13px] font-bold transition-all disabled:opacity-50 min-h-[48px] relative overflow-hidden ${
-          isPro && !isDisabled
-            ? "bg-gradient-to-r from-accent/80 to-secondary text-foreground border border-border/50 shadow-sm"
-            : "bg-secondary text-foreground"
-        }`}
-      >
-        {/* Shimmer effect */}
-        {isPro && !isDisabled && !loading && (
+    <div className="space-y-3">
+      {/* Scanning state - full card takeover */}
+      <AnimatePresence mode="wait">
+        {loading ? (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/5 to-transparent"
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-          />
-        )}
-
-        <span className="relative flex items-center gap-2">
-          {loading ? (
-            <div className="flex flex-col items-center gap-1.5 w-full">
-              <div className="flex items-center gap-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            key="scanning"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="native-card p-5 border border-primary/20 relative overflow-hidden"
+          >
+            {/* Animated background glow */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            
+            <div className="relative flex flex-col items-center gap-4">
+              {/* Animated spy icon */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              >
+                <SpyIcon size={36} glow />
+              </motion.div>
+              
+              {/* Phase text */}
+              <div className="text-center">
+                <motion.p 
+                  key={phase}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[13px] font-bold text-foreground"
                 >
-                  <SpyIcon size={18} glow />
-                </motion.div>
-                <span className="text-[12px]">{phaseLabel()}</span>
+                  {phaseLabel()}
+                </motion.p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {t("unfollow_check.please_wait", "Das kann bis zu 2 Minuten dauern...")}
+                </p>
               </div>
-              {/* Indeterminate progress bar */}
-              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+              
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-primary rounded-full"
-                  initial={{ x: "-100%", width: "40%" }}
-                  animate={{ x: "250%" }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                  initial={{ x: "-100%", width: "35%" }}
+                  animate={{ x: "350%" }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
-            </div>
-          ) : !isPro ? (
-            <><Lock className="h-4 w-4 text-muted-foreground" /> {t("unfollow_check.pro_only")}</>
-          ) : checksRemaining !== null && checksRemaining <= 0 ? (
-            <><Shield className="h-4 w-4 text-muted-foreground" /> {t("unfollow_check.limit_reached")}</>
-          ) : (
-            <>
-              <Search className="h-4 w-4" />
-              <span>{t("unfollow_check.button")}</span>
-              {checksRemaining !== null && (
-                <span className="text-[10px] bg-foreground/10 px-1.5 py-0.5 rounded-full tabular-nums">
-                  {checksRemaining}/2
-                </span>
-              )}
-            </>
-          )}
-        </span>
-      </motion.button>
 
-      {/* Result cards */}
-      <AnimatePresence>
-        {result && (
+              {/* Phase steps */}
+              <div className="flex items-center gap-3 w-full justify-center">
+                {[
+                  { key: "scanning_following", label: "Following" },
+                  { key: "scanning_followers", label: "Followers" },
+                  { key: "evaluating", label: "Auswertung" },
+                ].map((step, i) => {
+                  const isActive = phase === step.key;
+                  const isDone = (phase === "scanning_followers" && i === 0) || 
+                                 (phase === "evaluating" && i <= 1) ||
+                                 (phase === "done" && i <= 2);
+                  return (
+                    <div key={step.key} className="flex items-center gap-1.5">
+                      <motion.div
+                        className={`h-2 w-2 rounded-full ${
+                          isDone ? "bg-brand-green" : isActive ? "bg-primary" : "bg-muted-foreground/30"
+                        }`}
+                        animate={isActive ? { scale: [1, 1.3, 1] } : {}}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                      <span className={`text-[9px] font-medium ${
+                        isActive ? "text-foreground" : isDone ? "text-brand-green" : "text-muted-foreground/50"
+                      }`}>
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        ) : result ? (
           <motion.div
-            initial={{ opacity: 0, y: -8, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -8, height: 0 }}
-            className="overflow-hidden space-y-2"
+            key="result"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="space-y-2"
           >
-            {/* Unfollows card */}
+            {/* Unfollows result */}
             {totalUnfollows > 0 ? (
-              <div className="native-card p-4 border-l-4 border-destructive">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🚩</span>
-                  <p className="text-[13px] font-bold text-destructive">
-                    {totalUnfollows} {t("unfollow_check.unfollows_detected")}
-                  </p>
-                </div>
-                <div className="space-y-1 ms-7">
-                  {result.unfollows_found > 0 && (
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <UserMinus className="h-3 w-3" />
-                      <span>{result.unfollows_found} {t("unfollow_check.has_unfollowed", "has unfollowed")}</span>
+              <div className="native-card p-4 border border-destructive/30 bg-destructive/5">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center">
+                    <span className="text-sm">🚩</span>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-destructive">
+                      {totalUnfollows} {t("unfollow_check.unfollows_detected")}
+                    </p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {result.unfollows_found > 0 && (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <UserMinus className="h-2.5 w-2.5" /> {result.unfollows_found} entfolgt
+                        </span>
+                      )}
+                      {result.lost_followers > 0 && (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Users className="h-2.5 w-2.5" /> {result.lost_followers} Follower verloren
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {result.lost_followers > 0 && (
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <Users className="h-3 w-3" />
-                      <span>{result.lost_followers} {t("unfollow_check.lost_followers", "lost followers")}</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="native-card p-4 border-l-4 border-brand-green">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">✅</span>
+              <div className="native-card p-4 border border-brand-green/30 bg-brand-green/5">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-full bg-brand-green/15 flex items-center justify-center">
+                    <span className="text-sm">✅</span>
+                  </div>
                   <p className="text-[13px] font-bold text-brand-green">
                     {t("unfollow_check.no_unfollows")}
                   </p>
@@ -264,30 +290,58 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
               </div>
             )}
 
-            {/* New follows card */}
+            {/* New activity */}
             {totalNew > 0 && (
-              <div className="native-card p-3 border-l-4 border-primary/50">
+              <div className="native-card p-3 border border-primary/20">
                 <div className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4 text-primary" />
-                  <p className="text-[12px] text-muted-foreground">
-                    + {totalNew} {t("unfollow_check.new_activity_found", "new activity found")}
+                  <UserPlus className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-[11px] text-muted-foreground">
+                    +{totalNew} {t("unfollow_check.new_activity_found", "neue Aktivität gefunden")}
                   </p>
-                </div>
-                <div className="space-y-0.5 ms-6 mt-1">
-                  {result.new_follows_found > 0 && (
-                    <p className="text-[11px] text-muted-foreground">
-                      {result.new_follows_found} {t("unfollow_check.new_follows", "new follows")}
-                    </p>
-                  )}
-                  {result.new_followers_found > 0 && (
-                    <p className="text-[11px] text-muted-foreground">
-                      {result.new_followers_found} {t("unfollow_check.new_followers", "new followers")}
-                    </p>
-                  )}
                 </div>
               </div>
             )}
           </motion.div>
+        ) : (
+          <motion.button
+            key="button"
+            onClick={handleCheck}
+            disabled={isDisabled}
+            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-[13px] font-bold transition-all disabled:opacity-50 min-h-[48px] relative overflow-hidden ${
+              isPro && !isDisabled
+                ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20"
+                : "bg-secondary text-foreground"
+            }`}
+          >
+            {/* Shimmer */}
+            {isPro && !isDisabled && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+              />
+            )}
+            <span className="relative flex items-center gap-2">
+              {!isPro ? (
+                <><Lock className="h-4 w-4" /> {t("unfollow_check.pro_only")}</>
+              ) : checksRemaining !== null && checksRemaining <= 0 ? (
+                <><Shield className="h-4 w-4" /> {t("unfollow_check.limit_reached")}</>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  <span>{t("unfollow_check.button")}</span>
+                  {checksRemaining !== null && (
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full tabular-nums">
+                      {checksRemaining}/2
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
