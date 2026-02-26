@@ -46,24 +46,26 @@ const AnalyzingProfile = () => {
         if (res.error) throw res.error;
 
         setCurrentStep(3); setProgress(60);
-
-        const baselineRes = await supabase.functions.invoke("create-baseline", {
-          body: { profileId },
-        });
-
-        if (baselineRes.error) {
-          console.warn("Baseline creation failed:", baselineRes.error);
-        }
-
         setCurrentStep(4); setProgress(85);
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 400));
         setCurrentStep(5); setProgress(100);
 
         queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
         queryClient.invalidateQueries({ queryKey: ["follow_events"] });
 
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 600));
         navigate(`/profile/${profileId}`, { replace: true });
+
+        // Fire-and-forget: baseline scan runs in background
+        supabase.functions.invoke("create-baseline", {
+          body: { profileId },
+        }).then(({ error }) => {
+          if (error) console.error("[Baseline] Background error:", error);
+          else {
+            console.log("[Baseline] Completed in background");
+            queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+          }
+        });
       } catch (err) {
         toast.error(t("profile_detail.scan_failed", { error: err instanceof Error ? err.message : String(err) }));
         navigate("/dashboard", { replace: true });

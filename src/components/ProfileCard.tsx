@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
@@ -117,6 +118,15 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             {/* Gender Mini-Bar */}
             {(() => {
               const total = (profile.gender_female_count || 0) + (profile.gender_male_count || 0) + (profile.gender_unknown_count || 0);
+              const baselineComplete = profile.baseline_complete !== false;
+              if (total === 0 && !baselineComplete) {
+                return (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Loader2 className="h-2.5 w-2.5 animate-spin text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground">{t("gender_analysis_running")}</span>
+                  </div>
+                );
+              }
               if (total === 0) return null;
               const fPct = Math.round(((profile.gender_female_count || 0) / total) * 100);
               const mPct = Math.round(((profile.gender_male_count || 0) / total) * 100);
@@ -127,6 +137,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                     <div className="h-full bg-blue-400" style={{ width: `${mPct}%` }} />
                   </div>
                   <span className="text-[9px] text-muted-foreground tabular-nums">♀{fPct}% ♂{mPct}%</span>
+                  {!baselineComplete && <span className="text-[8px] text-muted-foreground/60">~</span>}
                 </div>
               );
             })()}

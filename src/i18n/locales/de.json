@@ -420,5 +420,7 @@
   },
   "paywall": {
     "unlock_spy_agent": "🔒 Spy Agent freischalten"
-  }
+  },
+  "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
+  "preliminary_data": "Vorläufig"
 }
