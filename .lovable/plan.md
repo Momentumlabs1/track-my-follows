@@ -1,43 +1,40 @@
 
-Kurzdiagnose
-- Nein: der 6-stellige Code wird von Supabase Auth generiert, nicht vom Frontend.
-- Wahrscheinliche Fehlerquellen im aktuellen Code: falsches Routing in den Verify-Flow bei „already registered“, veralteter Code ohne automatisches Fresh-Resend, fehlende E-Mail-Normalisierung/robuste Fehlerbehandlung.
 
-Umsetzungsplan
-1) Login-Flow absichern (`src/pages/Login.tsx`)
-- E-Mail vor jedem Auth-Call normalisieren (`trim().toLowerCase()`).
-- „already registered“-Branch umbauen: nicht blind auf `/verify-email` leiten.
-- Stattdessen gezielt `auth.resend({ type: "signup" })` testen:
-  - wenn erfolgreich → `/verify-email` mit frischem Code
-  - wenn nicht erfolgreich → als normales Login-Problem behandeln (falsches Passwort/Account-Zustand).
-- In allen frühen Returns `setLoading(false)` konsistent setzen.
+## Plan: Welcome-Popup, Free-User Dashboard wie Pro (aber gelockt), Spy Agent sichtbar aber gesperrt
 
-2) Verify-Flow robuster machen (`src/pages/VerifyEmail.tsx`)
-- E-Mail nicht nur aus `location.state`, zusätzlich aus Query-Param (`?email=`) lesen.
-- OTP-Eingabe härten: nur Ziffern akzeptieren/säubern, vor Verify trimmen.
-- Doppelte Verify-Requests verhindern (Auto-Submit entschärfen oder entfernen; eindeutiger Submit-Trigger).
-- Fehlercodes gezielt behandeln (`otp_expired`, `invalid token`): klare UX + optional automatisches Resend.
-- Bei erfolgreichem Resend deutlicher Hinweis: nur der neueste Code ist gültig.
+### 1. Welcome-Popup nach Registrierung erstellen
+- Neue Komponente `src/components/WelcomeDialog.tsx`: Modal/Sheet das nach erstem Login erscheint
+  - Spy-Logo animiert, "Willkommen bei Spy-Secret!", Mini-Einleitung (3 Punkte: was die App kann, was Free beinhaltet, wie man upgradet)
+  - "Los geht's"-Button schließt und setzt `localStorage`-Flag `welcome_shown`
+- In `Dashboard.tsx`: beim Mount prüfen ob `welcome_shown` existiert, wenn nicht → Dialog zeigen
 
-3) Navigation stabilisieren (`src/pages/Login.tsx`, `src/pages/VerifyEmail.tsx`)
-- Beim Redirect immer auch Query-Param setzen (`/verify-email?email=...`) als Fallback gegen State-Verlust (Reload/Neustart/App-Wechsel).
+### 2. Dashboard für Free-User umbauen – Pro-Layout mit Blur/Lock
+Aktuell sehen Free-User den Spy Agent Card gar nicht (`isPro &&`). Änderungen in `Dashboard.tsx`:
 
-4) Texte ergänzen (`src/i18n/locales/de.json`, `src/i18n/locales/en.json`)
-- Neue Auth-Messages für:
-  - „nur letzter Code gültig“
-  - „Code abgelaufen, neuer Code gesendet“
-  - „Account existiert, bitte Passwort prüfen oder Reset nutzen“
+- **Spy Agent Card**: Immer anzeigen, aber für Free-User eine gelockte Version:
+  - Card mit `opacity-40 grayscale blur-sm` + Lock-Overlay + "Pro freischalten"-Button → `showPaywall("spy_agent")`
+  - Kein Drag, keine Interaktion
+- **Event Feed**: Free-User sehen Follower-Events (1x täglich) aber Following- und Unfollow-Events werden ausgeblendet oder gelockt:
+  - Follower-Events (`source === "follower"` + `event_type === "gained"`) → sichtbar (geblurred wie bisher)
+  - Following-Events (`source === "follow"`) → nicht im Feed für Free (oder als gelockte Platzhalter)
+  - Unfollow-Events → nicht im Feed für Free
 
-5) Reproduzierbares Debugging einbauen (temporär)
-- In Login/Verify strukturierte `console.info` mit anonymisierten Daten (kein Token im Log): auth-step, normalized email hash, error code/message.
-- Danach End-to-End prüfen: neuer Account, bestehender unbestätigter Account, bestehender bestätigter Account.
+### 3. EventFeedItem Filter-Logik
+In `Dashboard.tsx` den `allEvents`-Filter anpassen:
+- Free-User: nur `source === "follower"` Events durchlassen
+- Pro-User: alles wie bisher
 
-Technische Details
-- Betroffene Dateien:
-  - `src/pages/Login.tsx`
-  - `src/pages/VerifyEmail.tsx`
-  - `src/i18n/locales/de.json`
-  - `src/i18n/locales/en.json`
-- Keine DB-Migration erforderlich.
-- Keine Änderung an Supabase-Tabellen/RLS erforderlich.
-- Dashboard-Check bleibt: `Authentication -> Providers -> Email -> Email OTP Expiration = 600`.
+### 4. Spy Agent Card gelockte Variante
+In `SpyAgentCard.tsx` oder direkt in `Dashboard.tsx`:
+- Neue Bedingung: wenn `!isPro` → gelockte Fake-Version der SpyAgentCard rendern (gleicher Look, aber Blur + Lock-Icon + Paywall-Trigger)
+
+### 5. Translations ergänzen
+- `de.json` / `en.json`: Welcome-Texte, "Spy Agent gesperrt", Mini-Einleitung
+
+### Betroffene Dateien
+- `src/components/WelcomeDialog.tsx` (neu)
+- `src/pages/Dashboard.tsx`
+- `src/components/SpyAgentCard.tsx`
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
+
