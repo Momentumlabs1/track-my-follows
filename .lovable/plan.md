@@ -1,67 +1,32 @@
 
 
-## Plan: Logo einbinden und Email-Templates professionalisieren
+## Plan: Dashboard Performance & Scroll-Fixes
 
 ### Problem
-Die Templates nutzen aktuell einen Text-basierten "SpySecret"-Block statt des echten Logos. Das Design ist funktional, aber nicht professionell genug (kein Logo-Bild, kein Card-Layout, kein visuelles Gewicht).
+1. **Elemente verschwinden beim Scrollen** – Jede `motion.div` in `ProfileCard` und `EventFeedItem` hat `initial={{ opacity: 0, y: 12 }}`. Wenn Elemente aus dem Viewport scrollen und zurückkommen, spielt framer-motion die Einblend-Animation erneut ab (opacity 0 → 1), was als "Verschwinden" wahrgenommen wird.
+2. **Ruckeln beim Drag** – `spyDragging` und `hoveredProfileId` State-Änderungen lösen Re-Renders des gesamten Dashboards aus, inkl. aller ProfileCards und EventFeedItems.
 
 ### Umsetzung
 
-**1. Logo in `public/` kopieren**
-- `src/assets/logo-wide.png` nach `public/email-logo.png` kopieren, damit es per URL erreichbar ist
-- Referenz-URL: `https://track-my-follows.lovable.app/email-logo.png`
+**1. `ProfileCard.tsx` – `React.memo` + Scroll-Fix**
+- Component in `React.memo` wrappen
+- `initial` auf `false` setzen wenn `isDragging` aktiv, sonst Animation nur beim ersten Mount abspielen (via `useRef` Flag)
+- Oder: `initial` komplett durch `whileInView` ersetzen mit `once: true` – damit animiert es nur einmal
 
-**2. Alle 6 Email-Templates upgraden**
+**2. `EventFeedItem.tsx` – `React.memo` + einmalige Animation**
+- `React.memo` wrappen
+- `initial={{ opacity: 0, y: 12 }}` → Viewport-basiert mit `viewport={{ once: true }}` statt `initial/animate`, damit Items nicht bei Re-Scroll verschwinden
 
-Gemeinsame Design-Verbesserungen in allen Templates:
-- **Logo als `<Img>`** statt Text-Block: `logo-wide.png` zentriert oben, ca. 180px breit
-- **Card-Layout**: Weisser Container mit `border-radius: 20px`, leichtem Schatten (`box-shadow`) und Padding auf hellgrauem Body (`#f4f4f5`)
-- **Spy-Icon** als subtiles Element im Footer (🕵️)
-- **Professionellerer Footer**: App-Name, Tagline, ggf. Link zu Impressum/Datenschutz
-- **Konsistentere Typografie**: Etwas grössere Abstände, klarere Hierarchie
+**3. `SpyAgentCard.tsx` – Drag-Performance**
+- `onDrag` Throttling von 80ms auf 60ms ist okay, aber `onHoverProfileChange` sollte nur feuern wenn sich der Wert ändert (deduplizieren mit `useRef`)
 
-Betroffene Dateien:
-- `supabase/functions/_shared/email-templates/signup.tsx`
-- `supabase/functions/_shared/email-templates/recovery.tsx`
-- `supabase/functions/_shared/email-templates/magic-link.tsx`
-- `supabase/functions/_shared/email-templates/invite.tsx`
-- `supabase/functions/_shared/email-templates/email-change.tsx`
-- `supabase/functions/_shared/email-templates/reauthentication.tsx`
+**4. `Dashboard.tsx` – State-Isolation**
+- `setHoveredProfileId` und `setSpyDragging` Callbacks mit `useCallback` wrappen
+- ProfileCard `onTap` mit `useCallback` statt inline Arrow
 
-**3. Edge Function deployen**
-- `auth-email-hook` neu deployen, damit die aktualisierten Templates live gehen
-
-### Template-Struktur (neu)
-
-```text
-┌─────────────────────────────────┐  ← #f4f4f5 body bg
-│                                 │
-│  ┌───────────────────────────┐  │  ← white card, rounded-20px, shadow
-│  │                           │  │
-│  │     [ LOGO-WIDE.PNG ]     │  │  ← echtes Logo-Bild, 180px
-│  │                           │  │
-│  │   ─────────────────────   │  │  ← subtle divider
-│  │                           │  │
-│  │   Bestätige deine E-Mail  │  │  ← heading
-│  │   Gib diesen Code ein...  │  │  ← body text
-│  │                           │  │
-│  │   ┌───────────────────┐   │  │
-│  │   │    6 8 2 8 9 0    │   │  │  ← gradient code box
-│  │   └───────────────────┘   │  │
-│  │                           │  │
-│  │   60 Min gültig...        │  │
-│  │                           │  │
-│  │   ─────────────────────   │  │
-│  │   🕵️ Spy-Secret           │  │
-│  │   Dein geheimer Agent     │  │
-│  └───────────────────────────┘  │
-│                                 │
-└─────────────────────────────────┘
-```
-
-### Was sich NICHT andert
-- Email-Versandlogik in `index.ts` (Resend)
-- Deutsche Texte und Agent-Tonfall
-- Farben (#FF2D78 Pink, #000 Schwarz)
-- `deno.json` Imports
+### Betroffene Dateien
+- `src/components/ProfileCard.tsx`
+- `src/components/EventFeedItem.tsx`
+- `src/components/SpyAgentCard.tsx`
+- `src/pages/Dashboard.tsx`
 
