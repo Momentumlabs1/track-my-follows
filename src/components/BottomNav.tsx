@@ -7,8 +7,8 @@ import { haptic } from "@/lib/native";
 export function BottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
-  const hiddenRoutes = ["/", "/splash", "/onboarding", "/login", "/impressum", "/datenschutz"];
-  const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing");
+  const hiddenRoutes = ["/", "/splash", "/onboarding", "/login"];
+  const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing") || location.pathname.startsWith("/legal");
 
   if (isHidden) return null;
 

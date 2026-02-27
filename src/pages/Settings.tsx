@@ -272,13 +272,21 @@ const Settings = () => {
                 <h2 className="font-bold text-sm">{t("settings.legal")}</h2>
               </div>
               <div className="space-y-2">
-                <button onClick={() => navigate("/impressum")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
-                  <FileText className="h-3.5 w-3.5" />
-                  {t("settings.impressum")}
+                <button onClick={() => navigate("/legal/impressum")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
+                  <span className="text-sm">📋</span>
+                  Impressum
                 </button>
-                <button onClick={() => navigate("/datenschutz")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
-                  <FileText className="h-3.5 w-3.5" />
-                  {t("settings.privacy")}
+                <button onClick={() => navigate("/legal/datenschutz")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
+                  <span className="text-sm">🔒</span>
+                  Datenschutzerklärung
+                </button>
+                <button onClick={() => navigate("/legal/agb")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
+                  <span className="text-sm">📄</span>
+                  AGB
+                </button>
+                <button onClick={() => navigate("/legal/widerruf")} className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors py-1 min-h-[44px] w-full text-start">
+                  <span className="text-sm">↩️</span>
+                  Widerrufsbelehrung
                 </button>
               </div>
             </div>
