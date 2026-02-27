@@ -93,6 +93,26 @@ Deno.serve(async (req) => {
     const hikerApiKey = Deno.env.get("HIKER_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // ⚠️ Auth: Verify user owns the profile
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claimsData.claims.sub;
+
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
 
@@ -102,16 +122,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load profile
+    // Load profile with ownership check
     const { data: profile, error: profileError } = await supabase
       .from("tracked_profiles")
       .select("*")
       .eq("id", profileId)
+      .eq("user_id", userId)
       .single();
 
     if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Profile not found or access denied" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
