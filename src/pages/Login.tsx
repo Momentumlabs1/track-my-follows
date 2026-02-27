@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [signupCooldown, setSignupCooldown] = useState(0);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
 
   const navigateToVerify = (normalizedEmail: string) => {
@@ -211,9 +213,25 @@ const Login = () => {
                 <input type="password" placeholder={t("auth.password_placeholder")} value={password} onChange={e => setPassword(e.target.value)} required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
+              {/* AGB / Datenschutz Checkbox */}
+              <label className="flex items-start gap-2.5 text-[12px] text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={termsAccepted}
+                  onCheckedChange={(v) => setTermsAccepted(v === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Ich akzeptiere die{" "}
+                  <Link to="/legal/agb" className="text-primary underline" target="_blank">AGB</Link>{" "}
+                  und habe die{" "}
+                  <Link to="/legal/datenschutz" className="text-primary underline" target="_blank">Datenschutzerklärung</Link>{" "}
+                  gelesen.
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={loading || signupCooldown > 0}
+                disabled={loading || signupCooldown > 0 || !termsAccepted}
                 className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
               >
                 {loading ? (
@@ -232,6 +250,15 @@ const Login = () => {
             <p className="text-center text-[12px] text-muted-foreground/70 mt-3">
               {t("auth.free_note")}
             </p>
+
+            {/* Legal footer links */}
+            <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-muted-foreground/50">
+              <Link to="/legal/impressum" className="hover:text-muted-foreground transition-colors">Impressum</Link>
+              <span>·</span>
+              <Link to="/legal/datenschutz" className="hover:text-muted-foreground transition-colors">Datenschutz</Link>
+              <span>·</span>
+              <Link to="/legal/agb" className="hover:text-muted-foreground transition-colors">AGB</Link>
+            </div>
           </div>
         </div>
       </motion.div>

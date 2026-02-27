@@ -18,8 +18,10 @@ import AddProfile from "./pages/AddProfile";
 import AnalyzingProfile from "./pages/AnalyzingProfile";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
-import Impressum from "./pages/Impressum";
-import Datenschutz from "./pages/Datenschutz";
+import LegalImpressum from "./pages/legal/Impressum";
+import LegalDatenschutz from "./pages/legal/Datenschutz";
+import LegalAGB from "./pages/legal/AGB";
+import LegalWiderruf from "./pages/legal/Widerruf";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
@@ -35,8 +37,10 @@ function AppContent() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/impressum" element={<Impressum />} />
-        <Route path="/datenschutz" element={<Datenschutz />} />
+        <Route path="/legal/impressum" element={<LegalImpressum />} />
+        <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
+        <Route path="/legal/agb" element={<LegalAGB />} />
+        <Route path="/legal/widerruf" element={<LegalWiderruf />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile/:id" element={<ProtectedRoute><ProfileDetail /></ProtectedRoute>} />
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
