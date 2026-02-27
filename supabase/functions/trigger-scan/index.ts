@@ -98,6 +98,7 @@ async function syncNewFollows(
   profileId: string,
   currentUsers: FollowingUser[],
   lastScannedAt: string | null,
+  isInitialScan: boolean,
 ) {
   const { data: existing } = await supabase
     .from("profile_followings")
@@ -110,14 +111,16 @@ async function syncNewFollows(
   const newEntries = currentUsers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  const now = Date.now();
-  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
-  const spanMs = Math.max(now - lastTs, 60_000);
-  const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
+  const now = new Date().toISOString();
+  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
+  const spanMs = Math.max(Date.now() - lastTs, 60_000);
 
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
-    const ts = randomTs[i].toISOString();
+    // For initial scan: use current time (no fake spread). For subsequent: spread between last scan and now.
+    const ts = isInitialScan
+      ? now
+      : new Date(lastTs + Math.random() * spanMs).toISOString();
     const genderTag = detectGender(f.full_name);
     const category = categorizeFollow(f.follower_count, f.is_private);
     await supabase.from("profile_followings").insert({
@@ -135,6 +138,7 @@ async function syncNewFollows(
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
+      is_initial: isInitialScan,
     });
   }
   return newEntries.length;
@@ -145,6 +149,7 @@ async function syncNewFollowers(
   profileId: string,
   currentFollowers: FollowingUser[],
   lastScannedAt: string | null,
+  isInitialScan: boolean,
 ) {
   const { data: existing } = await supabase
     .from("profile_followers")
@@ -156,14 +161,15 @@ async function syncNewFollowers(
   const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  const now = Date.now();
-  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
-  const spanMs = Math.max(now - lastTs, 60_000);
-  const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
+  const now = new Date().toISOString();
+  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
+  const spanMs = Math.max(Date.now() - lastTs, 60_000);
 
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
-    const ts = randomTs[i].toISOString();
+    const ts = isInitialScan
+      ? now
+      : new Date(lastTs + Math.random() * spanMs).toISOString();
     await supabase.from("profile_followers").insert({
       tracked_profile_id: profileId,
       follower_user_id: f.pk,
@@ -187,6 +193,7 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name),
       category: categorizeFollow(f.follower_count, f.is_private),
+      is_initial: isInitialScan,
     });
   }
   return newEntries.length;
@@ -258,15 +265,17 @@ Deno.serve(async (req) => {
         initial_scan_done: true,
       }).eq("id", profile.id);
 
+      const isInitialScan = !profile.initial_scan_done;
+
       // Call 1: Following page 1
       await sleep(500);
       const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at);
+      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan);
 
       // Call 2: Follower page 1
       await sleep(1000);
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
-      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at);
+      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan);
 
       console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
       results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });

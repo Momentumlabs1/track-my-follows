@@ -41,6 +41,7 @@ export interface UnifiedFeedEvent {
   profile_pic_url?: string | null;
   follower_count?: number | null;
   is_verified?: boolean;
+  is_initial?: boolean;
   tracked_profiles?: { username: string; avatar_url: string | null } | null;
 }
 
@@ -105,6 +106,7 @@ const Dashboard = () => {
       gender_tag: (e as Record<string, unknown>).gender_tag as string | null,
       is_mutual: (e as Record<string, unknown>).is_mutual as boolean | null,
       category: (e as Record<string, unknown>).category as string | null,
+      is_initial: (e as Record<string, unknown>).is_initial as boolean | undefined,
       tracked_profiles: e.tracked_profiles,
     }));
 
@@ -125,6 +127,7 @@ const Dashboard = () => {
         is_verified: e.is_verified,
         gender_tag: e.gender_tag,
         category: e.category,
+        is_initial: e.is_initial,
         tracked_profiles: tp ? { username: tp.username, avatar_url: tp.avatar_url } : null,
       };
     });
@@ -135,7 +138,9 @@ const Dashboard = () => {
       ? combinedEvents
       : combinedEvents.filter((e) => e.source === "follower");
 
+    // Filter out is_initial events from the main feed – they clutter it
     return filteredEvents
+      .filter((e) => !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
       .slice(0, 100);
   }, [followEventsRaw, followerEventsRaw, profiles, isPro]);

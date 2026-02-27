@@ -163,6 +163,7 @@ async function syncNewFollows(
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
+      is_initial: false,
     });
     // Gender-Count live updaten
     await supabaseClient.rpc("increment_gender_count", {
@@ -222,6 +223,7 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name),
       category: categorizeFollow(f.follower_count, f.is_private),
+      is_initial: false,
     });
   }
   return newEntries.length;

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 export type TrackedProfile = Tables<"tracked_profiles">;
 export type FollowEvent = Tables<"follow_events"> & {
   tracked_profiles?: { username: string; avatar_url: string | null } | null;
+  is_initial?: boolean;
 };
 
 export function useTrackedProfiles() {

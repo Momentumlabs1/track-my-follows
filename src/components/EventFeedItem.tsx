@@ -90,7 +90,7 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
           {eventInfo.verb}
         </span>
         <span className="text-[11px] text-muted-foreground ms-auto">
-          {timeAgo(event.detected_at)}
+          {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
         </span>
       </div>
 

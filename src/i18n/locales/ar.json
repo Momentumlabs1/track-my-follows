@@ -389,5 +389,8 @@
     "spy_of_the_day": "جاسوس اليوم"
   },
   "gender_analysis_running": "تحليل الجنس قيد التنفيذ...",
-  "preliminary_data": "مبدئي"
+  "preliminary_data": "مبدئي",
+  "recently_detected": "تم اكتشافه مؤخراً",
+  "existing_at_first_scan": "موجود عند المسح الأول",
+  "initial_scan_label": "موجود"
 }
