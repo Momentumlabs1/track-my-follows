@@ -18,10 +18,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify webhook auth
+    // ⚠️ Verify webhook auth (Bearer token from RevenueCat Dashboard)
     const expectedAuth = Deno.env.get("REVENUECAT_WEBHOOK_AUTH");
     const authHeader = req.headers.get("Authorization");
-    if (expectedAuth && authHeader !== expectedAuth) {
+    if (!expectedAuth || !authHeader || authHeader !== `Bearer ${expectedAuth}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

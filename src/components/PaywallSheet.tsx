@@ -47,7 +47,7 @@ export function PaywallSheet() {
         await refetch();
         closePaywall();
       } else if (import.meta.env.DEV) {
-        // Dev simulation
+        // ⚠️ TODO BEFORE LAUNCH: Remove development mode subscription bypass
         const { error } = await supabase.from("subscriptions").upsert({
           user_id: user.id,
           plan_type: "pro",
