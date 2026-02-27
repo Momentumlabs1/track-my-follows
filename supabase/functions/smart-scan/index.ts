@@ -435,6 +435,17 @@ async function performBasicScan(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // ⚠️ Auth: Verify cron secret
+  const cronSecret = req.headers.get("x-cron-secret");
+  const expectedSecret = Deno.env.get("CRON_SECRET");
+  if (!cronSecret || cronSecret !== expectedSecret) {
+    console.error("[smart-scan] Unauthorized: Invalid or missing cron secret");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
