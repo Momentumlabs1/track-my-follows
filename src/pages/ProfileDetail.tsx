@@ -150,13 +150,25 @@ const ProfileDetail = () => {
   // Event lists
   const newFollowEvents = useMemo(() =>
     followEvents
-      .filter((e) => e.event_type === "follow" || e.event_type === "new_following")
+      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial)
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
+    [followEvents]);
+
+  const initialFollowEvents = useMemo(() =>
+    followEvents
+      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
   const newFollowerEventsList = useMemo(() =>
     followerEvents
-      .filter((e) => e.event_type === "gained")
+      .filter((e) => e.event_type === "gained" && !e.is_initial)
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
+    [followerEvents]);
+
+  const initialFollowerEventsList = useMemo(() =>
+    followerEvents
+      .filter((e) => e.event_type === "gained" && e.is_initial === true)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followerEvents]);
 
@@ -436,48 +448,104 @@ const ProfileDetail = () => {
       {/* Tab Content */}
       <motion.div className="px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
-          <EventList
-            events={newFollowEvents.map((e) => ({
-              id: e.id,
-              username: e.target_username,
-              displayName: e.target_display_name,
-              avatarUrl: e.target_avatar_url,
-              detectedAt: e.detected_at,
-              isRead: e.is_read,
-              genderTag: (e as Record<string, unknown>).gender_tag as string | undefined,
-              isMutual: (e as Record<string, unknown>).is_mutual as boolean | undefined,
-              category: (e as Record<string, unknown>).category as string | undefined,
-              followerCount: (e as Record<string, unknown>).target_follower_count as number | undefined,
-            }))}
-            shouldBlur={shouldBlur}
-            showPaywall={showPaywall}
-            timeAgo={timeAgo}
-            emptyIcon="✨"
-            emptyText={t("profile_detail.no_new_events")}
-            emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-          />
+          <div className="space-y-4">
+            {/* Real new events */}
+            <EventList
+              events={newFollowEvents.map((e) => ({
+                id: e.id,
+                username: e.target_username,
+                displayName: e.target_display_name,
+                avatarUrl: e.target_avatar_url,
+                detectedAt: e.detected_at,
+                isRead: e.is_read,
+                genderTag: (e as Record<string, unknown>).gender_tag as string | undefined,
+                isMutual: (e as Record<string, unknown>).is_mutual as boolean | undefined,
+                category: (e as Record<string, unknown>).category as string | undefined,
+                followerCount: (e as Record<string, unknown>).target_follower_count as number | undefined,
+              }))}
+              shouldBlur={shouldBlur}
+              showPaywall={showPaywall}
+              timeAgo={timeAgo}
+              emptyIcon="✨"
+              emptyText={t("profile_detail.no_new_events")}
+              emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
+              sectionTitle={initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined}
+            />
+            {/* Initial snapshot events */}
+            {initialFollowEvents.length > 0 && (
+              <div>
+                <p className="section-header px-1 mb-2 text-muted-foreground">{t("existing_at_first_scan")}</p>
+                <EventList
+                  events={initialFollowEvents.map((e) => ({
+                    id: e.id,
+                    username: e.target_username,
+                    displayName: e.target_display_name,
+                    avatarUrl: e.target_avatar_url,
+                    detectedAt: e.detected_at,
+                    isRead: true,
+                    genderTag: (e as Record<string, unknown>).gender_tag as string | undefined,
+                    category: (e as Record<string, unknown>).category as string | undefined,
+                    followerCount: (e as Record<string, unknown>).target_follower_count as number | undefined,
+                  }))}
+                  shouldBlur={shouldBlur}
+                  showPaywall={showPaywall}
+                  timeAgo={() => t("initial_scan_label")}
+                  emptyIcon="✨"
+                  emptyText=""
+                  emptySubText=""
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === "new_followers" && (
-          <EventList
-            events={newFollowerEventsList.map((e) => ({
-              id: e.id,
-              username: e.username,
-              displayName: e.full_name,
-              avatarUrl: e.profile_pic_url,
-              detectedAt: e.detected_at,
-              isRead: e.is_read,
-              genderTag: e.gender_tag || undefined,
-              category: e.category || undefined,
-              followerCount: e.follower_count || undefined,
-            }))}
-            shouldBlur={shouldBlur}
-            showPaywall={showPaywall}
-            timeAgo={timeAgo}
-            emptyIcon="👥"
-            emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")}
-            emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-          />
+          <div className="space-y-4">
+            <EventList
+              events={newFollowerEventsList.map((e) => ({
+                id: e.id,
+                username: e.username,
+                displayName: e.full_name,
+                avatarUrl: e.profile_pic_url,
+                detectedAt: e.detected_at,
+                isRead: e.is_read,
+                genderTag: e.gender_tag || undefined,
+                category: e.category || undefined,
+                followerCount: e.follower_count || undefined,
+              }))}
+              shouldBlur={shouldBlur}
+              showPaywall={showPaywall}
+              timeAgo={timeAgo}
+              emptyIcon="👥"
+              emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")}
+              emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
+              sectionTitle={initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined}
+            />
+            {initialFollowerEventsList.length > 0 && (
+              <div>
+                <p className="section-header px-1 mb-2 text-muted-foreground">{t("existing_at_first_scan")}</p>
+                <EventList
+                  events={initialFollowerEventsList.map((e) => ({
+                    id: e.id,
+                    username: e.username,
+                    displayName: e.full_name,
+                    avatarUrl: e.profile_pic_url,
+                    detectedAt: e.detected_at,
+                    isRead: true,
+                    genderTag: e.gender_tag || undefined,
+                    category: e.category || undefined,
+                    followerCount: e.follower_count || undefined,
+                  }))}
+                  shouldBlur={shouldBlur}
+                  showPaywall={showPaywall}
+                  timeAgo={() => t("initial_scan_label")}
+                  emptyIcon="👥"
+                  emptyText=""
+                  emptySubText=""
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === "unfollowed" && (
@@ -673,7 +741,7 @@ interface EventItem {
 }
 
 function EventList({
-  events, shouldBlur, showPaywall, timeAgo, emptyIcon, emptyText, emptySubText,
+  events, shouldBlur, showPaywall, timeAgo, emptyIcon, emptyText, emptySubText, sectionTitle,
 }: {
   events: EventItem[];
   shouldBlur: boolean;
@@ -682,21 +750,26 @@ function EventList({
   emptyIcon: string;
   emptyText: string;
   emptySubText: string;
+  sectionTitle?: string;
 }) {
   const { t } = useTranslation();
 
-  if (events.length === 0) {
-    return (
+  if (events.length === 0 && !sectionTitle) {
+    return emptyText ? (
       <div className="native-card p-5 text-center">
         <span className="text-4xl block mb-3">{emptyIcon}</span>
         <p className="text-[13px] text-muted-foreground">{emptyText}</p>
         <p className="text-[11px] text-muted-foreground mt-1">{emptySubText}</p>
       </div>
-    );
+    ) : null;
   }
 
+  if (events.length === 0) return null;
+
   return (
-    <div className="native-card overflow-hidden">
+    <div>
+      {sectionTitle && <p className="section-header px-1 mb-2">{sectionTitle}</p>}
+      <div className="native-card overflow-hidden">
       {events.map((event, i) => (
         <motion.div
           key={event.id}
@@ -750,6 +823,7 @@ function EventList({
           )}
         </motion.div>
       ))}
+      </div>
     </div>
   );
 }

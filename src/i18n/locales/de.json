@@ -422,5 +422,8 @@
     "unlock_spy_agent": "🔒 Spy Agent freischalten"
   },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
-  "preliminary_data": "Vorläufig"
+  "preliminary_data": "Vorläufig",
+  "recently_detected": "Kürzlich erkannt",
+  "existing_at_first_scan": "Beim ersten Scan vorhanden",
+  "initial_scan_label": "Bestehend"
 }

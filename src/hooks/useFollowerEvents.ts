@@ -16,6 +16,7 @@ export interface FollowerEvent {
   is_read: boolean;
   gender_tag: string | null;
   category: string | null;
+  is_initial?: boolean;
 }
 
 export function useFollowerEvents(trackedProfileId?: string) {

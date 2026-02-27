@@ -22,6 +22,7 @@ export type Database = {
           event_type: string
           gender_tag: string | null
           id: string
+          is_initial: boolean | null
           is_mutual: boolean | null
           is_read: boolean
           notification_sent: boolean | null
@@ -39,6 +40,7 @@ export type Database = {
           event_type: string
           gender_tag?: string | null
           id?: string
+          is_initial?: boolean | null
           is_mutual?: boolean | null
           is_read?: boolean
           notification_sent?: boolean | null
@@ -56,6 +58,7 @@ export type Database = {
           event_type?: string
           gender_tag?: string | null
           id?: string
+          is_initial?: boolean | null
           is_mutual?: boolean | null
           is_read?: boolean
           notification_sent?: boolean | null
@@ -86,6 +89,7 @@ export type Database = {
           gender_tag: string | null
           id: string
           instagram_user_id: string
+          is_initial: boolean | null
           is_read: boolean
           is_verified: boolean | null
           profile_id: string
@@ -101,6 +105,7 @@ export type Database = {
           gender_tag?: string | null
           id?: string
           instagram_user_id: string
+          is_initial?: boolean | null
           is_read?: boolean
           is_verified?: boolean | null
           profile_id: string
@@ -116,6 +121,7 @@ export type Database = {
           gender_tag?: string | null
           id?: string
           instagram_user_id?: string
+          is_initial?: boolean | null
           is_read?: boolean
           is_verified?: boolean | null
           profile_id?: string
