@@ -452,6 +452,10 @@
     "no_unfollow_left": "Kein Unfollow-Scan mehr übrig heute ⏰"
   },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
+  "private_frozen": "Dieses Profil ist jetzt privat – Tracking eingefroren",
+  "private_frozen_subtitle": "Bestehende Daten bleiben erhalten. Sobald das Profil wieder öffentlich ist, wird das Tracking automatisch fortgesetzt.",
+  "private_cannot_track": "Dieses Profil ist privat und kann nicht überwacht werden.",
+  "private_frozen_short": "Tracking eingefroren 🔒",
   "preliminary_data": "Vorläufig",
   "recently_detected": "Kürzlich erkannt",
   "existing_at_first_scan": "Beim ersten Scan vorhanden",

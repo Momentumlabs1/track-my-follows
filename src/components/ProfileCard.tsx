@@ -119,9 +119,17 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-foreground truncate">@{profile.username}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[14px] font-bold text-foreground truncate">@{profile.username}</p>
+              {profile.is_private && (
+                <span className="text-[10px] bg-destructive/15 text-destructive font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0">🔒</span>
+              )}
+            </div>
             <p className="text-[11px] text-muted-foreground">
-              {t("spy.last_scan")}: {timeAgo(profile.last_scanned_at)}
+              {profile.is_private
+                ? t("private_frozen_short", "Tracking eingefroren")
+                : `${t("spy.last_scan")}: ${timeAgo(profile.last_scanned_at)}`
+              }
             </p>
           </div>
 

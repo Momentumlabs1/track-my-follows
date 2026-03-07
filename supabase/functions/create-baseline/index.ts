@@ -161,6 +161,17 @@ Deno.serve(async (req) => {
     const igUserId = String(userInfo.pk || userInfo.id);
     const followingCount = userInfo.following_count ?? 0;
 
+    // ── Private account check ──
+    if (userInfo.is_private === true) {
+      await supabase.from("tracked_profiles").update({ is_private: true }).eq("id", profileId);
+      console.log(`[create-baseline] ${username}: private, skipping baseline`);
+      return new Response(JSON.stringify({
+        success: true,
+        skipped: true,
+        message: "Profile is private",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // ══════════════════════════════════════════
     // LOAD FOLLOWING LIST
     // Up to 10K: ALL pages (full baseline)
