@@ -43,7 +43,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
   // Get last 3 new follows (non-initial)
   const recentFollows = useMemo(() => {
     return followEvents
-      .filter(e => e.event_type === "new_follow" && !e.is_initial)
+      .filter(e => e.event_type === "follow" && !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
       .slice(0, 3);
   }, [followEvents]);
@@ -186,29 +186,6 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           )}
         </div>
 
-        {/* Gender Bar */}
-        {genderBar && (
-          <div className="flex items-center gap-2">
-            {genderBar.loading ? (
-              <div className="flex items-center gap-1.5">
-                <Loader2 className="h-2.5 w-2.5 animate-spin text-muted-foreground" />
-                <span className="text-[9px] text-muted-foreground">{t("gender_analysis_running")}</span>
-              </div>
-            ) : (
-              <>
-                <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-muted">
-                  <div className="h-full bg-primary" style={{ width: `${genderBar.fPct}%` }} />
-                  <div className="h-full bg-blue-400" style={{ width: `${genderBar.mPct}%` }} />
-                </div>
-                <span className="text-[9px] text-muted-foreground tabular-nums flex-shrink-0">
-                  ♀{genderBar.fPct}% ♂{genderBar.mPct}%
-                  {genderBar.uPct > 0 && ` ?${genderBar.uPct}%`}
-                </span>
-                {!genderBar.baselineComplete && <span className="text-[8px] text-muted-foreground/60">~</span>}
-              </>
-            )}
-          </div>
-        )}
       </button>
     </motion.div>
   );
