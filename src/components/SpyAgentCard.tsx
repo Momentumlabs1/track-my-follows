@@ -100,7 +100,7 @@ export function SpyAgentCard({
         </div>
       </div>
 
-      <div className="flex items-stretch gap-3">
+      <div className="flex items-stretch gap-3 min-h-[88px]">
         {/* Card – profile info (simplified) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}

@@ -1,84 +1,35 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Lock } from "lucide-react";
-import { SpyAgentCard } from "@/components/SpyAgentCard";
-import { ProfileCard } from "@/components/ProfileCard";
+import { Loader2, ChevronRight, Lock, UserMinus, UserPlus, UserX, UserCheck } from "lucide-react";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
-import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { SpyIcon } from "@/components/SpyIcon";
-import { useTrackedProfiles, useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
+import { useFollowEvents, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
-import { useMoveSpy } from "@/hooks/useSpyProfile";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { haptic } from "@/lib/native";
-import { toast } from "sonner";
+import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 import logoSquare from "@/assets/logo-square.png";
 
-// Unified event type for the feed
-export interface UnifiedFeedEvent {
-  id: string;
-  tracked_profile_id: string;
-  detected_at: string;
-  is_read: boolean;
-  source: "follow" | "follower";
-  event_type: string;
-  target_username?: string;
-  target_avatar_url?: string | null;
-  target_display_name?: string | null;
-  target_follower_count?: number | null;
-  target_is_private?: boolean | null;
-  direction?: string;
-  gender_tag?: string | null;
-  is_mutual?: boolean | null;
-  category?: string | null;
-  username?: string;
-  full_name?: string | null;
-  profile_pic_url?: string | null;
-  follower_count?: number | null;
-  is_verified?: boolean;
-  is_initial?: boolean;
-  tracked_profiles?: { username: string; avatar_url: string | null } | null;
-}
+type FilterType = "all" | "follows" | "unfollows";
 
-const Dashboard = () => {
+const FeedPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { plan, showPaywall } = useSubscription();
-  const [isDragging, setIsDragging] = useState(false);
-  const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
-
-  const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
-  const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
-  const { data: followerEventsRaw = [] } = useFollowerEvents();
-  const moveSpy = useMoveSpy();
-
-  const isLoading = profilesLoading || eventsLoading;
-  const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "User";
-  const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
-  const handleProfileTap = useCallback((profileId: string) => {
-    navigate(`/profile/${profileId}`);
-  }, [navigate]);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [visibleCount, setVisibleCount] = useState(50);
 
-  const handleMoveSpy = useCallback((profileId: string) => {
-    moveSpy.mutate(profileId, {
-      onSuccess: () => {
-        const newProfile = profiles.find(p => p.id === profileId);
-        if (newProfile) {
-          toast.success(`Spion überwacht jetzt @${newProfile.username} 🕵️`);
-        }
-        try { navigator.vibrate?.(50); } catch {}
-      }
-    });
-  }, [moveSpy, profiles]);
+  const { data: profiles = [] } = useTrackedProfiles();
+  const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
+  const { data: followerEventsRaw = [] } = useFollowerEvents();
 
   // Build unified feed
   const allEvents: UnifiedFeedEvent[] = useMemo(() => {
@@ -125,20 +76,38 @@ const Dashboard = () => {
     });
 
     const combinedEvents = [...fromFollows, ...fromFollowers];
-    const filteredEvents = isPro
+    const filteredByPlan = isPro
       ? combinedEvents
       : combinedEvents.filter((e) => e.source === "follower");
 
-    return filteredEvents
+    return filteredByPlan
       .filter((e) => !e.is_initial)
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 100);
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
   }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
 
+  // Apply filter
+  const filteredEvents = useMemo(() => {
+    if (filter === "all") return allEvents;
+    if (filter === "follows") {
+      return allEvents.filter((e) => {
+        if (e.source === "follow") return e.event_type !== "unfollow";
+        return e.event_type === "gained";
+      });
+    }
+    // unfollows
+    return allEvents.filter((e) => {
+      if (e.source === "follow") return e.event_type === "unfollow";
+      return e.event_type === "lost";
+    });
+  }, [allEvents, filter]);
+
+  const visibleEvents = filteredEvents.slice(0, visibleCount);
+
+  // Group by day
   const groupedEvents = useMemo(() => {
     const groups: { date: string; events: UnifiedFeedEvent[] }[] = [];
     let currentDate = "";
-    for (const event of allEvents) {
+    for (const event of visibleEvents) {
       const eventDate = new Date(event.detected_at).toDateString();
       if (eventDate !== currentDate) {
         currentDate = eventDate;
@@ -147,7 +116,7 @@ const Dashboard = () => {
       groups[groups.length - 1].events.push(event);
     }
     return groups;
-  }, [allEvents]);
+  }, [visibleEvents]);
 
   // Spy of the Day
   const latestEvent = allEvents.length > 0 ? allEvents[0] : null;
@@ -162,36 +131,26 @@ const Dashboard = () => {
   };
   const latestInfo = getLatestEventInfo();
 
-  return (
-    <div className="min-h-screen bg-background">
-      <WelcomeDialog />
-      
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 drop-shadow-md" />
-            <span className="text-lg font-extrabold text-foreground">
-              Spy<span className="text-primary">Secret</span>
-            </span>
-          </div>
-        </div>
+  const filters: { key: FilterType; label: string; emoji: string }[] = [
+    { key: "all", label: t("feed.all", "Alle"), emoji: "" },
+    { key: "follows", label: t("feed.follows", "Follows"), emoji: "🟢" },
+    { key: "unfollows", label: t("feed.unfollows", "Unfollows"), emoji: "🔴" },
+  ];
 
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6"
-        >
-          <h1 className="text-2xl font-extrabold text-foreground">Hey {displayName}!</h1>
-          {profiles.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {t("simple.tracking_count", { count: profiles.length })}
-            </p>
-          )}
-        </motion.div>
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
+        <div className="flex items-center gap-2.5 mb-4">
+          <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 drop-shadow-md" />
+          <span className="text-lg font-extrabold text-foreground">
+            Spy<span className="text-primary">Secret</span>
+          </span>
+        </div>
+        <h1 className="text-2xl font-extrabold text-foreground">{t("feed.whats_new", "What's new?")}</h1>
       </div>
 
-      {/* ═══════ SPY DES TAGES ═══════ */}
+      {/* Spy des Tages */}
       {isPro && latestEvent && latestInfo && (() => {
         const eventType = latestEvent.source === "follow"
           ? latestEvent.event_type === "unfollow" ? "unfollow" : "new_follow"
@@ -268,20 +227,6 @@ const Dashboard = () => {
         );
       })()}
 
-      {isPro && !latestEvent && profiles.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mx-4 mb-4">
-          <div className="native-card p-4 border border-primary/15">
-            <div className="flex items-center gap-1.5 mb-2">
-              <SpyIcon size={18} />
-              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">{t("simple.spy_of_the_day")}</span>
-            </div>
-            <p className="text-[13px] text-muted-foreground font-medium flex items-center gap-2">
-              <span className="text-xl">😴</span> {t("simple.no_activity_today")}
-            </p>
-          </div>
-        </motion.div>
-      )}
-
       {/* Free users locked spy of the day */}
       {!isPro && profiles.length > 0 && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.1 }} className="mx-4 mb-4">
@@ -309,81 +254,34 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* ═══════ SPY AGENT CARD (with dock) ═══════ */}
-      {isPro ? (
-        <SpyAgentCard
-          spyProfile={spyProfile}
-          onDragMoveSpy={handleMoveSpy}
-          isDragging={isDragging}
-          onDragStateChange={setIsDragging}
-          onHoverProfileChange={setHoveredProfileId}
-        />
-      ) : (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.15 }} className="mx-4 mb-4">
-          <button onClick={() => { haptic.light(); showPaywall("spy_agent"); }} className="w-full text-start relative overflow-hidden rounded-2xl">
-            <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 opacity-40 grayscale blur-[2px] pointer-events-none select-none">
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">{t("spy.spy_watching")}</span>
-              </div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-12 w-12 rounded-full bg-muted" />
-                <div className="flex-1">
-                  <div className="h-4 w-24 rounded bg-muted mb-1" />
-                  <div className="h-3 w-32 rounded bg-muted/60" />
-                </div>
-              </div>
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-[1px] rounded-2xl">
-              <div className="flex items-center gap-3">
-                <SpyIcon size={48} />
-                <div>
-                  <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5 text-primary" />
-                    {t("paywall.unlock_spy_agent", "🔒 Spy Agent freischalten")}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{t("spy.spy_description")}</p>
-                </div>
-              </div>
-            </div>
-          </button>
-        </motion.div>
-      )}
-
-      {/* Profile Cards */}
-      {profiles.length > 0 && (
-        <div className="px-4 py-3 space-y-3">
-          <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
-          {profiles.map((profile, i) => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              profileId={profile.id}
-              hasSpy={profile.has_spy === true}
-              onTap={handleProfileTap}
-              onAssignSpy={handleMoveSpy}
-              index={i}
-              isDragging={isDragging}
-              isHovered={hoveredProfileId === profile.id}
-            />
+      {/* Filter Pills */}
+      <div className="px-4 mb-4">
+        <div className="flex gap-2">
+          {filters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => { setFilter(f.key); setVisibleCount(50); }}
+              className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors ${
+                filter === f.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              {f.emoji && <span className="mr-1">{f.emoji}</span>}
+              {f.label}
+            </button>
           ))}
-          <button
-            onClick={() => navigate("/add-profile")}
-            className="w-full py-3 rounded-xl border border-dashed border-muted-foreground/20 text-muted-foreground text-[13px] font-medium hover:bg-muted/50 transition-colors flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
-          </button>
         </div>
-      )}
+      </div>
 
       {/* Event Feed */}
-      <main className="px-4 pb-28">
-        {isLoading ? (
+      <main className="px-4">
+        {eventsLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : allEvents.length > 0 ? (
+        ) : visibleEvents.length > 0 ? (
           <div className="space-y-3">
-            <p className="section-header px-1 mt-4">{t("spy.latest_activity", "Letzte Aktivität")}</p>
             {groupedEvents.map((group, gi) => (
               <div key={group.date}>
                 <DaySeparator date={group.date} />
@@ -394,23 +292,22 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
-          </div>
-        ) : profiles.length > 0 ? (
-          <div className="text-center py-20">
-            <span className="text-5xl block mb-4">⏳</span>
-            <p className="text-sm font-semibold text-foreground">{t("events.no_events")}</p>
-            <p className="text-[12px] text-muted-foreground mt-1">{t("events.no_events_subtitle")}</p>
+            {filteredEvents.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount((c) => c + 50)}
+                className="w-full py-3 rounded-xl bg-secondary text-muted-foreground text-[13px] font-semibold hover:bg-secondary/80 transition-colors"
+              >
+                {t("feed.load_more", "Mehr laden")}
+              </button>
+            )}
           </div>
         ) : (
           <div className="text-center py-20">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <img src={logoSquare} alt="" className="h-16 w-16 mx-auto mb-4 opacity-30" />
-              <p className="text-sm font-semibold text-foreground">{t("dashboard.no_profiles")}</p>
-              <p className="text-[12px] text-muted-foreground mt-1 mb-6">{t("dashboard.add_first")}</p>
-              <button onClick={() => navigate("/add-profile")} className="pill-btn-primary px-6 py-3 text-[14px]">
-                <Plus className="h-4 w-4" /> {t("nav.add")}
-              </button>
-            </motion.div>
+            <span className="text-5xl block mb-4">🕵️</span>
+            <p className="text-sm font-semibold text-foreground">{t("feed.empty_title", "Noch keine Aktivitäten")}</p>
+            <p className="text-[12px] text-muted-foreground mt-1 max-w-[260px] mx-auto">
+              {t("feed.empty_subtitle", "Dein Spion ist auf der Lauer... Neue Follows und Unfollows erscheinen hier.")}
+            </p>
           </div>
         )}
       </main>
@@ -418,4 +315,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default FeedPage;
