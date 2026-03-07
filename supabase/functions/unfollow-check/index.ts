@@ -150,18 +150,43 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "profileId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Daily limit: max 2 checks ──
-    const today = new Date().toISOString().split("T")[0];
-    const { count } = await supabase
-      .from("unfollow_checks")
-      .select("*", { count: "exact", head: true })
-      .eq("tracked_profile_id", profileId)
+    // ── Load profile first for budget check ──
+    const { data: profile } = await supabase
+      .from("tracked_profiles")
+      .select("*")
+      .eq("id", profileId)
       .eq("user_id", user.id)
-      .gte("created_at", `${today}T00:00:00Z`);
+      .eq("is_active", true)
+      .single();
 
-    if ((count || 0) >= 2) {
+    if (!profile) {
+      return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Budget check using column-based system ──
+    const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    let unfollowRemaining = profile.unfollow_scans_today ?? 1;
+
+    if (resetAt < todayMidnight) {
+      unfollowRemaining = 1;
+      await supabase.from("tracked_profiles").update({
+        push_scans_today: 4,
+        unfollow_scans_today: 1,
+        scans_reset_at: new Date().toISOString(),
+      }).eq("id", profile.id);
+    }
+
+    if (unfollowRemaining <= 0) {
       return new Response(JSON.stringify({ error: "LIMIT_REACHED", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Decrement unfollow budget
+    await supabase.from("tracked_profiles").update({
+      unfollow_scans_today: unfollowRemaining - 1,
+    }).eq("id", profile.id);
 
     // ── Load profile ──
     const { data: profile } = await supabase
