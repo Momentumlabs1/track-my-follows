@@ -1,39 +1,71 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Feed-Seite + Neue Bottom Navigation
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### 1) Neue Bottom Navigation (`BottomNav.tsx`)
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Replace the 3 tabs with:
+- **Feed** (`/feed`) — icon: `Newspaper` from lucide
+- **Spy** (`/dashboard`) — icon: custom `SpyIcon` or `Eye` — this is the default/home tab
+- **Settings** (`/settings`) — icon: `Settings`
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+Remove the old "Add" tab. Keep the active indicator (pink dot + pink color). Update `isActive` logic so `/feed` highlights Feed tab, `/dashboard` + `/profile/*` highlights Spy tab. Hide on same routes as before.
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+### 2) New Feed Page (`src/pages/FeedPage.tsx`)
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+A new page at route `/feed` showing all activity chronologically.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**Structure:**
+- Header: "SpySecret" logo + "What's new?" title
+- **Spy des Tages** card pinned at top (move existing logic from Dashboard)
+- **Filter pills**: `Alle | 🟢 Follows | 🔴 Unfollows` — horizontal, active = pink bg
+- **Event list** grouped by time period (Heute / Gestern / Letzte Woche / Älter)
+- Each event: avatar, @target, event badge (green/red), "bei @tracked_account", relative time
+- Empty state with spy emoji
+- Load 50 events, "Mehr laden" button for pagination
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**Data:** Reuse `useFollowEvents()` + `useFollowerEvents()` hooks. Build unified feed same as Dashboard currently does, but move the feed logic into a `useFeedEvents` hook or directly into FeedPage.
+
+### 3) Dashboard Changes (`Dashboard.tsx`)
+
+- **Remove** the entire event feed section (lines ~378-416) — feed moves to `/feed`
+- **Remove** the "Spy des Tages" section — moves to `/feed`
+- **Keep**: Header/greeting, SpyAgentCard, Profile cards list, "Add profile" button
+- The Dashboard becomes the "Spy" tab — focused on profiles management
+
+### 4) Spy Agent Card Height Fix (`SpyAgentCard.tsx`)
+
+Make the Spy Dock (right side) match the height of the account card (left side) by using `items-stretch` on the flex container and making the dock div fill available height with `h-full`.
+
+### 5) Routing (`App.tsx`)
+
+- Add route: `/feed` → `<ProtectedRoute><FeedPage /></ProtectedRoute>`
+- Update Splash redirect: default to `/dashboard` (already done)
+
+### 6) i18n Keys
+
+Add to `de.json` (and `en.json`):
+- `nav.feed`: "Feed"
+- `nav.spy`: "Spy"  
+- `feed.whats_new`: "What's new?"
+- `feed.all`: "Alle"
+- `feed.follows`: "Follows"
+- `feed.unfollows`: "Unfollows"
+- `feed.load_more`: "Mehr laden"
+- `feed.empty_title`: "Noch keine Aktivitäten"
+- `feed.empty_subtitle`: "Dein Spion ist auf der Lauer... Neue Follows und Unfollows erscheinen hier."
+- `feed.this_week`: "Diese Woche"
+- `feed.older`: "Älter"
+
+### Files to Create/Edit
+
+| File | Action |
+|------|--------|
+| `src/pages/FeedPage.tsx` | **Create** — new feed page with filters, grouped events, spy of the day |
+| `src/components/BottomNav.tsx` | **Edit** — 3 new tabs (Feed, Spy, Settings) |
+| `src/pages/Dashboard.tsx` | **Edit** — remove event feed + spy of the day sections |
+| `src/components/SpyAgentCard.tsx` | **Edit** — fix dock height to match left card |
+| `src/App.tsx` | **Edit** — add `/feed` route |
+| `src/i18n/locales/de.json` | **Edit** — add feed-related keys |
+| `src/i18n/locales/en.json` | **Edit** — add feed-related keys |
 
