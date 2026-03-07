@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Pencil, Loader2, Search, Eye } from "lucide-react";
+import { ArrowLeft, Pencil, Loader2, Search, Eye, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -85,7 +85,7 @@ export default function SpyDetail() {
       toast.error(t("spy_detail.no_scans_left", "Keine Push-Scans mehr übrig heute ⏰"));
       return;
     }
-    haptic.medium();
+    haptic.light();
     setPushScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke("trigger-scan", {
@@ -113,7 +113,7 @@ export default function SpyDetail() {
       toast.error(t("spy_detail.no_unfollow_left", "Kein Unfollow-Scan mehr übrig heute ⏰"));
       return;
     }
-    haptic.medium();
+    haptic.light();
     setUnfollowScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke("unfollow-check", {
