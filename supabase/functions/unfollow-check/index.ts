@@ -383,10 +383,13 @@ Deno.serve(async (req) => {
       await supabase.rpc("decrement_gender_count", { p_profile_id: profile.id, p_gender: g });
     }
 
-    // ── Reset pending hint + update last_following_count ──
+    // ── Reset pending hint + update counts ──
     await supabase.from("tracked_profiles").update({
       pending_unfollow_hint: 0,
       last_following_count: allFollowings.length,
+      total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowsFound + newFollowersFound,
+      total_unfollows_detected: (profile.total_unfollows_detected ?? 0) + unfollowsFound + lostFollowers,
+      total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
     }).eq("id", profile.id);
 
     // ── Log the check ──
@@ -397,7 +400,7 @@ Deno.serve(async (req) => {
       new_follows_found: newFollowsFound + newFollowersFound,
     });
 
-    const remaining = 2 - ((count || 0) + 1);
+    const remaining = unfollowRemaining - 1;
     console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${lostFollowers} lost followers, ${newFollowsFound} new follows, ${newFollowersFound} new followers, ${remaining} checks remaining`);
 
     return new Response(JSON.stringify({
