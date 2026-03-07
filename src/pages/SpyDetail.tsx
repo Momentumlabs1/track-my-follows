@@ -27,6 +27,24 @@ export default function SpyDetail() {
   const [pushScanning, setPushScanning] = useState(false);
   const [unfollowScanning, setUnfollowScanning] = useState(false);
 
+  // Recent events (last 5) - must be before early return
+  const recentEvents = useMemo(() => {
+    if (!spyProfile) return [];
+    const allEvents = [
+      ...followEvents.filter(e => !e.is_initial).map(e => ({
+        id: e.id, detected_at: e.detected_at, type: e.event_type,
+        username: e.target_username, source: "follow" as const,
+      })),
+      ...followerEvents.filter(e => !e.is_initial).map(e => ({
+        id: e.id, detected_at: e.detected_at, type: e.event_type,
+        username: e.username, source: "follower" as const,
+      })),
+    ];
+    return allEvents
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
+      .slice(0, 5);
+  }, [followEvents, followerEvents, spyProfile]);
+
   if (!spyProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -49,23 +67,6 @@ export default function SpyDetail() {
   const totalUnfollows = (spyProfile as Record<string, unknown>).total_unfollows_detected as number || 0;
   const spyAssignedAt = spyProfile.spy_assigned_at;
   const daysSince = spyAssignedAt ? Math.floor((Date.now() - new Date(spyAssignedAt).getTime()) / 86400000) : 0;
-
-  // Recent events (last 5)
-  const recentEvents = useMemo(() => {
-    const allEvents = [
-      ...followEvents.filter(e => !e.is_initial).map(e => ({
-        id: e.id, detected_at: e.detected_at, type: e.event_type,
-        username: e.target_username, source: "follow" as const,
-      })),
-      ...followerEvents.filter(e => !e.is_initial).map(e => ({
-        id: e.id, detected_at: e.detected_at, type: e.event_type,
-        username: e.username, source: "follower" as const,
-      })),
-    ];
-    return allEvents
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 5);
-  }, [followEvents, followerEvents]);
 
   const avgPerDay = daysSince > 0 ? ((totalFollows + totalUnfollows) / daysSince).toFixed(1) : "0";
 
