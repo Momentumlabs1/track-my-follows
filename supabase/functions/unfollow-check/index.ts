@@ -188,19 +188,6 @@ Deno.serve(async (req) => {
       unfollow_scans_today: unfollowRemaining - 1,
     }).eq("id", profile.id);
 
-    // ── Load profile ──
-    const { data: profile } = await supabase
-      .from("tracked_profiles")
-      .select("*")
-      .eq("id", profileId)
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .single();
-
-    if (!profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     // ── Get IG user ID ──
     const userInfoRes = await fetch(
       `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
