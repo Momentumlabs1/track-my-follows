@@ -23,6 +23,7 @@ import LegalDatenschutz from "./pages/legal/Datenschutz";
 import LegalAGB from "./pages/legal/AGB";
 import LegalWiderruf from "./pages/legal/Widerruf";
 import VerifyEmail from "./pages/VerifyEmail";
+import SpyDetail from "./pages/SpyDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/profile/:id" element={<ProtectedRoute><ProfileDetail /></ProtectedRoute>} />
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
         <Route path="/analyzing/:profileId/:username" element={<ProtectedRoute><AnalyzingProfile /></ProtectedRoute>} />
+        <Route path="/spy" element={<ProtectedRoute><SpyDetail /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
