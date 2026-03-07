@@ -29,12 +29,11 @@ function nextScanIn(lastScannedAt: string | null): string {
   const diff = nextScan.getTime() - Date.now();
   if (diff <= 0) return "Jetzt";
   const mins = Math.ceil(diff / 60000);
-  return `${mins}min`;
+  return `${mins} Min.`;
 }
 
 interface SpyAgentCardProps {
   spyProfile: TrackedProfile | null;
-  onMoveSpy: () => void;
   onDragMoveSpy: (profileId: string) => void;
   isDragging: boolean;
   onDragStateChange: (dragging: boolean) => void;
@@ -43,7 +42,6 @@ interface SpyAgentCardProps {
 
 export function SpyAgentCard({
   spyProfile,
-  onMoveSpy,
   onDragMoveSpy,
   isDragging,
   onDragStateChange,
@@ -56,11 +54,13 @@ export function SpyAgentCard({
   const dragRef = useRef<HTMLDivElement>(null);
   const lastHitCheck = useRef(0);
   const lastHoveredId = useRef<string | null>(null);
+  const tapStartTime = useRef(0);
+  const tapStartPos = useRef({ x: 0, y: 0 });
+  const didDrag = useRef(false);
 
-  // Reset phase when spy profile changes (data arrived)
+  // Reset phase when spy profile changes
   useEffect(() => {
     if (spyPhase === "flying") {
-      // Profile data updated → transition to returning
       const timer = setTimeout(() => setSpyPhase("returning"), 200);
       return () => clearTimeout(timer);
     }
@@ -111,29 +111,29 @@ export function SpyAgentCard({
 
   return (
     <div className="mx-4 mb-4">
+      {/* Section header */}
+      <div className="flex items-center gap-1.5 mb-2 px-1">
+        <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+          {t("spy.spy_watching")}
+        </span>
+        <div className="ms-auto flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
+        </div>
+      </div>
+
       <div className="flex items-start gap-3">
-        {/* Card */}
+        {/* Card – profile info */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{
-            opacity: isDragging ? 0.45 : 1,
+            opacity: isDragging ? 0.3 : 1,
             scale: isDragging ? 0.96 : 1,
           }}
           transition={{ duration: 0.25 }}
           className="flex-1 rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.12)]"
         >
-          {/* Header */}
-          <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
-              {t("spy.spy_watching")}
-            </span>
-            <div className="ms-auto flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
-            </div>
-          </div>
-
-          {/* Profile info – clickable to navigate to profile */}
+          {/* Profile info – clickable */}
           <AnimatePresence mode="wait">
             <motion.div
               key={spyProfile.id}
@@ -144,7 +144,7 @@ export function SpyAgentCard({
             >
               <button
                 onClick={() => navigate(`/profile/${spyProfile.id}`)}
-                className="flex items-center gap-3 mb-3 w-full text-start rounded-xl p-2 -mx-2 hover:bg-primary/5 transition-colors"
+                className="flex items-center gap-3 w-full text-start rounded-xl p-2 -mx-2 hover:bg-primary/5 transition-colors"
               >
                 <div className="ring-2 ring-primary/40 rounded-full p-[2px]">
                   <InstagramAvatar
@@ -168,14 +168,6 @@ export function SpyAgentCard({
             </motion.div>
           </AnimatePresence>
 
-          {/* Move Spy button */}
-          <button
-            onClick={onMoveSpy}
-            className="w-full py-2.5 rounded-xl border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
-          >
-            <SpyIcon size={16} /> {t("spy.move_spy")}
-          </button>
-
           {/* Unfollow Hint */}
           {(spyProfile.pending_unfollow_hint ?? 0) > 0 && (
             <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3">
@@ -198,60 +190,101 @@ export function SpyAgentCard({
           )}
         </motion.div>
 
-        {/* Draggable Spy */}
-        <div className="flex-shrink-0 flex flex-col items-center pt-6">
-          <motion.div
-            ref={dragRef}
-            drag={spyPhase === "idle"}
-            dragSnapToOrigin
-            dragElastic={0.15}
-            dragMomentum={false}
-            whileDrag={{
-              scale: 1.12,
-              zIndex: 9999,
-              filter: "drop-shadow(0 0 18px hsl(var(--primary) / 0.5))",
-            }}
-            whileHover={spyPhase === "idle" ? { scale: 1.08 } : undefined}
-            onDragStart={() => onDragStateChange(true)}
-            onDrag={() => {
-              const now = Date.now();
-              if (now - lastHitCheck.current < 80) return;
-              lastHitCheck.current = now;
-              const rect = dragRef.current?.getBoundingClientRect();
-              if (!rect) return;
-              const hovered = findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-              if (hovered !== lastHoveredId.current) {
-                lastHoveredId.current = hovered;
-                onHoverProfileChange(hovered);
-              }
-            }}
-            onDragEnd={() => {
-              onDragStateChange(false);
-              const rect = dragRef.current?.getBoundingClientRect();
-              const profileId = rect ? findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
-              if (profileId && profileId !== spyProfile.id) {
-                setSpyPhase("flying");
-                onDragMoveSpy(profileId);
-              }
-              onHoverProfileChange(null);
-            }}
-            className="cursor-grab active:cursor-grabbing touch-none select-none z-50"
+        {/* Spy Dock + Draggable Spy */}
+        <div className="flex-shrink-0 flex flex-col items-center pt-2">
+          {/* Dock container */}
+          <div
+            className={`relative rounded-2xl border-2 transition-all duration-300 ${
+              isDragging
+                ? "border-dashed border-primary/30 bg-primary/5"
+                : "border-primary/20 bg-primary/[0.08]"
+            } p-2 shadow-[0_0_16px_-4px_hsl(var(--primary)/0.25)]`}
+            style={{ width: 76, height: 76 }}
           >
+            {/* Empty dock placeholder when dragging */}
+            {isDragging && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-primary/30" />
+              </motion.div>
+            )}
+
+            {/* Draggable + Tappable Spy Icon */}
             <motion.div
-              animate={spyPhase}
-              variants={spyIconVariants}
-              transition={
-                spyPhase === "flying"
-                  ? { duration: 0.4, ease: [0.6, 0, 0.4, 1] }
-                  : spyPhase === "returning"
-                  ? { duration: 0.45, ease: [0, 0.6, 0.4, 1], delay: 0.15 }
-                  : { duration: 0.3 }
-              }
+              ref={dragRef}
+              drag={spyPhase === "idle"}
+              dragSnapToOrigin
+              dragElastic={0.15}
+              dragMomentum={false}
+              whileDrag={{
+                scale: 1.12,
+                zIndex: 9999,
+                filter: "drop-shadow(0 0 18px hsl(var(--primary) / 0.5))",
+              }}
+              whileHover={spyPhase === "idle" ? { scale: 1.08 } : undefined}
+              onPointerDown={(e) => {
+                tapStartTime.current = Date.now();
+                tapStartPos.current = { x: e.clientX, y: e.clientY };
+                didDrag.current = false;
+              }}
+              onDragStart={() => {
+                didDrag.current = true;
+                onDragStateChange(true);
+              }}
+              onDrag={() => {
+                const now = Date.now();
+                if (now - lastHitCheck.current < 80) return;
+                lastHitCheck.current = now;
+                const rect = dragRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const hovered = findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                if (hovered !== lastHoveredId.current) {
+                  lastHoveredId.current = hovered;
+                  onHoverProfileChange(hovered);
+                }
+              }}
+              onDragEnd={() => {
+                onDragStateChange(false);
+                const rect = dragRef.current?.getBoundingClientRect();
+                const profileId = rect ? findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
+                if (profileId && profileId !== spyProfile.id) {
+                  setSpyPhase("flying");
+                  onDragMoveSpy(profileId);
+                  // Haptic feedback
+                  try { navigator.vibrate?.(50); } catch {}
+                }
+                onHoverProfileChange(null);
+              }}
+              onPointerUp={() => {
+                // Tap detection: short duration + minimal movement
+                const elapsed = Date.now() - tapStartTime.current;
+                if (!didDrag.current && elapsed < 300) {
+                  navigate("/spy");
+                }
+              }}
+              className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex items-center justify-center"
+              style={{ width: "100%", height: "100%" }}
             >
-              <SpyIcon size={96} glow />
+              <motion.div
+                animate={spyPhase}
+                variants={spyIconVariants}
+                transition={
+                  spyPhase === "flying"
+                    ? { duration: 0.4, ease: [0.6, 0, 0.4, 1] }
+                    : spyPhase === "returning"
+                    ? { duration: 0.45, ease: [0, 0.6, 0.4, 1], delay: 0.15 }
+                    : { duration: 0.3 }
+                }
+              >
+                <SpyIcon size={56} glow />
+              </motion.div>
             </motion.div>
-          </motion.div>
-          <p className="text-[9px] text-muted-foreground/60 mt-1 select-none text-center">
+          </div>
+
+          <p className="text-[9px] text-muted-foreground/60 mt-1.5 select-none text-center">
             {t("spy.drag_hint", "Ziehen")}
           </p>
         </div>
