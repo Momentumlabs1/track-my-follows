@@ -419,8 +419,8 @@ const Dashboard = () => {
               onTap={handleProfileTap}
               onAssignSpy={handleMoveSpy}
               index={i}
-              isDragging={spyDragging}
-              isHovered={hoveredProfileId === profile.id}
+              isDragging={false}
+              isHovered={false}
             />
           ))}
           <button
