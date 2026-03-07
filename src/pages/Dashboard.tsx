@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Plus, Loader2, ChevronRight, Lock, UserMinus, UserPlus, UserX, UserCheck } from "lucide-react";
 import { SpyAgentCard } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
-import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
@@ -52,7 +51,6 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { plan, showPaywall } = useSubscription();
-  const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
 
@@ -353,7 +351,7 @@ const Dashboard = () => {
 
       {/* Profile Cards */}
       {profiles.length > 0 && (
-        <div className="px-4 py-3 space-y-2">
+        <div className="px-4 py-3 space-y-3">
           <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard
@@ -416,15 +414,6 @@ const Dashboard = () => {
           </div>
         )}
       </main>
-
-      {/* Move Spy Sheet */}
-      <MoveSpySheet
-        open={moveSpyOpen}
-        onOpenChange={setMoveSpyOpen}
-        profiles={profiles}
-        currentSpyId={spyProfile?.id || null}
-        onMove={handleMoveSpy}
-      />
     </div>
   );
 };
