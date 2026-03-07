@@ -59,12 +59,13 @@ export default function SpyDetail() {
     );
   }
 
-  const spyName = (spyProfile as Record<string, unknown>).spy_name as string || "Spion 🕵️";
-  const pushRemaining = spyProfile.push_scans_today ?? 4;
-  const unfollowRemaining = spyProfile.unfollow_scans_today ?? 1;
-  const totalScans = (spyProfile as Record<string, unknown>).total_scans_executed as number || 0;
-  const totalFollows = (spyProfile as Record<string, unknown>).total_follows_detected as number || 0;
-  const totalUnfollows = (spyProfile as Record<string, unknown>).total_unfollows_detected as number || 0;
+  const profileAny = spyProfile as Record<string, unknown>;
+  const spyName = (profileAny.spy_name as string) || "Spion 🕵️";
+  const pushRemaining = (profileAny.push_scans_today as number) ?? 4;
+  const unfollowRemaining = (profileAny.unfollow_scans_today as number) ?? 1;
+  const totalScans = (profileAny.total_scans_executed as number) || 0;
+  const totalFollows = (profileAny.total_follows_detected as number) || 0;
+  const totalUnfollows = (profileAny.total_unfollows_detected as number) || 0;
   const spyAssignedAt = spyProfile.spy_assigned_at;
   const daysSince = spyAssignedAt ? Math.floor((Date.now() - new Date(spyAssignedAt).getTime()) / 86400000) : 0;
 

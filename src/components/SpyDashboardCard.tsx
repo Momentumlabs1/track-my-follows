@@ -68,9 +68,10 @@ export function SpyDashboardCard({ spyProfile, onMoveSpy }: SpyDashboardCardProp
     );
   }
 
-  const pushRemaining = spyProfile.push_scans_today ?? 4;
-  const unfollowRemaining = spyProfile.unfollow_scans_today ?? 1;
-  const spyName = (spyProfile as Record<string, unknown>).spy_name as string || "Spion 🕵️";
+  const profileAny = spyProfile as Record<string, unknown>;
+  const pushRemaining = (profileAny.push_scans_today as number) ?? 4;
+  const unfollowRemaining = (profileAny.unfollow_scans_today as number) ?? 1;
+  const spyName = (profileAny.spy_name as string) || "Spion 🕵️";
 
   return (
     <motion.div
