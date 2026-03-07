@@ -146,18 +146,18 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           </div>
 
           {recentFollows.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+            <div className="grid grid-cols-4 gap-2">
               {recentFollows.map((event) => {
                 const isRecent = Date.now() - new Date(event.detected_at).getTime() < 24 * 60 * 60 * 1000;
                 return (
-                  <div key={event.id} className="flex flex-col items-center min-w-[60px]">
-                    <div className="relative">
+                  <div key={event.id} className="flex flex-col items-center min-w-0">
+                    <div className="relative h-[52px] w-[52px] rounded-xl bg-muted/60 overflow-hidden">
                       <InstagramAvatar
                         src={event.target_avatar_url}
                         alt={event.target_username || ""}
                         fallbackInitials={event.target_username || "?"}
                         size={52}
-                        className="rounded-xl"
+                        className="!rounded-xl !object-contain"
                       />
                       {isRecent && (
                         <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[7px] font-bold px-1 py-[1px] rounded-md">
@@ -165,7 +165,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                         </span>
                       )}
                     </div>
-                    <span className="text-[9px] text-muted-foreground mt-1 truncate max-w-[60px] text-center">
+                    <span className="text-[9px] text-muted-foreground mt-1 truncate max-w-full text-center">
                       @{event.target_username}
                     </span>
                   </div>
