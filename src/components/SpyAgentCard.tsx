@@ -167,15 +167,15 @@ export function SpyAgentCard({
           )}
         </motion.div>
 
-        {/* Spy Dock – compact, no text */}
-        <div className="flex-shrink-0 flex items-center">
+        {/* Spy Dock – stretches to match left card */}
+        <div className="flex-shrink-0 flex items-stretch">
           <div
-            className={`relative rounded-2xl border-2 transition-all duration-300 ${
+            className={`relative rounded-2xl border-2 transition-all duration-300 flex items-center justify-center ${
               isDragging
                 ? "border-dashed border-primary/30 bg-primary/5"
                 : "border-primary/20 bg-primary/[0.08]"
             } p-2 shadow-[0_0_16px_-4px_hsl(var(--primary)/0.25)]`}
-            style={{ width: 76, height: 76 }}
+            style={{ width: 76 }}
           >
             {/* Empty dock placeholder when dragging */}
             {isDragging && (

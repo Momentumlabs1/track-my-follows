@@ -43,6 +43,7 @@ function AppContent() {
         <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
         <Route path="/legal/agb" element={<LegalAGB />} />
         <Route path="/legal/widerruf" element={<LegalWiderruf />} />
+        <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile/:id" element={<ProtectedRoute><ProfileDetail /></ProtectedRoute>} />
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
