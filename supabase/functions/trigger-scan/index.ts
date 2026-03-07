@@ -285,6 +285,33 @@ Deno.serve(async (req) => {
       const userInfo = await userInfoRes.json();
       const igUserId = String(userInfo.pk || userInfo.id);
 
+      // ── Private account check ──
+      const isPrivate = userInfo.is_private === true;
+      if (isPrivate) {
+        await supabase.from("tracked_profiles").update({
+          is_private: true,
+          avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+          display_name: userInfo.full_name || null,
+          follower_count: userInfo.follower_count || 0,
+          following_count: userInfo.following_count || 0,
+          last_scanned_at: new Date().toISOString(),
+        }).eq("id", profile.id);
+
+        if (!profile.initial_scan_done) {
+          results.push({ username: profile.username, error: "profile_private" });
+        } else {
+          console.log(`[trigger-scan] ${profile.username}: now private, tracking frozen`);
+          results.push({ username: profile.username, new_follows: 0, new_followers: 0, frozen: true });
+        }
+        continue;
+      }
+
+      // If was private but now public again
+      if (profile.is_private) {
+        await supabase.from("tracked_profiles").update({ is_private: false }).eq("id", profile.id);
+        console.log(`[trigger-scan] ${profile.username}: back to public!`);
+      }
+
       await supabase.from("tracked_profiles").update({
         previous_follower_count: profile.follower_count || 0,
         previous_following_count: profile.following_count || 0,

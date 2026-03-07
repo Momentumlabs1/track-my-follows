@@ -434,6 +434,10 @@
     "unlock_spy_agent": "🔒 Unlock Spy Agent"
   },
   "gender_analysis_running": "Gender analysis running in background...",
+  "private_frozen": "This profile is now private – tracking frozen",
+  "private_frozen_subtitle": "Existing data is preserved. Tracking will resume automatically once the profile goes public again.",
+  "private_cannot_track": "This profile is private and cannot be monitored.",
+  "private_frozen_short": "Tracking frozen 🔒",
   "preliminary_data": "Preliminary",
   "recently_detected": "Recently detected",
   "existing_at_first_scan": "Present at first scan",

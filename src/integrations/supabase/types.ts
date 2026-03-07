@@ -377,6 +377,7 @@ export type Database = {
           id: string
           initial_scan_done: boolean | null
           is_active: boolean
+          is_private: boolean | null
           last_follower_count: number | null
           last_following_count: number | null
           last_scanned_at: string | null
@@ -411,6 +412,7 @@ export type Database = {
           id?: string
           initial_scan_done?: boolean | null
           is_active?: boolean
+          is_private?: boolean | null
           last_follower_count?: number | null
           last_following_count?: number | null
           last_scanned_at?: string | null
@@ -445,6 +447,7 @@ export type Database = {
           id?: string
           initial_scan_done?: boolean | null
           is_active?: boolean
+          is_private?: boolean | null
           last_follower_count?: number | null
           last_following_count?: number | null
           last_scanned_at?: string | null

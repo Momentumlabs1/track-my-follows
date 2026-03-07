@@ -277,7 +277,7 @@ const ProfileDetail = () => {
         <div className="flex items-center gap-0">
           <button
             onClick={handleScan}
-            disabled={isScanning}
+            disabled={isScanning || profile.is_private}
             className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50"
           >
             {isScanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
@@ -369,8 +369,25 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
+      {/* Private account banner */}
+      {profile.is_private && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
+          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20">
+            <Lock className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-[13px] font-bold text-destructive">
+                {profile.initial_scan_done ? t("private_frozen") : t("private_cannot_track")}
+              </p>
+              {profile.initial_scan_done && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t("private_frozen_subtitle")}</p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Baseline running indicator */}
-      {!profile.baseline_complete && (
+      {!profile.baseline_complete && !profile.is_private && (profile.gender_sample_size === 0 || profile.gender_sample_size === null) && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
             <Loader2 className="w-3 h-3 animate-spin text-accent" />

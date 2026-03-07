@@ -334,6 +334,24 @@ async function performSpyScan(
   const actualFollowingCount = userInfo.following_count ?? 0;
   const actualFollowerCount = userInfo.follower_count ?? 0;
 
+  // ── Private account check ──
+  if (userInfo.is_private === true) {
+    await supabaseClient.from("tracked_profiles").update({
+      is_private: true,
+      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+      display_name: userInfo.full_name || null,
+      follower_count: actualFollowerCount,
+      following_count: actualFollowingCount,
+      last_scanned_at: new Date().toISOString(),
+    }).eq("id", profileId);
+    console.log(`[SPY-SCAN] ${username}: private, tracking frozen`);
+    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
+  }
+  if (profile.is_private) {
+    await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
+    console.log(`[SPY-SCAN] ${username}: back to public!`);
+  }
+
   // ── CALL 1: Following page 1 ──
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
@@ -411,6 +429,24 @@ async function performBasicScan(
   const igUserId = String(userInfo.pk || userInfo.id);
   const actualFollowingCount = userInfo.following_count ?? 0;
   const actualFollowerCount = userInfo.follower_count ?? 0;
+
+  // ── Private account check ──
+  if (userInfo.is_private === true) {
+    await supabaseClient.from("tracked_profiles").update({
+      is_private: true,
+      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+      display_name: userInfo.full_name || null,
+      follower_count: actualFollowerCount,
+      following_count: actualFollowingCount,
+      last_scanned_at: new Date().toISOString(),
+    }).eq("id", profileId);
+    console.log(`[BASIC-SCAN] ${username}: private, tracking frozen`);
+    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
+  }
+  if (profile.is_private) {
+    await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
+    console.log(`[BASIC-SCAN] ${username}: back to public!`);
+  }
 
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
