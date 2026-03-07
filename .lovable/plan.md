@@ -1,29 +1,39 @@
 
 
-## Analyse
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-Der Private-Account-Check ist in allen 3 Edge Functions (`trigger-scan`, `smart-scan`, `create-baseline`) **bereits korrekt eingebaut** (Zeilen 288-306 in trigger-scan, 338-348 + 434-444 in smart-scan). Der Code prüft `userInfo.is_private` von HikerAPI und setzt `is_private = true` in der DB + überspringt den Scan.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-**Das Problem:** Der `smart-scan` Cron-Job läuft zwar stündlich (Cron existiert in `cron.job`), aber es gibt **keine Edge Function Logs** — weder für `smart-scan` noch für `trigger-scan`. Das bedeutet die Functions werden entweder nicht erreicht oder sind nicht korrekt deployed.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-**Warum `diego_gut1` nicht als privat angezeigt wird:** Er wurde vor 8 Tagen zuletzt gescannt. Seitdem hat kein Scan mehr stattgefunden (weder Cron noch manuell), also wurde `is_private` nie auf `true` gesetzt.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-## Plan
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### 1) Edge Functions neu deployen
-Alle 3 Functions (`trigger-scan`, `smart-scan`, `create-baseline`) müssen neu deployed werden damit die Private-Check Logik aktiv wird. Lovable deployed automatisch bei Code-Änderungen — ich mache einen kleinen Touch (z.B. Kommentar-Update) in jeder Function um den Deploy zu triggern.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-### 2) Manuellen Scan auslösen um `diego_gut1` zu updaten
-Nach dem Deploy einen manuellen Scan des Profils auslösen — dann greift der Private-Check und setzt `is_private = true`. Alternativ: direkt in der DB `is_private = true` setzen für sofortiges Ergebnis.
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-### 3) Frontend zeigt dann automatisch das 🔒 Banner
-Der UI-Code in `ProfileDetail.tsx` und `ProfileCard.tsx` prüft bereits `profile.is_private` und zeigt Banner + deaktiviert Scan-Button. Sobald die DB aktualisiert ist, funktioniert alles.
-
-### Dateien
-
-| Datei | Aktion |
-|-------|--------|
-| `supabase/functions/trigger-scan/index.ts` | Touch für Redeploy |
-| `supabase/functions/smart-scan/index.ts` | Touch für Redeploy |
-| `supabase/functions/create-baseline/index.ts` | Touch für Redeploy |
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
