@@ -2,7 +2,19 @@
   "app_name": "TrackIQ",
   "splash": { "subtitle": "Sieh wem sie folgen" },
   "tabs": { "whats_new": "Neuigkeiten", "profiles": "Profile" },
-  "feed": { "today": "Heute", "yesterday": "Gestern" },
+  "feed": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "whats_new": "What's new?",
+    "all": "Alle",
+    "follows": "Follows",
+    "unfollows": "Unfollows",
+    "load_more": "Mehr laden",
+    "empty_title": "Noch keine Aktivitäten",
+    "empty_subtitle": "Dein Spion ist auf der Lauer... Neue Follows und Unfollows erscheinen hier.",
+    "this_week": "Diese Woche",
+    "older": "Älter"
+  },
   "dashboard": {
     "just_now": "Gerade eben",
     "minutes_ago": "Vor {{count}} Min.",
@@ -339,7 +351,7 @@
     "new_followers": "neue Follower"
   },
   "scan_status": { "auto_hourly": "Stündlich", "once_daily": "1×/Tag" },
-  "nav": { "dashboard": "Home", "add": "Hinzufügen", "settings": "Einstellungen" },
+  "nav": { "dashboard": "Home", "add": "Hinzufügen", "settings": "Einstellungen", "feed": "Feed", "spy": "Spy" },
   "landing": {
     "beta_badge": "Geheime Beta-Mission 🕵️",
     "hero_line1": "Vertrauen ist gut.",
