@@ -15,7 +15,7 @@ import { haptic } from "@/lib/native";
 import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 import logoSquare from "@/assets/logo-square.png";
 
-type FilterType = "all" | "follows" | "unfollows";
+type FilterType = "all" | "follows";
 
 const FeedPage = () => {
   const { t } = useTranslation();
@@ -88,16 +88,10 @@ const FeedPage = () => {
   // Apply filter
   const filteredEvents = useMemo(() => {
     if (filter === "all") return allEvents;
-    if (filter === "follows") {
-      return allEvents.filter((e) => {
-        if (e.source === "follow") return e.event_type !== "unfollow";
-        return e.event_type === "gained";
-      });
-    }
-    // unfollows
+    // follows = new follows + new followers (everything that's not an unfollow/lost)
     return allEvents.filter((e) => {
-      if (e.source === "follow") return e.event_type === "unfollow";
-      return e.event_type === "lost";
+      if (e.source === "follow") return e.event_type !== "unfollow";
+      return e.event_type === "gained";
     });
   }, [allEvents, filter]);
 
@@ -134,7 +128,6 @@ const FeedPage = () => {
   const filters: { key: FilterType; label: string; emoji: string }[] = [
     { key: "all", label: t("feed.all", "Alle"), emoji: "" },
     { key: "follows", label: t("feed.follows", "Follows"), emoji: "🟢" },
-    { key: "unfollows", label: t("feed.unfollows", "Unfollows"), emoji: "🔴" },
   ];
 
   return (
