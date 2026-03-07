@@ -180,47 +180,55 @@ const FeedPage = () => {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mx-4 mb-4"
+            className="mx-4 mb-6"
           >
             <button
               onClick={() => { haptic.light(); navigate(`/profile/${latestEvent.tracked_profile_id}`); }}
-              className="w-full text-start native-card p-4 border border-primary/15 active:scale-[0.98] transition-transform"
+              className="w-full text-start relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-card to-card p-5 active:scale-[0.98] transition-transform shadow-[0_0_32px_-8px_hsl(var(--primary)/0.25)]"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <SpyIcon size={18} />
-                  <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
-                    {t("simple.spy_of_the_day")}
-                  </span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative flex-shrink-0">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover bg-muted" />
-                  ) : (
-                    <div className="h-11 w-11 rounded-full gradient-pink flex items-center justify-center text-primary-foreground text-sm font-bold">
-                      {displayUsername.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>
-                      {badge.icon} {badge.label}
+              {/* Decorative glow */}
+              <div className="absolute -top-12 -end-12 w-32 h-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <SpyIcon size={20} glow />
+                    <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+                      {t("simple.spy_of_the_day")}
                     </span>
                   </div>
-                  <p className="text-[14px] font-bold text-foreground truncate">
-                    @{displayUsername} <span className="font-normal text-muted-foreground">{latestInfo.verb}</span>
-                  </p>
-                  {trackedUsername && (
-                    <p className="text-[11px] text-muted-foreground truncate">
-                      {t("simple.spy_of_the_day_subtitle_at", "bei")} @{trackedUsername}
-                    </p>
-                  )}
+                  <span className="text-[10px] text-muted-foreground/70">{timeAgo}</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+                
+                <div className="flex items-center gap-3.5">
+                  <div className="relative flex-shrink-0">
+                    <div className="ring-2 ring-primary/30 rounded-full p-[2px]">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover bg-muted" />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full gradient-pink flex items-center justify-center text-primary-foreground text-sm font-bold">
+                          {displayUsername.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${badge.className}`}>
+                        {badge.icon} {badge.label}
+                      </span>
+                    </div>
+                    <p className="text-[15px] font-bold text-foreground truncate">
+                      @{displayUsername}
+                    </p>
+                    {trackedUsername && (
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        {t("simple.spy_of_the_day_subtitle_at", "bei")} @{trackedUsername}
+                      </p>
+                    )}
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-primary/50 flex-shrink-0 rtl:rotate-180" />
+                </div>
               </div>
             </button>
           </motion.div>
