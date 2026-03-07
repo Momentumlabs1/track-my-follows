@@ -45,7 +45,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     return followEvents
       .filter(e => e.event_type === "follow" && !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 3);
+      .slice(0, 4);
   }, [followEvents]);
 
 
@@ -144,19 +144,13 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                 return (
                   <div key={event.id} className="flex flex-col items-center min-w-[60px]">
                     <div className="relative">
-                      <div className="w-[52px] h-[52px] rounded-xl overflow-hidden bg-muted">
-                        {event.target_avatar_url ? (
-                          <img
-                            src={event.target_avatar_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[14px] font-bold">
-                            {(event.target_username || "?").slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
+                      <InstagramAvatar
+                        src={event.target_avatar_url}
+                        alt={event.target_username || ""}
+                        fallbackInitials={event.target_username || "?"}
+                        size={52}
+                        className="rounded-xl"
+                      />
                       {isRecent && (
                         <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[7px] font-bold px-1 py-[1px] rounded-md">
                           {t("events.new_badge", "NEU")}
