@@ -1,0 +1,9 @@
+
+ALTER TABLE public.tracked_profiles 
+  ADD COLUMN IF NOT EXISTS spy_name TEXT DEFAULT 'Spion 🕵️',
+  ADD COLUMN IF NOT EXISTS push_scans_today INTEGER DEFAULT 4,
+  ADD COLUMN IF NOT EXISTS unfollow_scans_today INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS scans_reset_at TIMESTAMPTZ DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS total_scans_executed INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_follows_detected INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_unfollows_detected INTEGER DEFAULT 0;

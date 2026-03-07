@@ -383,7 +383,14 @@ export type Database = {
           pending_unfollow_hint: number | null
           previous_follower_count: number | null
           previous_following_count: number | null
+          push_scans_today: number | null
+          scans_reset_at: string | null
           spy_assigned_at: string | null
+          spy_name: string | null
+          total_follows_detected: number | null
+          total_scans_executed: number | null
+          total_unfollows_detected: number | null
+          unfollow_scans_today: number | null
           updated_at: string
           user_id: string
           username: string
@@ -410,7 +417,14 @@ export type Database = {
           pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
+          push_scans_today?: number | null
+          scans_reset_at?: string | null
           spy_assigned_at?: string | null
+          spy_name?: string | null
+          total_follows_detected?: number | null
+          total_scans_executed?: number | null
+          total_unfollows_detected?: number | null
+          unfollow_scans_today?: number | null
           updated_at?: string
           user_id: string
           username: string
@@ -437,7 +451,14 @@ export type Database = {
           pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
           previous_following_count?: number | null
+          push_scans_today?: number | null
+          scans_reset_at?: string | null
           spy_assigned_at?: string | null
+          spy_name?: string | null
+          total_follows_detected?: number | null
+          total_scans_executed?: number | null
+          total_unfollows_detected?: number | null
+          unfollow_scans_today?: number | null
           updated_at?: string
           user_id?: string
           username?: string
