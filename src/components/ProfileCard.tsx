@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
@@ -48,17 +48,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       .slice(0, 3);
   }, [followEvents]);
 
-  // Gender stats
-  const genderBar = useMemo(() => {
-    const total = (profile.gender_female_count || 0) + (profile.gender_male_count || 0) + (profile.gender_unknown_count || 0);
-    const baselineComplete = profile.baseline_complete !== false;
-    if (total === 0 && !baselineComplete) return { loading: true };
-    if (total === 0) return null;
-    const fPct = Math.round(((profile.gender_female_count || 0) / total) * 100);
-    const mPct = Math.round(((profile.gender_male_count || 0) / total) * 100);
-    const uPct = 100 - fPct - mPct;
-    return { fPct, mPct, uPct, baselineComplete };
-  }, [profile]);
+
+
 
   return (
     <motion.div
