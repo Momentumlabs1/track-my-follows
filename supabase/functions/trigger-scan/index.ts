@@ -227,6 +227,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
+    const scanType = body.scanType; // "push" for manual push scan
 
     let query = supabase.from("tracked_profiles").select("*").eq("user_id", user.id).eq("is_active", true);
     if (profileId) query = query.eq("id", profileId);
@@ -239,6 +240,36 @@ Deno.serve(async (req) => {
     // Free user: block if initial_scan_done (except first scan)
     if (!isPro && profiles[0]?.initial_scan_done) {
       return new Response(JSON.stringify({ error: "PAYWALL_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Budget check for manual push scans ──
+    if (isPro && scanType === "push" && profileId) {
+      const profile = profiles[0];
+      const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+
+      let pushRemaining = profile.push_scans_today ?? 4;
+
+      // Reset budget if last reset was before today
+      if (resetAt < todayMidnight) {
+        pushRemaining = 4;
+        await supabase.from("tracked_profiles").update({
+          push_scans_today: 4,
+          unfollow_scans_today: 1,
+          scans_reset_at: new Date().toISOString(),
+        }).eq("id", profile.id);
+      }
+
+      if (pushRemaining <= 0) {
+        return new Response(JSON.stringify({ error: "Keine Push-Scans mehr übrig heute", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Decrement budget
+      await supabase.from("tracked_profiles").update({
+        push_scans_today: pushRemaining - 1,
+        total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
+      }).eq("id", profile.id);
     }
 
     const results = [];
@@ -276,6 +307,13 @@ Deno.serve(async (req) => {
       await sleep(1000);
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan);
+
+      // Update total detected counts
+      if (newFollowCount + newFollowerCount > 0 && !isInitialScan) {
+        await supabase.from("tracked_profiles").update({
+          total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowCount + newFollowerCount,
+        }).eq("id", profile.id);
+      }
 
       console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
       results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });

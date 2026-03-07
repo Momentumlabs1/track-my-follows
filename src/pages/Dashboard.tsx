@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Loader2, RefreshCw, ChevronRight, Lock, UserMinus, UserPlus, UserX, UserCheck } from "lucide-react";
-import { SpyAgentCard } from "@/components/SpyAgentCard";
+import { SpyDashboardCard } from "@/components/SpyDashboardCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { EventFeedItem } from "@/components/EventFeedItem";
@@ -53,8 +53,6 @@ const Dashboard = () => {
   const { plan, showPaywall } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
-  const [spyDragging, setSpyDragging] = useState(false);
-  const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
@@ -66,10 +64,8 @@ const Dashboard = () => {
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
-  const handleDragStateChange = useCallback((dragging: boolean) => {
-    setSpyDragging(dragging);
-    if (!dragging) setHoveredProfileId(null);
-  }, []);
+
+
 
   const handleProfileTap = useCallback((profileId: string) => {
     navigate(`/profile/${profileId}`);
@@ -357,15 +353,11 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* ═══════ SPY AGENT CARD ═══════ */}
+      {/* ═══════ SPY DASHBOARD CARD ═══════ */}
       {isPro ? (
-        <SpyAgentCard
+        <SpyDashboardCard
           spyProfile={spyProfile}
           onMoveSpy={() => setMoveSpyOpen(true)}
-          onDragMoveSpy={handleMoveSpy}
-          isDragging={spyDragging}
-          onDragStateChange={handleDragStateChange}
-          onHoverProfileChange={setHoveredProfileId}
         />
       ) : (
         /* Locked Spy Agent for Free users */
@@ -382,16 +374,11 @@ const Dashboard = () => {
             }}
             className="w-full text-start relative overflow-hidden rounded-2xl"
           >
-            {/* Blurred / greyed out version */}
             <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 opacity-40 grayscale blur-[2px] pointer-events-none select-none">
               <div className="flex items-center gap-1.5 mb-3">
                 <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
                   {t("spy.spy_watching")}
                 </span>
-                <div className="ms-auto flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-green-400" />
-                  <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
-                </div>
               </div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="h-12 w-12 rounded-full bg-muted" />
@@ -400,10 +387,7 @@ const Dashboard = () => {
                   <div className="h-3 w-32 rounded bg-muted/60" />
                 </div>
               </div>
-              <div className="h-10 w-full rounded-xl bg-muted/40" />
             </div>
-
-            {/* Lock overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-[1px] rounded-2xl">
               <div className="flex items-center gap-3">
                 <SpyIcon size={48} />
@@ -435,8 +419,8 @@ const Dashboard = () => {
               onTap={handleProfileTap}
               onAssignSpy={handleMoveSpy}
               index={i}
-              isDragging={spyDragging}
-              isHovered={hoveredProfileId === profile.id}
+              isDragging={false}
+              isHovered={false}
             />
           ))}
           <button

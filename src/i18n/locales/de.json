@@ -421,6 +421,24 @@
   "paywall": {
     "unlock_spy_agent": "🔒 Spy Agent freischalten"
   },
+  "spy_detail": {
+    "your_spy": "Dein Spion",
+    "spy_profile": "Spion-Profil",
+    "spy_since": "Spion seit",
+    "next_auto_scan": "Nächster Auto-Scan",
+    "spy_report": "Spion-Bericht",
+    "total_missions": "Gesamte Einsätze",
+    "follows_detected": "Neue Follows erkannt",
+    "unfollows_detected": "Unfollows erkannt",
+    "active_days": "Aktiv seit",
+    "avg_changes": "Durchschn. Änderungen/Tag",
+    "last_activity": "Letzte Aktivität",
+    "push_desc": "Sofort scannen wer neu gefolgt wird",
+    "unfollow_desc": "Prüfe ob jemand entfolgt wurde",
+    "tomorrow": "Morgen wieder verfügbar ⏰",
+    "no_scans_left": "Keine Push-Scans mehr übrig heute ⏰",
+    "no_unfollow_left": "Kein Unfollow-Scan mehr übrig heute ⏰"
+  },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
   "preliminary_data": "Vorläufig",
   "recently_detected": "Kürzlich erkannt",
