@@ -64,10 +64,8 @@ const Dashboard = () => {
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
-  const handleDragStateChange = useCallback((dragging: boolean) => {
-    setSpyDragging(dragging);
-    if (!dragging) setHoveredProfileId(null);
-  }, []);
+
+
 
   const handleProfileTap = useCallback((profileId: string) => {
     navigate(`/profile/${profileId}`);
