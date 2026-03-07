@@ -53,8 +53,6 @@ const Dashboard = () => {
   const { plan, showPaywall } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
-  const [spyDragging, setSpyDragging] = useState(false);
-  const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
