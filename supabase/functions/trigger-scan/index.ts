@@ -308,6 +308,13 @@ Deno.serve(async (req) => {
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan);
 
+      // Update total detected counts
+      if (newFollowCount + newFollowerCount > 0 && !isInitialScan) {
+        await supabase.from("tracked_profiles").update({
+          total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowCount + newFollowerCount,
+        }).eq("id", profile.id);
+      }
+
       console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
       results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });
     }
