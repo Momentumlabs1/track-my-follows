@@ -1,0 +1,1 @@
+ALTER TABLE public.tracked_profiles ADD COLUMN is_private boolean DEFAULT false;
