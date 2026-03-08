@@ -57,7 +57,7 @@ const Dashboard = () => {
       
       {/* ═══ ZONE 1: Pink Header – nur Logo + Greeting ═══ */}
       <div
-        className="rounded-b-[2rem] pb-12"
+        className="rounded-b-[2rem] pb-28"
         style={{
           background: 'linear-gradient(180deg, hsl(347 100% 65%), hsl(347 90% 50%))',
         }}
