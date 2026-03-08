@@ -209,7 +209,7 @@ const ProfileDetail = () => {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="native-card p-4 text-center" style={{ borderRadius: '14px' }}>
+          <div className="card-pink p-4 text-center" style={{ borderRadius: '14px' }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-bold font-mono-num text-foreground" style={{ fontSize: '1.5rem' }}>{formatCount(profile.follower_count ?? 0)}</span>
               {followerDelta !== null && followerDelta !== 0 && (
@@ -220,7 +220,7 @@ const ProfileDetail = () => {
             </div>
             <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>{t("dashboard.followers")}</p>
           </div>
-          <div className="native-card p-4 text-center" style={{ borderRadius: '14px' }}>
+          <div className="card-pink p-4 text-center" style={{ borderRadius: '14px' }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-bold font-mono-num text-foreground" style={{ fontSize: '1.5rem' }}>{formatCount(profile.following_count ?? 0)}</span>
               {followingDelta !== null && followingDelta !== 0 && (
@@ -231,6 +231,38 @@ const ProfileDetail = () => {
             </div>
             <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>{t("dashboard.following")}</p>
           </div>
+
+          {/* Gender Mini-Preview */}
+          {(profile.following_count ?? 0) > 0 && ((profile.gender_female_count ?? 0) > 0 || (profile.gender_male_count ?? 0) > 0) && (
+            <div className="col-span-2 card-pink p-3 flex items-center gap-3" style={{ borderRadius: '14px' }}>
+              <span style={{ fontSize: '1rem' }}>👫</span>
+              <div className="flex-1">
+                <div className="flex h-2.5 rounded-full overflow-hidden" style={{ background: 'hsl(var(--muted))' }}>
+                  {(() => {
+                    const f = profile.gender_female_count ?? 0;
+                    const m = profile.gender_male_count ?? 0;
+                    const total = f + m;
+                    if (total === 0) return null;
+                    const fPct = Math.round((f / total) * 100);
+                    return (
+                      <>
+                        <div style={{ width: `${fPct}%`, background: 'hsl(var(--primary))' }} />
+                        <div style={{ width: `${100 - fPct}%`, background: 'hsl(var(--brand-blue))' }} />
+                      </>
+                    );
+                  })()}
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: '0.6875rem', color: 'hsl(var(--primary))' }} className="font-semibold">
+                    ♀ {Math.round(((profile.gender_female_count ?? 0) / ((profile.gender_female_count ?? 0) + (profile.gender_male_count ?? 0))) * 100)}%
+                  </span>
+                  <span style={{ fontSize: '0.6875rem', color: 'hsl(var(--brand-blue))' }} className="font-semibold">
+                    ♂ {Math.round(((profile.gender_male_count ?? 0) / ((profile.gender_female_count ?? 0) + (profile.gender_male_count ?? 0))) * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -306,9 +338,9 @@ const ProfileDetail = () => {
                 setActiveTab(tab.id);
               }}
               className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold flex items-center gap-1.5 min-h-[40px] transition-colors ${
-                activeTab === tab.id ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
+                activeTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
-              style={{ fontSize: '0.8125rem' }}
+              style={{ fontSize: '0.8125rem', background: activeTab === tab.id ? undefined : 'hsl(var(--card))', border: activeTab === tab.id ? undefined : '1px solid hsl(var(--border))' }}
             >
               {tab.label}
               {tab.count !== null && (

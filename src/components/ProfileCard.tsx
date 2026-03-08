@@ -68,10 +68,9 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden rounded-2xl"
-        style={{ background: 'hsl(var(--card-elevated))' }}
+        className="w-full text-start overflow-hidden card-pink"
       >
-        {/* ═══ Profile Header – large, prominent ═══ */}
+        {/* ═══ Profile Header ═══ */}
         <div className="p-4 pb-3">
           <div className="flex items-center gap-3.5">
             <div className="relative flex-shrink-0">
@@ -122,7 +121,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           </div>
         </div>
 
-        {/* ═══ Zuletzt gefolgt – rectangles, no names ═══ */}
+        {/* ═══ Zuletzt gefolgt – rectangles via InstagramAvatar ═══ */}
         {recentFollows.length > 0 && (
           <div className="px-4 pb-4">
             <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
@@ -132,20 +131,16 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="flex-1 overflow-hidden rounded-lg"
+                  className="flex-1 overflow-hidden rounded-lg bg-muted"
                   style={{ aspectRatio: '3/4' }}
                 >
-                  {event.target_avatar_url ? (
-                    <img
-                      src={event.target_avatar_url}
-                      alt={event.target_username || ""}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-primary-foreground" style={{ background: 'hsl(var(--primary))', fontSize: '0.875rem' }}>
-                      {(event.target_username || "?").slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <InstagramAvatar
+                    src={event.target_avatar_url}
+                    alt={event.target_username || ""}
+                    fallbackInitials={event.target_username || "?"}
+                    size={200}
+                    className="!rounded-none w-full h-full"
+                  />
                 </div>
               ))}
             </div>
