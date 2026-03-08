@@ -57,7 +57,7 @@ const Dashboard = () => {
       
       {/* ═══ ZONE 1: Pink Header – nur Logo + Greeting ═══ */}
       <div
-        className="rounded-b-[2rem] pb-12"
+        className="rounded-b-[2rem] pb-28"
         style={{
           background: 'linear-gradient(180deg, hsl(347 100% 65%), hsl(347 90% 50%))',
         }}
@@ -78,7 +78,7 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ ZONE 2: Spy Bereich – eigene Sektion ═══ */}
-      <div className="px-5 -mt-6">
+      <div className="px-5 -mt-20">
         {isPro ? (
           <SpyWidget
             spyProfile={spyProfile}
@@ -132,7 +132,7 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-8 pb-3 space-y-3">
+        <div className="px-5 pt-10 pb-3 space-y-3">
           <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
