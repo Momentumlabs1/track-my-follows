@@ -396,8 +396,8 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
-      {/* Gender Breakdown */}
-      {suspicionAnalysis.genderStats.total > 0 && (
+      {/* Gender Breakdown - only show for profiles that follow others */}
+      {(profile.following_count ?? 0) > 0 && suspicionAnalysis.genderStats.total > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
           <GenderCard genderStats={suspicionAnalysis.genderStats} profile={profile as unknown as Record<string, unknown>} />
         </motion.div>
