@@ -174,7 +174,7 @@ const ProfileDetail = () => {
 
   const unfollowedByThem = useMemo(() =>
     followEvents
-      .filter((e) => e.event_type === "unfollow" || e.event_type === "unfollowed")
+      .filter((e) => (e.event_type === "unfollow" || e.event_type === "unfollowed") && (e as Record<string, unknown>).direction === "following")
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
