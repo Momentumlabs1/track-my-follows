@@ -80,8 +80,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     >
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[2px] rounded-2xl border-2 border-primary/60 pointer-events-none z-10"
-          animate={{ opacity: [0.5, 1, 0.5] }}
+          className="absolute -inset-[2px] rounded-2xl border-2 border-primary pointer-events-none z-10"
+          animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
       )}
