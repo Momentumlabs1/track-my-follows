@@ -2,7 +2,9 @@ import { useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 interface SpyWidgetProps {
@@ -14,6 +16,7 @@ interface SpyWidgetProps {
 }
 
 export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateChange, onHoverProfileChange }: SpyWidgetProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dragRef = useRef<HTMLDivElement>(null);
   const lastHitCheck = useRef(0);
@@ -32,30 +35,56 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
     return target?.getAttribute("data-profile-id") || null;
   }, []);
 
-  // No spy assigned – show pulsing icon with CTA
+  // No spy assigned
   if (!spyProfile) {
     return (
-      <div className="flex flex-col items-center py-4">
-        <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-          <SpyIcon size={100} />
+      <div className="rounded-2xl p-5 flex items-center gap-4" style={{ background: 'hsl(var(--card))' }}>
+        <motion.div
+          ref={dragRef}
+          drag
+          dragSnapToOrigin
+          dragElastic={0.15}
+          dragMomentum={false}
+          whileDrag={{ scale: 1.1, zIndex: 9999 }}
+          onDragStart={() => { onDragStateChange(true); }}
+          onDrag={() => {
+            const now = Date.now();
+            if (now - lastHitCheck.current < 80) return;
+            lastHitCheck.current = now;
+            const rect = dragRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const hovered = findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            if (hovered !== lastHoveredId.current) { lastHoveredId.current = hovered; onHoverProfileChange(hovered); }
+          }}
+          onDragEnd={() => {
+            onDragStateChange(false);
+            onHoverProfileChange(null);
+          }}
+          className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0"
+        >
+          <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+            <SpyIcon size={56} glow />
+          </motion.div>
         </motion.div>
-        <p className="text-white/70 mt-3 font-medium" style={{ fontSize: '0.8125rem' }}>
-          Ziehe den Spion auf ein Profil
-        </p>
+        <div>
+          <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.assign_your_spy")}</p>
+          <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>{t("spy.spy_description")}</p>
+        </div>
       </div>
     );
   }
 
-  // Spy assigned – show icon + avatar + username, minimal
+  // Spy assigned – card with spy icon left, profile info right
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={spyProfile.id}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.25 }}
-        className="flex flex-col items-center py-2"
+        className="rounded-2xl p-5 flex items-center gap-4"
+        style={{ background: 'hsl(var(--card))' }}
       >
         {/* Draggable Spy Icon */}
         <motion.div
@@ -84,29 +113,27 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             onHoverProfileChange(null);
           }}
           onPointerUp={() => { if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy"); }}
-          className="cursor-grab active:cursor-grabbing touch-none select-none z-50"
+          className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0"
         >
           <motion.div animate={{ scale: [1, 1.04, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-            <SpyIcon size={100} glow />
+            <SpyIcon size={56} glow />
           </motion.div>
         </motion.div>
 
-        {/* Profile info below icon */}
-        <button
-          onClick={() => navigate(`/profile/${spyProfile.id}`)}
-          className="mt-3 flex items-center gap-2.5"
-        >
-          <div className="rounded-full ring-2 ring-white/30 p-[1px]">
-            <InstagramAvatar src={spyProfile.avatar_url} alt={spyProfile.username} fallbackInitials={spyProfile.username} size={28} />
+        {/* Profile info */}
+        <button onClick={() => navigate(`/profile/${spyProfile.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-start">
+          <div className="rounded-full ring-2 ring-primary/30 p-[1px] flex-shrink-0">
+            <InstagramAvatar src={spyProfile.avatar_url} alt={spyProfile.username} fallbackInitials={spyProfile.username} size={40} />
           </div>
-          <span className="text-white font-semibold" style={{ fontSize: '0.9375rem' }}>
-            @{spyProfile.username}
-          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-foreground truncate" style={{ fontSize: '0.9375rem' }}>@{spyProfile.username}</p>
+            <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("spy.spy_is_active", "Dein Spion ist aktiv.")}</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </button>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-// Keep backward-compatible export name
 export { SpyWidget as SpyAgentCard };

@@ -64,7 +64,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
         />
       )}
 
-      <button onClick={() => onTap(profileId)} className="native-card w-full text-start overflow-hidden">
+      <button onClick={() => onTap(profileId)} className="w-full text-start overflow-hidden rounded-2xl" style={{ background: 'hsl(var(--card-elevated))' }}>
         {/* Main profile row */}
         <div className="flex items-center gap-3 p-4">
           <div className="relative flex-shrink-0">
@@ -87,9 +87,9 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
 
-        {/* "Zuletzt gefolgt" – large cards like The Ick */}
+        {/* "Zuletzt gefolgt" */}
         {recentFollows.length > 0 && (
-          <div className="bg-primary/5 dark:bg-primary/10 px-4 py-3 rounded-b-2xl">
+          <div className="px-4 py-3 rounded-b-2xl" style={{ background: 'hsl(var(--primary) / 0.06)' }}>
             <p className="text-muted-foreground mb-2.5" style={{ fontSize: '0.8125rem' }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
@@ -97,8 +97,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="flex-shrink-0 rounded-xl bg-primary/10 dark:bg-primary/15 p-2 flex flex-col items-center gap-1.5"
-                  style={{ width: 80 }}
+                  className="flex-shrink-0 rounded-xl p-2 flex flex-col items-center gap-1.5"
+                  style={{ width: 80, background: 'hsl(var(--primary) / 0.08)' }}
                 >
                   <InstagramAvatar
                     src={event.target_avatar_url}
