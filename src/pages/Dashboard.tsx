@@ -77,7 +77,7 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ ZONE 2: Spy Bereich ═══ */}
-      <div className="px-5 -mt-24">
+      <div className="px-5 -mt-28">
         {isPro ? (
           <SpyWidget
             spyProfile={spyProfile}
