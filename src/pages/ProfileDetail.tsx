@@ -74,9 +74,8 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
 
-  const followingDirectionEvents = useMemo(() =>
-    followEvents.filter((e) => (e as Record<string, unknown>).direction === "following"),
-    [followEvents]);
+
+
 
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
 

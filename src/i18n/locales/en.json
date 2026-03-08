@@ -441,5 +441,21 @@
   "preliminary_data": "Preliminary",
   "recently_detected": "Recently detected",
   "existing_at_first_scan": "Present at first scan",
-  "initial_scan_label": "Existing"
+  "initial_scan_label": "Existing",
+  "insights_7d": {
+    "title": "LAST 7 DAYS",
+    "since_days": "ACTIVE FOR {{days}} DAYS",
+    "building_data": "Data is building up – in {{days}} days you'll have your first full report.",
+    "no_activity": "No activity in the last 7 days.",
+    "spy_watching": "Your spy keeps watching... 🕵️",
+    "not_analyzed": "{{count}} accounts could not be analyzed",
+    "new_women_followed": "New women followed",
+    "new_men_followed": "New men followed",
+    "new_follows_total": "New follows total",
+    "unfollows": "Unfollows",
+    "new_followers": "New followers",
+    "lost_followers": "Lost followers",
+    "summary": "Summary",
+    "gender_distribution": "Gender distribution of new follows: {{percent}}% female"
+  }
 }
