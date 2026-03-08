@@ -149,10 +149,10 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
               src={spyProfile.avatar_url}
               alt={spyProfile.username}
               fallbackInitials={spyProfile.username}
-              size={38}
+              size={44}
             />
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-primary-foreground truncate" style={{ fontSize: "0.8125rem" }}>
+              <p className="font-bold text-primary-foreground truncate" style={{ fontSize: "0.9375rem" }}>
                 @{spyProfile.username}
               </p>
               {(followerCount != null || followingCount != null) && (

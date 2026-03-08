@@ -147,8 +147,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
         {/* ═══ Zuletzt gefolgt – white sub-area with square images ═══ */}
         {recentFollows.length > 0 && (
-          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.95)' }}>
-            <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.15)' }}>
+            <p className="text-white/70 mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
             <div className="flex gap-1.5">
