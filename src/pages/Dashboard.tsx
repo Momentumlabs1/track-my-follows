@@ -56,7 +56,7 @@ const Dashboard = () => {
       <WelcomeDialog />
       
       {/* Zone 1 – Hero Header */}
-      <div className="bg-card rounded-b-3xl pb-6">
+      <div className="bg-card-elevated rounded-b-3xl pb-6">
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)]">
           <div className="flex items-center gap-2.5 mb-5">
             <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8" />
