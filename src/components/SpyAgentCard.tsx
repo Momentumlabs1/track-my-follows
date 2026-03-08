@@ -156,7 +156,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
                 @{spyProfile.username}
               </p>
               {(followerCount != null || followingCount != null) && (
-                <p className="text-primary-foreground/80" style={{ fontSize: "0.625rem" }}>
+                <p className="text-primary-foreground/80" style={{ fontSize: "0.75rem" }}>
                   {followerCount != null && (
                     <span>
                       <span className="font-semibold text-primary-foreground">{formatCount(followerCount)}</span> Follower
