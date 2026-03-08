@@ -1,39 +1,50 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Dashboard komplett überarbeiten — App-Look, grössere Texte, klare Trennung
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Probleme aktuell
+- Spy-Bereich und Profilkarten sehen zu ähnlich aus (alles pink, alles in Bubbles)
+- "Aktiv"-Badge ist unnötig klein und überflüssig
+- Texte zu klein für eine mobile App
+- "Zuletzt gefolgt" weisse Sub-Area kontrastiert viel zu hart
+- Alles wirkt eingequetscht, nicht wie eine native App
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Änderungen
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+#### 1. `src/pages/Dashboard.tsx` — Mehr Platz, grössere Texte
+- Header `pb-32` → `pb-40` (mehr Platz für den Spy-Bereich darunter)
+- Greeting-Text von `1.875rem` → `2.25rem` (grösser, app-like)
+- "SpySecret" Brand-Text von `0.8125rem` → `0.875rem`
+- Spy-Bereich `-mt-24` → `-mt-28` (mehr Overlap, mehr Raum)
+- Section-Header "Überwachte Accounts" grösser: von `0.75rem` → `0.8125rem`
+- Profil-Liste `space-y-3` → `space-y-4` (mehr Luft zwischen Karten)
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+#### 2. `src/components/SpyAgentCard.tsx` — Aufgeräumt, grösser
+- **"Aktiv"-Badge komplett entfernen** — überflüssig, der grüne Dot reicht
+- Spy-Label "Dein Spion" von `0.625rem` → `0.75rem`
+- "Überwachung aktiv" Text von `0.9375rem` → `1.125rem` (deutlich grösser)
+- Username im Account-Button von `0.8125rem` → `0.9375rem`
+- Stats-Text von `0.625rem` → `0.75rem`
+- Avatar im Account-Button von `38px` → `44px`
+- SpyIcon von `84px` → `72px` (etwas kleiner, damit es nicht drückt)
+- Drag-Hint "Ziehen" von `0.5625rem` → `0.6875rem`
+- Gesamtes Padding von `p-4` → `p-5`
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+#### 3. `src/components/ProfileCard.tsx` — Neutral, grösser, kein hartes Weiss
+- **Hintergrund**: Pink-Gradient bleibt, aber die "Zuletzt gefolgt" Sub-Area ändert sich von `hsl(0 0% 100% / 0.95)` → `hsl(0 0% 100% / 0.15)` (halbtransparent, verschmilzt mit Pink statt hartem Weiss-Kontrast)
+- Sub-Area Text von dark `text-muted-foreground` → `text-white/70`
+- Username von `1rem` → `1.125rem`
+- Stats von `0.75rem` → `0.8125rem`
+- Avatar von `52px` → `56px`
+- Padding von `p-4 pb-3` → `p-5 pb-4`
+- Rect-Avatar Fallback-Farbe in Sub-Area anpassen (weiss/transparent statt gradient-pink)
+- Clock/Time von `0.6875rem` → `0.75rem`
+- ChevronRight von `h-4 w-4` → `h-5 w-5`
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+| Datei | Was |
+|---|---|
+| `Dashboard.tsx` | Mehr Platz im Header, grössere Texte, mehr Spacing |
+| `SpyAgentCard.tsx` | "Aktiv" Badge weg, alle Texte grösser, Avatar grösser |
+| `ProfileCard.tsx` | Sub-Area halbtransparent statt weiss, alle Texte grösser |
 
