@@ -36,10 +36,6 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
   const otherUsername = isFollowSource ? (event.target_username || "???") : (event.username || "???");
   const otherAvatar = isFollowSource ? event.target_avatar_url : event.profile_pic_url;
 
-  // Actor = who performed the action
-  // Follow source: tracked user follows/unfollows someone → tracked is actor
-  // Follower source gained: someone follows tracked → other is actor
-  // Follower source lost: someone unfollowed tracked → other is actor
   const trackedIsActor = isFollowSource;
 
   const actorUsername = trackedIsActor ? trackedUsername : otherUsername;
@@ -62,6 +58,42 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
 
   const verb = getVerb();
 
+  // Determine which side is tracked (square pink) vs other (round)
+  const renderAvatar = (
+    username: string,
+    avatar: string | null | undefined,
+    isTracked: boolean,
+    blur: boolean
+  ) => {
+    if (isTracked) {
+      // Tracked = square, pink bg, larger
+      return (
+        <div className={`flex-shrink-0 ${blur ? "blur-md" : ""}`}>
+          <div className="rounded-xl overflow-hidden" style={{ padding: '2px', background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))' }}>
+            <InstagramAvatar
+              src={avatar}
+              alt={username}
+              fallbackInitials={username}
+              size={46}
+              className="!rounded-[10px]"
+            />
+          </div>
+        </div>
+      );
+    }
+    // Other = round, normal
+    return (
+      <div className={`flex-shrink-0 ${blur ? "blur-md" : ""}`}>
+        <InstagramAvatar
+          src={avatar}
+          alt={username}
+          fallbackInitials={username}
+          size={42}
+        />
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,58 +102,41 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
       transition={{ delay: Math.min(index * 0.02, 0.15), duration: 0.2 }}
       className="feed-row relative"
     >
-      {/* Actor avatar (left, 44px) with status dot */}
-      <div className={`relative flex-shrink-0 ${shouldBlur && !trackedIsActor ? "blur-md" : ""}`}>
-        <div className={trackedIsActor ? "avatar-ring" : ""}>
-          <InstagramAvatar
-            src={actorAvatar}
-            alt={actorUsername}
-            fallbackInitials={actorUsername}
-            size={44}
-            className={trackedIsActor ? "ring-1 ring-background" : ""}
-          />
-        </div>
-        {/* Color dot indicator */}
+      {/* Left: Actor avatar */}
+      {renderAvatar(actorUsername, actorAvatar, trackedIsActor, shouldBlur && !trackedIsActor)}
+
+      {/* Center: verb + names stacked */}
+      <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
+        {/* Top line: actor username + verb */}
+        <p className="text-[0.8125rem] leading-snug truncate">
+          <span className="font-bold text-foreground">@{actorUsername}</span>
+        </p>
+        {/* Verb as colored badge-like text */}
         <span
-          className={`absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-background ${
-            verb.isPositive ? "bg-brand-green" : "bg-destructive"
+          className={`inline-block text-[0.6875rem] font-bold mt-0.5 ${
+            verb.isPositive ? "text-brand-green" : "text-destructive"
           }`}
-        />
+        >
+          {verb.text}
+        </span>
+        {/* Target username below verb */}
+        <p className="text-[0.75rem] text-muted-foreground font-semibold truncate mt-0.5">
+          @{targetUsername}
+        </p>
       </div>
 
-      {/* Sentence: @actor verb @target */}
-      <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
-        <p className="text-[0.8125rem] leading-snug">
-          <span className="font-bold text-foreground">@{actorUsername}</span>
-          {" "}
-          <span className={`font-semibold ${verb.isPositive ? "text-brand-green" : "text-destructive"}`}>
-            {verb.text}
-          </span>
-          {" "}
-          <span className="font-bold text-foreground">@{targetUsername}</span>
-        </p>
-        <span className="text-muted-foreground text-[0.6875rem]">
+      {/* Time + unread */}
+      <div className="flex flex-col items-end flex-shrink-0 gap-1 self-start pt-0.5">
+        <span className="text-muted-foreground text-[0.625rem]">
           {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
         </span>
+        {!event.is_read && !shouldBlur && (
+          <span className="h-2 w-2 rounded-full bg-primary" />
+        )}
       </div>
 
-      {/* Target avatar (right, 32px) */}
-      <div className={`flex-shrink-0 ${shouldBlur && trackedIsActor ? "blur-md" : ""}`}>
-        <div className={!trackedIsActor ? "avatar-ring-sm" : ""}>
-          <InstagramAvatar
-            src={targetAvatar}
-            alt={targetUsername}
-            fallbackInitials={targetUsername}
-            size={32}
-            className={!trackedIsActor ? "ring-1 ring-background" : "opacity-60"}
-          />
-        </div>
-      </div>
-
-      {/* Unread dot */}
-      {!event.is_read && !shouldBlur && (
-        <span className="absolute top-2 end-3 h-2 w-2 rounded-full bg-primary" />
-      )}
+      {/* Right: Target avatar */}
+      {renderAvatar(targetUsername, targetAvatar, !trackedIsActor, shouldBlur && trackedIsActor)}
 
       {/* Paywall overlay */}
       {shouldBlur && (
