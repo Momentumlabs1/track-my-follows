@@ -57,18 +57,19 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
   if (!spyProfile) {
     return (
       <div
-        className="rounded-3xl p-6 flex items-center gap-5"
+        className="rounded-[2rem] p-7 flex items-center gap-5"
         style={{
-          background: 'linear-gradient(145deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.25))',
-          border: '1.5px solid hsl(var(--primary) / 0.3)',
-          backdropFilter: 'blur(24px)',
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(32px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
         }}
       >
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-primary-foreground" style={{ fontSize: '0.9375rem' }}>
+          <p className="font-bold text-white" style={{ fontSize: '1rem' }}>
             {t("spy.assign_your_spy")}
           </p>
-          <p className="text-primary-foreground/70 mt-1" style={{ fontSize: '0.75rem' }}>
+          <p className="text-white/60 mt-1" style={{ fontSize: '0.8125rem' }}>
             {t("spy.spy_description")}
           </p>
         </div>
@@ -83,7 +84,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0"
         >
           <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <SpyIcon size={72} glow />
+            <SpyIcon size={80} glow />
           </motion.div>
         </motion.div>
       </div>
