@@ -1,62 +1,39 @@
 
 
-## Dashboard komplett neu gestalten – 3 klar getrennte Zonen
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Was der User will
-1. **Oberer Bereich (Hero mit Name) soll PINK sein** – nicht grau, sondern ein helles/leuchtendes Pink als Hintergrund
-2. **Spy-Überwachungsbereich komplett neu denken** – weg vom überladenen Rechteck mit "SPY ÜBERWACHT", "Aktiv", "Letzter Scan", "Nächster Scan" alles reingestopft. Minimalistischer, cleaner, mehr Luft
-3. **Klare visuelle Trennung** zwischen Hero, Spy-Bereich und Profilliste
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Neues Layout-Konzept
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-```text
-┌─────────── PINK GRADIENT HERO ────────────┐
-│                                           │
-│  🔍 SpySecret                             │
-│                                           │
-│  Hey ewcwe! ❤️                            │
-│  Dein Spion ist aktiv.                    │
-│                                           │
-│         [🕵️ SPY ICON 100px]              │
-│         @saif_nassiri                     │
-│                                           │
-└───────────── rounded-b-3xl ───────────────┘
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-    gap / Abstand (24px+)
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-  DEINE PROFILE
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-┌──────────── schwarz/dunkel ───────────────┐
-│  [Avatar] @strichabi              >       │
-│  ┌── Zuletzt gefolgt ───────────────────┐ │
-└───────────────────────────────────────────┘
-```
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-### Konkrete Änderungen
-
-#### 1. `src/pages/Dashboard.tsx` – Hero wird Pink + Spy-Info integriert
-- **Hero-Hintergrund**: Von `bg-card-elevated` zu einem echtem Pink-Gradient: `linear-gradient(180deg, hsl(347 100% 45%), hsl(347 80% 30%))` – leuchtendes, warmes Pink
-- **Spy-Info IN den Hero integrieren** statt separater SpyAgentCard darunter:
-  - Logo + Name oben
-  - Greeting darunter
-  - Großer SpyIcon (100px) zentriert mit dem überwachten Username darunter
-  - Kein "SPY ÜBERWACHT" Label, kein "Aktiv" Badge, keine Scan-Zeiten – das ist die Detailseite
-- **Mehr Padding**, mehr Luft (pb-10 statt pb-6)
-- Spy-Icon bleibt draggable (tap → /spy, drag → reassign)
-- Der `SpyAgentCard`-Wrapper in Zone 2 entfällt für Pro-User – alles ist im Hero
-
-#### 2. `src/components/SpyAgentCard.tsx` – Wird zum reinen "Spy-Widget" innerhalb des Heroes
-- Nur noch das draggable Spy-Icon + Avatar + Username rendern (kein Container, kein Background)
-- Kein "SPY ÜBERWACHT" Header, kein "Aktiv" Badge, kein "Letzter/Nächster Scan"
-- Unfollow-Hint bleibt als separates Element unter dem Hero (oder als Banner)
-
-#### 3. Farbgebung
-- Hero: Kräftiges Pink `hsl(347, 100%, 45%)` → `hsl(347, 80%, 25%)` Gradient (hell nach dunkel pink)
-- Text im Hero: Weiß
-- Profile darunter: Bleiben schwarz/dunkel wie bisher
-- Großer Kontrast: Pink-Hero vs. schwarzer Rest
-
-### Dateien
-1. **`src/pages/Dashboard.tsx`** – Hero-Background auf Pink-Gradient, Spy-Content in Hero integrieren, Zone 2 vereinfachen
-2. **`src/components/SpyAgentCard.tsx`** – Radikal vereinfachen: nur Icon + Avatar + Username, kein eigener Container/Background mehr
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
