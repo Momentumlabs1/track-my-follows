@@ -72,21 +72,21 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       viewport={{ once: true }}
       className="relative will-change-transform"
     >
-      {/* Spy highlight: gradient border + glow */}
+      {/* Spy highlight: subtle neon glow border */}
       {isSpyHighlighted && (
         <>
           <div
-            className="absolute -inset-[2px] rounded-2xl pointer-events-none z-10"
+            className="absolute -inset-[1px] rounded-2xl pointer-events-none z-10"
             style={{
-              background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)))",
+              background: "linear-gradient(135deg, hsl(var(--primary) / 0.6), hsl(var(--accent) / 0.4), hsl(var(--primary) / 0.6))",
               mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               maskComposite: "exclude",
               WebkitMaskComposite: "xor",
-              padding: "2px",
+              padding: "1px",
               borderRadius: "1rem",
             }}
           />
-          <div className="absolute -inset-[2px] rounded-2xl pointer-events-none z-[9] blur-md opacity-40"
+          <div className="absolute -inset-[1px] rounded-2xl pointer-events-none z-[9] blur-lg opacity-20"
             style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}
           />
         </>
@@ -95,33 +95,60 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       {/* Drop target pulsing border */}
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[3px] rounded-2xl border-2 border-primary pointer-events-none z-10"
+          className="absolute -inset-[2px] rounded-2xl border border-primary/60 pointer-events-none z-10"
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.5, 1, 0.5] }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
       <button
         onClick={() => onTap(profileId)}
-        className={`native-card p-4 w-full text-start ${isSpyHighlighted ? "!bg-primary/[0.08] shadow-[0_0_28px_-4px_hsl(var(--primary)/0.35)]" : ""}`}
+        className="w-full text-start rounded-2xl p-5"
+        style={{
+          background: isSpyHighlighted
+            ? "hsl(var(--card) / 0.7)"
+            : "hsl(var(--card) / 0.5)",
+          backdropFilter: "blur(24px) saturate(150%)",
+          WebkitBackdropFilter: "blur(24px) saturate(150%)",
+          border: isSpyHighlighted
+            ? "none"
+            : "1px solid hsl(0 0% 100% / 0.05)",
+          boxShadow: isSpyHighlighted
+            ? "0 0 24px -8px hsl(var(--primary) / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.04)"
+            : "0 2px 12px hsl(0 0% 0% / 0.4), inset 0 1px 0 hsl(0 0% 100% / 0.03)",
+        }}
       >
         {/* Header: Avatar + Username + Last Scan */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3.5 mb-4">
           <div className="relative flex-shrink-0">
             <motion.div
               animate={isDropTarget ? { rotate: [0, -4, 4, 0] } : { rotate: 0 }}
               transition={isDropTarget ? { duration: 0.6, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
             >
-              <InstagramAvatar
-                src={profile.avatar_url}
-                alt={profile.username}
-                fallbackInitials={profile.username}
-                size={44}
-              />
+              <div
+                className="rounded-full p-[1.5px]"
+                style={{
+                  background: isSpyHighlighted
+                    ? "linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--accent) / 0.5))"
+                    : "hsl(0 0% 100% / 0.08)",
+                }}
+              >
+                <div className="rounded-full bg-card p-[1px]">
+                  <InstagramAvatar
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    fallbackInitials={profile.username}
+                    size={44}
+                  />
+                </div>
+              </div>
             </motion.div>
             {isSpyHighlighted && (
-              <div className="absolute -top-1 -right-1 z-20 bg-card rounded-full p-[2px] shadow-sm">
+              <div
+                className="absolute -top-1 -right-1 z-20 rounded-full p-[2px] shadow-sm"
+                style={{ background: "hsl(var(--card))" }}
+              >
                 <SpyIcon size={16} glow />
               </div>
             )}
@@ -129,21 +156,26 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
           <div className="flex-1 min-w-0">
             <p className="text-[14px] font-bold text-foreground truncate">@{profile.username}</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
               {t("spy.last_scan")}: {timeAgo(profile.last_scanned_at)}
             </p>
           </div>
 
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0 rtl:rotate-180" />
         </div>
 
         {/* Recently Followed Section */}
-        <div className="rounded-xl bg-primary/[0.06] border border-primary/10 p-3 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-foreground/80">
+        <div
+          className="rounded-xl p-3 mb-4"
+          style={{
+            background: "hsl(0 0% 100% / 0.03)",
+            border: "1px solid hsl(0 0% 100% / 0.05)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[10px] font-semibold text-foreground/70 uppercase tracking-wider">
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </span>
-            <span className="text-[10px] text-primary">🔍</span>
           </div>
 
           {recentFollows.length > 0 ? (
@@ -153,7 +185,10 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                 return (
                   <div key={event.id} className="flex flex-col items-center min-w-[60px]">
                     <div className="relative">
-                      <div className="w-[52px] h-[52px] rounded-xl overflow-hidden bg-muted">
+                      <div
+                        className="w-[52px] h-[52px] rounded-xl overflow-hidden"
+                        style={{ background: "hsl(var(--muted) / 0.6)" }}
+                      >
                         {event.target_avatar_url ? (
                           <img
                             src={event.target_avatar_url}
@@ -167,12 +202,18 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                         )}
                       </div>
                       {isRecent && (
-                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[7px] font-bold px-1 py-[1px] rounded-md">
+                        <span
+                          className="absolute -top-1 -right-1 text-[7px] font-bold px-1 py-[1px] rounded-md"
+                          style={{
+                            background: "hsl(var(--primary))",
+                            color: "hsl(var(--primary-foreground))",
+                          }}
+                        >
                           {t("events.new_badge", "NEU")}
                         </span>
                       )}
                     </div>
-                    <span className="text-[9px] text-muted-foreground mt-1 truncate max-w-[60px] text-center">
+                    <span className="text-[9px] text-muted-foreground/60 mt-1 truncate max-w-[60px] text-center">
                       @{event.target_username}
                     </span>
                   </div>
@@ -180,31 +221,46 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               })}
             </div>
           ) : (
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground/50">
               {t("profile_card.no_new_follows", "Keine neuen Follows seit dem letzten Scan")}
             </p>
           )}
         </div>
 
-        {/* Gender Bar */}
+        {/* Gender Bar – thinner, cleaner */}
         {genderBar && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {genderBar.loading ? (
               <div className="flex items-center gap-1.5">
-                <Loader2 className="h-2.5 w-2.5 animate-spin text-muted-foreground" />
-                <span className="text-[9px] text-muted-foreground">{t("gender_analysis_running")}</span>
+                <Loader2 className="h-2.5 w-2.5 animate-spin text-muted-foreground/50" />
+                <span className="text-[9px] text-muted-foreground/50">{t("gender_analysis_running")}</span>
               </div>
             ) : (
               <>
-                <div className="flex h-1.5 flex-1 rounded-full overflow-hidden bg-muted">
-                  <div className="h-full bg-primary" style={{ width: `${genderBar.fPct}%` }} />
-                  <div className="h-full bg-blue-400" style={{ width: `${genderBar.mPct}%` }} />
+                <div
+                  className="flex h-[3px] flex-1 rounded-full overflow-hidden"
+                  style={{ background: "hsl(0 0% 100% / 0.06)" }}
+                >
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${genderBar.fPct}%`,
+                      background: "linear-gradient(90deg, hsl(330 60% 55%), hsl(340 70% 60%))",
+                    }}
+                  />
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${genderBar.mPct}%`,
+                      background: "linear-gradient(90deg, hsl(200 70% 50%), hsl(185 65% 48%))",
+                    }}
+                  />
                 </div>
-                <span className="text-[9px] text-muted-foreground tabular-nums flex-shrink-0">
-                  ♀{genderBar.fPct}% ♂{genderBar.mPct}%
-                  {genderBar.uPct > 0 && ` ?${genderBar.uPct}%`}
+                <span className="text-[8px] text-muted-foreground/50 tabular-nums flex-shrink-0 font-medium">
+                  {genderBar.fPct}% · {genderBar.mPct}%
+                  {genderBar.uPct > 0 && ` · ${genderBar.uPct}%`}
                 </span>
-                {!genderBar.baselineComplete && <span className="text-[8px] text-muted-foreground/60">~</span>}
+                {!genderBar.baselineComplete && <span className="text-[8px] text-muted-foreground/40">~</span>}
               </>
             )}
           </div>

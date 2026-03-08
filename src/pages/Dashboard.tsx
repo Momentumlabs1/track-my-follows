@@ -75,13 +75,13 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
-      
+
       <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 drop-shadow-md" />
-            <span className="text-lg font-extrabold text-foreground">
-              Spy<span className="text-primary">Secret</span>
+            <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8 drop-shadow-md" />
+            <span className="text-[15px] font-extrabold text-foreground">
+              Spy<span style={{ color: "hsl(var(--primary))" }}>Secret</span>
             </span>
           </div>
         </div>
@@ -90,11 +90,11 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mb-6"
+          className="mb-5"
         >
-          <h1 className="text-2xl font-extrabold text-foreground">Hey {displayName}!</h1>
+          <h1 className="text-xl font-bold text-foreground">Hey {displayName}!</h1>
           {profiles.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-[12px] text-muted-foreground/60 mt-0.5">
               {t("simple.tracking_count", { count: profiles.length })}
             </p>
           )}
@@ -143,7 +143,7 @@ const Dashboard = () => {
 
       {/* Profile Cards */}
       {profiles.length > 0 && (
-        <div className="px-4 py-3 space-y-3">
+        <div className="px-4 pt-2 pb-3 space-y-3.5">
           <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard
@@ -160,9 +160,13 @@ const Dashboard = () => {
           ))}
           <button
             onClick={() => navigate("/add-profile")}
-            className="w-full py-3 rounded-xl border border-dashed border-muted-foreground/20 text-muted-foreground text-[13px] font-medium hover:bg-muted/50 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl text-muted-foreground/50 text-[12px] font-medium transition-colors flex items-center justify-center gap-2"
+            style={{
+              border: "1px dashed hsl(0 0% 100% / 0.08)",
+              background: "hsl(var(--card) / 0.2)",
+            }}
           >
-            <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
+            <Plus className="h-3.5 w-3.5" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
           </button>
         </div>
       )}
