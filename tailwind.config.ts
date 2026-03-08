@@ -60,6 +60,7 @@ export default {
           yellow: "hsl(var(--brand-yellow))",
           blue: "hsl(var(--brand-blue))",
         },
+        "card-elevated": "hsl(var(--card-elevated))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

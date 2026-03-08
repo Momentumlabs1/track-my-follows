@@ -4,81 +4,83 @@
 
 @layer base {
   :root {
-    --background: 0 0% 96%;
-    --foreground: 0 0% 0%;
-    --card: 0 0% 93%;
-    --card-foreground: 0 0% 0%;
-    --card-elevated: 0 0% 90%;
+    /* ═══ LIGHT MODE — Clean, bright, social ═══ */
+    --background: 0 0% 97%;
+    --foreground: 0 0% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+    --card-elevated: 0 0% 96%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 8%;
     --primary: 347 100% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 30%;
     --muted: 0 0% 94%;
     --muted-foreground: 0 0% 45%;
     --accent: 347 100% 59%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 4 100% 59%;
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
     --ring: 347 100% 59%;
     --radius: 1rem;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
+    --sidebar-foreground: 0 0% 8%;
     --sidebar-primary: 347 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 94%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 90%;
+    --sidebar-accent-foreground: 0 0% 8%;
+    --sidebar-border: 0 0% 92%;
     --sidebar-ring: 347 100% 59%;
-    /* Brand tokens */
+    /* Brand */
     --brand-pink: 347 100% 59%;
     --brand-rose: 345 100% 71%;
     --brand-green: 142 71% 45%;
-    --brand-red: 4 100% 59%;
-    --brand-yellow: 50 100% 52%;
-    --brand-blue: 197 100% 67%;
+    --brand-red: 4 90% 58%;
+    --brand-yellow: 45 100% 51%;
+    --brand-blue: 210 100% 56%;
     --surface-elevated: 0 0% 100%;
-    --surface-glass: 0 0% 100%;
-    --text-secondary: 0 0% 56%;
-    --text-tertiary: 0 0% 30%;
+    --text-secondary: 0 0% 45%;
+    --text-tertiary: 0 0% 80%;
+    --hairline: 0 0% 0% / 0.06;
   }
 
   .dark {
+    /* ═══ DARK MODE — Premium noir ═══ */
     --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --foreground: 0 0% 98%;
     --card: 0 0% 7%;
-    --card-foreground: 0 0% 100%;
-    --card-elevated: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+    --card-elevated: 0 0% 11%;
     --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 98%;
     --primary: 347 100% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 80%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 56%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 75%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 50%;
     --accent: 347 100% 59%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 4 100% 59%;
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
     --ring: 347 100% 59%;
     --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 347 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-accent: 0 0% 11%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14%;
     --sidebar-ring: 347 100% 59%;
-    --surface-elevated: 0 0% 10%;
-    --surface-glass: 0 0% 4%;
-    --text-secondary: 0 0% 56%;
-    --text-tertiary: 0 0% 29%;
+    --surface-elevated: 0 0% 11%;
+    --text-secondary: 0 0% 50%;
+    --text-tertiary: 0 0% 20%;
+    --hairline: 0 0% 100% / 0.08;
   }
 }
 
@@ -102,31 +104,13 @@
     font-family: 'IBM Plex Sans Arabic', -apple-system, system-ui, sans-serif;
   }
 
-  /* Hide scrollbars for native feel */
-  ::-webkit-scrollbar {
-    display: none;
-  }
-  * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  ::-webkit-scrollbar { display: none; }
+  * { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer utilities {
-  .gradient-bg {
-    background: linear-gradient(135deg, hsl(347 100% 59%), hsl(345 100% 71%));
-  }
-
   .gradient-pink {
     background: linear-gradient(135deg, hsl(347 100% 59%), hsl(345 100% 71%));
-  }
-
-  .gradient-danger {
-    background: linear-gradient(135deg, hsl(4 100% 59%), hsl(347 100% 59%));
-  }
-
-  .gradient-safe {
-    background: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 60% 40%));
   }
 
   .gradient-text {
@@ -134,13 +118,9 @@
     background-image: linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)));
   }
 
-  /* Native card — NO borders, NO shadows in dark. Separation via color only. */
+  /* ─── Cards ─── */
   .native-card {
     @apply rounded-2xl;
-    background: hsl(var(--card));
-  }
-
-  .dark .native-card {
     background: hsl(var(--card));
   }
 
@@ -149,128 +129,74 @@
     background: hsl(var(--card-elevated));
   }
 
-  /* iOS-style list cell */
+  /* ─── List cells ─── */
   .native-cell {
-    @apply flex items-center gap-3 px-5 py-4;
-    border-bottom: 0.5px solid hsl(var(--text-tertiary) / 0.15);
+    @apply flex items-center gap-3;
+    padding: 1rem 1.25rem;
+    border-bottom: 0.5px solid hsl(var(--hairline));
   }
+  .native-cell:last-child { border-bottom: none; }
 
-  .native-cell:last-child {
-    border-bottom: none;
+  /* ─── Feed rows (Instagram notification style) ─── */
+  .feed-row {
+    @apply flex items-center gap-3;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 0.5px solid hsl(var(--hairline));
   }
+  .feed-row:last-child { border-bottom: none; }
 
+  /* ─── Avatar ring ─── */
   .avatar-ring {
-    @apply rounded-full p-[2px];
+    @apply rounded-full;
+    padding: 2px;
     background: linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)));
   }
 
-  .avatar-ring-inactive {
-    @apply rounded-full p-[2px];
-    background: hsl(var(--muted));
+  /* ─── Tags ─── */
+  .tag {
+    @apply inline-flex items-center gap-1 rounded-full font-semibold px-2.5 py-1;
+    font-size: 0.75rem;
+  }
+  .tag-pink { @apply tag; background: hsl(var(--brand-pink) / 0.12); color: hsl(var(--brand-pink)); }
+  .tag-red { @apply tag; background: hsl(var(--brand-red) / 0.12); color: hsl(var(--brand-red)); }
+  .tag-green { @apply tag; background: hsl(var(--brand-green) / 0.12); color: hsl(var(--brand-green)); }
+  .tag-yellow { @apply tag; background: hsl(var(--brand-yellow) / 0.12); color: hsl(var(--brand-yellow)); }
+  .tag-muted { @apply tag bg-muted text-muted-foreground; }
+
+  /* ─── Section headers ─── */
+  .section-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(var(--text-secondary));
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
+  /* ─── Buttons ─── */
   .pill-btn {
     @apply inline-flex items-center gap-2 rounded-xl font-semibold transition-all duration-200;
   }
-
   .pill-btn-primary {
     @apply pill-btn text-primary-foreground;
     background: hsl(var(--primary));
   }
 
-  .pill-btn-ghost {
-    @apply pill-btn text-muted-foreground;
-    background: hsl(var(--card-elevated));
-  }
+  /* ─── Touch targets ─── */
+  .touch-target { @apply min-h-[44px] flex items-center; }
 
-  .tag {
-    @apply inline-flex items-center gap-1 rounded-full font-semibold px-2.5 py-1;
-    font-size: 0.8125rem;
-  }
-
-  .tag-pink {
-    @apply tag;
-    background: hsl(var(--brand-pink) / 0.15);
-    color: hsl(var(--brand-pink));
-  }
-
-  .tag-red {
-    @apply tag;
-    background: hsl(var(--brand-red) / 0.15);
-    color: hsl(var(--brand-red));
-  }
-
-  .tag-green {
-    @apply tag;
-    background: hsl(var(--brand-green) / 0.15);
-    color: hsl(var(--brand-green));
-  }
-
-  .tag-yellow {
-    @apply tag;
-    background: hsl(var(--brand-yellow) / 0.15);
-    color: hsl(var(--brand-yellow));
-  }
-
-  .tag-muted {
-    @apply tag bg-muted text-muted-foreground;
-  }
-
-  .section-header {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: hsl(var(--text-secondary));
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .touch-target {
-    @apply min-h-[44px] flex items-center;
-  }
-
-  /* Mono numbers */
+  /* ─── Mono numbers ─── */
   .font-mono-num {
     font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
   }
-
-  /* Feed event row — hairline separator, no card */
-  .feed-row {
-    @apply flex items-center gap-3 py-4;
-    padding-inline: 1.25rem;
-    border-bottom: 0.5px solid hsl(var(--text-tertiary) / 0.15);
-  }
-
-  .feed-row:last-child {
-    border-bottom: none;
-  }
 }
 
-/* Legal page content styling */
-.legal-content h2 {
-  @apply text-base font-extrabold text-foreground mt-6 mb-2;
-}
-.legal-content h3 {
-  @apply text-sm font-bold text-foreground mt-4 mb-1.5;
-}
-.legal-content p {
-  @apply text-muted-foreground leading-relaxed mb-2;
-  font-size: 0.8125rem;
-}
-.legal-content ul {
-  @apply list-disc list-inside space-y-1 text-muted-foreground leading-relaxed mb-3;
-  font-size: 0.8125rem;
-}
-.legal-content a {
-  @apply text-primary underline break-all;
-}
-.legal-content table {
-  @apply w-full text-muted-foreground mb-3 border border-border/30 rounded-xl overflow-hidden;
-  font-size: 0.8125rem;
-}
-.legal-content th {
-  @apply text-start p-2 bg-secondary/50 font-semibold text-foreground;
-}
-.legal-content td {
-  @apply p-2 border-t border-border/20;
-}
+/* ─── Legal content ─── */
+.legal-content h2 { @apply text-base font-extrabold text-foreground mt-6 mb-2; }
+.legal-content h3 { @apply text-sm font-bold text-foreground mt-4 mb-1.5; }
+.legal-content p { @apply text-muted-foreground leading-relaxed mb-2; font-size: 0.875rem; }
+.legal-content ul { @apply list-disc list-inside space-y-1 text-muted-foreground leading-relaxed mb-3; font-size: 0.875rem; }
+.legal-content a { @apply text-primary underline break-all; }
+.legal-content table { @apply w-full text-muted-foreground mb-3 border border-border/30 rounded-xl overflow-hidden; font-size: 0.875rem; }
+.legal-content th { @apply text-start p-2 bg-secondary/50 font-semibold text-foreground; }
+.legal-content td { @apply p-2 border-t border-border/20; }
