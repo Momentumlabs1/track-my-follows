@@ -80,15 +80,16 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     >
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[2px] rounded-2xl border-2 border-primary/60 pointer-events-none z-10"
-          animate={{ opacity: [0.5, 1, 0.5] }}
+          className="absolute -inset-[2px] rounded-2xl border-2 border-primary pointer-events-none z-10"
+          animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
       )}
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden rounded-2xl border border-border bg-card"
+        className="w-full text-start overflow-hidden rounded-2xl border-b border-border/50"
+        style={{ background: 'transparent' }}
       >
         {/* ═══ Profile Header ═══ */}
         <div className="p-5 pb-4">
@@ -153,7 +154,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
         {/* ═══ Zuletzt gefolgt – neutral sub-area ═══ */}
         {recentFollows.length > 0 && (
-          <div className="mx-2 mb-2 rounded-xl px-3 py-3 bg-muted">
+          <div className="mx-0 mb-0 px-3 py-3 border-t border-border/30">
             <p className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
