@@ -72,7 +72,14 @@ export function SpyAgentCard({
         animate={{ opacity: 1, scale: 1 }}
         className="mx-4 mb-4"
       >
-        <div className="rounded-2xl border border-dashed border-primary/30 bg-card/60 p-6 text-center">
+        <div
+          className="rounded-2xl border border-dashed border-primary/20 p-6 text-center"
+          style={{
+            background: "hsl(var(--card) / 0.4)",
+            backdropFilter: "blur(20px) saturate(150%)",
+            WebkitBackdropFilter: "blur(20px) saturate(150%)",
+          }}
+        >
           <motion.div
             className="flex justify-center mb-3"
             animate={{ rotate: [0, 10, -10, 0] }}
@@ -88,20 +95,23 @@ export function SpyAgentCard({
   }
 
   return (
-    <div className="mx-4 mb-4">
+    <div className="mx-4 mb-5">
       {/* Section header */}
-      <div className="flex items-center gap-1.5 mb-2 px-1">
-        <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">
+      <div className="flex items-center gap-1.5 mb-2.5 px-1">
+        <span
+          className="text-[9px] font-semibold uppercase tracking-[0.18em]"
+          style={{ color: "hsl(var(--neon-cyan, 185 70% 48%) / 0.7)" }}
+        >
           {t("spy.spy_watching")}
         </span>
         <div className="ms-auto flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[10px] font-semibold text-green-400">{t("spy.active")}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-green-400 status-dot-pulse" />
+          <span className="text-[9px] font-medium text-green-400/80">{t("spy.active")}</span>
         </div>
       </div>
 
       <div className="flex items-stretch gap-3 min-h-[88px]">
-        {/* Card – profile info (simplified) */}
+        {/* Card – profile info with glassmorphism */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{
@@ -109,7 +119,14 @@ export function SpyAgentCard({
             scale: isDragging ? 0.96 : 1,
           }}
           transition={{ duration: 0.25 }}
-          className="flex-1 rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.12)]"
+          className="flex-1 rounded-2xl p-4"
+          style={{
+            background: "hsl(var(--card) / 0.5)",
+            backdropFilter: "blur(24px) saturate(150%)",
+            WebkitBackdropFilter: "blur(24px) saturate(150%)",
+            border: "1px solid hsl(var(--primary) / 0.1)",
+            boxShadow: "0 0 20px -6px hsl(var(--primary) / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.03)",
+          }}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -123,31 +140,38 @@ export function SpyAgentCard({
                 onClick={() => navigate(`/profile/${spyProfile.id}`)}
                 className="flex items-center gap-3 w-full text-start rounded-xl p-2 -mx-2 hover:bg-primary/5 transition-colors"
               >
-                <div className="ring-2 ring-primary/40 rounded-full p-[2px]">
-                  <InstagramAvatar
-                    src={spyProfile.avatar_url}
-                    alt={spyProfile.username}
-                    fallbackInitials={spyProfile.username}
-                    size={48}
-                  />
+                <div
+                  className="rounded-full p-[1.5px]"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--accent) / 0.5))",
+                  }}
+                >
+                  <div className="rounded-full bg-card p-[1px]">
+                    <InstagramAvatar
+                      src={spyProfile.avatar_url}
+                      alt={spyProfile.username}
+                      fallbackInitials={spyProfile.username}
+                      size={46}
+                    />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                     {t("spy.last_scan")}: {timeAgo(spyProfile.last_scanned_at)}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground/70">
                     {t("spy.next_scan")}: {nextScanIn(spyProfile.last_scanned_at)}
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0 rtl:rotate-180" />
               </button>
             </motion.div>
           </AnimatePresence>
 
           {/* Unfollow Hint */}
           {(spyProfile.pending_unfollow_hint ?? 0) > 0 && (
-            <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3">
+            <div className="mt-3 rounded-xl border border-destructive/15 bg-destructive/5 p-3">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-sm">⚠️</span>
                 <span className="text-[12px] font-bold text-destructive">
@@ -159,7 +183,7 @@ export function SpyAgentCard({
               </p>
               <button
                 onClick={() => navigate(`/profile/${spyProfile.id}`)}
-                className="w-full py-2 rounded-lg bg-destructive/20 text-destructive text-[11px] font-bold"
+                className="w-full py-2 rounded-lg bg-destructive/15 text-destructive text-[11px] font-bold"
               >
                 🔍 {t("spy.reveal_now")}
               </button>
@@ -167,24 +191,34 @@ export function SpyAgentCard({
           )}
         </motion.div>
 
-        {/* Spy Dock – stretches to match left card */}
+        {/* Spy Dock – subtler, integrated look */}
         <div className="flex-shrink-0 flex items-stretch">
           <div
-            className={`relative rounded-2xl border-2 transition-all duration-300 flex items-center justify-center ${
+            className={`relative rounded-2xl transition-all duration-300 flex items-center justify-center ${
               isDragging
-                ? "border-dashed border-primary/30 bg-primary/5"
-                : "border-primary/20 bg-primary/[0.08]"
-            } p-2 shadow-[0_0_16px_-4px_hsl(var(--primary)/0.25)]`}
-            style={{ width: 76 }}
+                ? "border border-dashed border-primary/20"
+                : "border border-primary/10"
+            } p-2`}
+            style={{
+              width: 72,
+              background: isDragging
+                ? "hsl(var(--primary) / 0.03)"
+                : "hsl(var(--card) / 0.3)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow: isDragging
+                ? "none"
+                : "0 0 12px -4px hsl(var(--primary) / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.02)",
+            }}
           >
             {/* Empty dock placeholder when dragging */}
             {isDragging && (
               <motion.div
                 className="absolute inset-0 flex items-center justify-center"
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                animate={{ opacity: [0.2, 0.4, 0.2] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <div className="w-10 h-10 rounded-full border-2 border-dashed border-primary/30" />
+                <div className="w-10 h-10 rounded-full border border-dashed border-primary/20" />
               </motion.div>
             )}
 
@@ -198,9 +232,9 @@ export function SpyAgentCard({
               whileDrag={{
                 scale: 1.12,
                 zIndex: 9999,
-                filter: "drop-shadow(0 0 18px hsl(var(--primary) / 0.5))",
+                filter: "drop-shadow(0 0 14px hsl(var(--primary) / 0.4))",
               }}
-              whileHover={{ scale: 1.08 }}
+              whileHover={{ scale: 1.06 }}
               onPointerDown={(e) => {
                 tapStartTime.current = Date.now();
                 didDrag.current = false;
@@ -241,10 +275,10 @@ export function SpyAgentCard({
               style={{ width: "100%", height: "100%" }}
             >
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
+                animate={{ scale: [1, 1.04, 1] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                <SpyIcon size={56} glow />
+                <SpyIcon size={48} glow />
               </motion.div>
             </motion.div>
           </div>
