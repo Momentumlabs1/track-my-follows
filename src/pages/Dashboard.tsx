@@ -64,7 +64,7 @@ const Dashboard = () => {
       >
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)]">
           {/* Brand name centered */}
-          <p className="text-center font-bold text-white/80 mb-3" style={{ fontSize: '0.8125rem', letterSpacing: '0.05em' }}>
+          <p className="text-center font-bold text-white/80 mb-3" style={{ fontSize: '0.875rem', letterSpacing: '0.05em' }}>
             SpySecret
           </p>
           {/* Greeting centered, no heart */}
