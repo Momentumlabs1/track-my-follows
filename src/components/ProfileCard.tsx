@@ -91,7 +91,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{t("profile_detail.tab_following", "Zuletzt gefolgt")}</p>
             <div className="flex -space-x-2">
               {recentFollows.map((event) => (
-                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-primary/10 dark:ring-primary/20 rounded-full">
+                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-card rounded-full">
                   <InstagramAvatar src={event.target_avatar_url} alt={event.target_username || ""} fallbackInitials={event.target_username || "?"} size={40} />
                 </div>
               ))}
