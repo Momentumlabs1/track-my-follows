@@ -131,8 +131,12 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
 
+  const followingDirectionEvents = useMemo(() =>
+    followEvents.filter((e) => (e as Record<string, unknown>).direction === "following"),
+    [followEvents]);
+
   const suspicionAnalysis = analyzeSuspicion(
-    followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
+    followingDirectionEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
   );
 
   const weeklyScores = useMemo(() => Array.from({ length: 4 }, (_, i) => {
