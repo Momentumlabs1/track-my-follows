@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Lock } from "lucide-react";
-import { SpyAgentCard } from "@/components/SpyAgentCard";
+import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -55,56 +55,90 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
       
-      {/* Zone 1 – Hero Header */}
-      <div className="bg-card-elevated rounded-b-3xl pb-6">
+      {/* Zone 1 – Pink Hero with integrated Spy */}
+      <div
+        className="rounded-b-3xl pb-10"
+        style={{
+          background: 'linear-gradient(180deg, hsl(347 100% 45%), hsl(347 80% 28%))',
+        }}
+      >
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)]">
-          <div className="flex items-center gap-2.5 mb-5">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 mb-6">
             <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8" />
-            <span className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
-              Spy<span className="text-primary">Secret</span>
+            <span className="font-bold text-white" style={{ fontSize: '1.125rem' }}>
+              Spy<span className="text-white/80">Secret</span>
             </span>
           </div>
+
+          {/* Greeting */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-foreground" style={{ fontSize: '1.75rem', letterSpacing: '-0.03em' }}>
+            <h1 className="font-bold text-white" style={{ fontSize: '1.75rem', letterSpacing: '-0.03em' }}>
               Hey {displayName}! ❤️
             </h1>
             {spyProfile && (
-              <p className="text-muted-foreground mt-1" style={{ fontSize: '0.875rem' }}>
+              <p className="text-white/70 mt-1" style={{ fontSize: '0.875rem' }}>
                 {t("spy.spy_is_active", "Dein Spion ist aktiv.")}
               </p>
             )}
           </motion.div>
         </div>
-      </div>
 
-      {/* Zone 2 – Spy Überwachungs-Bereich */}
-      <div className="px-5 -mt-2">
-        {isPro ? (
-          <SpyAgentCard spyProfile={spyProfile} onDragMoveSpy={handleMoveSpy} isDragging={isDragging} onDragStateChange={setIsDragging} onHoverProfileChange={setHoveredProfileId} />
-        ) : (
-          <div className="mt-4">
-            <button onClick={() => { haptic.light(); showPaywall("spy_agent"); }} className="w-full text-start relative overflow-hidden rounded-2xl">
-              <div className="native-card p-4 opacity-30 blur-[2px] pointer-events-none">
-                <div className="flex items-center gap-1.5 mb-2"><span className="section-header">{t("spy.spy_watching")}</span></div>
-                <div className="flex items-center gap-3"><div className="h-11 w-11 rounded-full bg-muted" /><div className="flex-1"><div className="h-3 w-20 rounded bg-muted mb-1" /><div className="h-3 w-28 rounded bg-muted/60" /></div></div>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <SpyIcon size={44} />
-                  <div>
-                    <p className="font-semibold text-foreground flex items-center gap-1.5" style={{ fontSize: '0.875rem' }}><Lock className="h-4 w-4 text-primary" />{t("paywall.unlock_spy_agent", "Spy Agent freischalten")}</p>
-                    <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_description")}</p>
+        {/* Spy Widget – centered in hero */}
+        <div className="mt-6">
+          {isPro ? (
+            <SpyWidget
+              spyProfile={spyProfile}
+              onDragMoveSpy={handleMoveSpy}
+              isDragging={isDragging}
+              onDragStateChange={setIsDragging}
+              onHoverProfileChange={setHoveredProfileId}
+            />
+          ) : (
+            <div className="flex flex-col items-center py-4">
+              <button
+                onClick={() => { haptic.light(); showPaywall("spy_agent"); }}
+                className="flex flex-col items-center gap-3"
+              >
+                <div className="relative">
+                  <SpyIcon size={80} />
+                  <div className="absolute -bottom-1 -right-1 bg-white/20 backdrop-blur-sm rounded-full p-1">
+                    <Lock className="h-4 w-4 text-white" />
                   </div>
                 </div>
-              </div>
-            </button>
-          </div>
-        )}
+                <p className="text-white/80 font-medium" style={{ fontSize: '0.8125rem' }}>
+                  {t("paywall.unlock_spy_agent", "Spy Agent freischalten")}
+                </p>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Unfollow hint – outside hero as banner */}
+      {spyProfile && (spyProfile.pending_unfollow_hint ?? 0) > 0 && (
+        <div className="px-5 mt-4">
+          <button
+            onClick={() => navigate(`/profile/${spyProfile.id}`)}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl"
+            style={{ background: 'hsl(347 80% 20% / 0.5)' }}
+          >
+            <span>⚠️</span>
+            <div className="flex-1 text-start">
+              <span className="font-semibold text-foreground" style={{ fontSize: '0.8125rem' }}>
+                ~{spyProfile.pending_unfollow_hint} {t("spy.unfollows_detected")}
+              </span>
+            </div>
+            <span className="text-primary font-semibold" style={{ fontSize: '0.8125rem' }}>
+              🔍 {t("spy.reveal_now")}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Zone 3 – Deine Profile */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-5 pb-3 space-y-3">
+        <div className="px-5 pt-6 pb-3 space-y-3">
           <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
