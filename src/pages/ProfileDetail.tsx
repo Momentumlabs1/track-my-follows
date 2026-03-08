@@ -131,32 +131,36 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
 
+  const followingDirectionEvents = useMemo(() =>
+    followEvents.filter((e) => (e as Record<string, unknown>).direction === "following"),
+    [followEvents]);
+
   const suspicionAnalysis = analyzeSuspicion(
-    followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
+    followingDirectionEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
   );
 
   const weeklyScores = useMemo(() => Array.from({ length: 4 }, (_, i) => {
     const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
     const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekEvents = followEvents.filter((e) => {
+    const weekEvents = followingDirectionEvents.filter((e) => {
       const d = new Date(e.detected_at);
       return d >= weekStart && d < weekEnd;
     });
     return analyzeSuspicion(weekEvents, [], profile?.follower_count ?? 0, profile?.following_count ?? 0).overallScore;
-  }).reverse(), [followEvents, profile]);
+  }).reverse(), [followingDirectionEvents, profile]);
 
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
 
   // Event lists
   const newFollowEvents = useMemo(() =>
     followEvents
-      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial)
+      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial && (e as Record<string, unknown>).direction === "following")
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
   const initialFollowEvents = useMemo(() =>
     followEvents
-      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true)
+      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true && (e as Record<string, unknown>).direction === "following")
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
@@ -174,7 +178,7 @@ const ProfileDetail = () => {
 
   const unfollowedByThem = useMemo(() =>
     followEvents
-      .filter((e) => e.event_type === "unfollow" || e.event_type === "unfollowed")
+      .filter((e) => (e.event_type === "unfollow" || e.event_type === "unfollowed") && (e as Record<string, unknown>).direction === "following")
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
@@ -396,15 +400,15 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
-      {/* Gender Breakdown */}
-      {suspicionAnalysis.genderStats.total > 0 && (
+      {/* Gender Breakdown - only show for profiles that follow others */}
+      {(profile.following_count ?? 0) > 0 && suspicionAnalysis.genderStats.total > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
           <GenderCard genderStats={suspicionAnalysis.genderStats} profile={profile as unknown as Record<string, unknown>} />
         </motion.div>
       )}
 
-      {/* Suspicion Meter */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
+      {/* Suspicion Meter - only show for profiles that follow others */}
+      {(profile.following_count ?? 0) > 0 && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
         {(!canUseStats || (!hasSpy && isPro)) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             {!isPro ? (
@@ -421,7 +425,7 @@ const ProfileDetail = () => {
         <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
           <SuspicionMeter analysis={suspicionAnalysis} weeklyScores={weeklyScores} />
         </div>
-      </motion.div>
+      </motion.div>}
 
       {/* Scrollable Tab Chips */}
       <div ref={tabsRef} className="px-4 mb-4 overflow-x-auto scrollbar-none">
