@@ -134,7 +134,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
               className="rounded-full p-[4px]"
               style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(347 100% 75%), hsl(var(--primary)))' }}
             >
-              <div className="rounded-full overflow-hidden ring-[3px]" style={{ ringColor: 'rgba(0,0,0,0.65)' }}>
+              <div className="rounded-full overflow-hidden" style={{ boxShadow: '0 0 0 3px rgba(0,0,0,0.65)' }}>
                 <InstagramAvatar
                   src={spyProfile.avatar_url}
                   alt={spyProfile.username}
