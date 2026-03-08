@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -40,7 +40,6 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
   const isDropTarget = isHovered === true;
   const isSpyHighlighted = !isDragging && hasSpy;
 
-  // Get last 3 new follows (non-initial)
   const recentFollows = useMemo(() => {
     return followEvents
       .filter(e => e.event_type === "follow" && !e.is_initial)
@@ -48,41 +47,16 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       .slice(0, 4);
   }, [followEvents]);
 
-
-
-
   return (
     <motion.div
       data-profile-id={profile.id}
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
-      animate={{
-        scale: isDropTarget ? 1.03 : 1,
-      }}
+      animate={{ scale: isDropTarget ? 1.03 : 1 }}
       transition={{ delay: index * 0.05, type: "spring", stiffness: 300, damping: 25 }}
       viewport={{ once: true }}
       className="relative will-change-transform"
     >
-      {/* Spy highlight: gradient border + glow */}
-      {isSpyHighlighted && (
-        <>
-          <div
-            className="absolute -inset-[2px] rounded-2xl pointer-events-none z-10"
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)))",
-              mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-              maskComposite: "exclude",
-              WebkitMaskComposite: "xor",
-              padding: "2px",
-              borderRadius: "1rem",
-            }}
-          />
-          <div className="absolute -inset-[2px] rounded-2xl pointer-events-none z-[9] blur-md opacity-40"
-            style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}
-          />
-        </>
-      )}
-
       {/* Drop target pulsing border */}
       {isDropTarget && (
         <motion.div
@@ -95,10 +69,10 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className={`native-card p-4 w-full text-start ${isSpyHighlighted ? "!bg-primary/[0.08] shadow-[0_0_28px_-4px_hsl(var(--primary)/0.35)]" : ""}`}
+        className="native-card p-5 w-full text-start"
       >
         {/* Header: Avatar + Username + Last Scan */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
             <motion.div
               animate={isDropTarget ? { rotate: [0, -4, 4, 0] } : { rotate: 0 }}
@@ -112,7 +86,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               />
             </motion.div>
             {isSpyHighlighted && (
-              <div className="absolute -top-1 -right-1 z-20 bg-card rounded-full p-[2px] shadow-sm">
+              <div className="absolute -top-1 -right-1 z-20">
                 <SpyIcon size={16} glow />
               </div>
             )}
@@ -120,12 +94,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-[14px] font-bold text-foreground truncate">@{profile.username}</p>
+              <p className="font-bold text-foreground truncate" style={{ fontSize: '1rem' }}>@{profile.username}</p>
               {profile.is_private && (
-                <span className="text-[10px] bg-destructive/15 text-destructive font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0">🔒</span>
+                <span className="bg-destructive/15 text-destructive font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0" style={{ fontSize: '0.6875rem' }}>🔒</span>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
               {profile.is_private
                 ? t("private_frozen_short", "Tracking eingefroren")
                 : `${t("spy.last_scan")}: ${timeAgo(profile.last_scanned_at)}`
@@ -133,52 +107,32 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             </p>
           </div>
 
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
 
-        {/* Recently Followed Section */}
-        <div className="rounded-xl bg-primary/[0.06] border border-primary/10 p-3 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-foreground/80">
+        {/* Recently Followed */}
+        {recentFollows.length > 0 && (
+          <div className="mt-4 pt-4" style={{ borderTop: '0.5px solid hsl(var(--text-tertiary) / 0.15)' }}>
+            <p className="section-header mb-3" style={{ fontSize: '0.6875rem' }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
-            </span>
-            <span className="text-[10px] text-primary">🔍</span>
-          </div>
-
-          {recentFollows.length > 0 ? (
-            <div className="grid grid-cols-4 gap-2">
-              {recentFollows.map((event) => {
-                const isRecent = Date.now() - new Date(event.detected_at).getTime() < 24 * 60 * 60 * 1000;
-                return (
-                  <div key={event.id} className="flex flex-col items-center min-w-0">
-                    <div className="relative h-[52px] w-[52px] rounded-xl bg-muted/60 overflow-hidden">
-                      <InstagramAvatar
-                        src={event.target_avatar_url}
-                        alt={event.target_username || ""}
-                        fallbackInitials={event.target_username || "?"}
-                        size={52}
-                        className="!rounded-xl !object-contain"
-                      />
-                      {isRecent && (
-                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[7px] font-bold px-1 py-[1px] rounded-md">
-                          {t("events.new_badge", "NEU")}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[9px] text-muted-foreground mt-1 truncate max-w-full text-center">
-                      @{event.target_username}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-[10px] text-muted-foreground">
-              {t("profile_card.no_new_follows", "Keine neuen Follows seit dem letzten Scan")}
             </p>
-          )}
-        </div>
-
+            <div className="flex gap-3">
+              {recentFollows.map((event) => (
+                <div key={event.id} className="flex flex-col items-center min-w-0" style={{ width: '52px' }}>
+                  <InstagramAvatar
+                    src={event.target_avatar_url}
+                    alt={event.target_username || ""}
+                    fallbackInitials={event.target_username || "?"}
+                    size={44}
+                  />
+                  <span className="text-muted-foreground mt-1 truncate max-w-full text-center" style={{ fontSize: '0.6875rem' }}>
+                    @{event.target_username}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </button>
     </motion.div>
   );
