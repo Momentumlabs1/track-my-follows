@@ -403,8 +403,8 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
-      {/* Suspicion Meter */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
+      {/* Suspicion Meter - only show for profiles that follow others */}
+      {(profile.following_count ?? 0) > 0 && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
         {(!canUseStats || (!hasSpy && isPro)) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             {!isPro ? (
