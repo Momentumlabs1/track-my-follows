@@ -392,5 +392,21 @@
   "preliminary_data": "مبدئي",
   "recently_detected": "تم اكتشافه مؤخراً",
   "existing_at_first_scan": "موجود عند المسح الأول",
-  "initial_scan_label": "موجود"
+  "initial_scan_label": "موجود",
+  "insights_7d": {
+    "title": "آخر ٧ أيام",
+    "since_days": "نشط منذ {{days}} أيام",
+    "building_data": "البيانات قيد التجميع – خلال {{days}} أيام ستحصل على أول تقرير كامل.",
+    "no_activity": "لا نشاط في آخر ٧ أيام.",
+    "spy_watching": "جاسوسك يراقب... 🕵️",
+    "not_analyzed": "لم يتم تحليل {{count}} حسابات",
+    "new_women_followed": "نساء جديدات تم متابعتهن",
+    "new_men_followed": "رجال جدد تم متابعتهم",
+    "new_follows_total": "إجمالي المتابعات الجديدة",
+    "unfollows": "إلغاء المتابعة",
+    "new_followers": "متابعون جدد",
+    "lost_followers": "متابعون مفقودون",
+    "summary": "ملخص",
+    "gender_distribution": "توزيع الجنس للمتابعات الجديدة: {{percent}}% إناث"
+  }
 }

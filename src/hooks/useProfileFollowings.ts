@@ -9,7 +9,7 @@ export function useProfileFollowings(trackedProfileId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profile_followings")
-        .select("following_display_name, following_username")
+        .select("following_display_name, following_username, following_avatar_url, gender_tag, first_seen_at")
         .eq("tracked_profile_id", trackedProfileId!)
         .eq("is_current", true);
       if (error) throw error;

@@ -459,5 +459,21 @@
   "preliminary_data": "Vorläufig",
   "recently_detected": "Kürzlich erkannt",
   "existing_at_first_scan": "Beim ersten Scan vorhanden",
-  "initial_scan_label": "Bestehend"
+  "initial_scan_label": "Bestehend",
+  "insights_7d": {
+    "title": "LETZTE 7 TAGE",
+    "since_days": "SEIT {{days}} TAGEN AKTIV",
+    "building_data": "Die Daten bauen sich auf – in {{days}} Tagen hast du den ersten vollständigen Bericht.",
+    "no_activity": "Noch keine Aktivitäten in den letzten 7 Tagen.",
+    "spy_watching": "Dein Spion beobachtet weiter... 🕵️",
+    "not_analyzed": "{{count}} Accounts konnten nicht analysiert werden",
+    "new_women_followed": "Neue Frauen gefolgt",
+    "new_men_followed": "Neue Männer gefolgt",
+    "new_follows_total": "Neue Follows gesamt",
+    "unfollows": "Unfollows",
+    "new_followers": "Neue Follower",
+    "lost_followers": "Verlorene Follower",
+    "summary": "Zusammenfassung",
+    "gender_distribution": "Gender-Verteilung der neuen Follows: {{percent}}% weiblich"
+  }
 }
