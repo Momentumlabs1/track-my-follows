@@ -62,12 +62,12 @@ export function SpyAgentCard({ spyProfile, onDragMoveSpy, isDragging, onDragStat
   if (!spyProfile) {
     return (
       <div className="mt-4">
-        <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, hsl(347 100% 59% / 0.15), hsl(347 100% 59% / 0.08))' }}>
+      <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(145deg, hsl(347 80% 25%), hsl(347 70% 18%))' }}>
           <motion.div className="flex justify-center mb-3" animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
             <SpyIcon size={80} glow />
           </motion.div>
-          <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.assign_your_spy")}</p>
-          <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_description")}</p>
+          <p className="font-semibold text-white" style={{ fontSize: '0.875rem' }}>{t("spy.assign_your_spy")}</p>
+          <p className="text-white/60 mt-1" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_description")}</p>
         </div>
       </div>
     );
