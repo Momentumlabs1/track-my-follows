@@ -346,7 +346,7 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-          <InsagramInsightsGrid profile={profile} followEvents={followEvents} followerEvents={followerEvents} followings={followings} />
+          <InsightsBubbleGrid followEvents={followEvents} followerEvents={followerEvents} profileFollowings={followings} profileCreatedAt={profile.created_at} />
         </div>
       </motion.div>
 
