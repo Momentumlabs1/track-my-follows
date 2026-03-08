@@ -421,7 +421,7 @@ const ProfileDetail = () => {
         <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
           <SuspicionMeter analysis={suspicionAnalysis} weeklyScores={weeklyScores} />
         </div>
-      </motion.div>
+      </motion.div>}
 
       {/* Scrollable Tab Chips */}
       <div ref={tabsRef} className="px-4 mb-4 overflow-x-auto scrollbar-none">
