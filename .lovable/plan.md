@@ -1,47 +1,39 @@
 
 
-## Plan: Feed-Rows komplett überarbeiten — klar, lesbar, sofort verständlich
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Problem
-Die aktuellen Feed-Rows sind verwirrend: zwei Avatare, Text dazwischen, keine klare visuelle Hierarchie. Man versteht nicht auf einen Blick was passiert ist.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Neues Design — Notification-Style (wie Instagram)
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-Jede Row wird ein kompakter, sofort lesbarer Satz mit klarem Layout:
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-```text
-┌─────────────────────────────────────────────────┐
-│ [Avatar 44px]  @saif_nassiri folgt jetzt    8h  │
-│  (pink ring)   @stephan.nq        [Avatar 32px] │
-│                                    (klein, grau) │
-├─────────────────────────────────────────────────┤
-│ [Avatar 44px]  @339jaann neuer         9h   ●   │
-│  (normal)      Follower von                      │
-│                @saif_nassiri       [Avatar 32px] │
-│                                    (pink ring)   │
-└─────────────────────────────────────────────────┘
-```
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### Konkrete Änderungen
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-#### 1. `src/components/EventFeedItem.tsx` — Komplett neu
-
-- **Einzeiliger Satz** statt zwei getrennte Textblöcke: `@actor verbt @target`
-- **Linker Avatar = Actor** (44px), mit pink `avatar-ring` wenn es unser getrackter Account ist
-- **Rechter Avatar = Target** (32px), kleiner und dezenter, mit pink ring wenn es unser getrackter Account ist
-- **Verb farbig inline**: grün "folgt jetzt", rot "hat entfolgt", grün "neuer Follower von", rot "Follower verloren"
-- **Farbiger Punkt-Indikator** links am Avatar-Rand: grüner Dot für positive Events, roter Dot für negative — sofort erkennbar
-- **Zeit rechts oben**, unread-Dot darunter — wie jetzt aber kompakter
-- Text als ein zusammenhängender Satz: `@saif_nassiri folgt jetzt @stephan.nq`
-
-#### 2. `src/index.css` — Feed-Row Padding anpassen
-
-- Padding leicht reduzieren: `0.75rem 1.25rem` statt `0.875rem`
-- Avatar-Ring dünner: 1.5px statt 2px padding
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-| Datei | Was |
-|---|---|
-| `EventFeedItem.tsx` | Neues Layout: Actor links groß, Verb+Target als Satz, Target-Avatar rechts klein |
-| `index.css` | Feed-row padding optimieren |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 

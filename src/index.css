@@ -148,7 +148,7 @@
   /* ─── Feed rows (Instagram notification style) ─── */
   .feed-row {
     @apply flex items-center gap-3;
-    padding: 0.875rem 1.25rem;
+    padding: 0.75rem 1.25rem;
     border-bottom: 0.5px solid hsl(var(--hairline));
   }
   .feed-row:last-child { border-bottom: none; }
@@ -156,7 +156,13 @@
   /* ─── Avatar ring ─── */
   .avatar-ring {
     @apply rounded-full;
-    padding: 2px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)));
+  }
+
+  .avatar-ring-sm {
+    @apply rounded-full;
+    padding: 1.5px;
     background: linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)));
   }
 
