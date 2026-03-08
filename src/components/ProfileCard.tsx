@@ -135,7 +135,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             {/* Time + chevron */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {!profile.is_private && (
-                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.6875rem' }}>
+                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.75rem' }}>
                   <Clock className="h-3 w-3" />
                   {shortTime(profile.last_scanned_at)}
                 </span>
