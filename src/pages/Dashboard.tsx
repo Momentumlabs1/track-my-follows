@@ -69,7 +69,7 @@ const Dashboard = () => {
           </p>
           {/* Greeting centered, no heart */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-white text-center" style={{ fontSize: '1.875rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+            <h1 className="font-bold text-white text-center" style={{ fontSize: '2.25rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Hey {displayName}
             </h1>
           </motion.div>
