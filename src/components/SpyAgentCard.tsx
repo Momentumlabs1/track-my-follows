@@ -127,29 +127,13 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         <div className="pe-24">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="uppercase tracking-[0.14em] font-extrabold text-primary-foreground/70" style={{ fontSize: "0.625rem" }}>
+              <p className="uppercase tracking-[0.14em] font-extrabold text-primary-foreground/70" style={{ fontSize: "0.75rem" }}>
                 🕵️ {t("spy.your_spy", "Dein Spion")}
               </p>
-              <p className="font-bold text-primary-foreground mt-1" style={{ fontSize: "0.9375rem" }}>
+              <p className="font-bold text-primary-foreground mt-1" style={{ fontSize: "1.125rem" }}>
                 {t("spy.hourly_monitoring", "Überwachung aktiv")}
               </p>
             </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-primary-foreground"
-              style={{
-                fontSize: "0.625rem",
-                background: "hsl(var(--primary-foreground) / 0.18)",
-                border: "1px solid hsl(var(--primary-foreground) / 0.3)",
-              }}
-            >
-              <motion.span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: "hsl(var(--brand-green))", boxShadow: "0 0 8px hsl(var(--brand-green) / 0.9)" }}
-                animate={{ opacity: [1, 0.4, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-              Aktiv
-            </span>
           </div>
 
           <button
