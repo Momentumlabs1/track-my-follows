@@ -62,7 +62,7 @@ export function SpyAgentCard({ spyProfile, onDragMoveSpy, isDragging, onDragStat
   if (!spyProfile) {
     return (
       <div className="mt-4">
-        <div className="bg-card rounded-2xl p-6 text-center">
+        <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, hsl(347 100% 59% / 0.15), hsl(347 100% 59% / 0.08))' }}>
           <motion.div className="flex justify-center mb-3" animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
             <SpyIcon size={80} glow />
           </motion.div>
@@ -75,11 +75,16 @@ export function SpyAgentCard({ spyProfile, onDragMoveSpy, isDragging, onDragStat
 
   return (
     <div className="mt-4">
-      {/* Single unified container */}
-      <div className="bg-card rounded-2xl p-5">
+      {/* Pink/primary-tinted unified container */}
+      <div
+        className="rounded-2xl p-5 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, hsl(347 100% 59% / 0.18), hsl(347 80% 50% / 0.08))',
+        }}
+      >
         {/* Header row */}
         <div className="flex items-center justify-between mb-4">
-          <span className="section-header">{t("spy.spy_watching")}</span>
+          <span className="section-header text-primary/80">{t("spy.spy_watching")}</span>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
             <span className="text-brand-green font-medium" style={{ fontSize: '0.6875rem' }}>{t("spy.active")}</span>
@@ -98,7 +103,7 @@ export function SpyAgentCard({ spyProfile, onDragMoveSpy, isDragging, onDragStat
           >
             {/* Left: Profile info (clickable) */}
             <button onClick={() => navigate(`/profile/${spyProfile.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-start">
-              <div className="flex-shrink-0 rounded-full ring-2 ring-primary/30 p-[2px]">
+              <div className="flex-shrink-0 rounded-full ring-2 ring-primary/40 p-[2px]">
                 <InstagramAvatar src={spyProfile.avatar_url} alt={spyProfile.username} fallbackInitials={spyProfile.username} size={56} />
               </div>
               <div className="flex-1 min-w-0">
@@ -147,7 +152,7 @@ export function SpyAgentCard({ spyProfile, onDragMoveSpy, isDragging, onDragStat
 
         {/* Unfollow hint */}
         {(spyProfile.pending_unfollow_hint ?? 0) > 0 && (
-          <div className="mt-4 pt-4" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
+          <div className="mt-4 pt-4" style={{ borderTop: '0.5px solid hsl(var(--primary) / 0.2)' }}>
             <div className="flex items-center gap-2 mb-1.5">
               <span>⚠️</span>
               <span className="font-semibold text-destructive" style={{ fontSize: '0.8125rem' }}>~{spyProfile.pending_unfollow_hint} {t("spy.unfollows_detected")}</span>
