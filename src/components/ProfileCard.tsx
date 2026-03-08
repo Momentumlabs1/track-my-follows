@@ -154,12 +154,10 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                   className="flex-1 overflow-hidden rounded-lg bg-muted"
                   style={{ aspectRatio: '3/4' }}
                 >
-                  <InstagramAvatar
+                  <RectAvatar
                     src={event.target_avatar_url}
                     alt={event.target_username || ""}
-                    fallbackInitials={event.target_username || "?"}
-                    size={200}
-                    className="!rounded-none w-full h-full"
+                    fallback={event.target_username || "?"}
                   />
                 </div>
               ))}
