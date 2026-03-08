@@ -1,42 +1,39 @@
 
 
-## Plan: Spy-Bereich und Profil-Bereich visuell komplett trennen
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Kernproblem
-Spy-Card und Profilkarten sind beides pink-gradient Rechtecke mit identischer Form — man versteht nicht, dass es zwei fundamental verschiedene Bereiche sind. Der Spy-Bereich muss ein eigener "Raum" sein, die Profilkarten brauchen einen komplett anderen Look.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Änderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. `src/components/SpyAgentCard.tsx` — Neuer Text, kein "Überwachung aktiv"
-- **"Überwachung aktiv" ersetzen** durch "Dauerüberwachung · Stündlich" — macht den Unterschied klar (stündlich vs. täglich bei normalen Accounts)
-- Text grösser: `1.25rem`
-- Subtitle darunter: "Push-Scans · Unfollow-Erkennung · Volle Insights" in `0.75rem` white/70
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-#### 2. `src/components/ProfileCard.tsx` — Komplett anderer Look
-- **Kein Pink-Gradient mehr** — stattdessen `hsl(var(--card))` Hintergrund (weiss/dunkel je nach Theme)
-- **Border**: `1px solid hsl(var(--border))`
-- **Texte**: `text-foreground` und `text-muted-foreground` statt weiss
-- **"Zuletzt gefolgt" Sub-Area**: `hsl(var(--muted))` Hintergrund, `text-muted-foreground`
-- **Scan-Frequenz-Badge**: Kleines Tag "1x täglich" in `muted` neben der Zeit — erklärt den Unterschied zum Spy
-- Stats: `text-foreground` statt weiss
-- Drop-Target: Pink border-glow statt weiss
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-#### 3. `src/pages/Dashboard.tsx` — Section-Header aufwerten
-- Statt nur "📡 Überwachte Accounts" als tiny Label:
-  - Grösserer Titel: "Deine Accounts" in `1.125rem`, `font-bold`, `text-foreground`
-  - Subtitle darunter: "Täglicher Basis-Scan" in `0.8125rem`, `text-muted-foreground`
-  - Mehr Abstand oben: `pt-8` statt `pt-6`
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-### Ergebnis
-- **Spy = Pink gradient, weisser Text, premium-feel** → "Hier passiert das Besondere"
-- **Profile = Neutral card, normaler Text** → "Standard-Überwachung"
-- **Section-Header** erklärt was der Bereich ist
-- Visuell zwei komplett verschiedene Welten auf einer Seite
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-### Dateien
-| Datei | Was |
-|---|---|
-| `SpyAgentCard.tsx` | Text "Überwachung aktiv" → "Dauerüberwachung · Stündlich" + Subtitle |
-| `ProfileCard.tsx` | Pink-Gradient → neutraler Card-Style, alle Farben anpassen |
-| `Dashboard.tsx` | Section-Header grösser mit Subtitle |
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 

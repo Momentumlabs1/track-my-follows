@@ -19,7 +19,7 @@ function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | nul
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className={`w-full h-full flex items-center justify-center font-bold text-white/90 ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(0 0% 100% / 0.2)' }}>
+      <div className={`w-full h-full flex items-center justify-center font-bold text-muted-foreground ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(var(--muted))' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );
@@ -80,7 +80,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     >
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[2px] rounded-2xl border-2 border-white/60 pointer-events-none z-10"
+          className="absolute -inset-[2px] rounded-2xl border-2 border-primary/60 pointer-events-none z-10"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
@@ -88,11 +88,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden rounded-2xl"
-        style={{
-          background: 'linear-gradient(145deg, hsl(347 100% 62%), hsl(347 90% 52%))',
-          boxShadow: '0 4px 16px hsl(347 100% 50% / 0.25)',
-        }}
+        className="w-full text-start overflow-hidden rounded-2xl border border-border bg-card"
       >
         {/* ═══ Profile Header ═══ */}
         <div className="p-5 pb-4">
@@ -103,8 +99,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="font-bold text-white truncate" style={{ fontSize: '1.125rem' }}>
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-foreground truncate" style={{ fontSize: '1.125rem' }}>
                   @{profile.username}
                 </p>
                 {profile.is_private && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
@@ -114,48 +110,58 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {!profile.is_private && (followerCount != null || followingCount != null) && (
                 <div className="flex items-center gap-3 mt-1">
                   {followerCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
-                      <span className="font-semibold text-white">{followerCount.toLocaleString()}</span> Follower
+                    <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
+                      <span className="font-semibold text-foreground">{followerCount.toLocaleString()}</span> Follower
                     </span>
                   )}
                   {followingCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
-                      <span className="font-semibold text-white">{followingCount.toLocaleString()}</span> Following
+                    <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
+                      <span className="font-semibold text-foreground">{followingCount.toLocaleString()}</span> Following
                     </span>
                   )}
                 </div>
               )}
               {profile.is_private && (
-                <p className="text-white/60 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>
                   {t("private_frozen_short", "Tracking eingefroren")} 🔒
                 </p>
               )}
             </div>
 
-            {/* Time + chevron */}
+            {/* Time + badge + chevron */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {!profile.is_private && (
-                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.75rem' }}>
+                <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                   <Clock className="h-3 w-3" />
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
-              <ChevronRight className="h-5 w-5 text-white/50 rtl:rotate-180" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground/50 rtl:rotate-180" />
             </div>
+          </div>
+
+          {/* Scan frequency badge */}
+          <div className="mt-2.5">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-muted-foreground bg-muted"
+              style={{ fontSize: '0.6875rem', fontWeight: 600 }}
+            >
+              📡 1x täglich
+            </span>
           </div>
         </div>
 
-        {/* ═══ Zuletzt gefolgt – white sub-area with square images ═══ */}
+        {/* ═══ Zuletzt gefolgt – neutral sub-area ═══ */}
         {recentFollows.length > 0 && (
-          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.15)' }}>
-            <p className="text-white/70 mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          <div className="mx-2 mb-2 rounded-xl px-3 py-3 bg-muted">
+            <p className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
             <div className="flex gap-1.5">
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="overflow-hidden rounded-lg bg-muted"
+                  className="overflow-hidden rounded-lg"
                   style={{ aspectRatio: '1/1', width: '36px', flexShrink: 0 }}
                 >
                   <RectAvatar
