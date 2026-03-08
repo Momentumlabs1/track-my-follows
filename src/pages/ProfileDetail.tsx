@@ -386,15 +386,8 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
-      {/* Gender Breakdown - only show for profiles that follow others */}
-      {(profile.following_count ?? 0) > 0 && suspicionAnalysis.genderStats.total > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
-          <GenderCard genderStats={suspicionAnalysis.genderStats} profile={profile as unknown as Record<string, unknown>} />
-        </motion.div>
-      )}
-
-      {/* Suspicion Meter - only show for profiles that follow others */}
-      {(profile.following_count ?? 0) > 0 && <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="px-4 mb-4 relative">
+      {/* 7-Day Insights Bubble Grid */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-4 mb-4 relative">
         {(!canUseStats || (!hasSpy && isPro)) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             {!isPro ? (
@@ -409,9 +402,9 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-          <SuspicionMeter analysis={suspicionAnalysis} weeklyScores={weeklyScores} />
+          <InsagramInsightsGrid profile={profile} followEvents={followEvents} followerEvents={followerEvents} followings={followings} />
         </div>
-      </motion.div>}
+      </motion.div>
 
       {/* Scrollable Tab Chips */}
       <div ref={tabsRef} className="px-4 mb-4 overflow-x-auto scrollbar-none">
