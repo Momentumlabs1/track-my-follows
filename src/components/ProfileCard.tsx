@@ -78,21 +78,37 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {profile.is_private && <span className="text-destructive" style={{ fontSize: '0.6875rem' }}>🔒</span>}
             </div>
             <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
-              {profile.is_private ? t("private_frozen_short", "Tracking eingefroren") : timeAgo(profile.last_scanned_at)}
+              {profile.is_private
+                ? t("private_frozen_short", "Tracking eingefroren")
+                : `${t("spy.last_scan", "Letzter Scan")}: ${timeAgo(profile.last_scanned_at)}`}
             </p>
           </div>
 
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
 
-        {/* Pink-tinted "Zuletzt gefolgt" sub-area */}
+        {/* "Zuletzt gefolgt" – large cards like The Ick */}
         {recentFollows.length > 0 && (
-          <div className="bg-primary/5 dark:bg-primary/10 px-4 py-3 flex items-center justify-between rounded-b-2xl">
-            <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{t("profile_detail.tab_following", "Zuletzt gefolgt")}</p>
-            <div className="flex -space-x-2">
+          <div className="bg-primary/5 dark:bg-primary/10 px-4 py-3 rounded-b-2xl">
+            <p className="text-muted-foreground mb-2.5" style={{ fontSize: '0.8125rem' }}>
+              {t("profile_detail.tab_following", "Zuletzt gefolgt")}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
               {recentFollows.map((event) => (
-                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-card rounded-full">
-                  <InstagramAvatar src={event.target_avatar_url} alt={event.target_username || ""} fallbackInitials={event.target_username || "?"} size={40} />
+                <div
+                  key={event.id}
+                  className="flex-shrink-0 rounded-xl bg-primary/10 dark:bg-primary/15 p-2 flex flex-col items-center gap-1.5"
+                  style={{ width: 80 }}
+                >
+                  <InstagramAvatar
+                    src={event.target_avatar_url}
+                    alt={event.target_username || ""}
+                    fallbackInitials={event.target_username || "?"}
+                    size={52}
+                  />
+                  <p className="text-foreground font-medium truncate w-full text-center" style={{ fontSize: '0.6875rem' }}>
+                    {event.target_username || "?"}
+                  </p>
                 </div>
               ))}
             </div>
