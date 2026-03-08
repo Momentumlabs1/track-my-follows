@@ -131,7 +131,7 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-6 pb-3 space-y-4">
+        <div className="px-5 pt-8 pb-3 space-y-4">
           <div className="px-1 mb-1">
             <p className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
               {t("spy.your_accounts", "Deine Accounts")}
