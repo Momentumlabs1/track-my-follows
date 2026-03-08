@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
@@ -66,10 +65,7 @@ export function InsightsBubbleGrid({
       const evGender = (ev as any).gender_tag as string | undefined;
       const matching = recentFollowingsWithGender.find((f) => f.following_username === ev.target_username);
       const gender = matching?.gender_tag || evGender || "unknown";
-      const entry = {
-        username: ev.target_username,
-        avatar: matching?.following_avatar_url || ev.target_avatar_url,
-      };
+      const entry = { username: ev.target_username, avatar: matching?.following_avatar_url || ev.target_avatar_url };
       if (gender === "female") femaleFollows.push(entry);
       else if (gender === "male") maleFollows.push(entry);
       else unknownCount++;
@@ -78,150 +74,149 @@ export function InsightsBubbleGrid({
     return { newFollows: recentFollows.length, newUnfollows: recentUnfollows.length, newFollowers: recentNewFollowers.length, lostFollowers: recentLostFollowers.length, femaleFollows, maleFollows, unknownCount };
   }, [followEvents, followerEvents, profileFollowings, sevenDaysAgo]);
 
-  const summaryLines = useMemo(() => {
-    const lines: string[] = [];
-    const totalGender = stats.femaleFollows.length + stats.maleFollows.length;
-    if (totalGender > 0) {
-      const femPct = Math.round((stats.femaleFollows.length / totalGender) * 100);
-      if (femPct > 0) lines.push(t("insights_7d.gender_distribution", { percent: femPct }));
-    }
-    return lines;
-  }, [stats, t]);
-
   const trackingDays = Math.floor((now - new Date(profileCreatedAt).getTime()) / (24 * 60 * 60 * 1000));
   const isNew = trackingDays < 7;
   const totalActivity = stats.newFollows + stats.newUnfollows + stats.newFollowers + stats.lostFollowers;
 
+  // Empty states
   if (totalActivity === 0) {
-    if (isNew) {
-      return (
-        <div className="native-card p-5 text-center">
-          <p className="section-header mb-3">📊 {t("insights_7d.since_days", { days: trackingDays })}</p>
-          <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
-            {t("insights_7d.building_data", { days: 7 - trackingDays })}
-          </p>
-        </div>
-      );
-    }
     return (
-      <div className="native-card p-5 text-center">
-        <p className="section-header mb-3">📊 {t("insights_7d.title")}</p>
-        <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("insights_7d.no_activity")}</p>
-        <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>{t("insights_7d.spy_watching")}</p>
+      <div className="native-card p-6 text-center">
+        <p className="section-header mb-2">
+          {isNew ? t("insights_7d.since_days", { days: trackingDays }) : t("insights_7d.title")}
+        </p>
+        <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>
+          {isNew ? t("insights_7d.building_data", { days: 7 - trackingDays }) : t("insights_7d.no_activity")}
+        </p>
+        {!isNew && (
+          <p className="text-muted-foreground mt-1" style={{ fontSize: '0.875rem' }}>{t("insights_7d.spy_watching")}</p>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <p className="section-header">📊 {t("insights_7d.title")}</p>
-        {stats.unknownCount > 0 && (
-          <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>
-            {t("insights_7d.not_analyzed", { count: stats.unknownCount })}
-          </p>
-        )}
-      </div>
+    <div className="space-y-3">
+      {/* Section header */}
+      <p className="section-header">{t("insights_7d.title")}</p>
 
-      {/* Bubble Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <GenderBubble
-          count={stats.femaleFollows.length}
-          label={t("insights_7d.new_women_followed")}
-          symbol="♀"
-          accentColor="text-primary"
-          avatars={stats.femaleFollows}
-          delay={0}
-        />
-        <GenderBubble
-          count={stats.maleFollows.length}
-          label={t("insights_7d.new_men_followed")}
-          symbol="♂"
-          accentColor="text-brand-blue"
-          avatars={stats.maleFollows}
-          delay={0.05}
-        />
-        <StatBubble
+      {/* ─── Story Cards ─── */}
+
+      {/* Gender story: "Folgt X neuen Frauen / Männern" */}
+      {(stats.femaleFollows.length > 0 || stats.maleFollows.length > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="native-card overflow-hidden"
+        >
+          {stats.femaleFollows.length > 0 && (
+            <StoryRow
+              number={stats.femaleFollows.length}
+              label={t("insights_7d.new_women_followed")}
+              symbol="♀"
+              accentClass="text-primary"
+              avatars={stats.femaleFollows}
+            />
+          )}
+          {stats.maleFollows.length > 0 && (
+            <StoryRow
+              number={stats.maleFollows.length}
+              label={t("insights_7d.new_men_followed")}
+              symbol="♂"
+              accentClass="text-brand-blue"
+              avatars={stats.maleFollows}
+            />
+          )}
+        </motion.div>
+      )}
+
+      {/* Follow/Unfollow activity */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.05 }}
+        className="native-card overflow-hidden"
+      >
+        <StatRow
           value={stats.newFollows}
           prefix="+"
           label={t("insights_7d.new_follows_total")}
-          accentColor="text-brand-green"
-          icon={<TrendingUp className="h-5 w-5" />}
-          delay={0.1}
+          accentClass="text-brand-green"
         />
-        <StatBubble
-          value={stats.newUnfollows}
-          prefix="-"
-          label={t("insights_7d.unfollows")}
-          accentColor="text-destructive"
-          icon={<TrendingDown className="h-5 w-5" />}
-          delay={0.15}
-        />
-        <StatBubble
-          value={stats.newFollowers}
-          prefix="+"
-          label={t("insights_7d.new_followers")}
-          accentColor="text-brand-green"
-          icon={<TrendingUp className="h-5 w-5" />}
-          delay={0.2}
-        />
-        <StatBubble
-          value={stats.lostFollowers}
-          prefix="-"
-          label={t("insights_7d.lost_followers")}
-          accentColor="text-destructive"
-          icon={<TrendingDown className="h-5 w-5" />}
-          delay={0.25}
-        />
-      </div>
+        {stats.newUnfollows > 0 && (
+          <StatRow
+            value={stats.newUnfollows}
+            prefix="-"
+            label={t("insights_7d.unfollows")}
+            accentClass="text-destructive"
+          />
+        )}
+      </motion.div>
 
-      {/* Summary */}
-      {summaryLines.length > 0 && (
-        <div className="native-card p-5">
-          <p className="section-header mb-3">📝 {t("insights_7d.summary")}</p>
-          <ul className="space-y-2">
-            {summaryLines.map((line, i) => (
-              <li key={i} className="text-muted-foreground flex items-start gap-2" style={{ fontSize: '0.8125rem' }}>
-                <span className="text-muted-foreground/50">•</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Follower changes */}
+      {(stats.newFollowers > 0 || stats.lostFollowers > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.1 }}
+          className="native-card overflow-hidden"
+        >
+          {stats.newFollowers > 0 && (
+            <StatRow
+              value={stats.newFollowers}
+              prefix="+"
+              label={t("insights_7d.new_followers")}
+              accentClass="text-brand-green"
+            />
+          )}
+          {stats.lostFollowers > 0 && (
+            <StatRow
+              value={stats.lostFollowers}
+              prefix="-"
+              label={t("insights_7d.lost_followers")}
+              accentClass="text-destructive"
+            />
+          )}
+        </motion.div>
+      )}
+
+      {/* Unknown accounts note */}
+      {stats.unknownCount > 0 && (
+        <p className="text-muted-foreground px-1" style={{ fontSize: '0.8125rem' }}>
+          {t("insights_7d.not_analyzed", { count: stats.unknownCount })}
+        </p>
       )}
     </div>
   );
 }
 
-function GenderBubble({
-  count, label, symbol, accentColor, avatars, delay,
+/* ─── Story row with avatars ─── */
+function StoryRow({
+  number, label, symbol, accentClass, avatars,
 }: {
-  count: number;
+  number: number;
   label: string;
   symbol: string;
-  accentColor: string;
+  accentClass: string;
   avatars: Array<{ username: string; avatar?: string | null }>;
-  delay: number;
 }) {
-  const maxVisible = 6;
+  const maxVisible = 5;
   const visible = avatars.slice(0, maxVisible);
-  const remaining = count - maxVisible;
+  const remaining = number - maxVisible;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.2 }}
-      className="native-card p-5 flex flex-col items-center justify-center min-h-[160px]"
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`font-bold ${accentColor}`} style={{ fontSize: '1.25rem' }}>{symbol}</span>
-        <span className={`font-bold font-mono-num ${accentColor}`} style={{ fontSize: '2.5rem', lineHeight: 1 }}>{count}</span>
+    <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '0.5px solid hsl(var(--hairline))' }}>
+      {/* Big number + symbol */}
+      <div className="flex items-baseline gap-1 flex-shrink-0" style={{ minWidth: '48px' }}>
+        <span className={`font-bold font-mono-num ${accentClass}`} style={{ fontSize: '1.75rem', lineHeight: 1 }}>{number}</span>
+        <span className={`font-semibold ${accentClass}`} style={{ fontSize: '1rem' }}>{symbol}</span>
       </div>
 
-      {visible.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+      {/* Label + avatars */}
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground font-medium mb-2" style={{ fontSize: '0.875rem' }}>{label}</p>
+        <div className="flex items-center gap-1">
           {visible.map((a) => (
             <a
               key={a.username}
@@ -229,45 +224,37 @@ function GenderBubble({
               target="_blank"
               rel="noopener noreferrer"
               title={`@${a.username}`}
+              className="flex-shrink-0"
             >
-              <InstagramAvatar src={a.avatar} alt={a.username} fallbackInitials={a.username} size={36} />
+              <InstagramAvatar src={a.avatar} alt={a.username} fallbackInitials={a.username} size={28} />
             </a>
           ))}
           {remaining > 0 && (
-            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground font-bold" style={{ fontSize: '0.6875rem' }}>+{remaining}</span>
+            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-muted-foreground font-bold" style={{ fontSize: '0.625rem' }}>+{remaining}</span>
             </div>
           )}
         </div>
-      )}
-
-      <p className="text-muted-foreground text-center leading-tight" style={{ fontSize: '0.8125rem' }}>{label}</p>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-function StatBubble({
-  value, prefix, label, accentColor, icon, delay,
+/* ─── Simple stat row ─── */
+function StatRow({
+  value, prefix, label, accentClass,
 }: {
   value: number;
   prefix: string;
   label: string;
-  accentColor: string;
-  icon: React.ReactNode;
-  delay: number;
+  accentClass: string;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.2 }}
-      className="native-card p-5 flex flex-col items-center justify-center min-h-[120px]"
-    >
-      <div className={`mb-2 ${accentColor}`}>{icon}</div>
-      <span className={`font-bold font-mono-num ${accentColor}`} style={{ fontSize: '2.5rem', lineHeight: 1 }}>
+    <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '0.5px solid hsl(var(--hairline))' }}>
+      <span className={`font-bold font-mono-num flex-shrink-0 ${accentClass}`} style={{ fontSize: '1.75rem', lineHeight: 1, minWidth: '48px' }}>
         {value > 0 ? `${prefix}${value}` : "0"}
       </span>
-      <p className="text-muted-foreground text-center leading-tight mt-2" style={{ fontSize: '0.8125rem' }}>{label}</p>
-    </motion.div>
+      <p className="text-foreground font-medium" style={{ fontSize: '0.875rem' }}>{label}</p>
+    </div>
   );
 }

@@ -39,12 +39,12 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
       if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
         return { text: t("events.hasUnfollowed"), color: "text-destructive" };
       }
-      return { text: t("events.follows_now"), color: "text-foreground" };
+      return { text: t("events.follows_now"), color: "text-muted-foreground" };
     }
     if (event.event_type === "lost") {
       return { text: t("events.lostFollower"), color: "text-destructive" };
     }
-    return { text: t("events.new_follower_of"), color: "text-foreground" };
+    return { text: t("events.new_follower_of"), color: "text-muted-foreground" };
   };
 
   const verb = getVerb();
@@ -53,54 +53,36 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
     <motion.div
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{ delay: Math.min(index * 0.03, 0.2), duration: 0.2 }}
+      viewport={{ once: true }}
+      transition={{ delay: Math.min(index * 0.02, 0.15), duration: 0.2 }}
       className="feed-row relative"
     >
-      {/* Avatar */}
       <div className={`flex-shrink-0 ${shouldBlur ? "blur-md" : ""}`}>
-        <InstagramAvatar
-          src={targetAvatar}
-          alt={targetUsername}
-          fallbackInitials={targetUsername}
-          size={40}
-        />
+        <InstagramAvatar src={targetAvatar} alt={targetUsername} fallbackInitials={targetUsername} size={40} />
       </div>
 
-      {/* Content */}
       <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
-        <p style={{ fontSize: '1rem' }}>
+        <p style={{ fontSize: '0.875rem', lineHeight: 1.4 }}>
           <span className="font-semibold text-foreground">@{profileUsername}</span>
           {" "}
-          <span className={`${verb.color}`}>{verb.text}</span>
+          <span className={verb.color}>{verb.text}</span>
           {" "}
-          <a
-            href={`https://instagram.com/${targetUsername}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-foreground hover:text-primary transition-colors"
-          >
+          <a href={`https://instagram.com/${targetUsername}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground">
             @{targetUsername}
           </a>
         </p>
       </div>
 
-      {/* Timestamp */}
-      <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>
+      <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.75rem' }}>
         {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
       </span>
 
-      {/* New dot */}
       {!event.is_read && !shouldBlur && (
-        <span className="absolute top-4 end-5 h-2 w-2 rounded-full bg-primary" />
+        <span className="absolute top-3.5 end-5 h-2 w-2 rounded-full bg-primary" />
       )}
 
-      {/* Blur paywall overlay */}
       {shouldBlur && (
-        <button
-          onClick={() => showPaywall("blur")}
-          className="absolute inset-0 flex items-center justify-center"
-        >
+        <button onClick={() => showPaywall("blur")} className="absolute inset-0 flex items-center justify-center">
           <span className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5" style={{ fontSize: '0.8125rem' }}>
             <Lock className="h-3.5 w-3.5" /> {t("events.upgrade_to_reveal")}
           </span>
