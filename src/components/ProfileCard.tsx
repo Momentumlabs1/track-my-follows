@@ -1,23 +1,22 @@
 import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useFollowEvents } from "@/hooks/useTrackedProfiles";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
-function useTimeAgo() {
-  const { t } = useTranslation();
+function useShortTimeAgo() {
   return (dateStr: string | null): string => {
-    if (!dateStr) return t("dashboard.never_scanned");
+    if (!dateStr) return "—";
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return t("dashboard.just_now");
-    if (mins < 60) return t("dashboard.minutes_ago", { count: mins });
+    if (mins < 1) return "jetzt";
+    if (mins < 60) return `${mins}m`;
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return t("dashboard.hours_ago", { count: hours });
-    return t("dashboard.days_ago", { count: Math.floor(hours / 24) });
+    if (hours < 24) return `${hours}h`;
+    return `${Math.floor(hours / 24)}d`;
   };
 }
 
@@ -34,7 +33,7 @@ interface ProfileCardProps {
 
 export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered }: ProfileCardProps) {
   const { t } = useTranslation();
-  const timeAgo = useTimeAgo();
+  const shortTime = useShortTimeAgo();
   const { data: followEvents = [] } = useFollowEvents(profileId);
 
   const isDropTarget = isHovered === true;
@@ -45,6 +44,9 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
       .slice(0, 4);
   }, [followEvents]);
+
+  const followerCount = profile.follower_count ?? profile.last_follower_count;
+  const followingCount = profile.following_count ?? profile.last_following_count;
 
   return (
     <motion.div
@@ -66,53 +68,84 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden rounded-2xl border border-primary/30"
-        style={{ background: 'hsl(var(--primary) / 0.2)' }}
+        className="w-full text-start overflow-hidden rounded-2xl"
+        style={{ background: 'hsl(var(--card-elevated))' }}
       >
-        {/* Main profile row */}
-        <div className="flex items-center gap-3 p-4">
-          <div className="relative flex-shrink-0">
-            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={48} />
-            {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={16} glow /></div>}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="font-semibold text-primary-foreground truncate" style={{ fontSize: '0.9375rem' }}>@{profile.username}</p>
-              {profile.is_private && <span className="text-primary-foreground/80" style={{ fontSize: '0.6875rem' }}>🔒</span>}
+        {/* ═══ Profile Header – large, prominent ═══ */}
+        <div className="p-4 pb-3">
+          <div className="flex items-center gap-3.5">
+            <div className="relative flex-shrink-0">
+              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={52} />
+              {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={16} glow /></div>}
             </div>
-            <p className="text-primary-foreground/80" style={{ fontSize: '0.8125rem' }}>
-              {profile.is_private
-                ? t("private_frozen_short", "Tracking eingefroren")
-                : `${t("spy.last_scan", "Letzter Scan")}: ${timeAgo(profile.last_scanned_at)}`}
-            </p>
-          </div>
 
-          <ChevronRight className="h-4 w-4 text-primary-foreground/80 flex-shrink-0 rtl:rotate-180" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="font-bold text-foreground truncate" style={{ fontSize: '1rem' }}>
+                  @{profile.username}
+                </p>
+                {profile.is_private && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
+              </div>
+
+              {/* Stats row */}
+              {!profile.is_private && (followerCount != null || followingCount != null) && (
+                <div className="flex items-center gap-3 mt-1">
+                  {followerCount != null && (
+                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
+                      <span className="font-semibold text-foreground">{followerCount.toLocaleString()}</span> Follower
+                    </span>
+                  )}
+                  {followingCount != null && (
+                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
+                      <span className="font-semibold text-foreground">{followingCount.toLocaleString()}</span> Following
+                    </span>
+                  )}
+                </div>
+              )}
+              {profile.is_private && (
+                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>
+                  {t("private_frozen_short", "Tracking eingefroren")} 🔒
+                </p>
+              )}
+            </div>
+
+            {/* Time + chevron */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {!profile.is_private && (
+                <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                  <Clock className="h-3 w-3" />
+                  {shortTime(profile.last_scanned_at)}
+                </span>
+              )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground rtl:rotate-180" />
+            </div>
+          </div>
         </div>
 
-        {/* "Zuletzt gefolgt" */}
+        {/* ═══ Zuletzt gefolgt – rectangles, no names ═══ */}
         {recentFollows.length > 0 && (
-          <div className="px-4 py-3 rounded-b-2xl">
-            <p className="text-primary-foreground/80 mb-2.5" style={{ fontSize: '0.8125rem' }}>
+          <div className="px-4 pb-4">
+            <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            <div className="flex gap-1.5">
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="flex-shrink-0 rounded-xl p-2 flex flex-col items-center gap-1.5"
-                  style={{ width: 80 }}
+                  className="flex-1 overflow-hidden rounded-lg"
+                  style={{ aspectRatio: '3/4' }}
                 >
-                  <InstagramAvatar
-                    src={event.target_avatar_url}
-                    alt={event.target_username || ""}
-                    fallbackInitials={event.target_username || "?"}
-                    size={52}
-                  />
-                  <p className="text-primary-foreground font-medium truncate w-full text-center" style={{ fontSize: '0.6875rem' }}>
-                    {event.target_username || "?"}
-                  </p>
+                  {event.target_avatar_url ? (
+                    <img
+                      src={event.target_avatar_url}
+                      alt={event.target_username || ""}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-primary-foreground" style={{ background: 'hsl(var(--primary))', fontSize: '0.875rem' }}>
+                      {(event.target_username || "?").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
