@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -6,6 +6,26 @@ import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useFollowEvents } from "@/hooks/useTrackedProfiles";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
+
+const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
+function getProxiedUrl(src: string): string {
+  if (src.includes("cdninstagram.com") || src.includes("fbcdn.net")) {
+    return `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`;
+  }
+  return src;
+}
+
+function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div className={`w-full h-full flex items-center justify-center font-bold text-primary-foreground gradient-pink ${className}`} style={{ fontSize: '0.875rem' }}>
+        {fallback.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+  return <img src={getProxiedUrl(src)} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setFailed(true)} />;
+}
 
 function useShortTimeAgo() {
   return (dateStr: string | null): string => {
