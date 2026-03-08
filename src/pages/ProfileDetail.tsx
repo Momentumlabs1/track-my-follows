@@ -47,63 +47,7 @@ function formatCount(n: number): string {
 
 type TabId = "new_follows" | "new_followers" | "unfollowed" | "insights";
 
-function GenderCard({ genderStats, profile }: { genderStats: { female: number; male: number; unknown: number; total: number; femalePercent: number }; profile?: Record<string, unknown> }) {
-  const { t } = useTranslation();
-  const malePercent = genderStats.total > 0 ? 100 - genderStats.femalePercent : 0;
-  const getVerdict = () => {
-    if (genderStats.femalePercent > 70) return t("simple.mostly_women");
-    if (genderStats.femalePercent < 40) return t("simple.mostly_men");
-    return t("simple.balanced");
-  };
-  return (
-    <div className="native-card p-4">
-      <p className="section-header mb-3">{t("simple.who_they_follow")}</p>
-      <div className="flex items-center gap-3 mb-3">
-        <div className="flex-1 flex items-center gap-2">
-          <span className="text-xl font-extrabold text-primary">♀ {genderStats.femalePercent}%</span>
-          <span className="text-[11px] text-muted-foreground">{genderStats.female}</span>
-        </div>
-        <div className="flex-1 flex items-center justify-end gap-2">
-          <span className="text-[11px] text-muted-foreground">{genderStats.male}</span>
-          <span className="text-xl font-extrabold text-blue-400">♂ {malePercent}%</span>
-        </div>
-      </div>
-      <div className="h-2 rounded-full overflow-hidden flex bg-muted">
-        <motion.div className="h-full gradient-pink" initial={{ width: 0 }} animate={{ width: `${genderStats.femalePercent}%` }} transition={{ duration: 0.8, delay: 0.3 }} />
-        <motion.div className="h-full bg-blue-400" initial={{ width: 0 }} animate={{ width: `${malePercent}%` }} transition={{ duration: 0.8, delay: 0.4 }} />
-      </div>
-      <p className="text-[12px] font-medium text-muted-foreground mt-2.5 text-center">{getVerdict()}</p>
-      {genderStats.unknown > 0 && (
-        <p className="text-[10px] text-muted-foreground/60 mt-0.5 text-center">{t("suspicion.not_detected", { count: genderStats.unknown })}</p>
-      )}
-      {/* Confidence Badge */}
-      {(() => {
-        const confidence = profile?.gender_confidence as string | undefined;
-        const sampleSize = (profile?.gender_sample_size as number) || 0;
-        const totalFollowing = (profile?.following_count as number) || 0;
-        if (!confidence || confidence === "unknown") return null;
-        const config: Record<string, { emoji: string; color: string; bg: string; label: string }> = {
-          high: { emoji: "🕵️", color: "text-green-400", bg: "bg-green-400/10", label: t("gender.confidence_high") },
-          medium: { emoji: "🕵️", color: "text-yellow-400", bg: "bg-yellow-400/10", label: t("gender.confidence_medium") },
-          low: { emoji: "🕵️😵‍💫", color: "text-destructive", bg: "bg-destructive/10", label: t("gender.confidence_low") },
-        };
-        const c = config[confidence];
-        if (!c) return null;
-        return (
-          <div className={`mt-3 flex items-center gap-2 rounded-lg ${c.bg} px-3 py-2`}>
-            <span className="text-sm">{c.emoji}</span>
-            <div>
-              <p className={`text-[11px] font-bold ${c.color}`}>{c.label}</p>
-              <p className="text-[9px] text-muted-foreground">
-                {t("gender.based_on_sample", { count: sampleSize, total: totalFollowing })}
-              </p>
-            </div>
-          </div>
-        );
-      })()}
-    </div>
-  );
-}
+
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
