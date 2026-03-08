@@ -214,7 +214,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             className="rounded-2xl p-2"
             style={{ background: "hsl(var(--primary-foreground) / 0.16)", border: "1px solid hsl(var(--primary-foreground) / 0.3)" }}
           >
-            <SpyIcon size={84} glow />
+            <SpyIcon size={72} glow />
           </div>
           <span className="mt-1 text-primary-foreground/75" style={{ fontSize: "0.5625rem", fontWeight: 600 }}>
             ↕ {t("spy.drag_hint", "Ziehen")}
