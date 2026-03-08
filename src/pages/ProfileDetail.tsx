@@ -390,8 +390,9 @@ const ProfileDetail = () => {
         </motion.div>
       )}
 
-      {/* Baseline running indicator */}
-      {!profile.baseline_complete && !profile.is_private && (profile.gender_sample_size === 0 || profile.gender_sample_size === null) && (
+      {/* Baseline running indicator — only while baseline is actively running AND no gender data exists yet */}
+      {!profile.baseline_complete && !profile.is_private && (profile.following_count ?? 0) > 0 &&
+        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
             <Loader2 className="w-3 h-3 animate-spin text-accent" />
