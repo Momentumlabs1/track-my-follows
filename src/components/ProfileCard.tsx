@@ -64,11 +64,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
         />
       )}
 
-      <button onClick={() => onTap(profileId)} className="native-card p-4 w-full text-start">
-        <div className="flex items-center gap-3">
+      <button onClick={() => onTap(profileId)} className="native-card w-full text-start overflow-hidden">
+        {/* Main profile row */}
+        <div className="flex items-center gap-3 p-4">
           <div className="relative flex-shrink-0">
-            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={44} />
-            {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={14} glow /></div>}
+            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={48} />
+            {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={16} glow /></div>}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -84,13 +85,13 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
 
-        {/* Recent follows strip – large avatars for depth */}
+        {/* Pink-tinted "Zuletzt gefolgt" sub-area */}
         {recentFollows.length > 0 && (
-          <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
+          <div className="bg-primary/5 dark:bg-primary/10 px-4 py-3 flex items-center justify-between rounded-b-2xl">
             <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{t("profile_detail.tab_following", "Zuletzt gefolgt")}</p>
             <div className="flex -space-x-2">
               {recentFollows.map((event) => (
-                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-card rounded-full">
+                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-primary/10 dark:ring-primary/20 rounded-full">
                   <InstagramAvatar src={event.target_avatar_url} alt={event.target_username || ""} fallbackInitials={event.target_username || "?"} size={40} />
                 </div>
               ))}
