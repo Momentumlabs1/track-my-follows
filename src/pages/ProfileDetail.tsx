@@ -156,7 +156,7 @@ const ProfileDetail = () => {
 
   const initialFollowEvents = useMemo(() =>
     followEvents
-      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true)
+      .filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true && (e as Record<string, unknown>).direction === "following")
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followEvents]);
 
