@@ -57,18 +57,19 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
   if (!spyProfile) {
     return (
       <div
-        className="rounded-3xl p-6 flex items-center gap-5"
+        className="rounded-[2rem] p-7 flex items-center gap-5"
         style={{
-          background: 'linear-gradient(145deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.25))',
-          border: '1.5px solid hsl(var(--primary) / 0.3)',
-          backdropFilter: 'blur(24px)',
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(32px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
         }}
       >
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-primary-foreground" style={{ fontSize: '0.9375rem' }}>
+          <p className="font-bold text-white" style={{ fontSize: '1rem' }}>
             {t("spy.assign_your_spy")}
           </p>
-          <p className="text-primary-foreground/70 mt-1" style={{ fontSize: '0.75rem' }}>
+          <p className="text-white/60 mt-1" style={{ fontSize: '0.8125rem' }}>
             {t("spy.spy_description")}
           </p>
         </div>
@@ -83,7 +84,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0"
         >
           <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <SpyIcon size={72} glow />
+            <SpyIcon size={80} glow />
           </motion.div>
         </motion.div>
       </div>
@@ -102,60 +103,60 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.3 }}
-        className="rounded-3xl overflow-hidden"
+        className="rounded-[2rem] overflow-hidden"
         style={{
-          background: 'linear-gradient(150deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.30))',
-          border: '1.5px solid hsl(var(--primary) / 0.35)',
-          backdropFilter: 'blur(24px)',
-          boxShadow: '0 8px 32px hsl(var(--primary) / 0.15), inset 0 1px 0 hsl(var(--primary-foreground) / 0.08)',
+          background: 'rgba(0,0,0,0.65)',
+          backdropFilter: 'blur(32px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
         }}
       >
         {/* ─── Title bar ─── */}
-        <div className="flex items-center gap-2 px-6 pt-5 pb-1">
-          <SpyIcon size={14} />
+        <div className="flex items-center gap-2 px-7 pt-6 pb-1">
+          <SpyIcon size={16} />
           <span
-            className="font-bold tracking-widest text-primary-foreground/80"
-            style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.15em' }}
+            className="font-bold tracking-widest"
+            style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.7)' }}
           >
             Spy Command Center
           </span>
         </div>
 
         {/* ─── Main content: Account LEFT ←→ Spy RIGHT ─── */}
-        <div className="px-6 py-5 flex items-center">
+        <div className="px-7 py-6 flex items-center">
           {/* LEFT: Monitored account */}
           <button
             onClick={() => navigate(`/profile/${spyProfile.id}`)}
-            className="flex flex-col items-center gap-2 text-center min-w-0"
+            className="flex flex-col items-center gap-2.5 text-center min-w-0"
           >
             {/* Avatar with thick gradient ring */}
             <div
-              className="rounded-full p-[3px]"
-              style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-rose)), hsl(var(--primary)))' }}
+              className="rounded-full p-[4px]"
+              style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(347 100% 75%), hsl(var(--primary)))' }}
             >
-              <div className="rounded-full overflow-hidden ring-[3px] ring-background">
+              <div className="rounded-full overflow-hidden" style={{ boxShadow: '0 0 0 3px rgba(0,0,0,0.65)' }}>
                 <InstagramAvatar
                   src={spyProfile.avatar_url}
                   alt={spyProfile.username}
                   fallbackInitials={spyProfile.username}
-                  size={76}
+                  size={80}
                 />
               </div>
             </div>
             <div>
-              <p className="font-bold text-primary-foreground truncate" style={{ fontSize: '0.9375rem', maxWidth: '120px' }}>
+              <p className="font-bold text-white truncate" style={{ fontSize: '1rem', maxWidth: '130px' }}>
                 @{spyProfile.username}
               </p>
               {(followerCount != null || followingCount != null) && (
-                <div className="flex items-center gap-2 mt-0.5 justify-center">
+                <div className="flex items-center gap-2.5 mt-1 justify-center">
                   {followerCount != null && (
-                    <span className="text-primary-foreground/60" style={{ fontSize: '0.6875rem' }}>
-                      <span className="font-semibold text-primary-foreground/90">{formatCount(followerCount)}</span> Follower
+                    <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.5)' }}>
+                      <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{formatCount(followerCount)}</span> Follower
                     </span>
                   )}
                   {followingCount != null && (
-                    <span className="text-primary-foreground/60" style={{ fontSize: '0.6875rem' }}>
-                      <span className="font-semibold text-primary-foreground/90">{formatCount(followingCount)}</span> Fol.
+                    <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.5)' }}>
+                      <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{formatCount(followingCount)}</span> Fol.
                     </span>
                   )}
                 </div>
@@ -164,17 +165,17 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           </button>
 
           {/* CENTER: Animated connection line */}
-          <div className="flex-1 flex items-center justify-center gap-1.5 px-2">
+          <div className="flex-1 flex items-center justify-center gap-2 px-3">
             {[0, 1, 2, 3, 4].map((i) => (
               <motion.div
                 key={i}
                 className="rounded-full"
                 style={{
-                  width: i === 2 ? 6 : 4,
-                  height: i === 2 ? 6 : 4,
-                  background: 'hsl(var(--primary-foreground))',
+                  width: i === 2 ? 7 : 5,
+                  height: i === 2 ? 7 : 5,
+                  background: 'white',
                 }}
-                animate={{ opacity: [0.15, 0.9, 0.15], scale: i === 2 ? [1, 1.3, 1] : 1 }}
+                animate={{ opacity: [0.12, 0.8, 0.12], scale: i === 2 ? [1, 1.4, 1] : 1 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
@@ -203,23 +204,32 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             onPointerUp={() => { if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy"); }}
             className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0"
           >
-            <div className="relative flex items-center justify-center" style={{ width: 100, height: 100 }}>
+            <div className="relative flex items-center justify-center" style={{ width: 112, height: 112 }}>
               {/* Outer glow */}
               <div
                 className="absolute rounded-full"
                 style={{
-                  width: 100, height: 100,
-                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.5) 0%, transparent 70%)',
-                  filter: 'blur(16px)',
+                  width: 112, height: 112,
+                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.6) 0%, transparent 70%)',
+                  filter: 'blur(20px)',
                 }}
               />
               {/* Mid glow */}
               <div
                 className="absolute rounded-full"
                 style={{
-                  width: 80, height: 80,
-                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, transparent 70%)',
-                  filter: 'blur(8px)',
+                  width: 88, height: 88,
+                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.35) 0%, transparent 70%)',
+                  filter: 'blur(10px)',
+                }}
+              />
+              {/* Inner glow */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 64, height: 64,
+                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)',
+                  filter: 'blur(4px)',
                 }}
               />
               {/* Pulsing spy icon */}
@@ -228,7 +238,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="relative"
               >
-                <SpyIcon size={88} glow />
+                <SpyIcon size={96} glow />
               </motion.div>
             </div>
           </motion.div>
@@ -237,19 +247,19 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         {/* ─── Footer: Status ─── */}
         <button
           onClick={() => navigate(`/profile/${spyProfile.id}`)}
-          className="w-full flex items-center gap-2.5 px-6 py-3.5"
-          style={{ borderTop: '1px solid hsl(var(--primary-foreground) / 0.1)' }}
+          className="w-full flex items-center gap-3 px-7 py-4"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
         >
           <motion.span
             className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-            style={{ background: 'hsl(var(--brand-green))', boxShadow: '0 0 8px hsl(var(--brand-green) / 0.7)' }}
+            style={{ background: 'hsl(var(--brand-green))', boxShadow: '0 0 10px hsl(var(--brand-green) / 0.8)' }}
             animate={{ opacity: [1, 0.5, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <span className="flex-1 text-start font-semibold" style={{ fontSize: '0.75rem', color: 'hsl(var(--brand-green))' }}>
+          <span className="flex-1 text-start font-semibold" style={{ fontSize: '0.8125rem', color: 'hsl(var(--brand-green))' }}>
             {t("spy.hourly_monitoring", "Stündliche Überwachung aktiv")}
           </span>
-          <ChevronRight className="h-4 w-4 text-primary-foreground/40 flex-shrink-0 rtl:rotate-180" />
+          <ChevronRight className="h-4 w-4 flex-shrink-0 rtl:rotate-180" style={{ color: 'rgba(255,255,255,0.35)' }} />
         </button>
       </motion.div>
     </AnimatePresence>

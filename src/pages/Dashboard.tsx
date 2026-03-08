@@ -57,7 +57,7 @@ const Dashboard = () => {
       
       {/* ═══ ZONE 1: Pink Header – nur Logo + Greeting ═══ */}
       <div
-        className="rounded-b-[2rem] pb-28"
+        className="rounded-b-[2rem] pb-32"
         style={{
           background: 'linear-gradient(180deg, hsl(347 100% 65%), hsl(347 90% 50%))',
         }}
@@ -78,7 +78,7 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ ZONE 2: Spy Bereich – eigene Sektion ═══ */}
-      <div className="px-5 -mt-20">
+      <div className="px-5 -mt-24">
         {isPro ? (
           <SpyWidget
             spyProfile={spyProfile}
