@@ -131,8 +131,8 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-10 pb-3 space-y-3">
-          <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
+        <div className="px-5 pt-8 pb-3 space-y-3">
+          <p className="section-header px-1">📡 {t("spy.monitored_accounts", "Überwachte Accounts")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
               onTap={handleProfileTap} onAssignSpy={handleMoveSpy} index={i} isDragging={isDragging} isHovered={hoveredProfileId === profile.id} />

@@ -1,43 +1,39 @@
 
 
-## Plan: Dashboard komplett visuell überarbeiten — klare Bereiche, starker Kontrast
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Kernprobleme
-1. **Kein visueller Unterschied** zwischen Spy-Bereich und Profilkarten — alles sieht gleich aus
-2. **ProfileCards haben keinen echten Hintergrund** — `card-pink` ist nur 10% Opacity, quasi unsichtbar
-3. **"Deine Profile"** ist als Label verwirrend — besser: "Überwachte Accounts" oder "Deine Accounts"
-4. **Kein klarer Sektions-Aufbau** — alles fließt ineinander ohne visuelle Trennung
-5. **Zuletzt-gefolgt-Bilder** noch zu groß
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Änderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. `src/components/SpyAgentCard.tsx` — Spy-Bereich als eigener Hero-Block
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-**Visuell komplett anders als Profilkarten:**
-- Größerer SpyIcon: **96px** statt 80px, zentrierter Fokus
-- Karten-Höhe erhöhen: oben ein großes "DEIN SPION" Label mit SpyIcon zentriert darunter, dann darunter den überwachten Account als kompakte Zeile
-- **Vertikales Layout statt horizontal** — damit der Spy-Bereich sich klar von den horizontalen Profilkarten unterscheidet:
-  - Oben: "🕵️ DEIN SPION" Titel zentriert
-  - Mitte: SpyIcon 96px zentriert mit intensivem Glow, "↕ Ziehe mich" darunter
-  - Unten: Überwachter Account als schmale weiße/halbtransparente Zeile (Avatar + @username + Stats) — so ist klar was der Spy überwacht
-- Stärkerer Box-Shadow und dickerer Border für mehr Tiefe
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-#### 2. `src/components/ProfileCard.tsx` — Echtes Pink
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-- **`card-pink` CSS-Klasse updaten** in `index.css`: Von `hsl(var(--primary) / 0.1)` auf einen echten soliden Pink-Gradient wie bei den inline-styles (die schon funktionieren)
-- Aber: Die Karte nutzt bereits inline-styles mit `linear-gradient(145deg, hsl(347 100% 62%), hsl(347 90% 52%))` — das Problem ist vielleicht Dark Mode oder dass die Klasse die Inline-Styles überschreibt
-- **Zuletzt-gefolgt-Bilder**: von 48px auf **36px** verkleinern
-
-#### 3. `src/pages/Dashboard.tsx` — Klare Sektionen
-
-- **Section-Label** ändern: "Deine Profile" → "Überwachte Accounts" (klarer was gemeint ist)
-- **Visueller Separator** zwischen Spy-Bereich und Profil-Liste: Abstand vergrößern + dezente Trennlinie oder Section-Header mit Icon
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-| Datei | Was |
-|---|---|
-| `SpyAgentCard.tsx` | Vertikales Layout, SpyIcon 96px zentriert, überwachter Account als Unter-Zeile |
-| `ProfileCard.tsx` | Bilder 36px statt 48px |
-| `Dashboard.tsx` | Section-Label umbenennen, bessere Abstände |
-| `index.css` | `card-pink` Klasse updaten falls nötig |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 

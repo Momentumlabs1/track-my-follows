@@ -156,7 +156,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                 <div
                   key={event.id}
                   className="overflow-hidden rounded-lg bg-muted"
-                  style={{ aspectRatio: '1/1', width: '48px', flexShrink: 0 }}
+                  style={{ aspectRatio: '1/1', width: '36px', flexShrink: 0 }}
                 >
                   <RectAvatar
                     src={event.target_avatar_url}
