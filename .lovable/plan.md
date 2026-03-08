@@ -1,37 +1,39 @@
 
 
-## Plan: Dashboard komplett überarbeiten
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Problem
-- Header zeigt nur den Namen — keine nützlichen Infos
-- Spy-Karte sieht unfertig aus (Icon in weisser Bubble, schlechte Anordnung)
-- Kein klarer visueller Break zwischen den drei Zonen
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Neue Struktur
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. Header (`Dashboard.tsx`) — Kompakter, mehr Infos
-- **Kleiner** machen: weniger vertikales Padding, `pb-24` statt `pb-40`
-- Unter dem Greeting **eine Info-Zeile** hinzufügen: `"{profiles.length} Accounts · Letzter Scan: {time}"` in `white/70`, `0.8125rem`
-- Optional: Kleines SpySecret-Logo links, Settings-Icon rechts im Header
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-#### 2. Spy-Karte (`SpyAgentCard.tsx`) — Komplett neu aufgebaut
-**Wenn Spy zugewiesen:**
-- **Horizontales Layout**: Linke Seite = Profil-Info (Avatar gross 56px + Username + Stats), Rechte Seite = SpyIcon (64px, ohne die hässliche weisse Bubble)
-- SpyIcon direkt auf dem Gradient, **kein** extra `background`/`border` Container drum herum
-- Oben: kleines Label "🕵️ DEIN SPION" + rechts daneben die Features als Chips/Tags
-- Unten: Separator-Linie + "Stündlich · Push-Scans · Unfollow-Erkennung" als dezente Zeile
-- Drag-Hint unter dem Icon: nur "↕ Ziehen" Text, kein Box
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-**Wenn kein Spy zugewiesen:** bleibt ähnlich, aber aufgeräumter
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-#### 3. Accounts-Section (`Dashboard.tsx`) — Mehr Abgrenzung
-- **Horizontale Linie** oder `border-t border-border/50` vor dem "Deine Accounts" Bereich
-- Section-Header bleibt wie aktuell (gut so)
-- Etwas mehr Abstand zwischen Spy und Accounts: `pt-10`
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-| Datei | Was |
-|---|---|
-| `Dashboard.tsx` | Header: Info-Zeile hinzufügen, weniger padding, Accounts-Section Abgrenzung |
-| `SpyAgentCard.tsx` | Spy-Karte: weisse Bubble vom Icon entfernen, Layout horizontal, aufgeräumter |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
