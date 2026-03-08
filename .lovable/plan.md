@@ -1,50 +1,39 @@
 
 
-## Plan: SpyAgentCard aufwerten + ProfileCards pink + Bilder quadratisch
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### 3 Probleme aus dem Screenshot
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-1. **SpyAgentCard sieht aus wie eine normale Profilkarte** — gleiche Höhe, gleicher Stil, nur mit kleinem Spy-Icon. Kein eigener "Spion-Bereich"-Charakter. Agent ist zu klein (56px), man erkennt nicht dass er ziehbar ist.
-2. **Profilkarten sind weiß (`native-card`)** — verschmelzen mit dem weißen Hintergrund, keine Abgrenzung.
-3. **"Zuletzt gefolgt"-Bilder sind 3:4 Rechtecke** statt Quadrate.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-### Änderungen
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-#### 1. `src/components/SpyAgentCard.tsx` — Spy-Bereich mit Charakter
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-Horizontales Layout bleibt (breiter als hoch), aber deutlich aufgewertet:
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-- **SpyIcon von 56px → 80px** mit stärkerem mehrstufigem Glow und pulsierender Scale-Animation
-- **Hinweis unter dem Icon**: kleiner Text "Ziehe mich!" oder Pfeil-Indikator damit klar ist, dass der Agent ziehbar ist
-- **Titel-Zeile oben** im Card: "🕵️ DEIN SPION" als dezenter Label damit sofort klar ist was der Bereich darstellt
-- **Avatar bleibt 48px** — der Agent soll das dominante Element sein, nicht das Profil
-- **"Überwachung aktiv"** Statuszeile bleibt pink (kein grün)
-- Hintergrund bleibt der dunkle Burgunder-Gradient — hebt sich gut ab
-
-Layout:
-```text
-┌─────────────────────────────────────────┐
-│  🕵️ DEIN SPION                         │
-│                                         │
-│  [Avatar 48px]  · · ·  [SpyIcon 80px]  │
-│  @username              ↕ Ziehe mich   │
-│  7.7K · 1.1K            🔴 Aktiv       │
-└─────────────────────────────────────────┘
-```
-
-#### 2. `src/components/ProfileCard.tsx` — Pink-Tint zurück
-
-- Ersetze `native-card` → `card-pink` in der Button-Klasse (Zeile 91)
-- So heben sich die Karten vom weißen Hintergrund ab
-
-#### 3. `src/components/ProfileCard.tsx` — Quadratische Bilder
-
-- Ändere `aspectRatio: '3/4'` → `aspectRatio: '1/1'` (Zeile 155)
-- "Zuletzt gefolgt" Bilder werden quadratisch statt rechteckig
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-| Datei | Was |
-|---|---|
-| `SpyAgentCard.tsx` | SpyIcon 80px, Titel-Label, Drag-Hinweis, stärkerer Glow |
-| `ProfileCard.tsx` | `card-pink` statt `native-card`, Bilder 1:1 statt 3:4 |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 

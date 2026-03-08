@@ -88,7 +88,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden native-card"
+        className="w-full text-start overflow-hidden card-pink"
       >
         {/* ═══ Profile Header ═══ */}
         <div className="p-4 pb-3">
@@ -152,7 +152,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                 <div
                   key={event.id}
                   className="flex-1 overflow-hidden rounded-lg bg-muted"
-                  style={{ aspectRatio: '3/4' }}
+                  style={{ aspectRatio: '1/1' }}
                 >
                   <RectAvatar
                     src={event.target_avatar_url}
