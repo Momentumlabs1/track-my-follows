@@ -140,7 +140,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
-              <ChevronRight className="h-4 w-4 text-white/50 rtl:rotate-180" />
+              <ChevronRight className="h-5 w-5 text-white/50 rtl:rotate-180" />
             </div>
           </div>
         </div>
