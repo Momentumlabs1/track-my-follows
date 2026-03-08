@@ -84,14 +84,14 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
         </div>
 
-        {/* Recent follows strip */}
+        {/* Recent follows strip – large avatars for depth */}
         {recentFollows.length > 0 && (
-          <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
-            <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.75rem' }}>{t("profile_detail.tab_following", "Zuletzt gefolgt")}</p>
-            <div className="flex -space-x-1.5 flex-1 justify-end">
+          <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
+            <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{t("profile_detail.tab_following", "Zuletzt gefolgt")}</p>
+            <div className="flex -space-x-2">
               {recentFollows.map((event) => (
-                <div key={event.id} className="flex-shrink-0 ring-2 ring-card rounded-full">
-                  <InstagramAvatar src={event.target_avatar_url} alt={event.target_username || ""} fallbackInitials={event.target_username || "?"} size={28} />
+                <div key={event.id} className="flex-shrink-0 ring-[2.5px] ring-card rounded-full">
+                  <InstagramAvatar src={event.target_avatar_url} alt={event.target_username || ""} fallbackInitials={event.target_username || "?"} size={40} />
                 </div>
               ))}
             </div>
