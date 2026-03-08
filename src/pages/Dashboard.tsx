@@ -55,7 +55,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
       
-      {/* ═══ ZONE 1: Pink Header – nur Logo + Greeting ═══ */}
+      {/* ═══ ZONE 1: Pink Header – centered text only ═══ */}
       <div
         className="rounded-b-[2rem] pb-32"
         style={{
@@ -63,21 +63,20 @@ const Dashboard = () => {
         }}
       >
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)]">
-          <div className="flex items-center gap-2.5 mb-4">
-            <img src={logoSquare} alt="Spy-Secret" className="h-7 w-7" />
-            <span className="font-bold text-white/90" style={{ fontSize: '1rem' }}>
-              Spy<span className="text-white">Secret</span>
-            </span>
-          </div>
+          {/* Brand name centered */}
+          <p className="text-center font-bold text-white/80 mb-3" style={{ fontSize: '0.8125rem', letterSpacing: '0.05em' }}>
+            SpySecret
+          </p>
+          {/* Greeting centered, no heart */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-white" style={{ fontSize: '1.875rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-              Hey {displayName}! ❤️
+            <h1 className="font-bold text-white text-center" style={{ fontSize: '1.875rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+              Hey {displayName}
             </h1>
           </motion.div>
         </div>
       </div>
 
-      {/* ═══ ZONE 2: Spy Bereich – eigene Sektion ═══ */}
+      {/* ═══ ZONE 2: Spy Bereich ═══ */}
       <div className="px-5 -mt-24">
         {isPro ? (
           <SpyWidget

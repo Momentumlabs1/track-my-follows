@@ -19,7 +19,7 @@ function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | nul
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className={`w-full h-full flex items-center justify-center font-bold text-primary-foreground gradient-pink ${className}`} style={{ fontSize: '0.875rem' }}>
+      <div className={`w-full h-full flex items-center justify-center font-bold text-primary-foreground gradient-pink ${className}`} style={{ fontSize: '0.75rem' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );
@@ -80,7 +80,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     >
       {isDropTarget && (
         <motion.div
-          className="absolute -inset-[2px] rounded-2xl border-2 border-primary pointer-events-none z-10"
+          className="absolute -inset-[2px] rounded-2xl border-2 border-white/60 pointer-events-none z-10"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
@@ -88,7 +88,11 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden card-pink"
+        className="w-full text-start overflow-hidden rounded-2xl"
+        style={{
+          background: 'linear-gradient(145deg, hsl(347 100% 62%), hsl(347 90% 52%))',
+          boxShadow: '0 4px 16px hsl(347 100% 50% / 0.25)',
+        }}
       >
         {/* ═══ Profile Header ═══ */}
         <div className="p-4 pb-3">
@@ -100,7 +104,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="font-bold text-foreground truncate" style={{ fontSize: '1rem' }}>
+                <p className="font-bold text-white truncate" style={{ fontSize: '1rem' }}>
                   @{profile.username}
                 </p>
                 {profile.is_private && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
@@ -110,19 +114,19 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {!profile.is_private && (followerCount != null || followingCount != null) && (
                 <div className="flex items-center gap-3 mt-1">
                   {followerCount != null && (
-                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                      <span className="font-semibold text-foreground">{followerCount.toLocaleString()}</span> Follower
+                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                      <span className="font-semibold text-white">{followerCount.toLocaleString()}</span> Follower
                     </span>
                   )}
                   {followingCount != null && (
-                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                      <span className="font-semibold text-foreground">{followingCount.toLocaleString()}</span> Following
+                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                      <span className="font-semibold text-white">{followingCount.toLocaleString()}</span> Following
                     </span>
                   )}
                 </div>
               )}
               {profile.is_private && (
-                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>
+                <p className="text-white/60 mt-0.5" style={{ fontSize: '0.75rem' }}>
                   {t("private_frozen_short", "Tracking eingefroren")} 🔒
                 </p>
               )}
@@ -131,19 +135,19 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             {/* Time + chevron */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {!profile.is_private && (
-                <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.6875rem' }}>
                   <Clock className="h-3 w-3" />
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
-              <ChevronRight className="h-4 w-4 text-muted-foreground rtl:rotate-180" />
+              <ChevronRight className="h-4 w-4 text-white/50 rtl:rotate-180" />
             </div>
           </div>
         </div>
 
-        {/* ═══ Zuletzt gefolgt – rectangles via InstagramAvatar ═══ */}
+        {/* ═══ Zuletzt gefolgt – white sub-area with square images ═══ */}
         {recentFollows.length > 0 && (
-          <div className="px-4 pb-4">
+          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.95)' }}>
             <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
@@ -151,8 +155,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="flex-1 overflow-hidden rounded-lg bg-muted"
-                  style={{ aspectRatio: '1/1' }}
+                  className="overflow-hidden rounded-lg bg-muted"
+                  style={{ aspectRatio: '1/1', width: '48px', flexShrink: 0 }}
                 >
                   <RectAvatar
                     src={event.target_avatar_url}
