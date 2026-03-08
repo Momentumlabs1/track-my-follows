@@ -36,28 +36,28 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
   const otherUsername = isFollowSource ? (event.target_username || "???") : (event.username || "???");
   const otherAvatar = isFollowSource ? event.target_avatar_url : event.profile_pic_url;
 
-  // Determine direction: who is the actor?
-  // "follow" source: tracked user follows/unfollows someone → tracked is actor (left)
-  // "follower" source gained: someone follows tracked → other is actor (left)
-  // "follower" source lost: someone unfollowed tracked → other is actor (left)
+  // Actor = who performed the action
+  // Follow source: tracked user follows/unfollows someone → tracked is actor
+  // Follower source gained: someone follows tracked → other is actor
+  // Follower source lost: someone unfollowed tracked → other is actor
   const trackedIsActor = isFollowSource;
 
-  const leftUsername = trackedIsActor ? trackedUsername : otherUsername;
-  const leftAvatar = trackedIsActor ? trackedAvatar : otherAvatar;
-  const rightUsername = trackedIsActor ? otherUsername : trackedUsername;
-  const rightAvatar = trackedIsActor ? otherAvatar : trackedAvatar;
+  const actorUsername = trackedIsActor ? trackedUsername : otherUsername;
+  const actorAvatar = trackedIsActor ? trackedAvatar : otherAvatar;
+  const targetUsername = trackedIsActor ? otherUsername : trackedUsername;
+  const targetAvatar = trackedIsActor ? otherAvatar : trackedAvatar;
 
   const getVerb = () => {
     if (isFollowSource) {
       if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
-        return { text: t("events.hasUnfollowed"), color: "text-destructive", isNegative: true };
+        return { text: t("events.hasUnfollowed"), isPositive: false };
       }
-      return { text: t("events.follows_now"), color: "text-brand-green", isNegative: false };
+      return { text: t("events.follows_now"), isPositive: true };
     }
     if (event.event_type === "lost") {
-      return { text: t("events.lostFollower"), color: "text-destructive", isNegative: true };
+      return { text: t("events.lostFollower"), isPositive: false };
     }
-    return { text: t("events.new_follower_of"), color: "text-brand-green", isNegative: false };
+    return { text: t("events.new_follower_of"), isPositive: true };
   };
 
   const verb = getVerb();
@@ -70,63 +70,63 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
       transition={{ delay: Math.min(index * 0.02, 0.15), duration: 0.2 }}
       className="feed-row relative"
     >
-      {/* Left avatar (actor) – highlighted ring if it's our tracked account */}
-      <div className={`flex-shrink-0 ${shouldBlur && !trackedIsActor ? "blur-md" : ""}`}>
+      {/* Actor avatar (left, 44px) with status dot */}
+      <div className={`relative flex-shrink-0 ${shouldBlur && !trackedIsActor ? "blur-md" : ""}`}>
         <div className={trackedIsActor ? "avatar-ring" : ""}>
           <InstagramAvatar
-            src={leftAvatar}
-            alt={leftUsername}
-            fallbackInitials={leftUsername}
-            size={trackedIsActor ? 44 : 40}
+            src={actorAvatar}
+            alt={actorUsername}
+            fallbackInitials={actorUsername}
+            size={44}
             className={trackedIsActor ? "ring-1 ring-background" : ""}
           />
         </div>
+        {/* Color dot indicator */}
+        <span
+          className={`absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-background ${
+            verb.isPositive ? "bg-brand-green" : "bg-destructive"
+          }`}
+        />
       </div>
 
-      {/* Center: text */}
+      {/* Sentence: @actor verb @target */}
       <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
-        <p style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
-          <span className="font-bold text-foreground">@{leftUsername}</span>
+        <p className="text-[0.8125rem] leading-snug">
+          <span className="font-bold text-foreground">@{actorUsername}</span>
           {" "}
-          <span className={`font-medium ${verb.color}`}>{verb.text}</span>
+          <span className={`font-semibold ${verb.isPositive ? "text-brand-green" : "text-destructive"}`}>
+            {verb.text}
+          </span>
+          {" "}
+          <span className="font-bold text-foreground">@{targetUsername}</span>
         </p>
-        <a
-          href={`https://instagram.com/${rightUsername}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          style={{ fontSize: '0.75rem' }}
-        >
-          @{rightUsername}
-        </a>
+        <span className="text-muted-foreground text-[0.6875rem]">
+          {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
+        </span>
       </div>
 
-      {/* Right avatar (target) – highlighted ring if it's our tracked account */}
+      {/* Target avatar (right, 32px) */}
       <div className={`flex-shrink-0 ${shouldBlur && trackedIsActor ? "blur-md" : ""}`}>
-        <div className={!trackedIsActor ? "avatar-ring" : ""}>
+        <div className={!trackedIsActor ? "avatar-ring-sm" : ""}>
           <InstagramAvatar
-            src={rightAvatar}
-            alt={rightUsername}
-            fallbackInitials={rightUsername}
-            size={!trackedIsActor ? 44 : 36}
-            className={!trackedIsActor ? "ring-1 ring-background" : "opacity-80"}
+            src={targetAvatar}
+            alt={targetUsername}
+            fallbackInitials={targetUsername}
+            size={32}
+            className={!trackedIsActor ? "ring-1 ring-background" : "opacity-60"}
           />
         </div>
       </div>
 
-      {/* Time + unread dot */}
-      <div className="flex flex-col items-end flex-shrink-0 gap-1">
-        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-          {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
-        </span>
-        {!event.is_read && !shouldBlur && (
-          <span className="h-2 w-2 rounded-full bg-primary" />
-        )}
-      </div>
+      {/* Unread dot */}
+      {!event.is_read && !shouldBlur && (
+        <span className="absolute top-2 end-3 h-2 w-2 rounded-full bg-primary" />
+      )}
 
+      {/* Paywall overlay */}
       {shouldBlur && (
         <button onClick={() => showPaywall("blur")} className="absolute inset-0 flex items-center justify-center">
-          <span className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5" style={{ fontSize: '0.8125rem' }}>
+          <span className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 text-[0.8125rem]">
             <Lock className="h-3.5 w-3.5" /> {t("events.upgrade_to_reveal")}
           </span>
         </button>
