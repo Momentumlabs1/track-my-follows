@@ -104,7 +104,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="font-bold text-white truncate" style={{ fontSize: '1rem' }}>
+                <p className="font-bold text-white truncate" style={{ fontSize: '1.125rem' }}>
                   @{profile.username}
                 </p>
                 {profile.is_private && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
