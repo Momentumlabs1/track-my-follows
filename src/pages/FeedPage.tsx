@@ -83,6 +83,20 @@ const FeedPage = () => {
     return { username: latestEvent.username || "???", verb: latestEvent.event_type === "lost" ? t("events.lostFollower") : t("events.newFollower") };
   })() : null;
 
+  // Event badge helper
+  const getEventBadge = (event: UnifiedFeedEvent) => {
+    if (event.source === "follow") {
+      if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
+        return { label: t("events.hasUnfollowed", "Entfolgt"), bg: 'hsl(4 90% 58%)' };
+      }
+      return { label: t("events.follows_now", "Neuer Follow"), bg: 'hsl(142 71% 45%)' };
+    }
+    if (event.event_type === "lost") {
+      return { label: t("events.lostFollower", "Verloren"), bg: 'hsl(25 95% 53%)' };
+    }
+    return { label: t("events.newFollower", "Neuer Follower"), bg: 'hsl(210 100% 56%)' };
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -96,7 +110,7 @@ const FeedPage = () => {
         <h1 className="font-bold text-foreground" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t("feed.whats_new", "What's new?")}</h1>
       </div>
 
-      {/* Spy of the Day */}
+      {/* ═══ Spy of the Day – bold pink gradient card ═══ */}
       {isPro && latestEvent && latestInfo && (() => {
         const avatarUrl = latestEvent.source === "follow" ? latestEvent.target_avatar_url : latestEvent.profile_pic_url;
         const trackedUsername = latestEvent.tracked_profiles?.username;
@@ -109,28 +123,54 @@ const FeedPage = () => {
           if (hrs < 24) return t("dashboard.hours_ago", { count: hrs });
           return t("dashboard.days_ago", { count: Math.floor(hrs / 24) });
         })();
+        const badge = getEventBadge(latestEvent);
 
         return (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="mx-5 mb-6">
-            <button onClick={() => { haptic.light(); navigate(`/profile/${latestEvent.tracked_profile_id}`); }} className="w-full text-start native-card p-4 active:scale-[0.98] transition-transform">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <SpyIcon size={18} glow />
-                  <span className="section-header">{t("simple.spy_of_the_day")}</span>
+            <button
+              onClick={() => { haptic.light(); navigate(`/profile/${latestEvent.tracked_profile_id}`); }}
+              className="w-full text-start rounded-2xl overflow-hidden active:scale-[0.98] transition-transform"
+              style={{ background: 'linear-gradient(145deg, hsl(347 100% 68%), hsl(347 85% 45%))' }}
+            >
+              <div className="p-5">
+                {/* Top: label + badge + time */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <SpyIcon size={20} />
+                    <span className="text-white font-bold tracking-wide" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      {t("simple.spy_of_the_day")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="font-semibold rounded-full px-2.5 py-0.5"
+                      style={{ fontSize: '0.625rem', background: badge.bg, color: '#fff' }}
+                    >
+                      {badge.label}
+                    </span>
+                    <span className="text-white/50" style={{ fontSize: '0.6875rem' }}>{timeAgo}</span>
+                  </div>
                 </div>
-                <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{timeAgo}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover bg-muted" />
-                  ) : (
-                    <div className="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">{latestInfo.username[0]?.toUpperCase()}</div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground truncate" style={{ fontSize: '0.9375rem' }}>@{latestInfo.username}</p>
-                  {trackedUsername && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{t("simple.spy_of_the_day_subtitle_at", "bei")} @{trackedUsername}</p>}
+
+                {/* Avatar + info */}
+                <div className="flex items-center gap-3.5">
+                  <div className="flex-shrink-0 rounded-full ring-2 ring-white/25 p-[2px]">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="h-13 w-13 rounded-full object-cover" style={{ width: 52, height: 52 }} />
+                    ) : (
+                      <div className="rounded-full bg-white/20 flex items-center justify-center text-white font-bold" style={{ width: 52, height: 52, fontSize: '1.125rem' }}>
+                        {latestInfo.username[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-white truncate" style={{ fontSize: '1.0625rem' }}>@{latestInfo.username}</p>
+                    {trackedUsername && (
+                      <p className="text-white/65 truncate mt-0.5" style={{ fontSize: '0.8125rem' }}>
+                        {t("simple.spy_of_the_day_subtitle_at", "bei")} @{trackedUsername}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </button>
@@ -138,15 +178,28 @@ const FeedPage = () => {
         );
       })()}
 
+      {/* Locked version for free users */}
       {!isPro && profiles.length > 0 && (
         <div className="mx-5 mb-5">
-          <button onClick={() => { haptic.light(); showPaywall("spy_of_the_day"); }} className="w-full text-start relative overflow-hidden rounded-2xl">
-            <div className="native-card p-4 opacity-30 blur-[2px]">
-              <div className="flex items-center gap-1.5 mb-2"><SpyIcon size={16} /><span className="section-header">{t("simple.spy_of_the_day")}</span></div>
-              <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-full bg-muted" /><div className="h-3 w-24 rounded bg-muted" /></div>
+          <button
+            onClick={() => { haptic.light(); showPaywall("spy_of_the_day"); }}
+            className="w-full text-start relative overflow-hidden rounded-2xl"
+            style={{ background: 'linear-gradient(145deg, hsl(347 100% 68%), hsl(347 85% 45%))' }}
+          >
+            <div className="p-5 opacity-25 blur-[3px] pointer-events-none">
+              <div className="flex items-center gap-2 mb-3">
+                <SpyIcon size={18} />
+                <span className="text-white font-bold" style={{ fontSize: '0.6875rem', textTransform: 'uppercase' }}>{t("simple.spy_of_the_day")}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-white/20" style={{ width: 48, height: 48 }} />
+                <div><div className="h-3 w-24 rounded bg-white/30 mb-1.5" /><div className="h-2.5 w-16 rounded bg-white/20" /></div>
+              </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
-              <span className="font-semibold text-primary flex items-center gap-1.5" style={{ fontSize: '0.8125rem' }}><Lock className="h-4 w-4" /> {t("paywall.unlock_spy", "Spy freischalten")}</span>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="font-semibold text-white flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-5 py-2.5 rounded-xl" style={{ fontSize: '0.8125rem' }}>
+                <Lock className="h-4 w-4" /> {t("paywall.unlock_spy", "Spy freischalten")}
+              </span>
             </div>
           </button>
         </div>
