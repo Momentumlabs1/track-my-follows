@@ -134,20 +134,6 @@ const ProfileDetail = () => {
     followEvents.filter((e) => (e as Record<string, unknown>).direction === "following"),
     [followEvents]);
 
-  const suspicionAnalysis = analyzeSuspicion(
-    followingDirectionEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t,
-  );
-
-  const weeklyScores = useMemo(() => Array.from({ length: 4 }, (_, i) => {
-    const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
-    const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekEvents = followingDirectionEvents.filter((e) => {
-      const d = new Date(e.detected_at);
-      return d >= weekStart && d < weekEnd;
-    });
-    return analyzeSuspicion(weekEvents, [], profile?.follower_count ?? 0, profile?.following_count ?? 0).overallScore;
-  }).reverse(), [followingDirectionEvents, profile]);
-
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
 
   // Event lists
