@@ -1,39 +1,71 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: SpyAgentCard komplett neu + visuelle Trennung von Profilkarten
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem (Screenshot-Analyse)
+1. **SpyAgentCard und ProfileCards sehen identisch aus** — beides `card-pink` mit dem gleichen rosa Tint. Null Unterscheidung.
+2. **SpyAgentCard ist zu klein** — nur eine Zeile mit Avatar + Dots + Spy-Icon, alles gequetscht.
+3. **Alles verschmilzt** — Pink auf Pink auf Pink, keine Hierarchie.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Lösung: 3 klare visuelle Zonen
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+```text
+┌──────────────────────────────────────┐
+│  Pink Gradient Header                │
+│  Logo + "Hey ewcwe!"                 │
+│                                      │
+│  ┌──────────────────────────────────┐│
+│  │  ★ SPY COMMAND CENTER ★         ││
+│  │                                  ││
+│  │  ┌──────────┐    ┌────────────┐ ││
+│  │  │ Avatar   │    │  SpyIcon   │ ││
+│  │  │  80px    │····│   88px     │ ││
+│  │  │ gradient │    │  glow+     │ ││
+│  │  │  ring    │    │  pulse     │ ││
+│  │  └──────────┘    └────────────┘ ││
+│  │  @username                      ││
+│  │  7.7K Follower · 1.1K Following ││
+│  │  🟢 Stündliche Überwachung      ││
+│  └──────────────────────────────────┘│
+└──────────────────────────────────────┘
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+  DEINE PROFILE  (section header)
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+  ┌──────────────────────────────────┐
+  │ native-card (weiß/dunkel,       │
+  │ KEIN Pink-Tint!)                 │
+  │ @saif_nassiri  7.698 · 1.081    │
+  │ ZULETZT GEFOLGT: [img][img]...  │
+  └──────────────────────────────────┘
+```
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+### Änderungen
+
+#### 1. `src/components/SpyAgentCard.tsx` — Komplett neu
+- **Viel größer**: Vertikales Layout statt horizontal gequetscht
+- **Oben**: Titel "SPY COMMAND CENTER" mit SpyIcon (16px) daneben
+- **Mitte**: Zwei große Elemente nebeneinander:
+  - Links: Avatar **80px** mit dickem Gradient-Ring + Username + Stats darunter
+  - Rechts: SpyIcon **88px** mit intensivem mehrschichtigem Glow + Pulse-Animation, draggable
+  - Dazwischen: Animierte horizontale Verbindungslinie (5 pulsierende Dots)
+- **Unten**: Grüner Status-Dot + "Stündliche Überwachung aktiv" + Chevron
+- **Hintergrund**: Dunkler als bisher — `hsl(var(--primary) / 0.20)` mit `border: 1.5px solid hsl(var(--primary) / 0.35)` und stärkerem `backdrop-blur(24px)`. MUSS sich deutlich von den Profilkarten unterscheiden.
+- **Kein `card-pink` Class** — eigener inline Style
+
+#### 2. `src/components/ProfileCard.tsx` — Kein Pink mehr!
+- Ersetze `card-pink` durch `native-card` — normaler Karten-Hintergrund (weiß im Light Mode, fast-schwarz im Dark Mode)
+- Die Profilkarten sollen sich klar vom Spy-Element unterscheiden: neutral, clean, keine rosa Tönung
+- Rest bleibt gleich (RectAvatar, Stats, etc.)
+
+#### 3. `src/pages/Dashboard.tsx` — Pink Header bis unter Spy-Karte ziehen
+- Pink Gradient Header bekommt `pb-28` statt `pb-12`, damit er bis unter die SpyAgentCard reicht
+- SpyAgentCard sitzt mit `-mt-20` im Overlap-Bereich → die Karte "sitzt" auf dem pinken Header
+- Mehr Abstand (`pt-10`) vor "DEINE PROFILE" Sektion
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+| Datei | Was |
+|---|---|
+| `SpyAgentCard.tsx` | Komplett neu: größer, vertikaler, eigener starker Pink-Hintergrund |
+| `ProfileCard.tsx` | `card-pink` → `native-card` (neutral, kein Pink) |
+| `Dashboard.tsx` | Header verlängern, SpyCard overlap, mehr Abstand zu Profilen |
 
