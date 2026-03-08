@@ -115,7 +115,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.25 }}
-        className="relative rounded-3xl p-5"
+        className="relative rounded-3xl p-6"
         style={{
           background: "linear-gradient(140deg, hsl(var(--primary)), hsl(var(--brand-rose)))",
           boxShadow: isDragging
