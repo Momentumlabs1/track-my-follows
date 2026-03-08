@@ -19,7 +19,7 @@ function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | nul
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className={`w-full h-full flex items-center justify-center font-bold text-primary-foreground gradient-pink ${className}`} style={{ fontSize: '0.75rem' }}>
+      <div className={`w-full h-full flex items-center justify-center font-bold text-white/90 ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(0 0% 100% / 0.2)' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );
@@ -95,16 +95,16 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
         }}
       >
         {/* ═══ Profile Header ═══ */}
-        <div className="p-4 pb-3">
+        <div className="p-5 pb-4">
           <div className="flex items-center gap-3.5">
             <div className="relative flex-shrink-0">
-              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={52} />
+              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={56} />
               {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={16} glow /></div>}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="font-bold text-white truncate" style={{ fontSize: '1rem' }}>
+                <p className="font-bold text-white truncate" style={{ fontSize: '1.125rem' }}>
                   @{profile.username}
                 </p>
                 {profile.is_private && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
@@ -114,12 +114,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {!profile.is_private && (followerCount != null || followingCount != null) && (
                 <div className="flex items-center gap-3 mt-1">
                   {followerCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
                       <span className="font-semibold text-white">{followerCount.toLocaleString()}</span> Follower
                     </span>
                   )}
                   {followingCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
                       <span className="font-semibold text-white">{followingCount.toLocaleString()}</span> Following
                     </span>
                   )}
@@ -135,20 +135,20 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
             {/* Time + chevron */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {!profile.is_private && (
-                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.6875rem' }}>
+                <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.75rem' }}>
                   <Clock className="h-3 w-3" />
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
-              <ChevronRight className="h-4 w-4 text-white/50 rtl:rotate-180" />
+              <ChevronRight className="h-5 w-5 text-white/50 rtl:rotate-180" />
             </div>
           </div>
         </div>
 
         {/* ═══ Zuletzt gefolgt – white sub-area with square images ═══ */}
         {recentFollows.length > 0 && (
-          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.95)' }}>
-            <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          <div className="mx-2 mb-2 rounded-xl px-3 py-3" style={{ background: 'hsl(0 0% 100% / 0.15)' }}>
+            <p className="text-white/70 mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
             <div className="flex gap-1.5">

@@ -57,19 +57,19 @@ const Dashboard = () => {
       
       {/* ═══ ZONE 1: Pink Header – centered text only ═══ */}
       <div
-        className="rounded-b-[2rem] pb-32"
+        className="rounded-b-[2rem] pb-40"
         style={{
           background: 'linear-gradient(180deg, hsl(347 100% 65%), hsl(347 90% 50%))',
         }}
       >
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)]">
           {/* Brand name centered */}
-          <p className="text-center font-bold text-white/80 mb-3" style={{ fontSize: '0.8125rem', letterSpacing: '0.05em' }}>
+          <p className="text-center font-bold text-white/80 mb-3" style={{ fontSize: '0.875rem', letterSpacing: '0.05em' }}>
             SpySecret
           </p>
           {/* Greeting centered, no heart */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-white text-center" style={{ fontSize: '1.875rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+            <h1 className="font-bold text-white text-center" style={{ fontSize: '2.25rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
               Hey {displayName}
             </h1>
           </motion.div>
@@ -77,7 +77,7 @@ const Dashboard = () => {
       </div>
 
       {/* ═══ ZONE 2: Spy Bereich ═══ */}
-      <div className="px-5 -mt-24">
+      <div className="px-5 -mt-28">
         {isPro ? (
           <SpyWidget
             spyProfile={spyProfile}
@@ -131,8 +131,8 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-8 pb-3 space-y-3">
-          <p className="section-header px-1">📡 {t("spy.monitored_accounts", "Überwachte Accounts")}</p>
+        <div className="px-5 pt-6 pb-3 space-y-4">
+          <p className="px-1 uppercase tracking-[0.08em] font-semibold" style={{ fontSize: '0.8125rem', color: 'hsl(var(--muted-foreground))' }}>📡 {t("spy.monitored_accounts", "Überwachte Accounts")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
               onTap={handleProfileTap} onAssignSpy={handleMoveSpy} index={i} isDragging={isDragging} isHovered={hoveredProfileId === profile.id} />
