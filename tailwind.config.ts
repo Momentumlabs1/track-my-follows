@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['-apple-system', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+        sans: ['"SF Pro Display"', '"SF Pro Text"', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
         arabic: ['"IBM Plex Sans Arabic"', '-apple-system', 'system-ui', 'sans-serif'],
+        mono: ['"SF Mono"', '"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -57,6 +58,7 @@ export default {
           green: "hsl(var(--brand-green))",
           red: "hsl(var(--brand-red))",
           yellow: "hsl(var(--brand-yellow))",
+          blue: "hsl(var(--brand-blue))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

@@ -1,11 +1,9 @@
 import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, TrendingUp, TrendingDown, Lock, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
 import { useAuth } from "@/contexts/AuthContext";
-import logoSquare from "@/assets/logo-square.png";
 import { SpyIcon } from "@/components/SpyIcon";
 import { ScanStatus } from "@/components/ScanStatus";
 import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/hooks/useTrackedProfiles";
@@ -47,8 +45,6 @@ function formatCount(n: number): string {
 
 type TabId = "new_follows" | "new_followers" | "unfollowed" | "insights";
 
-
-
 const ProfileDetail = () => {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
@@ -73,9 +69,6 @@ const ProfileDetail = () => {
   const hasSpy = profile?.has_spy === true;
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
-
-
-
 
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
 
@@ -150,18 +143,13 @@ const ProfileDetail = () => {
     deleteProfile.mutate(id, { onSuccess: () => navigate("/dashboard", { replace: true }) });
   };
 
-  const handleAssignSpy = () => {
-    if (!id) return;
-    moveSpy.mutate(id);
-  };
-
   // Follower/following deltas
   const followerDelta = (profile?.previous_follower_count != null && profile.previous_follower_count > 0)
     ? (profile.follower_count ?? 0) - profile.previous_follower_count : null;
   const followingDelta = (profile?.previous_following_count != null && profile.previous_following_count > 0)
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
-  // Tab lock logic: Free = paywall, Pro without spy = spy required
+  // Tab lock logic
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
     if (tabId === "new_follows") {
       return { locked: plan === "free", lockType: plan === "free" ? "paywall" : null };
@@ -172,10 +160,10 @@ const ProfileDetail = () => {
   };
 
   const tabs = [
-    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, icon: "💘", ...getTabLock("new_follows") },
-    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, icon: "👥", ...getTabLock("new_followers") },
-    { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, icon: "💔", ...getTabLock("unfollowed") },
-    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, icon: "📊", ...getTabLock("insights") },
+    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, ...getTabLock("new_follows") },
+    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, ...getTabLock("new_followers") },
+    { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
+    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, ...getTabLock("insights") },
   ];
 
   if (isLoading) {
@@ -190,7 +178,7 @@ const ProfileDetail = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <span className="text-5xl mb-4">🥲</span>
-        <p className="text-muted-foreground text-sm">{t("profile_detail.not_found")}</p>
+        <p className="text-muted-foreground" style={{ fontSize: '1rem' }}>{t("profile_detail.not_found")}</p>
       </div>
     );
   }
@@ -198,104 +186,103 @@ const ProfileDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
+      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
-        <div className="flex items-center gap-2">
-          {hasSpy && <SpyIcon size={22} glow />}
-          <span className="text-[13px] font-bold text-muted-foreground">@{profile.username}</span>
-        </div>
+        <span className="text-muted-foreground font-semibold" style={{ fontSize: '0.8125rem' }}>@{profile.username}</span>
         <div className="flex items-center gap-0">
           <button
             onClick={handleScan}
             disabled={isScanning || profile.is_private}
-            className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50"
+            className="p-2 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-30"
           >
             {isScanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
           </button>
           <button onClick={handleDelete} className="p-2 -me-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Trash2 className="h-4.5 w-4.5" />
+            <Trash2 className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* Profile Card */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-4 pt-2 pb-4">
-        <div className="native-card p-5">
-          {/* Avatar centered with spy badge */}
-          <div className="flex flex-col items-center mb-4">
-            <div className="relative">
-              <div className="avatar-ring p-[2.5px]">
+      {/* Profile Hero */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-4 pb-8">
+        {/* Avatar centered */}
+        <div className="flex flex-col items-center mb-5">
+          <div className="relative">
+            {hasSpy ? (
+              <div className="avatar-ring p-[2px]">
                 <div className="rounded-full bg-background p-[2px]">
-                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={72} />
+                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={88} />
                 </div>
               </div>
-              {hasSpy && (
-                <div className="absolute -top-2 -end-2"><SpyIcon size={32} glow /></div>
-              )}
-            </div>
-            <p className="text-[15px] font-bold text-foreground mt-2">@{profile.username}</p>
-            {profile.display_name && (
-              <p className="text-[12px] text-muted-foreground">{profile.display_name}</p>
-            )}
-            {/* Status label */}
-            {hasSpy ? (
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[10px] font-semibold text-green-400">{t("spy.spy_active")} · {t("spy.every_hour")}</span>
-              </div>
             ) : (
-              <div className="flex items-center gap-1.5 mt-1">
-                <ScanStatus lastScannedAt={profile.last_scanned_at} />
-                <span className="text-[10px] text-muted-foreground">
-                  · {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
-                </span>
-              </div>
+              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={88} />
+            )}
+            {hasSpy && (
+              <div className="absolute -top-2 -end-2"><SpyIcon size={32} glow /></div>
             )}
           </div>
+          <p className="text-foreground font-bold mt-3" style={{ fontSize: '1.375rem' }}>@{profile.username}</p>
+          {profile.display_name && (
+            <p className="text-muted-foreground" style={{ fontSize: '0.9375rem' }}>{profile.display_name}</p>
+          )}
+          {/* Status */}
+          {hasSpy ? (
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="h-2 w-2 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+              <span className="text-brand-green font-semibold" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_active")} · {t("spy.every_hour")}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-2">
+              <ScanStatus lastScannedAt={profile.last_scanned_at} />
+              <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
+                · {t("profile_detail.tracking_since", { date: new Date(profile.created_at).toLocaleDateString() })}
+              </span>
+            </div>
+          )}
+        </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="native-card p-3 text-center">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-xl font-extrabold tabular-nums">{formatCount(profile.follower_count ?? 0)}</span>
-                {followerDelta !== null && followerDelta !== 0 && (
-                  <span className={`text-[10px] font-bold flex items-center ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
-                    {followerDelta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {followerDelta > 0 ? "+" : ""}{followerDelta}
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground font-medium">{t("dashboard.followers")}</p>
+        {/* Follower / Following stat boxes */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="native-card-elevated p-4 text-center" style={{ borderRadius: '12px' }}>
+            <div className="flex items-baseline justify-center gap-1.5">
+              <span className="font-bold font-mono-num text-foreground" style={{ fontSize: '1.75rem' }}>{formatCount(profile.follower_count ?? 0)}</span>
+              {followerDelta !== null && followerDelta !== 0 && (
+                <span className={`font-bold flex items-center gap-0.5 ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
+                  {followerDelta > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                  {followerDelta > 0 ? "+" : ""}{followerDelta}
+                </span>
+              )}
             </div>
-            <div className="native-card p-3 text-center">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-xl font-extrabold tabular-nums">{formatCount(profile.following_count ?? 0)}</span>
-                {followingDelta !== null && followingDelta !== 0 && (
-                  <span className={`text-[10px] font-bold flex items-center ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`}>
-                    {followingDelta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {followingDelta > 0 ? "+" : ""}{followingDelta}
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground font-medium">{t("dashboard.following")}</p>
+            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("dashboard.followers")}</p>
+          </div>
+          <div className="native-card-elevated p-4 text-center" style={{ borderRadius: '12px' }}>
+            <div className="flex items-baseline justify-center gap-1.5">
+              <span className="font-bold font-mono-num text-foreground" style={{ fontSize: '1.75rem' }}>{formatCount(profile.following_count ?? 0)}</span>
+              {followingDelta !== null && followingDelta !== 0 && (
+                <span className={`font-bold flex items-center gap-0.5 ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
+                  {followingDelta > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                  {followingDelta > 0 ? "+" : ""}{followingDelta}
+                </span>
+              )}
             </div>
+            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("dashboard.following")}</p>
           </div>
         </div>
       </motion.div>
 
-      {/* Assign Spy CTA (Pro without Spy) */}
+      {/* Assign Spy CTA */}
       {isPro && !hasSpy && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-4 mb-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="px-5 mb-8">
           <button
             onClick={() => setMoveSpyOpen(true)}
-            className="w-full native-card p-4 border border-dashed border-primary/30 flex items-center gap-3"
+            className="w-full native-card p-5 flex items-center gap-3"
           >
             <SpyIcon size={40} glow />
             <div className="flex-1 text-start">
-              <p className="text-[13px] font-bold text-foreground">{t("spy.assign_spy_here")}</p>
-              <p className="text-[11px] text-muted-foreground">{t("spy.spy_required_description")}</p>
+              <p className="font-bold text-foreground" style={{ fontSize: '0.8125rem' }}>{t("spy.assign_spy_here")}</p>
+              <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_required_description")}</p>
             </div>
           </button>
         </motion.div>
@@ -303,42 +290,42 @@ const ProfileDetail = () => {
 
       {/* Private account banner */}
       {profile.is_private && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
-          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20">
-            <Lock className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-5 mb-8">
+          <div className="flex items-start gap-3 native-card p-5">
+            <Lock className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-[13px] font-bold text-destructive">
+              <p className="font-bold text-destructive" style={{ fontSize: '1rem' }}>
                 {profile.initial_scan_done ? t("private_frozen") : t("private_cannot_track")}
               </p>
               {profile.initial_scan_done && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t("private_frozen_subtitle")}</p>
+                <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>{t("private_frozen_subtitle")}</p>
               )}
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Baseline running indicator — only while baseline is actively running AND no gender data exists yet */}
+      {/* Baseline running indicator */}
       {!profile.baseline_complete && !profile.is_private && (profile.following_count ?? 0) > 0 &&
         (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-4 mb-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
-            <Loader2 className="w-3 h-3 animate-spin text-accent" />
-            <span className="text-accent text-xs">{t("gender_analysis_running")}</span>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="px-5 mb-8">
+          <div className="flex items-center gap-3 native-card p-5">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
           </div>
         </motion.div>
       )}
 
       {/* 7-Day Insights Bubble Grid */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-4 mb-4 relative">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="px-5 mb-8 relative">
         {(!canUseStats || (!hasSpy && isPro)) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             {!isPro ? (
-              <button onClick={() => showPaywall("stats")} className="gradient-pink text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
-                <Lock className="h-3.5 w-3.5" /> {t("profile_detail.pro_required")}
+              <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.8125rem' }}>
+                <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
               </button>
             ) : (
-              <button onClick={() => setMoveSpyOpen(true)} className="bg-primary/90 text-primary-foreground text-[12px] font-bold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
+              <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.8125rem' }}>
                 <SpyIcon size={14} /> {t("spy.spy_required")}
               </button>
             )}
@@ -349,8 +336,8 @@ const ProfileDetail = () => {
         </div>
       </motion.div>
 
-      {/* Scrollable Tab Chips */}
-      <div ref={tabsRef} className="px-4 mb-4 overflow-x-auto scrollbar-none">
+      {/* Tab Chips */}
+      <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto scrollbar-none">
         <div className="flex gap-2 w-max">
           {tabs.map((tab) => (
             <button
@@ -363,23 +350,23 @@ const ProfileDetail = () => {
                 }
                 setActiveTab(tab.id);
               }}
-              className={`flex-shrink-0 px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 flex items-center gap-1.5 min-h-[40px] ${
+              className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center gap-1.5 min-h-[44px] ${
                 activeTab === tab.id
-                  ? "gradient-pink text-primary-foreground shadow-lg"
-                  : "bg-secondary text-muted-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground"
               }`}
+              style={{ fontSize: '0.8125rem' }}
             >
-              <span>{tab.icon}</span>
               <span>{tab.label}</span>
               {tab.count !== null && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full tabular-nums ${
+                <span className={`px-1.5 py-0.5 rounded-full font-mono-num font-bold ${
                   activeTab === tab.id ? "bg-primary-foreground/20" : "bg-foreground/10"
-                }`}>
+                }`} style={{ fontSize: '0.6875rem' }}>
                   {tab.count}
                 </span>
               )}
               {tab.locked && (
-                <span className="text-[10px]">
+                <span style={{ fontSize: '0.6875rem' }}>
                   {tab.lockType === "paywall" ? "🔒" : <SpyIcon size={12} />}
                 </span>
               )}
@@ -389,10 +376,9 @@ const ProfileDetail = () => {
       </div>
 
       {/* Tab Content */}
-      <motion.div className="px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
+      <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
-            {/* Real new events */}
             <EventList
               events={newFollowEvents.map((e) => ({
                 id: e.id,
@@ -414,7 +400,6 @@ const ProfileDetail = () => {
               emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
               sectionTitle={initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined}
             />
-            {/* Initial snapshot events */}
             {initialFollowEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2 text-muted-foreground">{t("existing_at_first_scan")}</p>
@@ -492,23 +477,16 @@ const ProfileDetail = () => {
         )}
 
         {activeTab === "unfollowed" && (
-          <div className="space-y-3">
-            {/* Unfollow Hint Banner */}
+          <div className="space-y-4">
             {(profile.pending_unfollow_hint ?? 0) > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 6 }} 
-                animate={{ opacity: 1, y: 0 }}
-                className="native-card p-3.5 border border-destructive/25 bg-destructive/5"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm">⚠️</span>
-                  </div>
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="native-card p-5">
+                <div className="flex items-center gap-3">
+                  <span style={{ fontSize: '1.5rem' }}>⚠️</span>
                   <div>
-                    <span className="text-[12px] font-bold text-destructive">
+                    <span className="font-bold text-destructive" style={{ fontSize: '1rem' }}>
                       ~{profile.pending_unfollow_hint} {t("spy.unfollows_detected")}
                     </span>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                    <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>
                       {t("spy.unfollow_hint_explanation")}
                     </p>
                   </div>
@@ -516,26 +494,21 @@ const ProfileDetail = () => {
               </motion.div>
             )}
 
-            {/* Spy Scan CTA */}
-            {hasSpy && (
-              <UnfollowCheckButton profileId={profile.id} />
-            )}
+            {hasSpy && <UnfollowCheckButton profileId={profile.id} />}
 
-            {/* Info banner - compact */}
             <div className="flex items-center gap-2 px-1">
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
-              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+              <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <p className="text-muted-foreground leading-relaxed" style={{ fontSize: '0.8125rem' }}>
                 {t("profile.unfollows_detected_automatically")} {new Date(profile.created_at).toLocaleDateString()}
                 {hasSpy && <> · 🕵️ {t("unfollow_check.spy_hint", "2× täglich manueller Scan")}</>}
               </p>
             </div>
 
-            {/* Unfollowed by them */}
             {unfollowedByThem.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2 flex items-center gap-1.5">
+                <p className="section-header px-1 mb-3 flex items-center gap-1.5">
                   <span className="text-destructive">🚩</span> {t("profile.unfollowed_by_them")}
-                  <span className="text-[10px] bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full font-bold tabular-nums">{unfollowedByThem.length}</span>
+                  <span className="bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-bold font-mono-num" style={{ fontSize: '0.8125rem' }}>{unfollowedByThem.length}</span>
                 </p>
                 <div className="native-card overflow-hidden">
                   {unfollowedByThem.map((e, i) => (
@@ -547,19 +520,17 @@ const ProfileDetail = () => {
                       detectedAt={e.detected_at}
                       timeAgo={timeAgo}
                       index={i}
-                      badge={<span className="text-[8px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full font-bold">✕</span>}
                     />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Lost followers */}
             {lostFollowerEvents.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2 flex items-center gap-1.5">
+                <p className="section-header px-1 mb-3 flex items-center gap-1.5">
                   <span className="text-orange-400">↓</span> {t("profile.lost_followers_title")}
-                  <span className="text-[10px] bg-orange-400/15 text-orange-400 px-1.5 py-0.5 rounded-full font-bold tabular-nums">{lostFollowerEvents.length}</span>
+                  <span className="bg-orange-400/15 text-orange-400 px-2 py-0.5 rounded-full font-bold font-mono-num" style={{ fontSize: '0.8125rem' }}>{lostFollowerEvents.length}</span>
                 </p>
                 <div className="native-card overflow-hidden">
                   {lostFollowerEvents.map((e, i) => (
@@ -571,42 +542,33 @@ const ProfileDetail = () => {
                       detectedAt={e.detected_at}
                       timeAgo={timeAgo}
                       index={i}
-                      badge={<span className="text-[8px] bg-orange-400/20 text-orange-400 px-1.5 py-0.5 rounded-full font-bold">↓</span>}
                     />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Empty state */}
             {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="native-card p-6 text-center"
-              >
-                <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-muted mb-3">
-                  <span className="text-2xl">✨</span>
-                </div>
-                <p className="text-[14px] font-bold text-foreground mb-1">{t("profile.no_unfollows_yet")}</p>
-                <p className="text-[11px] text-muted-foreground max-w-[200px] mx-auto">{t("profile.unfollows_auto_detected")}</p>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="native-card p-8 text-center">
+                <span style={{ fontSize: '2.5rem' }} className="block mb-3">✨</span>
+                <p className="font-bold text-foreground mb-1" style={{ fontSize: '1rem' }}>{t("profile.no_unfollows_yet")}</p>
+                <p className="text-muted-foreground max-w-[240px] mx-auto" style={{ fontSize: '0.8125rem' }}>{t("profile.unfollows_auto_detected")}</p>
               </motion.div>
             )}
           </div>
         )}
 
         {activeTab === "insights" && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <ActivityHeatmap events={followEvents} />
             <GenderBreakdownChart events={followEvents} />
             <WeeklyActivityChart events={followEvents} />
             {profile.created_at && (Date.now() - new Date(profile.created_at).getTime()) < 7 * 24 * 60 * 60 * 1000 && (
-              <div className="native-card p-4 flex items-center gap-3">
-                <span className="text-2xl">⏳</span>
+              <div className="native-card p-5 flex items-center gap-3">
+                <span style={{ fontSize: '1.5rem' }}>⏳</span>
                 <div>
-                  <p className="text-[12px] font-semibold text-foreground">{t("insights.needs_time")}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="font-semibold text-foreground" style={{ fontSize: '1rem' }}>{t("insights.needs_time")}</p>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                     {t("insights.tracking_for_days", {
                       days: Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000)),
                     })}
@@ -618,7 +580,6 @@ const ProfileDetail = () => {
         )}
       </motion.div>
 
-      {/* Move Spy Sheet */}
       <MoveSpySheet
         open={moveSpyOpen}
         onOpenChange={setMoveSpyOpen}
@@ -630,9 +591,9 @@ const ProfileDetail = () => {
   );
 };
 
-// ── Reusable Event Row ──
+// ── Event Row ──
 function EventRow({
-  username, displayName, avatarUrl, detectedAt, timeAgo, index, badge,
+  username, displayName, avatarUrl, detectedAt, timeAgo, index,
 }: {
   username: string;
   displayName?: string | null;
@@ -640,7 +601,6 @@ function EventRow({
   detectedAt: string;
   timeAgo: (d: string | null) => string;
   index: number;
-  badge?: React.ReactNode;
 }) {
   return (
     <motion.div
@@ -649,22 +609,22 @@ function EventRow({
       transition={{ delay: index * 0.02 }}
       className="native-cell"
     >
-      <div className="relative flex-shrink-0">
-        <InstagramAvatar src={avatarUrl} alt={username} fallbackInitials={username} size={42} />
-        {badge && <div className="absolute -bottom-0.5 -end-0.5">{badge}</div>}
+      <div className="flex-shrink-0">
+        <InstagramAvatar src={avatarUrl} alt={username} fallbackInitials={username} size={40} />
       </div>
       <div className="flex-1 min-w-0">
         <a
           href={`https://instagram.com/${username}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] font-bold text-foreground hover:text-primary transition-colors"
+          className="font-semibold text-foreground hover:text-primary transition-colors"
+          style={{ fontSize: '1rem' }}
         >
           @{username}
         </a>
-        {displayName && <p className="text-[11px] text-muted-foreground truncate">{displayName}</p>}
+        {displayName && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{displayName}</p>}
       </div>
-      <span className="text-[10px] text-muted-foreground flex-shrink-0">{timeAgo(detectedAt)}</span>
+      <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{timeAgo(detectedAt)}</span>
     </motion.div>
   );
 }
@@ -699,10 +659,10 @@ function EventList({
 
   if (events.length === 0 && !sectionTitle) {
     return emptyText ? (
-      <div className="native-card p-5 text-center">
-        <span className="text-4xl block mb-3">{emptyIcon}</span>
-        <p className="text-[13px] text-muted-foreground">{emptyText}</p>
-        <p className="text-[11px] text-muted-foreground mt-1">{emptySubText}</p>
+      <div className="native-card p-8 text-center">
+        <span style={{ fontSize: '2.5rem' }} className="block mb-3">{emptyIcon}</span>
+        <p className="text-foreground font-semibold" style={{ fontSize: '1rem' }}>{emptyText}</p>
+        <p className="text-muted-foreground mt-1" style={{ fontSize: '0.8125rem' }}>{emptySubText}</p>
       </div>
     ) : null;
   }
@@ -711,7 +671,7 @@ function EventList({
 
   return (
     <div>
-      {sectionTitle && <p className="section-header px-1 mb-2">{sectionTitle}</p>}
+      {sectionTitle && <p className="section-header px-1 mb-3">{sectionTitle}</p>}
       <div className="native-card overflow-hidden">
       {events.map((event, i) => (
         <motion.div
@@ -722,9 +682,9 @@ function EventList({
           className="native-cell relative"
         >
           <div className={`relative flex-shrink-0 ${shouldBlur ? "blur-md" : ""}`}>
-            <InstagramAvatar src={event.avatarUrl} alt={event.username} fallbackInitials={event.username} size={42} />
+            <InstagramAvatar src={event.avatarUrl} alt={event.username} fallbackInitials={event.username} size={40} />
             {event.genderTag && event.genderTag !== "unknown" && (
-              <div className={`absolute -bottom-0.5 -end-0.5 h-4 w-4 rounded-full flex items-center justify-center text-[8px] text-white ${event.genderTag === "female" ? "gradient-pink" : "bg-blue-400"}`}>
+              <div className={`absolute -bottom-0.5 -end-0.5 h-4 w-4 rounded-full flex items-center justify-center text-white ${event.genderTag === "female" ? "bg-primary" : "bg-brand-blue"}`} style={{ fontSize: '0.5rem' }}>
                 {event.genderTag === "female" ? "♀" : "♂"}
               </div>
             )}
@@ -735,32 +695,33 @@ function EventList({
                 href={`https://instagram.com/${event.username}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] font-bold text-foreground hover:text-primary transition-colors"
+                className="font-semibold text-foreground hover:text-primary transition-colors"
+                style={{ fontSize: '1rem' }}
               >
                 @{event.username}
               </a>
               {!event.isRead && !shouldBlur && (
-                <span className="h-1.5 w-1.5 rounded-full gradient-pink flex-shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
               )}
             </div>
             {event.displayName && (
-              <p className="text-[11px] text-muted-foreground truncate">{event.displayName}</p>
+              <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{event.displayName}</p>
             )}
-            <div className="flex flex-wrap gap-1 mt-1">
-              {event.isMutual && <span className="tag-red text-[8px]">🔄 {t("events.mutual")}</span>}
-              {event.category === "influencer" && <span className="tag-yellow text-[8px]">⭐ {event.followerCount ? formatCount(event.followerCount) : ""}</span>}
-              {event.category === "celebrity" && <span className="tag-yellow text-[8px]">👑</span>}
-              {event.category === "private" && <span className="tag-muted text-[8px]">🔒</span>}
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {event.isMutual && <span className="tag-red">🔄 {t("events.mutual")}</span>}
+              {event.category === "influencer" && <span className="tag-yellow">⭐ {event.followerCount ? formatCount(event.followerCount) : ""}</span>}
+              {event.category === "celebrity" && <span className="tag-yellow">👑</span>}
+              {event.category === "private" && <span className="tag-muted">🔒</span>}
             </div>
           </div>
-          <span className="text-[10px] text-muted-foreground flex-shrink-0">{timeAgo(event.detectedAt)}</span>
+          <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.8125rem' }}>{timeAgo(event.detectedAt)}</span>
           {shouldBlur && (
             <button
               onClick={() => showPaywall("blur")}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="gradient-pink text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                <Lock className="h-3 w-3 inline me-1" />{t("events.upgrade_to_reveal")}
+              <span className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl" style={{ fontSize: '0.8125rem' }}>
+                <Lock className="h-3.5 w-3.5 inline me-1" />{t("events.upgrade_to_reveal")}
               </span>
             </button>
           )}

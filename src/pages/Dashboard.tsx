@@ -76,11 +76,11 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
       
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
-        <div className="flex items-center justify-between mb-4">
+      <div className="px-5 pt-[calc(env(safe-area-inset-top)+16px)] pb-4">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2.5">
             <img src={logoSquare} alt="Spy-Secret" className="h-9 w-9 drop-shadow-md" />
-            <span className="text-lg font-extrabold text-foreground">
+            <span className="font-extrabold text-foreground" style={{ fontSize: '1.125rem' }}>
               Spy<span className="text-primary">Secret</span>
             </span>
           </div>
@@ -89,19 +89,19 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6"
+          transition={{ duration: 0.3 }}
+          className="mb-8"
         >
-          <h1 className="text-2xl font-extrabold text-foreground">Hey {displayName}!</h1>
+          <h1 className="font-extrabold text-foreground" style={{ fontSize: '1.75rem', letterSpacing: '-0.02em' }}>Hey {displayName}!</h1>
           {profiles.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-muted-foreground mt-1" style={{ fontSize: '1rem' }}>
               {t("simple.tracking_count", { count: profiles.length })}
             </p>
           )}
         </motion.div>
       </div>
 
-      {/* ═══════ SPY AGENT CARD (with dock) ═══════ */}
+      {/* SPY AGENT CARD */}
       {isPro ? (
         <SpyAgentCard
           spyProfile={spyProfile}
@@ -111,11 +111,11 @@ const Dashboard = () => {
           onHoverProfileChange={setHoveredProfileId}
         />
       ) : (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.15 }} className="mx-4 mb-4">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3, delay: 0.15 }} className="mx-5 mb-5">
           <button onClick={() => { haptic.light(); showPaywall("spy_agent"); }} className="w-full text-start relative overflow-hidden rounded-2xl">
-            <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-secondary/80 to-card p-4 opacity-40 grayscale blur-[2px] pointer-events-none select-none">
+            <div className="native-card p-5 opacity-30 blur-[2px] pointer-events-none select-none">
               <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-[10px] font-extrabold text-primary uppercase tracking-widest">{t("spy.spy_watching")}</span>
+                <span className="section-header">{t("spy.spy_watching")}</span>
               </div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="h-12 w-12 rounded-full bg-muted" />
@@ -125,15 +125,15 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/40 backdrop-blur-[1px] rounded-2xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl">
               <div className="flex items-center gap-3">
                 <SpyIcon size={48} />
                 <div>
-                  <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5 text-primary" />
+                  <p className="font-bold text-foreground flex items-center gap-1.5" style={{ fontSize: '1rem' }}>
+                    <Lock className="h-4 w-4 text-primary" />
                     {t("paywall.unlock_spy_agent", "🔒 Spy Agent freischalten")}
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{t("spy.spy_description")}</p>
+                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_description")}</p>
                 </div>
               </div>
             </div>
@@ -143,7 +143,7 @@ const Dashboard = () => {
 
       {/* Profile Cards */}
       {profiles.length > 0 && (
-        <div className="px-4 py-3 space-y-3">
+        <div className="px-5 py-4 space-y-4">
           <p className="section-header px-1">{t("spy.your_profiles", "Deine Profile")}</p>
           {profiles.map((profile, i) => (
             <ProfileCard
@@ -160,22 +160,23 @@ const Dashboard = () => {
           ))}
           <button
             onClick={() => navigate("/add-profile")}
-            className="w-full py-3 rounded-xl border border-dashed border-muted-foreground/20 text-muted-foreground text-[13px] font-medium hover:bg-muted/50 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-2xl bg-card text-muted-foreground font-semibold transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            style={{ fontSize: '1rem' }}
           >
-            <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
+            <Plus className="h-5 w-5" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
           </button>
         </div>
       )}
 
       {/* Empty state */}
       {!profilesLoading && profiles.length === 0 && (
-        <div className="text-center py-20 px-4">
+        <div className="text-center py-20 px-5">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
             <img src={logoSquare} alt="" className="h-16 w-16 mx-auto mb-4 opacity-30" />
-            <p className="text-sm font-semibold text-foreground">{t("dashboard.no_profiles")}</p>
-            <p className="text-[12px] text-muted-foreground mt-1 mb-6">{t("dashboard.add_first")}</p>
-            <button onClick={() => navigate("/add-profile")} className="pill-btn-primary px-6 py-3 text-[14px]">
-              <Plus className="h-4 w-4" /> {t("nav.add")}
+            <p className="font-semibold text-foreground" style={{ fontSize: '1rem' }}>{t("dashboard.no_profiles")}</p>
+            <p className="text-muted-foreground mt-1 mb-8" style={{ fontSize: '0.8125rem' }}>{t("dashboard.add_first")}</p>
+            <button onClick={() => navigate("/add-profile")} className="bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl min-h-[44px]" style={{ fontSize: '1rem' }}>
+              <Plus className="h-5 w-5 inline me-2" /> {t("nav.add")}
             </button>
           </motion.div>
         </div>
