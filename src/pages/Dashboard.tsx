@@ -132,7 +132,14 @@ const Dashboard = () => {
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
         <div className="px-5 pt-6 pb-3 space-y-4">
-          <p className="px-1 uppercase tracking-[0.08em] font-semibold" style={{ fontSize: '0.8125rem', color: 'hsl(var(--muted-foreground))' }}>📡 {t("spy.monitored_accounts", "Überwachte Accounts")}</p>
+          <div className="px-1 mb-1">
+            <p className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
+              {t("spy.your_accounts", "Deine Accounts")}
+            </p>
+            <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>
+              {t("spy.daily_scan_subtitle", "Täglicher Basis-Scan")}
+            </p>
+          </div>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
               onTap={handleProfileTap} onAssignSpy={handleMoveSpy} index={i} isDragging={isDragging} isHovered={hoveredProfileId === profile.id} />

@@ -130,8 +130,11 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
               <p className="uppercase tracking-[0.14em] font-extrabold text-primary-foreground/70" style={{ fontSize: "0.75rem" }}>
                 🕵️ {t("spy.your_spy", "Dein Spion")}
               </p>
-              <p className="font-bold text-primary-foreground mt-1" style={{ fontSize: "1.125rem" }}>
-                {t("spy.hourly_monitoring", "Überwachung aktiv")}
+              <p className="font-bold text-primary-foreground mt-1" style={{ fontSize: "1.25rem" }}>
+                {t("spy.permanent_monitoring", "Dauerüberwachung · Stündlich")}
+              </p>
+              <p className="text-primary-foreground/60 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                Push-Scans · Unfollow-Erkennung · Volle Insights
               </p>
             </div>
           </div>
