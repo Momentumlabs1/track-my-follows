@@ -5,7 +5,6 @@ import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
-import spyAnimated from "@/assets/spy-logo-animated.gif";
 
 interface SpyWidgetProps {
   spyProfile: TrackedProfile | null;
@@ -57,9 +56,9 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
       <div
         className="rounded-2xl p-5 flex items-center gap-4"
         style={{
-          background: 'linear-gradient(145deg, hsl(347 80% 25%), hsl(347 70% 18%))',
-          border: '1px solid hsl(347 100% 59% / 0.3)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+          background: 'linear-gradient(145deg, hsl(347 80% 28%), hsl(347 70% 20%))',
+          border: '2px solid hsl(347 100% 59% / 0.4)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.35), 0 0 60px hsl(347 100% 50% / 0.15)',
         }}
       >
         <div className="flex-1 min-w-0">
@@ -102,25 +101,24 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         transition={{ duration: 0.25 }}
         className="rounded-2xl overflow-hidden relative"
         style={{
-          background: 'linear-gradient(150deg, hsl(347 75% 22%), hsl(340 70% 14%))',
-          border: '1px solid hsl(347 100% 59% / 0.2)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 hsl(347 100% 70% / 0.1)',
+          background: 'linear-gradient(150deg, hsl(347 80% 28%), hsl(347 70% 18%))',
+          border: '2px solid hsl(347 100% 59% / 0.4)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.45), 0 0 60px hsl(347 100% 50% / 0.15), inset 0 1px 0 hsl(347 100% 70% / 0.15)',
         }}
       >
-        {/* Subtle scan line animation */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'linear-gradient(180deg, transparent 0%, hsl(347 100% 60% / 0.04) 50%, transparent 100%)',
-            backgroundSize: '100% 200%',
-          }}
-          animate={{ backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-        />
+        {/* ─── Header Label ─── */}
+        <div className="px-5 pt-3.5 pb-0 relative z-10">
+          <span
+            className="uppercase tracking-widest font-bold"
+            style={{ fontSize: '0.625rem', color: 'hsl(347 100% 80% / 0.6)' }}
+          >
+            🕵️ {t("spy.your_spy", "Dein Spion")}
+          </span>
+        </div>
 
         {/* ─── Main Row ─── */}
-        <div className="flex items-center px-5 py-4 relative z-10">
-          {/* Left: Monitored profile */}
+        <div className="flex items-center px-5 pt-2.5 pb-4 relative z-10">
+          {/* Left: Monitored profile — directly on gradient, no bubble */}
           <button
             onClick={() => navigate(`/profile/${spyProfile.id}`)}
             className="flex items-center gap-3 flex-1 min-w-0 text-start"
@@ -129,7 +127,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
               className="rounded-full p-[2px] flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, hsl(347 100% 65%), hsl(347 100% 45%))' }}
             >
-              <div className="rounded-full overflow-hidden" style={{ border: '2px solid hsl(340 70% 14%)' }}>
+              <div className="rounded-full overflow-hidden" style={{ border: '2px solid hsl(347 70% 22%)' }}>
                 <InstagramAvatar
                   src={spyProfile.avatar_url}
                   alt={spyProfile.username}
@@ -193,7 +191,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             ))}
           </div>
 
-          {/* Right: Spy Agent — large & prominent */}
+          {/* Right: Spy Agent — SpyIcon with enhanced glow */}
           <motion.div
             ref={dragRef}
             drag dragSnapToOrigin dragElastic={0.15} dragMomentum={false}
@@ -211,12 +209,12 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             onPointerUp={() => { if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy"); }}
             className="cursor-grab active:cursor-grabbing touch-none select-none z-50 flex-shrink-0 relative flex flex-col items-center"
           >
-            {/* Multi-layer glow */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: -12 }}>
+            {/* Multi-layer glow behind icon */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: -8 }}>
               <div className="rounded-full" style={{
-                width: 110, height: 110,
-                background: 'radial-gradient(circle, hsl(347 100% 59% / 0.3) 0%, hsl(347 100% 50% / 0.1) 40%, transparent 65%)',
-                filter: 'blur(16px)',
+                width: 120, height: 120,
+                background: 'radial-gradient(circle, hsl(347 100% 59% / 0.35) 0%, hsl(347 100% 50% / 0.12) 40%, transparent 65%)',
+                filter: 'blur(20px)',
               }} />
             </div>
             <motion.div
@@ -224,17 +222,11 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="relative"
             >
-              <img
-                src={spyAnimated}
-                alt="Spy Agent"
-                className="object-contain drop-shadow-[0_0_16px_hsl(347_100%_59%/0.6)]"
-                style={{ width: 88, height: 88 }}
-                draggable={false}
-              />
+              <SpyIcon size={80} glow />
             </motion.div>
             {/* Drag hint */}
             <span
-              className="mt-0 select-none pointer-events-none"
+              className="mt-0.5 select-none pointer-events-none"
               style={{ fontSize: '0.5rem', color: 'hsl(347 100% 75% / 0.5)', fontWeight: 500 }}
             >
               ↕ {t("spy.drag_hint", "Ziehe mich")}
