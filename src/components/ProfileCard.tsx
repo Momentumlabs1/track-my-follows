@@ -19,7 +19,7 @@ function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | nul
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className={`w-full h-full flex items-center justify-center font-bold text-primary-foreground gradient-pink ${className}`} style={{ fontSize: '0.75rem' }}>
+      <div className={`w-full h-full flex items-center justify-center font-bold text-white/90 ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(0 0% 100% / 0.2)' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );

@@ -216,7 +216,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           >
             <SpyIcon size={72} glow />
           </div>
-          <span className="mt-1 text-primary-foreground/75" style={{ fontSize: "0.5625rem", fontWeight: 600 }}>
+          <span className="mt-1 text-primary-foreground/75" style={{ fontSize: "0.6875rem", fontWeight: 600 }}>
             ↕ {t("spy.drag_hint", "Ziehen")}
           </span>
         </motion.div>
