@@ -114,12 +114,12 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {!profile.is_private && (followerCount != null || followingCount != null) && (
                 <div className="flex items-center gap-3 mt-1">
                   {followerCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
                       <span className="font-semibold text-white">{followerCount.toLocaleString()}</span> Follower
                     </span>
                   )}
                   {followingCount != null && (
-                    <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
                       <span className="font-semibold text-white">{followingCount.toLocaleString()}</span> Following
                     </span>
                   )}
