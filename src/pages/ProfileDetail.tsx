@@ -338,8 +338,9 @@ const ProfileDetail = () => {
                 setActiveTab(tab.id);
               }}
               className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold flex items-center gap-1.5 min-h-[40px] transition-colors ${
-                activeTab === tab.id ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
+                activeTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
+              style={{ background: activeTab === tab.id ? undefined : 'hsl(var(--card))', border: activeTab === tab.id ? undefined : '1px solid hsl(var(--border))' }}
               style={{ fontSize: '0.8125rem' }}
             >
               {tab.label}
