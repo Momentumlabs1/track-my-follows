@@ -12,13 +12,12 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { SuspicionMeter } from "@/components/SuspicionMeter";
+import { InsightsBubbleGrid } from "@/components/InsightsBubbleGrid";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { GenderBreakdownChart } from "@/components/GenderBreakdownChart";
 import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
 import { SpyRequiredOverlay } from "@/components/SpyRequiredOverlay";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
-import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
