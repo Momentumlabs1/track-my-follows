@@ -95,10 +95,10 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
         }}
       >
         {/* ═══ Profile Header ═══ */}
-        <div className="p-4 pb-3">
+        <div className="p-5 pb-4">
           <div className="flex items-center gap-3.5">
             <div className="relative flex-shrink-0">
-              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={52} />
+              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={56} />
               {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={16} glow /></div>}
             </div>
 
