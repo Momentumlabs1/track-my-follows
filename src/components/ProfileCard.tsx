@@ -88,7 +88,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
 
       <button
         onClick={() => onTap(profileId)}
-        className="w-full text-start overflow-hidden native-card"
+        className="w-full text-start overflow-hidden card-pink"
       >
         {/* ═══ Profile Header ═══ */}
         <div className="p-4 pb-3">
