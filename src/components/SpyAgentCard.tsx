@@ -91,7 +91,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         className="relative z-[99999] cursor-grab active:cursor-grabbing touch-none select-none"
         style={{ WebkitTouchCallout: "none" }}
       >
-        <SpyIcon size={88} glow />
+        <SpyIcon size={72} glow />
       </motion.div>
 
       <span className="mt-1 text-primary-foreground/75 text-center leading-tight" style={{ fontSize: "0.5625rem", fontWeight: 700 }}>
