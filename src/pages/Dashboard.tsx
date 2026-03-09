@@ -113,28 +113,20 @@ const Dashboard = () => {
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
           {isPro ? (
-            <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
-              {/* Base — Light pink background */}
-              <div className="absolute inset-0 rounded-[1.75rem]" style={{ background: "rgba(255,240,245,0.95)" }} />
+            <div className="relative rounded-[1.75rem] min-h-[110px]" style={{ background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
+              {/* Scan-line effect on full dark bg */}
+              <div
+                className="absolute inset-0 rounded-[1.75rem] pointer-events-none opacity-[0.06]"
+                style={{
+                  backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
+                }}
+              />
 
-              {/* RIGHT — Dark Spy semicircle */}
-              <div className="absolute inset-0 rounded-[1.75rem] overflow-hidden">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
-                    clipPath: "ellipse(42% 100% at 100% 50%)",
-                  }}
-                />
-                {/* Scan-line effect */}
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-[0.06]"
-                  style={{
-                    clipPath: "ellipse(42% 100% at 100% 50%)",
-                    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
-                  }}
-                />
-              </div>
+              {/* LEFT — Light profile area with border from dark bg */}
+              <div
+                className="absolute inset-y-2 left-2 rounded-[1.25rem]"
+                style={{ width: "62%", background: "rgba(255,240,245,0.95)", boxShadow: "0 2px 12px -4px rgba(0,0,0,0.15)" }}
+              />
 
               {/* ═══ "Spy Connected" overlay animation ═══ */}
               <AnimatePresence>
