@@ -189,55 +189,59 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-center p-3 gap-2">
-                {/* Profile side (left, 60%) */}
-                <motion.div
-                  style={{ width: "65%" }}
-                  animate={{
-                    opacity: isDragging ? 0.3 : 1,
-                    filter: isDragging ? "grayscale(1)" : "grayscale(0)",
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <AnimatePresence mode="wait">
-                    {spyProfile ? (
-                      <motion.button
-                        key={spyProfile.id}
-                        initial={justAssigned ? { opacity: 0, y: 30, scale: 0.95 } : false}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        onClick={() => navigate(`/profile/${spyProfile.id}`)}
-                        className="w-full text-start"
-                      >
-                        {/* Label */}
-                        <div className="flex items-center gap-1.5 mb-3">
-                          <span className="text-foreground/60 font-bold uppercase tracking-widest" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
-                            🕵️ Spion angesetzt auf
-                          </span>
-                          <div className="flex-1 h-px bg-foreground/15" />
-                        </div>
-                        
-                        {/* Profile */}
-                        <div className="flex items-center gap-3">
-                          <InstagramAvatar
-                            src={spyProfile.avatar_url}
-                            alt={spyProfile.username}
-                            fallbackInitials={spyProfile.username}
-                            size={54}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
-                              @{spyProfile.username}
-                            </p>
-                            {spyProfile.follower_count != null && (
-                              <p className="text-muted-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
-                                {formatCount(spyProfile.follower_count)} Follower
+              <div className="relative z-10 flex flex-col">
+                {/* Full-width label header */}
+                {spyProfile && (
+                  <div className="px-4 pt-3 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-primary-foreground/70 font-bold uppercase tracking-widest" style={{ fontSize: "0.6875rem", letterSpacing: "0.12em" }}>
+                        🕵️ Spion angesetzt auf
+                      </span>
+                      <div className="flex-1 h-px bg-primary-foreground/20" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center px-3 pb-3 gap-2">
+                  {/* Profile side (left, 60%) */}
+                  <motion.div
+                    style={{ width: "65%" }}
+                    animate={{
+                      opacity: isDragging ? 0.3 : 1,
+                      filter: isDragging ? "grayscale(1)" : "grayscale(0)",
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {spyProfile ? (
+                        <motion.button
+                          key={spyProfile.id}
+                          initial={justAssigned ? { opacity: 0, y: 30, scale: 0.95 } : false}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                          onClick={() => navigate(`/profile/${spyProfile.id}`)}
+                          className="w-full text-start"
+                        >
+                          <div className="flex items-center gap-3">
+                            <InstagramAvatar
+                              src={spyProfile.avatar_url}
+                              alt={spyProfile.username}
+                              fallbackInitials={spyProfile.username}
+                              size={54}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
+                                @{spyProfile.username}
                               </p>
-                            )}
+                              {spyProfile.follower_count != null && (
+                                <p className="text-muted-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                                  {formatCount(spyProfile.follower_count)} Follower
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </motion.button>
+                        </motion.button>
                     ) : (
                       <motion.div
                         key="empty"
