@@ -60,7 +60,7 @@ const Dashboard = () => {
     setShowSpyConnected(true);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
-        if (targetProfile) toast.success(`Spion überwacht jetzt @${targetProfile.username} 🕵️`);
+        if (targetProfile) toast.success(`Tracking aktiv für @${targetProfile.username} 🕵️`);
         try { navigator.vibrate?.(50); } catch {}
         setTimeout(() => setJustAssigned(false), 600);
         setTimeout(() => setDroppedOnProfileId(null), 800);
