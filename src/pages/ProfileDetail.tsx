@@ -429,10 +429,10 @@ const ProfileDetail = () => {
 
         {activeTab === "new_followers" && (
           <div className="space-y-4">
-            <EventList events={newFollowerEventsList.map(mapFollowerEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={timeAgo}
+            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? timeAgo : timeAgo}
               emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-              sectionTitle={initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
-            {initialFollowerEventsList.length > 0 && (
+              sectionTitle={!onlyInitialFollowers && initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
+            {!onlyInitialFollowers && initialFollowerEventsList.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
                 <EventList events={initialFollowerEventsList.map(e => ({ ...mapFollowerEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="👥" emptyText="" emptySubText="" />
