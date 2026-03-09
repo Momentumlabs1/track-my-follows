@@ -57,12 +57,8 @@ const FeedPage = () => {
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
   }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
 
-  const filteredEvents = useMemo(() => {
-    if (filter === "all") return allEvents;
-    return allEvents.filter((e) => e.source === "follow" ? e.event_type !== "unfollow" : e.event_type === "gained");
-  }, [allEvents, filter]);
 
-  const visibleEvents = filteredEvents.slice(0, visibleCount);
+  const visibleEvents = allEvents.slice(0, visibleCount);
   const groupedEvents = useMemo(() => {
     const groups: { date: string; events: UnifiedFeedEvent[] }[] = [];
     let currentDate = "";
