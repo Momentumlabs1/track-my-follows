@@ -170,8 +170,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="overflow-hidden rounded-lg"
-                  style={{ aspectRatio: '1/1', width: '36px', flexShrink: 0 }}
+                  className="overflow-hidden rounded-md"
+                  style={{ aspectRatio: '1/1', width: '40px', flexShrink: 0 }}
                 >
                   <RectAvatar
                     src={event.target_avatar_url}
