@@ -83,8 +83,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         dragSnapToOrigin
         dragElastic={0.15}
         dragMomentum={false}
-        variants={idleVariants}
-        animate={isDragging ? undefined : "idle"}
+        animate={isDragging ? {} : idleAnimate}
         whileDrag={{ scale: 1.15, zIndex: 99999 }}
         onPointerDown={(e) => {
           e.stopPropagation();
