@@ -219,7 +219,7 @@ const Dashboard = () => {
                             size={50}
                           />
                           <div className="min-w-0 flex-1">
-                             <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                             <p className="font-bold text-foreground truncate" style={{ fontSize: "1rem" }}>
                               @{spyProfile.username}
                             </p>
                             {recentEvents.total > 0 && (
