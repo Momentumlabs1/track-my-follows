@@ -42,6 +42,8 @@ const Dashboard = () => {
   const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
   const [justAssigned, setJustAssigned] = useState(false);
   const [droppedOnProfileId, setDroppedOnProfileId] = useState<string | null>(null);
+  const [showSpyConnected, setShowSpyConnected] = useState(false);
+  const [connectedUsername, setConnectedUsername] = useState("");
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const moveSpy = useMoveSpy();
