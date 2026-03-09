@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, Lock, Info } from "lucide-react";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
