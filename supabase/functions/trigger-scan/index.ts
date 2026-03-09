@@ -167,11 +167,12 @@ async function syncNewFollowers(
   const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
   const spanMs = Math.max(Date.now() - lastTs, 60_000);
 
+  const nowMs = Date.now();
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
     const ts = isInitialScan
-      ? now
-      : new Date(lastTs + Math.random() * spanMs).toISOString();
+      ? new Date(nowMs - i * 1000).toISOString()
+      : new Date(nowMs - i * 1000).toISOString();
     await supabase.from("profile_followers").insert({
       tracked_profile_id: profileId,
       follower_user_id: f.pk,
