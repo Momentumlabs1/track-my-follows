@@ -68,7 +68,7 @@ const Dashboard = () => {
       <WelcomeDialog />
 
       {/* ═══ HEADER ═══ */}
-      <div className="relative gradient-pink" style={{ overflow: "visible" }}>
+      <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
         {/* Greeting zone */}
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 text-center">
           <p className="font-bold text-primary-foreground/85 mb-1" style={{ fontSize: "0.8125rem", letterSpacing: "0.06em" }}>
