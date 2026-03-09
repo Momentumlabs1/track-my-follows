@@ -134,7 +134,7 @@ const Dashboard = () => {
               />
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-center p-4 gap-2">
+              <div className="relative z-10 flex items-center p-3 gap-2">
                 {/* Profile side (left, 60%) */}
                 <motion.div
                   className="min-w-0"
