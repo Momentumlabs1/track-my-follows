@@ -6,6 +6,7 @@ import { DaySeparator } from "@/components/DaySeparator";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useFollowEvents, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,14 +15,13 @@ import { haptic } from "@/lib/native";
 import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 import logoSquare from "@/assets/logo-square.png";
 
-type FilterType = "all" | "follows";
+// Filter removed — show all events
 
 const FeedPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { plan, showPaywall } = useSubscription();
   const isPro = plan === "pro";
-  const [filter, setFilter] = useState<FilterType>("all");
   const [visibleCount, setVisibleCount] = useState(50);
 
   const { data: profiles = [] } = useTrackedProfiles();
@@ -57,12 +57,8 @@ const FeedPage = () => {
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
   }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
 
-  const filteredEvents = useMemo(() => {
-    if (filter === "all") return allEvents;
-    return allEvents.filter((e) => e.source === "follow" ? e.event_type !== "unfollow" : e.event_type === "gained");
-  }, [allEvents, filter]);
 
-  const visibleEvents = filteredEvents.slice(0, visibleCount);
+  const visibleEvents = allEvents.slice(0, visibleCount);
   const groupedEvents = useMemo(() => {
     const groups: { date: string; events: UnifiedFeedEvent[] }[] = [];
     let currentDate = "";
@@ -156,13 +152,12 @@ const FeedPage = () => {
                 {/* Avatar + info */}
                 <div className="flex items-center gap-3.5">
                   <div className="flex-shrink-0 rounded-full ring-2 ring-white/25 p-[2px]">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="" className="h-13 w-13 rounded-full object-cover" style={{ width: 52, height: 52 }} />
-                    ) : (
-                      <div className="rounded-full bg-white/20 flex items-center justify-center text-white font-bold" style={{ width: 52, height: 52, fontSize: '1.125rem' }}>
-                        {latestInfo.username[0]?.toUpperCase()}
-                      </div>
-                    )}
+                    <InstagramAvatar
+                      src={avatarUrl}
+                      alt={latestInfo.username}
+                      fallbackInitials={latestInfo.username}
+                      size={56}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-white truncate" style={{ fontSize: '1.0625rem' }}>@{latestInfo.username}</p>
@@ -208,17 +203,9 @@ const FeedPage = () => {
         </div>
       )}
 
-      {/* Filter pills */}
-      <div className="px-5 mb-4">
-        <div className="flex gap-3">
-          {([{ key: "all" as FilterType, label: t("feed.all", "Alle") }, { key: "follows" as FilterType, label: t("feed.follows", "Follows") }]).map((f) => (
-            <button key={f.key} onClick={() => { setFilter(f.key); setVisibleCount(50); }}
-              className={`flex-1 px-4 py-2 rounded-2xl font-semibold min-h-[44px] transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
-              style={{ fontSize: '0.9375rem' }}>
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Section title */}
+      <div className="px-5 mb-3">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("feed.your_feed", "Dein Feed")}</span>
       </div>
 
       {/* Feed */}
@@ -233,7 +220,7 @@ const FeedPage = () => {
                 {group.events.map((event, ei) => <EventFeedItem key={event.id} event={event} index={gi * 10 + ei} />)}
               </div>
             ))}
-            {filteredEvents.length > visibleCount && (
+            {allEvents.length > visibleCount && (
               <div className="px-5 pt-4">
                 <button onClick={() => setVisibleCount((c) => c + 50)} className="w-full py-3 rounded-xl bg-card text-muted-foreground font-semibold min-h-[44px]" style={{ fontSize: '0.875rem' }}>
                   {t("feed.load_more", "Mehr laden")}

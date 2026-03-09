@@ -1,42 +1,39 @@
 
 
-## Plan: Feed-Seite Überarbeitung
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Probleme
-1. **Spy des Tages Bild lädt nicht** — verwendet raw `<img>` statt `InstagramAvatar` mit Proxy (Zeile 160 in FeedPage). Instagram-URLs brauchen den Image-Proxy.
-2. **"Alle" / "Follows" Buttons** sind überflüssig — soll weg, stattdessen einfach ein Titel wie "Dein Feed"
-3. **Feed-Rows zu klein** — Avatare (42/46px) und Schriften könnten größer, klarer
-4. **Wer folgt wen** nicht sofort klar genug
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Änderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. Spy des Tages — Avatar-Fix (`FeedPage.tsx`, Zeile 159-165)
-- Raw `<img>` durch `InstagramAvatar` ersetzen → nutzt automatisch den Image-Proxy für Instagram-URLs
-- Size auf 56px erhöhen
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-#### 2. Filter-Buttons entfernen (`FeedPage.tsx`, Zeile 211-222)
-- Kompletten Filter-Block entfernen
-- `filter` State und `filteredEvents` Logik entfernen — immer alle Events zeigen
-- Stattdessen ein Section-Title: **"Dein Feed"** als `text-muted-foreground uppercase tracking-wider text-xs` (wie DaySeparator-Stil)
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-#### 3. Feed-Rows größer & klarer (`EventFeedItem.tsx`)
-- Actor-Avatar: 42px → **50px** (rund)
-- Tracked-Avatar: 46px → **52px** (eckig mit Pink-Border)
-- Actor-Username Font: `0.875rem` → **`0.9375rem`** (15px), `font-extrabold`
-- Verb: `0.8125rem` → **`0.875rem`** (14px)
-- Target-Username: `0.8125rem` → **`0.875rem`** (14px)
-- Time: `0.6875rem` → **`0.75rem`** (12px)
-- Feed-Row gap: `gap-3` → `gap-3.5`
-- Feed-Row vertical padding: `0.875rem` → `1rem`
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-#### 4. Feed-Row Padding (`index.css`)
-- `padding: 0.875rem 1.25rem` → `1rem 1.25rem`
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-
-| Datei | Änderung |
-|---|---|
-| `FeedPage.tsx` | InstagramAvatar für Spy-Card, Filter-Buttons → Section-Title, filter State entfernen |
-| `EventFeedItem.tsx` | Avatar-Sizes und Font-Sizes erhöhen |
-| `index.css` | feed-row padding erhöhen |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
