@@ -84,11 +84,11 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
     // Other = round, normal
     return (
       <div className={`flex-shrink-0 ${blur ? "blur-md" : ""}`}>
-        <InstagramAvatar
+         <InstagramAvatar
           src={avatar}
           alt={username}
           fallbackInitials={username}
-          size={42}
+          size={50}
         />
       </div>
     );
