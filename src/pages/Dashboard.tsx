@@ -80,16 +80,21 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Separator between greeting and agent zone */}
-        <div className="mx-6 h-px bg-primary-foreground/20" />
+        {/* Wave separator between greeting and agent zone */}
+        <div className="relative w-full leading-[0]">
+          <svg viewBox="0 0 500 22" preserveAspectRatio="none" className="block w-full h-[22px]">
+            <path d="M0,22 C170,0 330,0 500,22 L500,22 L0,22 Z" fill="hsl(var(--primary) / 0.15)" />
+          </svg>
+        </div>
 
         {/* Agent zone */}
-        <div className="px-5 pt-4 pb-12">
-          <p className="uppercase tracking-[0.12em] text-primary-foreground/70 font-bold px-1" style={{ fontSize: "0.625rem" }}>
+        <div className="px-5 pt-3 pb-12">
+          <p className="uppercase tracking-[0.12em] text-primary-foreground/70 font-bold px-1 mb-2" style={{ fontSize: "0.625rem" }}>
             {t("spy.your_spy", "Dein Spion")}
           </p>
 
-          <div className="mt-2 rounded-3xl border border-primary-foreground/25 bg-primary-foreground/10 backdrop-blur-sm p-4">
+          <div className="relative p-[1px] rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.05))" }}>
+            <div className="rounded-[1.75rem] bg-primary-foreground/8 backdrop-blur-md p-4" style={{ boxShadow: "inset 0 1px 20px rgba(255,255,255,0.08)" }}>
             {isPro ? (
               <div className="flex items-center gap-4">
                 <SpyWidget
