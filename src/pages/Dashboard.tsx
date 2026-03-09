@@ -101,7 +101,7 @@ const Dashboard = () => {
         {/* Agent zone — overflow visible so drag works */}
         <div className="px-5 pt-1 pb-12" style={{ position: "relative", zIndex: 10 }}>
           {isPro ? (
-            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)" }}>
+            <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
               {/* LEFT — Light profile half */}
               <div
                 className="absolute inset-0"
