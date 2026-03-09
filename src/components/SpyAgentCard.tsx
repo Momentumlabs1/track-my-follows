@@ -12,18 +12,15 @@ interface SpyWidgetProps {
   onHoverProfileChange: (profileId: string | null) => void;
 }
 
-// Subtle idle animation patterns
-const idleVariants = {
-  idle: {
-    x: [0, 2, -1, 1, 0],
-    y: [0, -1, 1, -2, 0],
-    rotate: [0, 1, -1, 0.5, 0],
-    transition: {
-      duration: 4,
-      repeat: Infinity,
-      repeatType: "reverse" as const,
-      ease: "easeInOut",
-    },
+const idleAnimate = {
+  x: [0, 2, -1, 1, 0],
+  y: [0, -1, 1, -2, 0],
+  rotate: [0, 1, -1, 0.5, 0],
+  transition: {
+    duration: 4,
+    repeat: Infinity,
+    repeatType: "reverse" as const,
+    ease: ["easeInOut"] as any,
   },
 };
 
