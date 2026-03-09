@@ -173,6 +173,8 @@ const FeedPage = () => {
                     )}
                   </div>
                 </div>
+                {/* Tap hint */}
+                <p className="text-white/45 mt-3" style={{ fontSize: '0.6875rem' }}>{t("feed.tap_for_details")}</p>
               </div>
             </button>
           </motion.div>
