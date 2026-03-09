@@ -223,7 +223,7 @@ const Dashboard = () => {
                               @{spyProfile.username}
                             </p>
                             {recentEvents.total > 0 && (
-                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.625rem" }}>
+                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.75rem" }}>
                                 {recentEvents.gained > 0 && `+${recentEvents.gained} Follows`}
                                 {recentEvents.gained > 0 && recentEvents.lost > 0 && " · "}
                                 {recentEvents.lost > 0 && `-${recentEvents.lost} Unfollows`}
