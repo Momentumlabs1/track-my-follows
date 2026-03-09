@@ -189,26 +189,17 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex flex-col">
-                {/* Full-width label header */}
-                {spyProfile && (
-                  <div className="px-4 pt-3 pb-1">
-                    <span className="text-foreground/60 font-bold uppercase tracking-widest" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
-                      Spion angesetzt auf
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex items-center px-3 pb-3 gap-2">
-                  {/* Profile side (left, 60%) */}
-                  <motion.div
-                    style={{ width: "65%" }}
-                    animate={{
-                      opacity: isDragging ? 0.3 : 1,
-                      filter: isDragging ? "grayscale(1)" : "grayscale(0)",
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
+              <div className="relative z-10 flex items-center px-2 py-2 gap-1">
+                {/* Profile side (left, 60%) */}
+                <motion.div
+                  className="rounded-[1.25rem] px-3 py-2.5"
+                  style={{ width: "65%", background: "rgba(255,240,245,0.95)" }}
+                  animate={{
+                    opacity: isDragging ? 0.3 : 1,
+                    filter: isDragging ? "grayscale(1)" : "grayscale(0)",
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
