@@ -1,10 +1,10 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
-import { useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { useRecentFollowings } from "@/hooks/useProfileFollowings";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
