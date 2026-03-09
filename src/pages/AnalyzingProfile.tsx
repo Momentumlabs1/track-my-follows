@@ -58,6 +58,7 @@ const AnalyzingProfile = () => {
 
         // Fire-and-forget: baseline scan runs in background
         supabase.functions.invoke("create-baseline", {
+          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
           body: { profileId },
         }).then(({ error }) => {
           if (error) console.error("[Baseline] Background error:", error);
