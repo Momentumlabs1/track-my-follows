@@ -169,7 +169,7 @@ const Dashboard = () => {
                     {/* Spy icon bounce */}
                     <motion.div
                       initial={{ scale: 0, rotate: -30 }}
-                      animate={{ scale: [0, 1.3, 1], rotate: [−30, 10, 0] }}
+                      animate={{ scale: [0, 1.3, 1], rotate: [-30, 10, 0] }}
                       transition={{ duration: 0.5, ease: "easeOut" }}
                     >
                       <SpyIcon size={40} glow />
