@@ -1,39 +1,37 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Spy-Drag Fix + Drop-Animation
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem 1: Spy verschwindet hinter dem Hintergrund
+Die Spy-Card hat `overflow-hidden` (Zeile 101 in Dashboard.tsx) auf dem Container mit `rounded-[1.75rem]`. Wenn das Icon rausgezogen wird, schneidet der Container es ab. 
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+**Fix**: `overflow-hidden` nur auf die Hintergrund-Layer anwenden (clipPath reicht bereits), nicht auf den gesamten Container. Der Container bekommt `overflow-visible`, damit das Icon frei schweben kann. Die abgerundeten Ecken werden über die inneren clipPath-Divs beibehalten.
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+### Problem 2: Keine Drop-Animation
+Aktuell passiert beim Loslassen auf einem Account nichts Visuelles — der Spy springt einfach zurück. 
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
-
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**Fix — 3-phasige Drop-Animation**:
+1. **Drop-Moment**: Wenn der Spy auf einen Account fallen gelassen wird, bekommt die ProfileCard einen kurzen "Verbindungs-Puls" — ein heller Pink-Glow der von der Karte ausgeht (scale 1.05 → 1.0 + border-glow), synchron mit Vibration
+2. **Spy-Icon**: Statt sofort zurückzuspringen, kurz auf der Karte verweilen (200ms), dann mit einer schnellen `spring`-Animation zurück zum Dock gleiten
+3. **Spy-Card oben**: Die Profil-Info auf der linken Seite wechselt mit einer slide-up/slide-in Animation zum neuen Account
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+
+| Datei | Änderung |
+|---|---|
+| `Dashboard.tsx` | `overflow-hidden` vom Spy-Card-Container entfernen; neuen State `droppedOnProfileId` für die Drop-Animation; ProfileCard bekommt `isDropped` prop |
+| `SpyAgentCard.tsx` | `dragSnapToOrigin` beibehalten, aber `onDragEnd` um kurze Verzögerung erweitern bevor der Snap zurück passiert |
+| `ProfileCard.tsx` | Neues `isDropped` prop: Wenn true, kurzer Pink-Glow-Puls + Scale-Bounce Animation (0.3s), dann reset |
+
+### Animations-Ablauf beim Drop
+
+```text
+t=0ms    Spy losgelassen auf ProfileCard
+         → ProfileCard: scale(1.05), pink border-glow erscheint
+         → Vibration
+t=200ms  → ProfileCard: scale zurück auf 1.0, glow faded
+         → Spy-Icon: spring-Animation zurück zum Dock
+t=400ms  → Spy-Card links: alter Account gleitet nach oben raus
+t=600ms  → Spy-Card links: neuer Account gleitet von unten rein
+```
 
