@@ -152,13 +152,12 @@ const FeedPage = () => {
                 {/* Avatar + info */}
                 <div className="flex items-center gap-3.5">
                   <div className="flex-shrink-0 rounded-full ring-2 ring-white/25 p-[2px]">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="" className="h-13 w-13 rounded-full object-cover" style={{ width: 52, height: 52 }} />
-                    ) : (
-                      <div className="rounded-full bg-white/20 flex items-center justify-center text-white font-bold" style={{ width: 52, height: 52, fontSize: '1.125rem' }}>
-                        {latestInfo.username[0]?.toUpperCase()}
-                      </div>
-                    )}
+                    <InstagramAvatar
+                      src={avatarUrl}
+                      alt={latestInfo.username}
+                      fallbackInitials={latestInfo.username}
+                      size={56}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-white truncate" style={{ fontSize: '1.0625rem' }}>@{latestInfo.username}</p>
