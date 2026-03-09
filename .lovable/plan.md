@@ -1,39 +1,44 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Fix: Label-Farbe & "Zuletzt gefolgt" Avatare
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### 1. Label "Spion angesetzt auf" → Schwarz
+**Problem:** `text-foreground/50` ist im Dark Mode weiß/grau, aber der Hintergrund ist rosa/weiß.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+**Lösung:** Ändere zu `text-black/60` (hardcoded schwarz).
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**Datei:** `src/pages/Dashboard.tsx` (Zeile ~192)
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+---
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### 2. "Zuletzt gefolgt" zeigt nur 1 Avatar
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**Problem:** `useFollowEvents` holt nur **Änderungen** aus `follow_events` — nicht die komplette Following-Baseline.
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**Lösung:** 
+- Neuen Hook `useRecentFollowings(profileId)` erstellen → holt aus `profile_followings` die letzten 6-10 Einträge sortiert nach `first_seen_at DESC`
+- In `ProfileCard.tsx` diesen Hook nutzen statt `useFollowEvents`
+
+**Dateien:**
+- `src/hooks/useProfileFollowings.ts` — neuen Query hinzufügen
+- `src/components/ProfileCard.tsx` — Hook austauschen
+
+```typescript
+// Neuer Hook
+export function useRecentFollowings(profileId?: string) {
+  return useQuery({
+    queryKey: ["recent_followings", profileId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profile_followings")
+        .select("username, avatar_url, first_seen_at")
+        .eq("tracked_profile_id", profileId)
+        .order("first_seen_at", { ascending: false })
+        .limit(10);
+      return data ?? [];
+    },
+    enabled: !!profileId,
+  });
+}
+```
 
