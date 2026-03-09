@@ -22,7 +22,6 @@ const FeedPage = () => {
   const { plan, showPaywall } = useSubscription();
   const isPro = plan === "pro";
   const [visibleCount, setVisibleCount] = useState(50);
-  const [visibleCount, setVisibleCount] = useState(50);
 
   const { data: profiles = [] } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
