@@ -76,26 +76,23 @@ const Dashboard = () => {
 
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
-        {/* Greeting zone */}
-        <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 text-center">
-          <p className="font-bold text-primary-foreground/85 mb-1" style={{ fontSize: "0.8125rem", letterSpacing: "0.06em" }}>
+        {/* Top bar */}
+        <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
+          <span className="text-primary-foreground/60 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
             SpySecret
-          </p>
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-primary-foreground" style={{ fontSize: "1.9rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-              Hey {displayName}
-            </h1>
-          </motion.div>
-          <p className="text-primary-foreground/70 mt-1" style={{ fontSize: "0.75rem" }}>
-            {t("dashboard.spy_briefing", "Heute hält dein Agent alles im Blick.")}
-          </p>
+          </span>
+          {profiles.length > 0 && (
+            <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>
+              {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
+            </span>
+          )}
         </div>
-
-        {/* Wave separator */}
-        <div className="relative w-full leading-[0] overflow-hidden">
-          <svg viewBox="0 0 500 22" preserveAspectRatio="none" className="block w-full h-[22px]">
-            <path d="M0,22 C170,0 330,0 500,22 L500,22 L0,22 Z" fill="hsl(var(--primary) / 0.15)" />
-          </svg>
+        {/* Greeting */}
+        <div className="px-6 pb-3">
+          <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+            className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+            Hey {displayName}
+          </motion.h1>
         </div>
 
         {/* Agent zone — overflow visible so drag works */}
