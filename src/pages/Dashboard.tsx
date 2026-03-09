@@ -104,12 +104,16 @@ const Dashboard = () => {
             <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
               {/* LEFT — Light profile half */}
               <div
-                className="absolute inset-0"
-                 style={{
-                   background: "rgba(255,240,245,0.95)",
-                   clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
-                 }}
-              />
+                className="absolute inset-0 rounded-[1.75rem] overflow-hidden"
+              >
+                <div
+                  className="absolute inset-0"
+                   style={{
+                     background: "rgba(255,240,245,0.95)",
+                     clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
+                   }}
+                />
+              </div>
 
               {/* RIGHT — Dark Spy half */}
               <div
