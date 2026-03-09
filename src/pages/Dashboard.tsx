@@ -192,13 +192,10 @@ const Dashboard = () => {
               <div className="relative z-10 flex flex-col">
                 {/* Full-width label header */}
                 {spyProfile && (
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-primary-foreground/70 font-bold uppercase tracking-widest" style={{ fontSize: "0.6875rem", letterSpacing: "0.12em" }}>
-                        🕵️ Spion angesetzt auf
-                      </span>
-                      <div className="flex-1 h-px bg-primary-foreground/20" />
-                    </div>
+                  <div className="px-4 pt-3 pb-1">
+                    <span className="text-foreground/60 font-bold uppercase tracking-widest" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
+                      Spion angesetzt auf
+                    </span>
                   </div>
                 )}
 
