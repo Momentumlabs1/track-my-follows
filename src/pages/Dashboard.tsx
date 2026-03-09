@@ -102,10 +102,10 @@ const Dashboard = () => {
               {/* LEFT — Light profile half */}
               <div
                 className="absolute inset-0"
-                style={{
-                  background: "rgba(255,255,255,0.92)",
-                  clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
-                }}
+                 style={{
+                   background: "rgba(255,240,245,0.95)",
+                   clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
+                 }}
               />
 
               {/* RIGHT — Dark Spy half */}
