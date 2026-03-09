@@ -114,41 +114,24 @@ const Dashboard = () => {
           </span>
           {isPro ? (
             <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
-              {/* LEFT — Light profile half */}
-              <div
-                className="absolute inset-0 rounded-[1.75rem] overflow-hidden"
-              >
-                <div
-                  className="absolute inset-0"
-                   style={{
-                     background: "rgba(255,240,245,0.95)",
-                     clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
-                   }}
-                />
-              </div>
+              {/* Base — Light pink background */}
+              <div className="absolute inset-0 rounded-[1.75rem]" style={{ background: "rgba(255,240,245,0.95)" }} />
 
-              {/* RIGHT — Dark Spy half */}
+              {/* RIGHT — Dark Spy semicircle */}
               <div className="absolute inset-0 rounded-[1.75rem] overflow-hidden">
                 <div
                   className="absolute inset-0"
                   style={{
                     background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
-                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                    clipPath: "ellipse(42% 100% at 100% 50%)",
                   }}
                 />
-                {/* Scan-line effect on dark side */}
+                {/* Scan-line effect */}
                 <div
                   className="absolute inset-0 pointer-events-none opacity-[0.06]"
                   style={{
-                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                    clipPath: "ellipse(42% 100% at 100% 50%)",
                     backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
-                  }}
-                />
-                {/* Diagonal glow line */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
                   }}
                 />
               </div>
@@ -206,8 +189,7 @@ const Dashboard = () => {
               <div className="relative z-10 flex items-center p-3 gap-2">
                 {/* Profile side (left, 60%) */}
                 <motion.div
-                  className="min-w-0"
-                  style={{ width: "60%" }}
+                  style={{ width: "65%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
                     filter: isDragging ? "grayscale(1)" : "grayscale(0)",
@@ -233,14 +215,14 @@ const Dashboard = () => {
                             src={spyProfile.avatar_url}
                             alt={spyProfile.username}
                             fallbackInitials={spyProfile.username}
-                            size={44}
+                            size={50}
                           />
                           <div className="min-w-0 flex-1">
-                             <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                             <p className="font-bold text-foreground truncate" style={{ fontSize: "1rem" }}>
                               @{spyProfile.username}
                             </p>
                             {recentEvents.total > 0 && (
-                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.625rem" }}>
+                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.75rem" }}>
                                 {recentEvents.gained > 0 && `+${recentEvents.gained} Follows`}
                                 {recentEvents.gained > 0 && recentEvents.lost > 0 && " · "}
                                 {recentEvents.lost > 0 && `-${recentEvents.lost} Unfollows`}
@@ -280,7 +262,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right, 40%) */}
-                <div className="flex flex-col items-center justify-center" style={{ width: "40%" }}>
+                <div className="flex flex-col items-center justify-center" style={{ width: "35%" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}

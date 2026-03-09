@@ -1,50 +1,39 @@
 
 
-## Plan: Spy-Kachel Redesign — Halbkreis statt Diagonale
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Problem
-Der diagonale Schrägbalken zwischen hellem (Profil) und dunklem (Spy) Bereich sieht unnatürlich aus. Der Spy-Bereich nimmt zu viel Platz ein (40%), der Account hat zu wenig Raum.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Änderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### `Dashboard.tsx` (Zeilen 116-290)
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-**1. Dark-Bereich: Diagonale → Halbkreis rechts**
-- Statt `clipPath: polygon(...)` einen **Halbkreis von rechts** als `border-radius` oder `clipPath: ellipse()` verwenden
-- Dunkler Bereich wird schmaler (~35%), nur rechte Seite mit großem `border-radius` links (z.B. `ellipse(55% 100% at 100% 50%)`)
-- Scan-line Effekt und Glow-Line an neuen clipPath anpassen
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-**2. Profil-Seite (links) bekommt mehr Platz**
-- Von `width: 60%` auf `width: 65%`
-- Avatar von 44px auf **50px**
-- Username Font von `0.9375rem` auf `1rem`
-- Follow-Stats Font von `0.625rem` auf `0.75rem`
-- Mehr Klarheit: kleines Label "Wird überwacht von deinem Spion" o.ä.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-**3. Spy-Seite (rechts) kompakter aber größer**
-- Von `width: 40%` auf `width: 35%`
-- SpyIcon von 72px auf **88px** — ragt leicht über den dunklen Bereich hinaus ins Helle
-- "Ziehen · Spion" Text bleibt
-
-**4. Helle Seite: volle Fläche als Basis**
-- Statt clipPath auf der hellen Seite: einfach `background: rgba(255,240,245,0.95)` auf die **gesamte Karte**, dann dark Halbkreis darüber
-
-### Visuelles Ziel
-```text
-┌──────────────────────────────────┐
-│ 🔒 Aktuell im Fokus             │
-│                          ╭──────│
-│  (Avatar) @diego_gut1   │ 🕵️   │  ← Halbkreis dunkel
-│  +358 Follows · -1 Unf  │      │
-│  [ava][ava][ava]         ╰──────│
-│                     Ziehen·Spion│
-└──────────────────────────────────┘
-```
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-
-| Datei | Änderung |
-|---|---|
-| `Dashboard.tsx` | clipPath polygon → ellipse für dark-side, helle Seite als Basis-BG, Profil-Breite 65%, Spy 35%, Avatar/Font größer |
-| `SpyAgentCard.tsx` | SpyIcon size 72→88px |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
