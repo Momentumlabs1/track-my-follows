@@ -51,7 +51,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
   }, [findProfileUnderPoint, onDragMoveSpy, onHoverProfileChange, spyProfile]);
 
   return (
-    <div className="relative flex w-[116px] flex-col items-center justify-center rounded-2xl border border-primary-foreground/30 bg-primary-foreground/10 px-2 py-3">
+    <div className="relative flex flex-col items-center justify-center px-2 py-3">
       {/* Ghost placeholder while dragging */}
       <AnimatePresence>
         {isDragging && (
@@ -59,10 +59,9 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center rounded-2xl"
-            style={{ background: "hsl(var(--primary) / 0.08)" }}
+            className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-[72px] h-[72px] rounded-full border-2 border-dashed border-primary-foreground/30 animate-pulse" />
+            <div className="w-[72px] h-[72px] rounded-full border-2 border-dashed border-primary-foreground/40 animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>
