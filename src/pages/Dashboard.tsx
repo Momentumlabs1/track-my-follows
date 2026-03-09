@@ -47,7 +47,15 @@ const Dashboard = () => {
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const moveSpy = useMoveSpy();
-  const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "User";
+  const spyNumber = useMemo(() => {
+    if (!user?.id) return "0000";
+    let hash = 0;
+    for (let i = 0; i < user.id.length; i++) {
+      hash = ((hash << 5) - hash) + user.id.charCodeAt(i);
+      hash |= 0;
+    }
+    return String(Math.abs(hash) % 10000).padStart(4, "0");
+  }, [user?.id]);
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
