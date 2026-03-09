@@ -116,12 +116,13 @@ async function syncNewFollows(
   const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
   const spanMs = Math.max(Date.now() - lastTs, 60_000);
 
+  const nowMs = Date.now();
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
-    // For initial scan: use current time (no fake spread). For subsequent: spread between last scan and now.
+    // Sequential descending timestamps to preserve Instagram's API order (index 0 = most recent)
     const ts = isInitialScan
-      ? now
-      : new Date(lastTs + Math.random() * spanMs).toISOString();
+      ? new Date(nowMs - i * 1000).toISOString()
+      : new Date(nowMs - i * 1000).toISOString();
     const genderTag = detectGender(f.full_name);
     const category = categorizeFollow(f.follower_count, f.is_private);
     await supabase.from("profile_followings").insert({
