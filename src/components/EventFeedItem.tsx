@@ -108,26 +108,26 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
       {/* Center: verb + names stacked */}
       <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
         {/* Top line: actor username + verb */}
-        <p className="text-[0.8125rem] leading-snug truncate">
+        <p className="text-[0.875rem] leading-snug truncate">
           <span className="font-bold text-foreground">@{actorUsername}</span>
         </p>
         {/* Verb as colored badge-like text */}
         <span
-          className={`inline-block text-[0.6875rem] font-bold mt-0.5 ${
+          className={`inline-block text-[0.8125rem] font-bold mt-0.5 ${
             verb.isPositive ? "text-brand-green" : "text-destructive"
           }`}
         >
           {verb.text}
         </span>
         {/* Target username below verb */}
-        <p className="text-[0.75rem] text-muted-foreground font-semibold truncate mt-0.5">
+        <p className="text-[0.8125rem] text-muted-foreground font-semibold truncate mt-0.5">
           @{targetUsername}
         </p>
       </div>
 
       {/* Time + unread */}
       <div className="flex flex-col items-end flex-shrink-0 gap-1 self-start pt-0.5">
-        <span className="text-muted-foreground text-[0.625rem]">
+        <span className="text-muted-foreground text-[0.6875rem]">
           {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
         </span>
         {!event.is_read && !shouldBlur && (
