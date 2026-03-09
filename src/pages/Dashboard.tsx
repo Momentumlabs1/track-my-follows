@@ -185,10 +185,10 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-stretch px-2 py-2 gap-1" style={{ minHeight: "110px" }}>
+              <div className="relative z-10 flex items-stretch px-2 py-2 gap-1" style={{ minHeight: "150px" }}>
                 {/* Profile side (left, 65%) */}
                 <motion.div
-                  className="flex flex-col"
+                  className="flex flex-col h-full"
                   style={{ width: "65%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
@@ -204,7 +204,7 @@ const Dashboard = () => {
                   )}
 
                   {/* Profile box – flush with bottom */}
-                  <div className="mt-auto rounded-[1.25rem] px-3 py-2.5 dark:bg-white/[0.06] bg-[rgba(255,240,245,0.95)]">
+                  <div className="mt-1 flex-1 rounded-[1.25rem] px-3 py-2.5 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
@@ -255,7 +255,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right) – subtle lighter black in dark mode */}
-                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-white/[0.08] bg-transparent" style={{ width: "35%" }}>
+                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-white/[0.06] bg-transparent" style={{ width: "35%" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}
