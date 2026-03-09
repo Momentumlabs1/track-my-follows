@@ -96,13 +96,9 @@ const Dashboard = () => {
         </div>
 
         {/* Agent zone — overflow visible so drag works */}
-        <div className="px-5 pt-3 pb-12" style={{ position: "relative", zIndex: 10 }}>
-          <p className="uppercase tracking-[0.12em] text-primary-foreground/70 font-bold px-1 mb-2" style={{ fontSize: "0.625rem" }}>
-            {t("spy.your_spy", "Dein Spion")}
-          </p>
-
+        <div className="px-5 pt-1 pb-12" style={{ position: "relative", zIndex: 10 }}>
           {isPro ? (
-            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[140px]" style={{ boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}>
+            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)" }}>
               {/* LEFT — Light profile half */}
               <div
                 className="absolute inset-0"
