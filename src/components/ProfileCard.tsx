@@ -63,7 +63,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     return followEvents
       .filter(e => e.event_type === "follow" && !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 4);
+      .slice(0, 6);
   }, [followEvents]);
 
   const followerCount = profile.follower_count ?? profile.last_follower_count;
@@ -154,18 +154,9 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
+              <span className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>· 📡 1x/d</span>
               <ChevronRight className="h-5 w-5 text-muted-foreground/50 rtl:rotate-180" />
             </div>
-          </div>
-
-          {/* Scan frequency badge */}
-          <div className="mt-2.5">
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-muted-foreground bg-muted"
-              style={{ fontSize: '0.6875rem', fontWeight: 600 }}
-            >
-              📡 1x täglich
-            </span>
           </div>
         </div>
 
@@ -179,8 +170,8 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
               {recentFollows.map((event) => (
                 <div
                   key={event.id}
-                  className="overflow-hidden rounded-lg"
-                  style={{ aspectRatio: '1/1', width: '36px', flexShrink: 0 }}
+                  className="overflow-hidden rounded-md"
+                  style={{ aspectRatio: '1/1', width: '40px', flexShrink: 0 }}
                 >
                   <RectAvatar
                     src={event.target_avatar_url}
