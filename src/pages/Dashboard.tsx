@@ -97,21 +97,58 @@ const Dashboard = () => {
             {t("spy.your_spy", "Dein Spion")}
           </p>
 
-          <div className="relative p-[1px] rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.05))" }}>
-            <div className="rounded-[1.75rem] bg-primary-foreground/8 backdrop-blur-md p-4" style={{ boxShadow: "inset 0 1px 20px rgba(255,255,255,0.08)" }}>
-            {isPro ? (
-              <div className="flex items-center gap-4">
-                <SpyWidget
-                  spyProfile={spyProfile}
-                  onDragMoveSpy={handleMoveSpy}
-                  isDragging={isDragging}
-                  onDragStateChange={setIsDragging}
-                  onHoverProfileChange={setHoveredProfileId}
-                />
+          {isPro ? (
+            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[140px]" style={{ boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}>
+              {/* LEFT — Dark Spy half */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
+                  clipPath: "polygon(0 0, 62% 0, 42% 100%, 0 100%)",
+                }}
+              />
+              {/* Scan-line effect on dark side */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                style={{
+                  clipPath: "polygon(0 0, 62% 0, 42% 100%, 0 100%)",
+                  backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
+                }}
+              />
 
-                {/* Spy target info — fades when dragging */}
+              {/* RIGHT — Light profile half */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08))",
+                  clipPath: "polygon(58% 0, 100% 0, 100% 100%, 38% 100%)",
+                }}
+              />
+
+              {/* Diagonal glow line */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(135deg, transparent 47%, rgba(255,255,255,0.2) 49%, rgba(255,255,255,0.2) 51%, transparent 53%)",
+                }}
+              />
+
+              {/* Content layer */}
+              <div className="relative z-10 flex items-center p-4 gap-2">
+                {/* Spy side */}
+                <div className="flex flex-col items-center justify-center" style={{ width: "42%" }}>
+                  <SpyWidget
+                    spyProfile={spyProfile}
+                    onDragMoveSpy={handleMoveSpy}
+                    isDragging={isDragging}
+                    onDragStateChange={setIsDragging}
+                    onHoverProfileChange={setHoveredProfileId}
+                  />
+                </div>
+
+                {/* Profile side */}
                 <motion.div
-                  className="min-w-0 flex-1"
+                  className="flex-1 min-w-0"
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
                     filter: isDragging ? "grayscale(1)" : "grayscale(0)",
@@ -127,7 +164,7 @@ const Dashboard = () => {
                         exit={{ opacity: 0, y: -20, scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         onClick={() => navigate(`/profile/${spyProfile.id}`)}
-                        className="w-full rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5 text-start"
+                        className="w-full text-start"
                       >
                         <span className="text-primary-foreground/75 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
                           🔒 Aktuell im Fokus
@@ -169,7 +206,6 @@ const Dashboard = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5"
                       >
                         <p className="font-bold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
                           {t("spy.assign_your_spy")}
@@ -182,26 +218,26 @@ const Dashboard = () => {
                   </AnimatePresence>
                 </motion.div>
               </div>
-            ) : (
-              <button
-                onClick={() => { haptic.light(); showPaywall("spy_agent"); }}
-                className="w-full rounded-2xl p-3.5 flex items-center gap-3 border border-primary-foreground/25 bg-primary-foreground/10"
-              >
-                <div className="rounded-full p-2 border border-primary-foreground/30 bg-primary-foreground/10">
-                  <Lock className="h-5 w-5 text-primary-foreground/85" />
-                </div>
-                <div className="text-start">
-                  <p className="font-semibold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
-                    {t("paywall.unlock_spy_agent", "Spy Agent freischalten")}
-                  </p>
-                  <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
-                    {t("spy.spy_description")}
-                  </p>
-                </div>
-              </button>
-            )}
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => { haptic.light(); showPaywall("spy_agent"); }}
+              className="w-full relative rounded-[1.75rem] overflow-hidden min-h-[100px] flex items-center gap-3 p-4"
+              style={{ background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 22%))", boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}
+            >
+              <div className="rounded-full p-2 border border-primary-foreground/30 bg-primary-foreground/10">
+                <Lock className="h-5 w-5 text-primary-foreground/85" />
+              </div>
+              <div className="text-start">
+                <p className="font-semibold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
+                  {t("paywall.unlock_spy_agent", "Spy Agent freischalten")}
+                </p>
+                <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                  {t("spy.spy_description")}
+                </p>
+              </div>
+            </button>
+          )}
 
           {profiles.length > 0 && (
             <p className="text-primary-foreground/65 mt-3 text-center" style={{ fontSize: "0.75rem" }}>
