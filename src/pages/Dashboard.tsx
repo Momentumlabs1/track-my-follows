@@ -140,15 +140,18 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 3: Deine Profile ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-10 pb-3 space-y-4">
-          <div className="border-t border-border/40 -mx-5 mb-4" />
-          <div className="px-1 mb-1">
-            <p className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
-              {t("spy.your_accounts", "Deine Accounts")}
-            </p>
-            <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>
-              {t("spy.daily_scan_subtitle", "Täglicher Basis-Scan")}
-            </p>
+        <div className="px-5 pt-12 pb-3 space-y-4">
+          <div className="border-t-2 border-border/60 -mx-5 mb-6" />
+          <div className="px-1 mb-1 flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
+                {t("spy.your_accounts", "Deine Accounts")}
+              </p>
+              <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>
+                {t("spy.daily_scan_subtitle", "Täglicher Basis-Scan")}
+              </p>
+            </div>
           </div>
           {profiles.map((profile, i) => (
             <ProfileCard key={profile.id} profile={profile} profileId={profile.id} hasSpy={profile.has_spy === true}
