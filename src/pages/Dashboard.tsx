@@ -216,7 +216,7 @@ const Dashboard = () => {
                             src={spyProfile.avatar_url}
                             alt={spyProfile.username}
                             fallbackInitials={spyProfile.username}
-                            size={44}
+                            size={50}
                           />
                           <div className="min-w-0 flex-1">
                              <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
