@@ -180,29 +180,55 @@ const ProfileDetail = () => {
 
       {/* ─── Hero ─── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-4 pb-6">
-        <div className="flex flex-col items-center mb-5">
-          <div className="relative">
-            {hasSpy ? (
-              <div className="avatar-ring">
-                <div className="rounded-full bg-background p-[2px]">
-                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+        <div className={`flex items-center mb-5 ${hasSpy ? "justify-between" : "flex-col"}`}>
+          {/* Avatar + Info */}
+          <div className={`flex ${hasSpy ? "items-center gap-4" : "flex-col items-center"}`}>
+            <div className="relative">
+              {hasSpy ? (
+                <div className="avatar-ring">
+                  <div className="rounded-full bg-background p-[2px]">
+                    <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
-            )}
-            {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={28} glow /></div>}
-          </div>
-          <p className="text-foreground font-bold mt-3" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
-          {profile.display_name && <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{profile.display_name}</p>}
-          {hasSpy ? (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
-              <span className="text-brand-green font-medium" style={{ fontSize: '0.75rem' }}>{t("spy.spy_active")}</span>
+              ) : (
+                <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <ScanStatus lastScannedAt={profile.last_scanned_at} />
+            <div className={hasSpy ? "" : "text-center mt-3"}>
+              <p className="text-foreground font-bold" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
+              {profile.display_name && <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{profile.display_name}</p>}
+              {hasSpy ? (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+                  <span className="text-brand-green font-medium" style={{ fontSize: '0.75rem' }}>{t("spy.spy_active")}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <ScanStatus lastScannedAt={profile.last_scanned_at} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Spy Action Hub – only on spy profiles */}
+          {hasSpy && (
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={() => {
+                  // Show scan actions sheet
+                  setSpyScanMenuOpen(true);
+                }}
+                className="relative group"
+                aria-label={t("spy.your_spy", "Spion")}
+              >
+                <div className="drop-shadow-[0_0_18px_hsl(var(--primary)/0.5)]">
+                  <SpyIcon size={72} glow />
+                </div>
+                <span className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full bg-brand-green border-2 border-background" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+              </button>
+              <span className="text-muted-foreground font-bold" style={{ fontSize: '0.5625rem', letterSpacing: '0.06em' }}>
+                {t("spy.tap_to_scan", "Tippen")}
+              </span>
             </div>
           )}
         </div>
