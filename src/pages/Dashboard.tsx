@@ -61,8 +61,18 @@ const Dashboard = () => {
     });
   }, [moveSpy, profiles]);
 
-  const followerCount = spyProfile?.follower_count ?? spyProfile?.last_follower_count;
-  const followingCount = spyProfile?.following_count ?? spyProfile?.last_following_count;
+  const { data: followings = [] } = useProfileFollowings(spyProfile?.id);
+  const genderStats = useMemo(() => {
+    if (!followings.length) return null;
+    let f = 0, m = 0, u = 0;
+    for (const fg of followings) {
+      if (fg.gender_tag === "female") f++;
+      else if (fg.gender_tag === "male") m++;
+      else u++;
+    }
+    const total = f + m + u;
+    return { fPct: Math.round((f / total) * 100), mPct: Math.round((m / total) * 100), uPct: Math.round((u / total) * 100), total };
+  }, [followings]);
 
   return (
     <div className="min-h-screen bg-background">
