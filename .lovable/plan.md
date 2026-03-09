@@ -1,39 +1,37 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Mehr Abgrenzung zwischen den drei Dashboard-Zonen
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem
+Die drei Bereiche (Header, Spy-Karte, Accounts) fliessen visuell ineinander — es fehlt klare Trennung.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Änderungen
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**`src/pages/Dashboard.tsx`**:
+- **Zwischen Spy-Karte und Accounts**: Stärkerer visueller Break — Section-Header "Deine Accounts" bekommt einen kleinen Icon (z.B. `Users` aus lucide) und mehr `pt-12` statt `pt-10`
+- **Separator** dicker machen: `border-t border-border/60` statt `/40`, und zusätzlich `mt-6` Abstand nach der Spy-Karte
+- **Spy-Bereich**: Eigenen Section-Header "🕵️ Dein Spion" **über** der Spy-Karte hinzufügen (als kleines Label ausserhalb der pinken Karte), damit klar ist dass das ein eigener Bereich ist
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+**`src/components/SpyAgentCard.tsx`**:
+- Keine strukturellen Änderungen nötig — die Abgrenzung kommt durch das Dashboard-Layout
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### Konkret
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+```
+[Pink Header - Hey User]
+          ↓ 16px overlap
+[── 🕵️ SPION ──────────]  ← neues Section-Label
+[  Pink Spy-Karte       ]
+          ↓ 32px gap
+[────── Trennlinie ─────]  ← border-t border-border/60
+[── 👤 DEINE ACCOUNTS ─]  ← Section-Label mit Icon
+[  ProfileCard 1        ]
+[  ProfileCard 2        ]
+[  + Hinzufügen         ]
+```
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+### Dateien
+| Datei | Was |
+|---|---|
+| `Dashboard.tsx` | Section-Labels, stärkere Separator, mehr Spacing |
 
