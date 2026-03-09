@@ -188,8 +188,8 @@ const Dashboard = () => {
               <div className="relative z-10 flex items-center px-2 py-2 gap-1">
                 {/* Profile side (left, 60%) */}
                 <motion.div
-                  className="rounded-[1.25rem] px-3 py-2.5"
-                  style={{ width: "65%", background: "rgba(255,240,245,0.95)" }}
+                  className="rounded-[1.25rem] px-3 py-2.5 dark:bg-black/80 bg-[rgba(255,240,245,0.95)]"
+                  style={{ width: "65%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
                     filter: isDragging ? "grayscale(1)" : "grayscale(0)",
@@ -197,7 +197,7 @@ const Dashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   {spyProfile && (
-                    <p className="text-black/60 font-bold uppercase tracking-widest mb-2" style={{ fontSize: "0.5625rem", letterSpacing: "0.1em" }}>
+                    <p className="text-black/60 dark:text-white/60 font-bold uppercase tracking-widest mb-2" style={{ fontSize: "0.5625rem", letterSpacing: "0.1em" }}>
                       Spion angesetzt auf
                     </p>
                   )}
