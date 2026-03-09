@@ -263,7 +263,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right, 40%) */}
-                <div className="flex flex-col items-center justify-center" style={{ width: "40%" }}>
+                <div className="flex flex-col items-center justify-center" style={{ width: "35%" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}
