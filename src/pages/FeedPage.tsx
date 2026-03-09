@@ -14,7 +14,7 @@ import { haptic } from "@/lib/native";
 import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 import logoSquare from "@/assets/logo-square.png";
 
-type FilterType = "all" | "follows";
+// Filter removed — show all events
 
 const FeedPage = () => {
   const { t } = useTranslation();
