@@ -197,7 +197,7 @@ const Dashboard = () => {
                   transition={{ duration: 0.2 }}
                 >
                   {spyProfile && (
-                    <p className="text-foreground/50 font-bold uppercase tracking-widest mb-2" style={{ fontSize: "0.5625rem", letterSpacing: "0.1em" }}>
+                    <p className="text-black/60 font-bold uppercase tracking-widest mb-2" style={{ fontSize: "0.5625rem", letterSpacing: "0.1em" }}>
                       Spion angesetzt auf
                     </p>
                   )}
