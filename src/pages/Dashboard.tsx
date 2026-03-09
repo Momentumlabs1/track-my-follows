@@ -199,10 +199,10 @@ const Dashboard = () => {
                         onClick={() => navigate(`/profile/${spyProfile.id}`)}
                         className="w-full text-start"
                       >
-                        <span className="text-foreground/50 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
-                          🔒 Aktuell im Fokus
+                        <span className="text-foreground/40 font-bold uppercase tracking-widest block" style={{ fontSize: "0.5rem", letterSpacing: "0.14em" }}>
+                          🕵️ Spion angesetzt auf:
                         </span>
-                        <div className="flex items-center gap-2.5 mt-1.5">
+                        <div className="flex items-center gap-3 mt-2">
                           <InstagramAvatar
                             src={spyProfile.avatar_url}
                             alt={spyProfile.username}
@@ -210,14 +210,14 @@ const Dashboard = () => {
                             size={50}
                           />
                           <div className="min-w-0 flex-1">
-                             <p className="font-bold text-foreground truncate" style={{ fontSize: "1rem" }}>
+                            <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.0625rem", letterSpacing: "-0.02em" }}>
                               @{spyProfile.username}
                             </p>
                             {recentEvents.total > 0 && (
-                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.75rem" }}>
-                                {recentEvents.gained > 0 && `+${recentEvents.gained} Follows`}
-                                {recentEvents.gained > 0 && recentEvents.lost > 0 && " · "}
-                                {recentEvents.lost > 0 && `-${recentEvents.lost} Unfollows`}
+                              <p className="text-muted-foreground mt-0.5 font-medium" style={{ fontSize: "0.75rem" }}>
+                                {recentEvents.gained > 0 && <span className="text-primary">+{recentEvents.gained} Follows</span>}
+                                {recentEvents.gained > 0 && recentEvents.lost > 0 && <span> · </span>}
+                                {recentEvents.lost > 0 && <span className="text-destructive">-{recentEvents.lost} Unfollows</span>}
                               </p>
                             )}
                             {recentEvents.avatars.length > 0 && (
