@@ -257,18 +257,19 @@ const Dashboard = () => {
                         </p>
                       </motion.div>
                     )}
-                  </AnimatePresence>
-                </motion.div>
+                    </AnimatePresence>
+                  </motion.div>
 
-                {/* Spy side (right, 40%) */}
-                <div className="flex flex-col items-center justify-center" style={{ width: "35%" }}>
-                  <SpyWidget
-                    spyProfile={spyProfile}
-                    onDragMoveSpy={handleMoveSpy}
-                    isDragging={isDragging}
-                    onDragStateChange={setIsDragging}
-                    onHoverProfileChange={setHoveredProfileId}
-                  />
+                  {/* Spy side (right, 40%) */}
+                  <div className="flex flex-col items-center justify-center" style={{ width: "35%" }}>
+                    <SpyWidget
+                      spyProfile={spyProfile}
+                      onDragMoveSpy={handleMoveSpy}
+                      isDragging={isDragging}
+                      onDragStateChange={setIsDragging}
+                      onHoverProfileChange={setHoveredProfileId}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
