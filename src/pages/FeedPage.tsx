@@ -6,6 +6,7 @@ import { DaySeparator } from "@/components/DaySeparator";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useFollowEvents, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
