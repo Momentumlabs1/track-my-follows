@@ -7,7 +7,7 @@ import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
-import { useProfileFollowings } from "@/hooks/useProfileFollowings";
+import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,18 +61,14 @@ const Dashboard = () => {
     });
   }, [moveSpy, profiles]);
 
-  const { data: followings = [] } = useProfileFollowings(spyProfile?.id);
-  const genderStats = useMemo(() => {
-    if (!followings.length) return null;
-    let f = 0, m = 0, u = 0;
-    for (const fg of followings) {
-      if (fg.gender_tag === "female") f++;
-      else if (fg.gender_tag === "male") m++;
-      else u++;
-    }
-    const total = f + m + u;
-    return { fPct: Math.round((f / total) * 100), mPct: Math.round((m / total) * 100), uPct: Math.round((u / total) * 100), total };
-  }, [followings]);
+  const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
+  const recentEvents = useMemo(() => {
+    const nonInitial = followerEvents.filter((e) => !e.is_initial);
+    const gained = nonInitial.filter((e) => e.event_type === "gained").length;
+    const lost = nonInitial.filter((e) => e.event_type === "lost").length;
+    const avatars = nonInitial.slice(0, 4);
+    return { gained, lost, avatars, total: nonInitial.length };
+  }, [followerEvents]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,43 +76,36 @@ const Dashboard = () => {
 
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
-        {/* Greeting zone */}
-        <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 text-center">
-          <p className="font-bold text-primary-foreground/85 mb-1" style={{ fontSize: "0.8125rem", letterSpacing: "0.06em" }}>
+        {/* Top bar */}
+        <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
+          <span className="text-primary-foreground/60 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
             SpySecret
-          </p>
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-            <h1 className="font-bold text-primary-foreground" style={{ fontSize: "1.9rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-              Hey {displayName}
-            </h1>
-          </motion.div>
-          <p className="text-primary-foreground/70 mt-1" style={{ fontSize: "0.75rem" }}>
-            {t("dashboard.spy_briefing", "Heute hält dein Agent alles im Blick.")}
-          </p>
+          </span>
+          {profiles.length > 0 && (
+            <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>
+              {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
+            </span>
+          )}
         </div>
-
-        {/* Wave separator */}
-        <div className="relative w-full leading-[0] overflow-hidden">
-          <svg viewBox="0 0 500 22" preserveAspectRatio="none" className="block w-full h-[22px]">
-            <path d="M0,22 C170,0 330,0 500,22 L500,22 L0,22 Z" fill="hsl(var(--primary) / 0.15)" />
-          </svg>
+        {/* Greeting */}
+        <div className="px-6 pb-3">
+          <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+            className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+            Hey {displayName}
+          </motion.h1>
         </div>
 
         {/* Agent zone — overflow visible so drag works */}
-        <div className="px-5 pt-3 pb-12" style={{ position: "relative", zIndex: 10 }}>
-          <p className="uppercase tracking-[0.12em] text-primary-foreground/70 font-bold px-1 mb-2" style={{ fontSize: "0.625rem" }}>
-            {t("spy.your_spy", "Dein Spion")}
-          </p>
-
+        <div className="px-5 pt-1 pb-12" style={{ position: "relative", zIndex: 10 }}>
           {isPro ? (
-            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[140px]" style={{ boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}>
+            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)" }}>
               {/* LEFT — Light profile half */}
               <div
                 className="absolute inset-0"
-                style={{
-                  background: "rgba(255,255,255,0.92)",
-                  clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
-                }}
+                 style={{
+                   background: "rgba(255,240,245,0.95)",
+                   clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
+                 }}
               />
 
               {/* RIGHT — Dark Spy half */}
@@ -145,7 +134,7 @@ const Dashboard = () => {
               />
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-center p-4 gap-2">
+              <div className="relative z-10 flex items-center p-3 gap-2">
                 {/* Profile side (left, 60%) */}
                 <motion.div
                   className="min-w-0"
@@ -178,20 +167,27 @@ const Dashboard = () => {
                             size={44}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                             <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
                               @{spyProfile.username}
                             </p>
-                            {genderStats && genderStats.total > 0 && (
-                              <>
-                                <div className="flex h-1 w-full rounded-full overflow-hidden mt-1.5">
-                                  {genderStats.fPct > 0 && <div style={{ width: `${genderStats.fPct}%` }} className="bg-pink-500" />}
-                                  {genderStats.mPct > 0 && <div style={{ width: `${genderStats.mPct}%` }} className="bg-blue-500" />}
-                                  {genderStats.uPct > 0 && <div style={{ width: `${genderStats.uPct}%` }} className="bg-muted-foreground/30" />}
-                                </div>
-                                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.5625rem" }}>
-                                  ♀ {genderStats.fPct}% · ♂ {genderStats.mPct}%
-                                </p>
-                              </>
+                            {recentEvents.total > 0 && (
+                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.625rem" }}>
+                                {recentEvents.gained > 0 && `+${recentEvents.gained} Follows`}
+                                {recentEvents.gained > 0 && recentEvents.lost > 0 && " · "}
+                                {recentEvents.lost > 0 && `-${recentEvents.lost} Unfollows`}
+                              </p>
+                            )}
+                            {recentEvents.avatars.length > 0 && (
+                              <div className="flex -space-x-1.5 mt-1.5">
+                                {recentEvents.avatars.map((ev) => (
+                                  <img
+                                    key={ev.id}
+                                    src={ev.profile_pic_url || "/placeholder.svg"}
+                                    alt={ev.username}
+                                    className="w-5 h-5 rounded-full border border-background object-cover"
+                                  />
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -246,16 +242,6 @@ const Dashboard = () => {
             </button>
           )}
 
-          {profiles.length > 0 && (
-            <p className="text-primary-foreground/65 mt-3 text-center" style={{ fontSize: "0.75rem" }}>
-              {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
-              {spyProfile?.last_scanned_at && (
-                <>
-                  {" "}· Letzter Scan: {new Date(spyProfile.last_scanned_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
-                </>
-              )}
-            </p>
-          )}
         </div>
 
         {/* curved bottom — clipped independently */}

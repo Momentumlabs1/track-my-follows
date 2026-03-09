@@ -1,43 +1,39 @@
 
 
-## Plan: Spy-Karte aufräumen — Header kompakter, Spy-Card schlanker mit exklusiven Spy-Daten
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Was stört aktuell
-1. **Header**: "SpySecret", "Hey Name", Subtitle — drei zentrierte Texte übereinander, wirkt leer und nimmt viel Platz
-2. **Spy-Card**: Gender-Bar soll weg, aber die Profil-Seite braucht stattdessen etwas Exklusives
-3. **Gesamthöhe**: Die Karte ist zu hoch (`min-h-[140px]` + viel Padding)
-4. **Farbübergang**: Schwarz/Weiß-Karte sitzt auf Pink-Hintergrund — passt nicht nahtlos
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Änderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. Header kompakter machen (`Dashboard.tsx`, Zeilen 83-96)
-- **"SpySecret" + Greeting auf eine Zeile**: Links "SpySecret" als kleine Brand-Pill, rechts der Account-Count oder Scan-Zeit
-- **"Hey Name"** bleibt als große Zeile, aber **ohne** den Subtitle darunter (der sagt eh nichts Neues)
-- **Wave-Separator entfernen** (Zeilen 98-103) — spart 22px Höhe und der Übergang zur Spy-Card wird direkter
-- Ergebnis: Statt 3 zentrierte Textblöcke + Wave → 1 top-bar + 1 Greeting, fertig
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-#### 2. Spy-Card: Gender-Bar raus, letzte Follower-Änderungen rein
-- **Gender-Bar und `genderStats`/`useProfileFollowings` komplett entfernen**
-- **Stattdessen**: Letzte 3-4 Follow-Events des Spy-Profils als kleine Avatar-Reihe anzeigen (ähnlich wie "Zuletzt gefolgt" auf den ProfileCards, aber hier zeigen wir **Follower-Events** — gained/lost — was man unten NICHT sieht)
-- Dafür `useFollowEvents(spyProfile?.id)` nutzen, die letzten 4 non-initial Events nehmen
-- Unter dem `@username`: Eine Zeile wie "3 neue Follows · 1 Unfollow" als kompakter Event-Counter
-- Darunter die 4 kleinen runden Avatare der letzten Events
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-#### 3. Spy-Card Höhe reduzieren
-- `min-h-[140px]` → `min-h-[120px]`
-- Padding von `p-4` → `p-3`
-- SpyIcon von 88px → 72px
-- "Dein Spion" Label-Zeile darüber entfernen (ist durch die Karte selbst offensichtlich)
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-#### 4. Karte besser in den Pink-Header einbetten
-- Statt harter Weiß/Schwarz-Karte: Die weiße Seite bekommt einen leichten Pink-Tint (`rgba(255,240,245,0.95)`) damit sie zum Hintergrund passt
-- Karten-Border: `border border-white/20` statt keiner Border → weicher Übergang
-- Shadow leicht reduzieren
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-
-| Datei | Änderung |
-|---|---|
-| `Dashboard.tsx` | Header kompakter (Wave + Subtitle weg), Gender-Bar entfernen, `useFollowEvents` statt `useProfileFollowings`, Spy-Card Höhe reduzieren, letzte Events als Avatare anzeigen |
-| `SpyAgentCard.tsx` | SpyIcon Größe 88→72px |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
