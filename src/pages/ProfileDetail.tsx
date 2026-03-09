@@ -350,14 +350,27 @@ const ProfileDetail = () => {
       )}
 
       {!profile.baseline_complete && !profile.is_private && (profile.following_count ?? 0) > 0 &&
-        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (
-        <div className="px-5 mb-4">
-          <div className="flex items-center gap-2 native-card p-4">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
-          </div>
-        </div>
-      )}
+        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (() => {
+          const profileAge = Date.now() - new Date(profile.created_at).getTime();
+          const timedOut = profileAge > 10 * 60 * 1000;
+          return (
+            <div className="px-5 mb-4">
+              <div className="flex items-center gap-2 native-card p-4">
+                {timedOut ? (
+                  <>
+                    <Info className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_unavailable", "Gender-Analyse derzeit nicht verfügbar")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       {/* ─── Tabs ─── */}
       <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
