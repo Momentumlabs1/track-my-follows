@@ -18,3 +18,21 @@ export function useProfileFollowings(trackedProfileId?: string) {
     enabled: !!user && !!trackedProfileId,
   });
 }
+
+export function useRecentFollowings(profileId?: string) {
+  return useQuery({
+    queryKey: ["recent_followings", profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_followings")
+        .select("following_username, following_avatar_url, first_seen_at")
+        .eq("tracked_profile_id", profileId!)
+        .eq("is_current", true)
+        .order("first_seen_at", { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profileId,
+  });
+}

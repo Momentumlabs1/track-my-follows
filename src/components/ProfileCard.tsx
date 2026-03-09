@@ -1,10 +1,10 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
-import { useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { useRecentFollowings } from "@/hooks/useProfileFollowings";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
@@ -55,16 +55,9 @@ interface ProfileCardProps {
 export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered, isDropped }: ProfileCardProps) {
   const { t } = useTranslation();
   const shortTime = useShortTimeAgo();
-  const { data: followEvents = [] } = useFollowEvents(profileId);
+  const { data: recentFollowings = [] } = useRecentFollowings(profileId);
 
   const isDropTarget = isHovered === true;
-
-  const recentFollows = useMemo(() => {
-    return followEvents
-      .filter(e => e.event_type === "follow" && !e.is_initial)
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 6);
-  }, [followEvents]);
 
   const followerCount = profile.follower_count ?? profile.last_follower_count;
   const followingCount = profile.following_count ?? profile.last_following_count;
@@ -161,22 +154,22 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
         </div>
 
         {/* ═══ Zuletzt gefolgt – neutral sub-area ═══ */}
-        {recentFollows.length > 0 && (
+        {recentFollowings.length > 0 && (
           <div className="mx-0 mb-0 px-3 py-3 border-t border-border/30">
             <p className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               {t("profile_detail.tab_following", "Zuletzt gefolgt")}
             </p>
             <div className="flex gap-1.5">
-              {recentFollows.map((event) => (
+              {recentFollowings.map((f, idx) => (
                 <div
-                  key={event.id}
+                  key={`${f.following_username}-${idx}`}
                   className="overflow-hidden rounded-md"
                   style={{ aspectRatio: '1/1', width: '40px', flexShrink: 0 }}
                 >
                   <RectAvatar
-                    src={event.target_avatar_url}
-                    alt={event.target_username || ""}
-                    fallback={event.target_username || "?"}
+                    src={f.following_avatar_url}
+                    alt={f.following_username || ""}
+                    fallback={f.following_username || "?"}
                   />
                 </div>
               ))}
