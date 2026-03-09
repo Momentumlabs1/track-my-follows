@@ -1,70 +1,39 @@
 
 
-## Plan: Dashboard komplett neu gestalten
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Grundproblem
-Das Dashboard hat zu viele visuelle Elemente die konkurrieren — der pinke Header, die pinke Spy-Karte, die Section-Labels, die Separator-Linien — alles zusammen wirkt überladen und unharmonisch.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-### Neues Konzept: Clean & Minimal
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-#### 1. Header (`Dashboard.tsx`) — Schlanker, informativer
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-Statt des grossen pinken Gradient-Blocks ein **kompakter Header** ohne runde Ecken:
-- Logo + "SpySecret" oben links, Settings-Icon oben rechts
-- Greeting "Hey {name}" als grosse Zeile
-- Darunter eine Info-Zeile: "{n} Accounts · Letzter Scan: {time}"
-- **Kein** `rounded-b-[2rem]`, einfach ein flacher pinker Bereich mit weniger padding (`pb-8` statt `pb-24`)
-- Kein negativer Margin-Trick mehr (`-mt-16`) — alles fliesst natürlich
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-#### 2. Spy-Karte (`SpyAgentCard.tsx`) — Komplett neu
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-**Wenn Spy zugewiesen:**
-- **Weisser Card-Background** (`bg-card`) statt Pink-Gradient — konsistent mit den Profilkarten
-- Linker Rand: Dicker pinker Accent-Streifen (`border-l-4 border-primary`)
-- Layout: Avatar (48px) links, Username + Stats Mitte, SpyIcon (40px) rechts
-- Oben: Dezentes Badge "🕵️ SPY · Stündlich" in Primary-Farbe
-- Kein "Stündlich · Push-Scans · Unfollow-Erkennung" Footer — die Tags oben reichen
-- Drag-Hint nur als kleiner Text unter dem SpyIcon
-
-**Wenn kein Spy:**
-- Gleicher Card-Style, aber mit CTA-Text und SpyIcon zum Ziehen
-
-#### 3. Accounts-Section — Nahtlos
-
-- Kein `border-t-2` Separator mehr — stattdessen nur der Section-Header "Deine Accounts" mit etwas Abstand (`mt-8`)
-- Die Profilkarten bleiben wie sie sind (weiss, `bg-card`)
-- Der Spy-Profil bekommt in der Account-Liste weiterhin sein kleines SpyIcon-Badge
-
-#### 4. Gesamtstruktur
-
-```text
-┌─────────────────────────┐
-│ Pink Header (kompakt)   │
-│ SpySecret               │
-│ Hey Username             │
-│ 2 Accounts · Scan 14:30 │
-└─────────────────────────┘  ← flach, kein rounded-bottom
-                              ← kein -mt overlap
-🕵️ DEIN SPION
-┌─────────────────────────┐
-│▌ [Avatar] @user   [Spy] │  ← bg-card, border-l-4 primary
-│▌ 1.2K Follower · 500 Fg │
-└─────────────────────────┘
-
-👤 DEINE ACCOUNTS  (mt-8)
-┌─────────────────────────┐
-│ [Avatar] @user1    [>]  │  ← bg-card normal
-│ 500 Follower             │
-└─────────────────────────┘
-┌─────────────────────────┐
-│ [Avatar] @user2    [>]  │
-└─────────────────────────┘
-[+ Hinzufügen]
-```
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-| Datei | Was |
-|---|---|
-| `Dashboard.tsx` | Header vereinfachen, negativen Margin entfernen, Separator entfernen |
-| `SpyAgentCard.tsx` | Pink-Gradient → weisse Card mit pinkem Left-Border, kompakter |
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
