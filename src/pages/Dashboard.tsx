@@ -61,18 +61,14 @@ const Dashboard = () => {
     });
   }, [moveSpy, profiles]);
 
-  const { data: followings = [] } = useProfileFollowings(spyProfile?.id);
-  const genderStats = useMemo(() => {
-    if (!followings.length) return null;
-    let f = 0, m = 0, u = 0;
-    for (const fg of followings) {
-      if (fg.gender_tag === "female") f++;
-      else if (fg.gender_tag === "male") m++;
-      else u++;
-    }
-    const total = f + m + u;
-    return { fPct: Math.round((f / total) * 100), mPct: Math.round((m / total) * 100), uPct: Math.round((u / total) * 100), total };
-  }, [followings]);
+  const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
+  const recentEvents = useMemo(() => {
+    const nonInitial = followerEvents.filter((e) => !e.is_initial);
+    const gained = nonInitial.filter((e) => e.event_type === "gained").length;
+    const lost = nonInitial.filter((e) => e.event_type === "lost").length;
+    const avatars = nonInitial.slice(0, 4);
+    return { gained, lost, avatars, total: nonInitial.length };
+  }, [followerEvents]);
 
   return (
     <div className="min-h-screen bg-background">
