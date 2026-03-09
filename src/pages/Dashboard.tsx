@@ -40,6 +40,7 @@ const Dashboard = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
   const [justAssigned, setJustAssigned] = useState(false);
+  const [droppedOnProfileId, setDroppedOnProfileId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const moveSpy = useMoveSpy();
