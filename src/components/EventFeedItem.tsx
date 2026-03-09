@@ -70,11 +70,11 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
       return (
         <div className={`flex-shrink-0 ${blur ? "blur-md" : ""}`}>
           <div className="rounded-xl overflow-hidden" style={{ padding: '2px', background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))' }}>
-            <InstagramAvatar
+             <InstagramAvatar
               src={avatar}
               alt={username}
               fallbackInitials={username}
-              size={46}
+              size={52}
               className="!rounded-[10px]"
             />
           </div>
