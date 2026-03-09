@@ -1,41 +1,39 @@
 
 
-## Plan: Dashboard Header — Spy-Nummer Greeting & Card Layout Improvements
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### 1. Greeting ändern
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-**Aktuell:** `Hey {displayName}` mit dem E-Mail-Namen oder display_name.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-**Neu:** `Willkommen zurück` als Haupttext, darunter `Spy-{4-stellige Zahl}` als Agenten-Kennung. Die 4-stellige Zahl wird deterministisch aus der User-ID generiert (z.B. Hash der ersten 8 Zeichen → Modulo 10000), sodass sie für jeden User stabil bleibt.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-```
-Willkommen zurück
-Spy-4827
-```
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-Subtitle bleibt: "Dein Spion ist aktiv – hier ist dein Überblick."
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-### 2. Spy-Kachel verbessern
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-- **"SPION ANGESETZT AUF"** Label nach ganz oben in die Kachel verschieben (aktuell sitzt es innerhalb des linken Profilbereichs mit kleiner Schrift).
-- Label als eigene Zeile über der gesamten Kartenbreite, nicht nur über dem linken 65%-Bereich. Etwas größere Schrift, stärkerer Kontrast (text-primary-foreground/70 statt foreground/60).
-- Die helle Profilseite (links) bekommt etwas mehr Padding oben, damit die Trennung klarer wird.
-- Optional: Eine subtile Trennlinie oder einen leichten Divider zwischen Label und Profilinhalt.
-
-### Dateien
-- `src/pages/Dashboard.tsx` — Greeting Text + Spy-Nummer Logik + Kachel-Layout
-
-### Technisch
-```typescript
-// Deterministische 4-stellige Spy-Nummer aus User-ID
-const spyNumber = useMemo(() => {
-  if (!user?.id) return "0000";
-  let hash = 0;
-  for (let i = 0; i < user.id.length; i++) {
-    hash = ((hash << 5) - hash) + user.id.charCodeAt(i);
-    hash |= 0;
-  }
-  return String(Math.abs(hash) % 10000).padStart(4, "0");
-}, [user?.id]);
-```
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
