@@ -53,6 +53,7 @@ const ProfileDetail = () => {
   const [activeTab, setActiveTab] = useState<TabId>("new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
+  const [spyScanMenuOpen, setSpyScanMenuOpen] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -180,29 +181,55 @@ const ProfileDetail = () => {
 
       {/* ─── Hero ─── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-4 pb-6">
-        <div className="flex flex-col items-center mb-5">
-          <div className="relative">
-            {hasSpy ? (
-              <div className="avatar-ring">
-                <div className="rounded-full bg-background p-[2px]">
-                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+        <div className={`flex items-center mb-5 ${hasSpy ? "justify-between" : "flex-col"}`}>
+          {/* Avatar + Info */}
+          <div className={`flex ${hasSpy ? "items-center gap-4" : "flex-col items-center"}`}>
+            <div className="relative">
+              {hasSpy ? (
+                <div className="avatar-ring">
+                  <div className="rounded-full bg-background p-[2px]">
+                    <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
-            )}
-            {hasSpy && <div className="absolute -top-1 -end-1"><SpyIcon size={28} glow /></div>}
-          </div>
-          <p className="text-foreground font-bold mt-3" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
-          {profile.display_name && <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{profile.display_name}</p>}
-          {hasSpy ? (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
-              <span className="text-brand-green font-medium" style={{ fontSize: '0.75rem' }}>{t("spy.spy_active")}</span>
+              ) : (
+                <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <ScanStatus lastScannedAt={profile.last_scanned_at} />
+            <div className={hasSpy ? "" : "text-center mt-3"}>
+              <p className="text-foreground font-bold" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
+              {profile.display_name && <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{profile.display_name}</p>}
+              {hasSpy ? (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+                  <span className="text-brand-green font-medium" style={{ fontSize: '0.75rem' }}>{t("spy.spy_active")}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <ScanStatus lastScannedAt={profile.last_scanned_at} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Spy Action Hub – only on spy profiles */}
+          {hasSpy && (
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                onClick={() => {
+                  // Show scan actions sheet
+                  setSpyScanMenuOpen(true);
+                }}
+                className="relative group"
+                aria-label={t("spy.your_spy", "Spion")}
+              >
+                <div className="drop-shadow-[0_0_18px_hsl(var(--primary)/0.5)]">
+                  <SpyIcon size={72} glow />
+                </div>
+                <span className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full bg-brand-green border-2 border-background" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+              </button>
+              <span className="text-muted-foreground font-bold" style={{ fontSize: '0.5625rem', letterSpacing: '0.06em' }}>
+                {t("spy.tap_to_scan", "Tippen")}
+              </span>
             </div>
           )}
         </div>
@@ -438,6 +465,67 @@ const ProfileDetail = () => {
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
+
+      {/* Spy Scan Actions Sheet */}
+      {hasSpy && spyScanMenuOpen && (
+        <div className="fixed inset-0 z-50" onClick={() => setSpyScanMenuOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl p-6 pb-[calc(env(safe-area-inset-bottom)+24px)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-5" />
+            <div className="flex items-center gap-3 mb-5">
+              <SpyIcon size={40} glow />
+              <div>
+                <p className="font-bold text-foreground" style={{ fontSize: '1rem' }}>{profile.spy_name || t("spy.default_name", "Spion 🕵️")}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("spy.scan_actions_subtitle", "Wähle eine Aktion")}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {/* Push Scan */}
+              <button
+                onClick={() => { setSpyScanMenuOpen(false); handleScan(); }}
+                disabled={isScanning || profile.is_private}
+                className="w-full native-card p-4 flex items-center gap-3 text-start disabled:opacity-40"
+              >
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <RefreshCw className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.push_scan", "Push-Scan")}</p>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("spy.push_scan_desc", "Sofortiger Following + Follower Scan")}</p>
+                </div>
+                <span className="text-muted-foreground font-mono-num" style={{ fontSize: '0.75rem' }}>
+                  {profile.push_scans_today ?? 0}/4
+                </span>
+              </button>
+
+              {/* Unfollow Check */}
+              <button
+                onClick={() => { setSpyScanMenuOpen(false); setActiveTab("unfollowed"); tabsRef.current?.scrollIntoView({ behavior: "smooth" }); }}
+                className="w-full native-card p-4 flex items-center gap-3 text-start"
+              >
+                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <span style={{ fontSize: '1.125rem' }}>🔍</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.unfollow_check", "Entfolger aufdecken")}</p>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("spy.unfollow_check_desc", "Wer hat entfolgt? (1x/Tag)")}</p>
+                </div>
+                <span className="text-muted-foreground font-mono-num" style={{ fontSize: '0.75rem' }}>
+                  {profile.unfollow_scans_today ?? 0}/2
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
