@@ -1,7 +1,6 @@
 import { useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SpyIcon } from "@/components/SpyIcon";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
 
@@ -13,8 +12,19 @@ interface SpyWidgetProps {
   onHoverProfileChange: (profileId: string | null) => void;
 }
 
+const idleAnimate = {
+  x: [0, 2, -1, 1, 0],
+  y: [0, -1, 1, -2, 0],
+  rotate: [0, 1, -1, 0.5, 0],
+  transition: {
+    duration: 4,
+    repeat: Infinity,
+    repeatType: "reverse" as const,
+    ease: ["easeInOut"] as any,
+  },
+};
+
 export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateChange, onHoverProfileChange }: SpyWidgetProps) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const iconRef = useRef<HTMLDivElement>(null);
   const lastHitCheck = useRef(0);
@@ -51,7 +61,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
   }, [findProfileUnderPoint, onDragMoveSpy, onHoverProfileChange, spyProfile]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center px-2 py-3">
+    <div className="relative flex flex-col items-center justify-center px-2 py-2">
       {/* Ghost placeholder while dragging */}
       <AnimatePresence>
         {isDragging && (
@@ -61,19 +71,20 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-[72px] h-[72px] rounded-full border-2 border-dashed border-primary-foreground/40 animate-pulse" />
+            <div className="w-[100px] h-[100px] rounded-full border-2 border-dashed border-primary-foreground/40 animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Draggable icon — only this moves, container stays */}
+      {/* Draggable icon with idle animation */}
       <motion.div
         ref={iconRef}
         drag
         dragSnapToOrigin
         dragElastic={0.15}
         dragMomentum={false}
-        whileDrag={{ scale: 1.2, zIndex: 99999 }}
+        animate={isDragging ? {} : idleAnimate}
+        whileDrag={{ scale: 1.15, zIndex: 99999 }}
         onPointerDown={(e) => {
           e.stopPropagation();
           tapStartTime.current = Date.now();
@@ -91,12 +102,8 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         className="relative z-[99999] cursor-grab active:cursor-grabbing touch-none select-none"
         style={{ WebkitTouchCallout: "none" }}
       >
-        <SpyIcon size={88} glow />
+        <SpyIcon size={100} glow />
       </motion.div>
-
-      <span className="mt-1 text-primary-foreground/75 text-center leading-tight" style={{ fontSize: "0.5625rem", fontWeight: 700 }}>
-        {t("spy.drag_hint", "Ziehen")} · {t("spy.your_spy", "Spion")}
-      </span>
     </div>
   );
 }

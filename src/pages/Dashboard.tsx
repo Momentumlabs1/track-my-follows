@@ -199,38 +199,30 @@ const Dashboard = () => {
                         onClick={() => navigate(`/profile/${spyProfile.id}`)}
                         className="w-full text-start"
                       >
-                        <span className="text-foreground/40 font-bold uppercase tracking-widest block" style={{ fontSize: "0.5rem", letterSpacing: "0.14em" }}>
-                          🕵️ Spion angesetzt auf:
-                        </span>
-                        <div className="flex items-center gap-3 mt-2">
+                        {/* Label */}
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <span className="text-foreground/60 font-bold uppercase tracking-widest" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
+                            🕵️ Spion angesetzt auf
+                          </span>
+                          <div className="flex-1 h-px bg-foreground/15" />
+                        </div>
+                        
+                        {/* Profile */}
+                        <div className="flex items-center gap-3">
                           <InstagramAvatar
                             src={spyProfile.avatar_url}
                             alt={spyProfile.username}
                             fallbackInitials={spyProfile.username}
-                            size={50}
+                            size={54}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.0625rem", letterSpacing: "-0.02em" }}>
+                            <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
                               @{spyProfile.username}
                             </p>
-                            {recentEvents.total > 0 && (
-                              <p className="text-muted-foreground mt-0.5 font-medium" style={{ fontSize: "0.75rem" }}>
-                                {recentEvents.gained > 0 && <span className="text-primary">+{recentEvents.gained} Follows</span>}
-                                {recentEvents.gained > 0 && recentEvents.lost > 0 && <span> · </span>}
-                                {recentEvents.lost > 0 && <span className="text-destructive">-{recentEvents.lost} Unfollows</span>}
+                            {spyProfile.follower_count != null && (
+                              <p className="text-muted-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                                {formatCount(spyProfile.follower_count)} Follower
                               </p>
-                            )}
-                            {recentEvents.avatars.length > 0 && (
-                              <div className="flex -space-x-1.5 mt-1.5">
-                                {recentEvents.avatars.map((ev) => (
-                                  <img
-                                    key={ev.id}
-                                    src={ev.profile_pic_url || "/placeholder.svg"}
-                                    alt={ev.username}
-                                    className="w-5 h-5 rounded-full border border-background object-cover"
-                                  />
-                                ))}
-                              </div>
                             )}
                           </div>
                         </div>
