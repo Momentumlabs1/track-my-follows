@@ -88,7 +88,7 @@ const Dashboard = () => {
         {/* Top bar */}
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
           <span className="text-primary-foreground/60 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
-            SpySecret
+            Spy-Secret
           </span>
           {profiles.length > 0 && (
             <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>

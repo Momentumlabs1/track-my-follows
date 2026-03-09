@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, RefreshCw } from "lucide-react";
 import { EventFeedItem } from "@/components/EventFeedItem";
 import { DaySeparator } from "@/components/DaySeparator";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -9,24 +9,37 @@ import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { haptic } from "@/lib/native";
 import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 import logoSquare from "@/assets/logo-square.png";
 
-// Filter removed — show all events
-
 const FeedPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { plan, showPaywall } = useSubscription();
   const isPro = plan === "pro";
   const [visibleCount, setVisibleCount] = useState(50);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: profiles = [] } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
   const { data: followerEventsRaw = [] } = useFollowerEvents();
+
+  // Pull-to-refresh handler (only invalidates queries, does NOT trigger API scan)
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    haptic.light();
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["follow_events"] }),
+      queryClient.invalidateQueries({ queryKey: ["follower_events"] }),
+      queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] }),
+    ]);
+    setIsRefreshing(false);
+    haptic.success();
+  }, [queryClient]);
 
   const allEvents: UnifiedFeedEvent[] = useMemo(() => {
     const fromFollows: UnifiedFeedEvent[] = followEventsRaw.map((e) => ({
@@ -97,15 +110,32 @@ const FeedPage = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="px-5 pt-[calc(env(safe-area-inset-top)+16px)] pb-4">
-        <div className="flex items-center gap-2.5 mb-4">
-          <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8" />
-          <span className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
-            Spy<span className="text-primary">Secret</span>
-          </span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8" />
+            <span className="font-bold text-foreground" style={{ fontSize: '1.125rem' }}>
+              Spy-<span className="text-primary">Secret</span>
+            </span>
+          </div>
+          {/* Pull-to-refresh button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
         <h1 className="font-bold text-foreground" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t("feed.whats_new")}</h1>
         <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{t("feed.subtitle")}</p>
       </div>
+
+      {/* Refresh indicator */}
+      {isRefreshing && (
+        <div className="flex justify-center py-2">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* ═══ Spy of the Day – bold pink gradient card ═══ */}
       {isPro && latestEvent && latestInfo && (() => {
