@@ -220,7 +220,7 @@ const FeedPage = () => {
                 {group.events.map((event, ei) => <EventFeedItem key={event.id} event={event} index={gi * 10 + ei} />)}
               </div>
             ))}
-            {filteredEvents.length > visibleCount && (
+            {allEvents.length > visibleCount && (
               <div className="px-5 pt-4">
                 <button onClick={() => setVisibleCount((c) => c + 50)} className="w-full py-3 rounded-xl bg-card text-muted-foreground font-semibold min-h-[44px]" style={{ fontSize: '0.875rem' }}>
                   {t("feed.load_more", "Mehr laden")}
