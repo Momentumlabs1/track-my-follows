@@ -97,15 +97,21 @@ const Dashboard = () => {
           )}
         </div>
         {/* Greeting */}
-        <div className="px-6 pb-3">
+        <div className="px-6 pb-2">
           <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
             Hey {displayName}
           </motion.h1>
+          <p className="text-primary-foreground/55 mt-1" style={{ fontSize: "0.8125rem" }}>
+            {t("dashboard.greeting_subtitle", "Dein Spion ist aktiv – hier ist dein Überblick.")}
+          </p>
         </div>
 
-        {/* Agent zone — overflow visible so drag works */}
-        <div className="px-5 pt-1 pb-12" style={{ position: "relative", zIndex: 10 }}>
+        {/* ─── Spy Agent Zone ─── */}
+        <div className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
+          <span className="text-primary-foreground/40 font-bold uppercase tracking-widest block mb-2 px-1" style={{ fontSize: "0.5625rem", letterSpacing: "0.12em" }}>
+            {t("spy.agent_zone", "🕵️ Dein Spion")}
+          </span>
           {isPro ? (
             <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
               {/* LEFT — Light profile half */}
