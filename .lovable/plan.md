@@ -1,39 +1,34 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Spy-Icon separat vom Hintergrund draggen + Drop-Animation fixen
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem
+Das gesamte SpyWidget-Container (inkl. Hintergrund, Border, Text) wird beim Drag mitgezogen. Nur das **SpyIcon selbst** soll sich bewegen — der Container/Dock bleibt stehen als Platzhalter.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Lösung
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+#### 1. SpyAgentCard.tsx — Icon vom Container trennen
+- Der äussere Container (`rounded-2xl border bg-primary-foreground/10`) wird **statisch** und bleibt immer an Ort und Stelle
+- Nur das `SpyIcon` bekommt `motion.div` mit `drag`, `dragSnapToOrigin` etc.
+- Während des Drags: Container zeigt einen pulsierenden Platzhalter-Kreis (ghost) wo das Icon war
+- Das Icon schwebt frei über allem mit `style={{ position: "fixed" }}` via `whileDrag` und `zIndex: 99999`
+- Tap-Erkennung bleibt auf dem Icon
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+#### 2. Dashboard.tsx — Stacking Context fixen
+- Sicherstellen dass der Content-Bereich unter dem Header (`bg-background`) NICHT über dem dragging Icon liegt
+- Die Account-Sektion braucht `position: relative` mit niedrigerem `z-index` als das dragging Icon
+- Header bleibt `overflow: visible`
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+#### 3. Drop-Animation auf ProfileCard
+- Wenn `isHovered` (Agent schwebt über einer ProfileCard): Pulsierender Border + leichte Scale-Animation (bereits vorhanden in ProfileCard)
+- Bei erfolgreichem Drop (`handleMoveSpy`): 
+  - `justAssigned` State triggert die `AnimatePresence` im Spy-Bereich (bereits vorhanden — `initial={{ opacity: 0, y: 30, scale: 0.95 }}`)
+  - Zusätzlich: Kurzer "success flash" auf der ProfileCard die gerade zugewiesen wurde via neuem `assignedProfileId` State
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+
+| Datei | Änderung |
+|---|---|
+| `SpyAgentCard.tsx` | Container statisch machen, nur Icon ist draggable, Ghost-Platzhalter während Drag |
+| `Dashboard.tsx` | z-index Stacking fixen damit Icon über Content schwebt, `assignedProfileId` State für Drop-Feedback |
 
