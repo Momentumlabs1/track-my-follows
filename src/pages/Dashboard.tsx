@@ -215,9 +215,9 @@ const Dashboard = () => {
                             </p>
                             {recentEvents.total > 0 && (
                               <p className="text-muted-foreground mt-0.5 font-medium" style={{ fontSize: "0.75rem" }}>
-                                {recentEvents.gained > 0 && <span className="text-emerald-600">+{recentEvents.gained} Follows</span>}
+                                {recentEvents.gained > 0 && <span className="text-primary">+{recentEvents.gained} Follows</span>}
                                 {recentEvents.gained > 0 && recentEvents.lost > 0 && <span> · </span>}
-                                {recentEvents.lost > 0 && <span className="text-red-500">-{recentEvents.lost} Unfollows</span>}
+                                {recentEvents.lost > 0 && <span className="text-destructive">-{recentEvents.lost} Unfollows</span>}
                               </p>
                             )}
                             {recentEvents.avatars.length > 0 && (
