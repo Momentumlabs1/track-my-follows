@@ -154,18 +154,9 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
                   {shortTime(profile.last_scanned_at)}
                 </span>
               )}
+              <span className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>· 📡 1x/d</span>
               <ChevronRight className="h-5 w-5 text-muted-foreground/50 rtl:rotate-180" />
             </div>
-          </div>
-
-          {/* Scan frequency badge */}
-          <div className="mt-2.5">
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-muted-foreground bg-muted"
-              style={{ fontSize: '0.6875rem', fontWeight: 600 }}
-            >
-              📡 1x täglich
-            </span>
           </div>
         </div>
 
