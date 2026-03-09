@@ -49,9 +49,10 @@ interface ProfileCardProps {
   index: number;
   isDragging?: boolean;
   isHovered?: boolean;
+  isDropped?: boolean;
 }
 
-export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered }: ProfileCardProps) {
+export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered, isDropped }: ProfileCardProps) {
   const { t } = useTranslation();
   const shortTime = useShortTimeAgo();
   const { data: followEvents = [] } = useFollowEvents(profileId);
