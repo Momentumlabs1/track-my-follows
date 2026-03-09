@@ -40,6 +40,7 @@ const Dashboard = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
   const [justAssigned, setJustAssigned] = useState(false);
+  const [droppedOnProfileId, setDroppedOnProfileId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const moveSpy = useMoveSpy();
@@ -50,14 +51,16 @@ const Dashboard = () => {
   const handleProfileTap = useCallback((profileId: string) => navigate(`/profile/${profileId}`), [navigate]);
   const handleMoveSpy = useCallback((profileId: string) => {
     setJustAssigned(true);
+    setDroppedOnProfileId(profileId);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
         const p = profiles.find((profile) => profile.id === profileId);
         if (p) toast.success(`Spion überwacht jetzt @${p.username} 🕵️`);
         try { navigator.vibrate?.(50); } catch {}
         setTimeout(() => setJustAssigned(false), 600);
+        setTimeout(() => setDroppedOnProfileId(null), 800);
       },
-      onError: () => setJustAssigned(false),
+      onError: () => { setJustAssigned(false); setDroppedOnProfileId(null); },
     });
   }, [moveSpy, profiles]);
 
@@ -98,40 +101,45 @@ const Dashboard = () => {
         {/* Agent zone — overflow visible so drag works */}
         <div className="px-5 pt-1 pb-12" style={{ position: "relative", zIndex: 10 }}>
           {isPro ? (
-            <div className="relative rounded-[1.75rem] overflow-hidden min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)" }}>
+            <div className="relative rounded-[1.75rem] min-h-[110px] border border-white/15" style={{ boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
               {/* LEFT — Light profile half */}
               <div
-                className="absolute inset-0"
-                 style={{
-                   background: "rgba(255,240,245,0.95)",
-                   clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
-                 }}
-              />
+                className="absolute inset-0 rounded-[1.75rem] overflow-hidden"
+              >
+                <div
+                  className="absolute inset-0"
+                   style={{
+                     background: "rgba(255,240,245,0.95)",
+                     clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
+                   }}
+                />
+              </div>
 
               {/* RIGHT — Dark Spy half */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
-                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
-                }}
-              />
-              {/* Scan-line effect on dark side */}
-              <div
-                className="absolute inset-0 pointer-events-none opacity-[0.06]"
-                style={{
-                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
-                  backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
-                }}
-              />
-
-              {/* Diagonal glow line */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
-                }}
-              />
+              <div className="absolute inset-0 rounded-[1.75rem] overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
+                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                  }}
+                />
+                {/* Scan-line effect on dark side */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                  style={{
+                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
+                  }}
+                />
+                {/* Diagonal glow line */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
+                  }}
+                />
+              </div>
 
               {/* Content layer */}
               <div className="relative z-10 flex items-center p-3 gap-2">
@@ -297,6 +305,7 @@ const Dashboard = () => {
               index={i}
               isDragging={isDragging}
               isHovered={hoveredProfileId === profile.id}
+              isDropped={droppedOnProfileId === profile.id}
             />
           ))}
 

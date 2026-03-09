@@ -49,9 +49,10 @@ interface ProfileCardProps {
   index: number;
   isDragging?: boolean;
   isHovered?: boolean;
+  isDropped?: boolean;
 }
 
-export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered }: ProfileCardProps) {
+export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered, isDropped }: ProfileCardProps) {
   const { t } = useTranslation();
   const shortTime = useShortTimeAgo();
   const { data: followEvents = [] } = useFollowEvents(profileId);
@@ -73,16 +74,33 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
       data-profile-id={profile.id}
       initial={{ opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
-      animate={{ scale: isDropTarget ? 1.02 : 1 }}
-      transition={{ delay: index * 0.04, type: "spring", stiffness: 300, damping: 25 }}
+      animate={{
+        scale: isDropped ? [1, 1.05, 1] : isDropTarget ? 1.02 : 1,
+        boxShadow: isDropped
+          ? ["0 0 0 0px rgba(236,72,153,0)", "0 0 20px 6px rgba(236,72,153,0.5)", "0 0 0 0px rgba(236,72,153,0)"]
+          : "0 0 0 0px rgba(236,72,153,0)",
+      }}
+      transition={isDropped
+        ? { duration: 0.5, ease: "easeOut" }
+        : { delay: index * 0.04, type: "spring", stiffness: 300, damping: 25 }
+      }
       viewport={{ once: true }}
-      className="relative"
+      className="relative rounded-2xl"
     >
       {isDropTarget && (
         <motion.div
           className="absolute -inset-[2px] rounded-2xl border-2 border-primary pointer-events-none z-10"
           animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 0.8, repeat: Infinity }}
+        />
+      )}
+      {isDropped && (
+        <motion.div
+          className="absolute -inset-[3px] rounded-2xl pointer-events-none z-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.8, 0], scale: [0.98, 1.02, 1] }}
+          transition={{ duration: 0.6 }}
+          style={{ border: "2px solid rgba(236,72,153,0.7)", boxShadow: "0 0 16px 4px rgba(236,72,153,0.3)" }}
         />
       )}
 
