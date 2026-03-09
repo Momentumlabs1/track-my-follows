@@ -248,36 +248,6 @@ const Dashboard = () => {
                             </div>
                           </div>
 
-                          {/* Suspicion indicator */}
-                          {suspicion && (
-                            <div className="flex items-center gap-2 mt-2.5 px-1">
-                              <div
-                                className="h-2.5 w-2.5 rounded-full shrink-0"
-                                style={{
-                                  backgroundColor: suspicion.overallScore <= 35
-                                    ? "hsl(145, 100%, 45%)"
-                                    : suspicion.overallScore <= 55
-                                      ? "hsl(50, 100%, 52%)"
-                                      : "hsl(338, 100%, 58%)",
-                                  boxShadow: `0 0 6px ${suspicion.overallScore <= 35 ? "hsl(145, 100%, 45%)" : suspicion.overallScore <= 55 ? "hsl(50, 100%, 52%)" : "hsl(338, 100%, 58%)"}`,
-                                }}
-                              />
-                              <span className="font-bold tabular-nums" style={{
-                                fontSize: "0.8125rem",
-                                color: suspicion.overallScore <= 35
-                                  ? "hsl(145, 80%, 40%)"
-                                  : suspicion.overallScore <= 55
-                                    ? "hsl(50, 80%, 40%)"
-                                    : "hsl(338, 80%, 50%)",
-                              }}>
-                                {suspicion.overallScore}%
-                              </span>
-                              <span className="text-muted-foreground font-medium" style={{ fontSize: "0.6875rem" }}>
-                                {suspicion.label}
-                              </span>
-                              <span style={{ fontSize: "0.75rem" }}>{suspicion.emoji}</span>
-                            </div>
-                          )}
                         </motion.button>
                       ) : (
                         <motion.div
