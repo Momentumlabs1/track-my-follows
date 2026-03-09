@@ -415,7 +415,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {profiles.map((profile, i) => (
+          {sortedProfiles.map((profile, i) => (
             <ProfileCard
               key={profile.id}
               profile={profile}
