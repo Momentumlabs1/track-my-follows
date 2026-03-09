@@ -1,39 +1,45 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Feed-Seite Header & Layout auffrischen
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Aktuell
+- Header zeigt "What's new?" — generisch, langweilig
+- Filter-Buttons sind kleine Pills mit viel ungenutztem Platz
+- Feed-Rows haben kleine Texte (0.8125rem / 0.6875rem)
+- Spy des Tages hat keine Erklärung was passiert wenn man drauf tippt
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Änderungen
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+#### 1. Header-Text modernisieren (`FeedPage.tsx`, Zeile 110)
+- "What's new?" ersetzen durch etwas wie **"Das macht gerade die Runde"** (de) / **"Trending now"** (en)
+- Darunter ein kleiner Subtitle: "Dein persönlicher Activity-Feed" — eine Zeile, `text-muted-foreground`
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+#### 2. Spy des Tages — Tap-Hinweis hinzufügen
+- Unter dem Avatar-Block im Spy-Card einen kleinen Hinweis: "Tippe für Details →" als dezenter weißer Text
+- Macht klar, dass die Karte interaktiv ist
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+#### 3. Filter-Buttons als gleichgroße Bubbles
+- Statt `gap-2` mit auto-Breite: **`flex gap-3`** mit beiden Buttons **`flex-1`** (gleiche Breite, 50/50)
+- Höhe auf `min-h-[44px]`, Font auf `0.9375rem` (15px statt 13px)
+- `rounded-2xl` statt `rounded-xl` — füllt die Breite besser aus, wirkt app-like
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+#### 4. Feed-Texte größer machen (`EventFeedItem.tsx`)
+- Actor username: `0.8125rem` → `0.875rem` (14px)
+- Verb text: `0.6875rem` → `0.8125rem` (13px)
+- Target username: `0.75rem` → `0.8125rem` (13px)
+- Time: `0.625rem` → `0.6875rem` (11px)
+- Feed-Row padding etwas mehr Luft: `0.75rem 1.25rem` → `0.875rem 1.25rem`
+
+#### 5. Translations
+- `feed.whats_new` → de: "Das macht die Runde" / en: "Trending now"
+- `feed.subtitle` → de: "Dein persönlicher Activity-Feed" / en: "Your personal activity feed"
+- `feed.tap_for_details` → de: "Tippe für Details →" / en: "Tap for details →"
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+| Datei | Änderung |
+|---|---|
+| `FeedPage.tsx` | Header-Text, Subtitle, Filter flex-1 + größer, Spy-Card Tap-Hinweis |
+| `EventFeedItem.tsx` | Font-Größen erhöhen |
+| `src/index.css` | feed-row padding anpassen |
+| `de.json`, `en.json` | Neue Translations |
 
