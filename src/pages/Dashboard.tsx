@@ -189,8 +189,7 @@ const Dashboard = () => {
               <div className="relative z-10 flex items-center p-3 gap-2">
                 {/* Profile side (left, 60%) */}
                 <motion.div
-                  className="min-w-0"
-                  style={{ width: "60%" }}
+                  style={{ width: "65%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
                     filter: isDragging ? "grayscale(1)" : "grayscale(0)",
