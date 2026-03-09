@@ -121,9 +121,12 @@ const Dashboard = () => {
         <div className="px-6 pb-2">
           <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Willkommen zurück, Spy-{spyNumber}
+            Willkommen zurück
           </motion.h1>
-          <p className="text-primary-foreground/55 mt-1.5" style={{ fontSize: "0.8125rem" }}>
+          <p className="text-primary-foreground/80 font-mono font-bold mt-1" style={{ fontSize: "0.875rem", letterSpacing: "0.05em" }}>
+            Spy-{spyNumber}
+          </p>
+          <p className="text-primary-foreground/55 mt-1" style={{ fontSize: "0.8125rem" }}>
             {isPro
               ? t("dashboard.greeting_subtitle_pro", "Dein Spion ist aktiv — hier ist dein Überblick.")
               : t("dashboard.greeting_subtitle_free", "Schalte deinen Spion frei für volle Kontrolle.")}
