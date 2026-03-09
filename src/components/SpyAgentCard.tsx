@@ -1,4 +1,5 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
@@ -21,6 +22,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
   const lastHoveredId = useRef<string | null>(null);
   const tapStartTime = useRef(0);
   const didDrag = useRef(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
 
   const findProfileUnderPoint = useCallback((x: number, y: number): string | null => {
     const el = dragRef.current;
@@ -46,18 +48,30 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
     }
   }, [findProfileUnderPoint, onHoverProfileChange]);
 
-  return (
+  const spyElement = (
     <motion.div
       ref={dragRef}
       drag
       dragSnapToOrigin
       dragElastic={0.15}
       dragMomentum={false}
-      whileDrag={{ scale: 1.14, zIndex: 9999 }}
+      whileDrag={{ scale: 1.14, zIndex: 99999 }}
+      style={isDragging && originRect ? {
+        position: "fixed",
+        top: originRect.top,
+        left: originRect.left,
+        width: originRect.width,
+        height: originRect.height,
+        zIndex: 99999,
+        pointerEvents: "auto",
+      } : undefined}
       onPointerDown={(e) => {
         e.stopPropagation();
         tapStartTime.current = Date.now();
         didDrag.current = false;
+        // Capture position before drag starts
+        const rect = dragRef.current?.getBoundingClientRect();
+        if (rect) setOriginRect(rect);
       }}
       onDragStart={() => {
         didDrag.current = true;
@@ -73,6 +87,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           try { navigator.vibrate?.(50); } catch {}
         }
         onHoverProfileChange(null);
+        setOriginRect(null);
       }}
       onPointerUp={() => {
         if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy");
@@ -88,6 +103,19 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
       </span>
     </motion.div>
   );
+
+  // When dragging, render via portal so it escapes any overflow:hidden ancestors
+  if (isDragging) {
+    return (
+      <>
+        {/* Placeholder to keep layout stable */}
+        <div className="w-[116px] flex-shrink-0" style={{ height: originRect?.height ?? 130 }} />
+        {createPortal(spyElement, document.body)}
+      </>
+    );
+  }
+
+  return spyElement;
 }
 
 export { SpyWidget as SpyAgentCard };
