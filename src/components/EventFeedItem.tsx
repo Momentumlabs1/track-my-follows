@@ -127,7 +127,7 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
 
       {/* Time + unread */}
       <div className="flex flex-col items-end flex-shrink-0 gap-1 self-start pt-0.5">
-        <span className="text-muted-foreground text-[0.6875rem]">
+        <span className="text-muted-foreground text-[0.75rem]">
           {event.is_initial ? t("initial_scan_label") : timeAgo(event.detected_at)}
         </span>
         {!event.is_read && !shouldBlur && (
