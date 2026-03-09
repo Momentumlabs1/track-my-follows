@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Lock, Users } from "lucide-react";
 import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
@@ -38,6 +38,7 @@ const Dashboard = () => {
   const { plan, showPaywall } = useSubscription();
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredProfileId, setHoveredProfileId] = useState<string | null>(null);
+  const [justAssigned, setJustAssigned] = useState(false);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const moveSpy = useMoveSpy();
@@ -47,12 +48,15 @@ const Dashboard = () => {
 
   const handleProfileTap = useCallback((profileId: string) => navigate(`/profile/${profileId}`), [navigate]);
   const handleMoveSpy = useCallback((profileId: string) => {
+    setJustAssigned(true);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
         const p = profiles.find((profile) => profile.id === profileId);
         if (p) toast.success(`Spion überwacht jetzt @${p.username} 🕵️`);
         try { navigator.vibrate?.(50); } catch {}
+        setTimeout(() => setJustAssigned(false), 600);
       },
+      onError: () => setJustAssigned(false),
     });
   }, [moveSpy, profiles]);
 
@@ -63,8 +67,8 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
 
-      {/* ═══ HEADER (separated zones + curve) ═══ */}
-      <div className="relative overflow-hidden gradient-pink">
+      {/* ═══ HEADER ═══ */}
+      <div className="relative gradient-pink" style={{ overflow: "visible" }}>
         {/* Greeting zone */}
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 text-center">
           <p className="font-bold text-primary-foreground/85 mb-1" style={{ fontSize: "0.8125rem", letterSpacing: "0.06em" }}>
@@ -80,15 +84,15 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Wave separator between greeting and agent zone */}
-        <div className="relative w-full leading-[0]">
+        {/* Wave separator */}
+        <div className="relative w-full leading-[0] overflow-hidden">
           <svg viewBox="0 0 500 22" preserveAspectRatio="none" className="block w-full h-[22px]">
             <path d="M0,22 C170,0 330,0 500,22 L500,22 L0,22 Z" fill="hsl(var(--primary) / 0.15)" />
           </svg>
         </div>
 
-        {/* Agent zone */}
-        <div className="px-5 pt-3 pb-12">
+        {/* Agent zone — overflow visible so drag works */}
+        <div className="px-5 pt-3 pb-12" style={{ position: "relative", zIndex: 10 }}>
           <p className="uppercase tracking-[0.12em] text-primary-foreground/70 font-bold px-1 mb-2" style={{ fontSize: "0.625rem" }}>
             {t("spy.your_spy", "Dein Spion")}
           </p>
@@ -105,55 +109,78 @@ const Dashboard = () => {
                   onHoverProfileChange={setHoveredProfileId}
                 />
 
-                {spyProfile ? (
-                  <button
-                    onClick={() => navigate(`/profile/${spyProfile.id}`)}
-                    className="min-w-0 flex-1 rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5 text-start"
-                  >
-                    <span className="text-primary-foreground/75 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
-                      🔒 Aktuell im Fokus
-                    </span>
-                    <div className="flex items-center gap-2.5 mt-1.5">
-                      <InstagramAvatar
-                        src={spyProfile.avatar_url}
-                        alt={spyProfile.username}
-                        fallbackInitials={spyProfile.username}
-                        size={44}
-                      />
-                      <div className="min-w-0">
-                        <p className="font-bold text-primary-foreground truncate" style={{ fontSize: "0.9375rem" }}>
-                          @{spyProfile.username}
+                {/* Spy target info — fades when dragging */}
+                <motion.div
+                  className="min-w-0 flex-1"
+                  animate={{
+                    opacity: isDragging ? 0.3 : 1,
+                    filter: isDragging ? "grayscale(1)" : "grayscale(0)",
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AnimatePresence mode="wait">
+                    {spyProfile ? (
+                      <motion.button
+                        key={spyProfile.id}
+                        initial={justAssigned ? { opacity: 0, y: 30, scale: 0.95 } : false}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        onClick={() => navigate(`/profile/${spyProfile.id}`)}
+                        className="w-full rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5 text-start"
+                      >
+                        <span className="text-primary-foreground/75 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
+                          🔒 Aktuell im Fokus
+                        </span>
+                        <div className="flex items-center gap-2.5 mt-1.5">
+                          <InstagramAvatar
+                            src={spyProfile.avatar_url}
+                            alt={spyProfile.username}
+                            fallbackInitials={spyProfile.username}
+                            size={44}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-bold text-primary-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                              @{spyProfile.username}
+                            </p>
+                            {(followerCount != null || followingCount != null) && (
+                              <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.6875rem" }}>
+                                {followerCount != null && (
+                                  <>
+                                    <span className="font-semibold text-primary-foreground">{formatCount(followerCount)}</span> Follower
+                                  </>
+                                )}
+                                {followerCount != null && followingCount != null && (
+                                  <span className="text-primary-foreground/40"> · </span>
+                                )}
+                                {followingCount != null && (
+                                  <>
+                                    <span className="font-semibold text-primary-foreground">{formatCount(followingCount)}</span> Following
+                                  </>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5"
+                      >
+                        <p className="font-bold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
+                          {t("spy.assign_your_spy")}
                         </p>
-                        {(followerCount != null || followingCount != null) && (
-                          <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.6875rem" }}>
-                            {followerCount != null && (
-                              <>
-                                <span className="font-semibold text-primary-foreground">{formatCount(followerCount)}</span> Follower
-                              </>
-                            )}
-                            {followerCount != null && followingCount != null && (
-                              <span className="text-primary-foreground/40"> · </span>
-                            )}
-                            {followingCount != null && (
-                              <>
-                                <span className="font-semibold text-primary-foreground">{formatCount(followingCount)}</span> Following
-                              </>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ) : (
-                  <div className="min-w-0 flex-1 rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 p-3.5">
-                    <p className="font-bold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
-                      {t("spy.assign_your_spy")}
-                    </p>
-                    <p className="text-primary-foreground/70 mt-1" style={{ fontSize: "0.75rem" }}>
-                      {t("spy.spy_description")}
-                    </p>
-                  </div>
-                )}
+                        <p className="text-primary-foreground/70 mt-1" style={{ fontSize: "0.75rem" }}>
+                          {t("spy.spy_description")}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               </div>
             ) : (
               <button
@@ -188,8 +215,8 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* curved bottom */}
-        <div className="absolute bottom-0 left-0 w-full leading-[0]">
+        {/* curved bottom — clipped independently */}
+        <div className="absolute bottom-0 left-0 w-full leading-[0] overflow-hidden" style={{ zIndex: 1 }}>
           <svg viewBox="0 0 500 38" preserveAspectRatio="none" className="block w-full h-[38px]">
             <path d="M0,0 C170,36 330,36 500,0 L500,38 L0,38 Z" fill="hsl(var(--background))" />
           </svg>
