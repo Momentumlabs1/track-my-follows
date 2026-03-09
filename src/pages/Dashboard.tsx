@@ -1,6 +1,9 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Lock, Users } from "lucide-react";
+import { useFollowEvents } from "@/hooks/useTrackedProfiles";
+import { useProfileFollowings } from "@/hooks/useProfileFollowings";
+import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -59,6 +62,12 @@ const Dashboard = () => {
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
+  // Sort profiles: spy profile goes to the bottom
+  const sortedProfiles = useMemo(() =>
+    [...profiles].sort((a, b) => (a.has_spy === b.has_spy ? 0 : a.has_spy ? 1 : -1)),
+    [profiles]
+  );
+
   const handleProfileTap = useCallback((profileId: string) => navigate(`/profile/${profileId}`), [navigate]);
   const handleMoveSpy = useCallback((profileId: string) => {
     setJustAssigned(true);
@@ -79,6 +88,20 @@ const Dashboard = () => {
   }, [moveSpy, profiles]);
 
   const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
+  const { data: spyFollowEvents = [] } = useFollowEvents(spyProfile?.id);
+  const { data: spyFollowings = [] } = useProfileFollowings(spyProfile?.id);
+
+  const suspicion = useMemo(() => {
+    if (!spyProfile) return null;
+    return analyzeSuspicion(
+      spyFollowEvents,
+      spyFollowings,
+      spyProfile.follower_count ?? 0,
+      spyProfile.following_count ?? 0,
+      t,
+    );
+  }, [spyFollowEvents, spyFollowings, spyProfile, t]);
+
   const recentEvents = useMemo(() => {
     const nonInitial = followerEvents.filter((e) => !e.is_initial);
     const gained = nonInitial.filter((e) => e.event_type === "gained").length;
@@ -200,7 +223,7 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-stretch p-2 gap-1" style={{ minHeight: "160px" }}>
+              <div className="relative z-10 flex items-stretch p-2 gap-1" style={{ minHeight: "190px" }}>
                 {/* Profile side (left, 65%) */}
                 <motion.div
                   className="flex flex-col"
@@ -213,13 +236,13 @@ const Dashboard = () => {
                 >
                   {/* Label */}
                   {spyProfile && (
-                    <p className="text-white/70 font-extrabold uppercase tracking-widest px-3 pt-1 pb-1" style={{ fontSize: "0.6875rem", letterSpacing: "0.14em" }}>
+                    <p className="text-white/80 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
                       Spion angesetzt auf
                     </p>
                   )}
 
                   {/* Profile box – fills remaining space, flush bottom */}
-                  <div className="flex-1 rounded-[1.25rem] px-3 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
+                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
@@ -236,10 +259,10 @@ const Dashboard = () => {
                               src={spyProfile.avatar_url}
                               alt={spyProfile.username}
                               fallbackInitials={spyProfile.username}
-                              size={48}
+                              size={56}
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.05rem", letterSpacing: "-0.02em" }}>
+                              <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
                                 @{spyProfile.username}
                               </p>
                               {spyProfile.follower_count != null && (
@@ -249,6 +272,37 @@ const Dashboard = () => {
                               )}
                             </div>
                           </div>
+
+                          {/* Suspicion indicator */}
+                          {suspicion && (
+                            <div className="flex items-center gap-2 mt-2.5 px-1">
+                              <div
+                                className="h-2.5 w-2.5 rounded-full shrink-0"
+                                style={{
+                                  backgroundColor: suspicion.overallScore <= 35
+                                    ? "hsl(145, 100%, 45%)"
+                                    : suspicion.overallScore <= 55
+                                      ? "hsl(50, 100%, 52%)"
+                                      : "hsl(338, 100%, 58%)",
+                                  boxShadow: `0 0 6px ${suspicion.overallScore <= 35 ? "hsl(145, 100%, 45%)" : suspicion.overallScore <= 55 ? "hsl(50, 100%, 52%)" : "hsl(338, 100%, 58%)"}`,
+                                }}
+                              />
+                              <span className="font-bold tabular-nums" style={{
+                                fontSize: "0.8125rem",
+                                color: suspicion.overallScore <= 35
+                                  ? "hsl(145, 80%, 40%)"
+                                  : suspicion.overallScore <= 55
+                                    ? "hsl(50, 80%, 40%)"
+                                    : "hsl(338, 80%, 50%)",
+                              }}>
+                                {suspicion.overallScore}%
+                              </span>
+                              <span className="text-muted-foreground font-medium" style={{ fontSize: "0.6875rem" }}>
+                                {suspicion.label}
+                              </span>
+                              <span style={{ fontSize: "0.75rem" }}>{suspicion.emoji}</span>
+                            </div>
+                          )}
                         </motion.button>
                       ) : (
                         <motion.div
@@ -361,7 +415,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {profiles.map((profile, i) => (
+          {sortedProfiles.map((profile, i) => (
             <ProfileCard
               key={profile.id}
               profile={profile}

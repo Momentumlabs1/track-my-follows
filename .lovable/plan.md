@@ -1,26 +1,39 @@
 
 
-## Plan: Spy-Profil unten sortieren, Spy-Karte vergrößern, Suspicion-Indicator einbauen
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### 1. Spy-Profil in der Account-Liste nach unten verschieben
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-In `src/pages/Dashboard.tsx` (Zeile ~364): Die `profiles`-Liste wird sortiert, sodass das Profil mit `has_spy === true` immer als letztes in der "Deine Accounts"-Liste erscheint. Einfaches `useMemo` mit Sort-Logik.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-### 2. Spy-Karte (oben) vergrößern
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-- `minHeight` von `160px` auf `180px` erhöhen (Zeile ~203)
-- Avatar-Größe von `48` auf `56` erhöhen
-- Username-Font von `1.05rem` auf `1.15rem`
-- "Spion angesetzt auf"-Label noch prominenter: `0.75rem`, `white/80`, etwas mehr Padding
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### 3. Suspicion-Indicator in die Spy-Karte einbauen
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-In der weißen Profilkachel (links) wird unter den Follower-Zahlen ein kompakter Verdachtslevel-Indikator angezeigt:
-- `analyzeSuspicion()` im Dashboard importieren und für das `spyProfile` berechnen
-- Dafür die Follow-Events (`useFollowEvents`) und Profile-Followings (`useProfileFollowings`) für das Spy-Profil laden
-- Anzeige: farbiger Dot + Score-Zahl + Label (z.B. "🟢 12% — Unauffällig" oder "🔴 78% — Sehr verdächtig")
-- Farbe basiert auf dem Score: grün (<35), gelb (35-55), rot (>55)
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-### Dateien
-- `src/pages/Dashboard.tsx` — alle drei Änderungen
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
