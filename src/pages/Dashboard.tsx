@@ -55,9 +55,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
       
-      {/* ═══ ZONE 1: Pink Header – kompakter, mehr Infos ═══ */}
+      {/* ═══ HEADER — kompakt, flach ═══ */}
       <div
-        className="rounded-b-[2rem] pb-24"
+        className="pb-8"
         style={{
           background: 'linear-gradient(180deg, hsl(347 100% 65%), hsl(347 90% 50%))',
         }}
@@ -82,10 +82,10 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ═══ ZONE 2: Spy Bereich ═══ */}
-      <div className="px-5 -mt-16">
+      {/* ═══ SPY SECTION ═══ */}
+      <div className="px-5 mt-6">
         <p className="uppercase tracking-[0.13em] font-bold text-muted-foreground mb-2.5" style={{ fontSize: '0.625rem' }}>
-          🕵️ Dein Spion
+          🕵️ {t("spy.your_spy", "Dein Spion")}
         </p>
         {isPro ? (
           <SpyWidget
@@ -98,12 +98,11 @@ const Dashboard = () => {
         ) : (
           <button
             onClick={() => { haptic.light(); showPaywall("spy_agent"); }}
-            className="w-full rounded-2xl p-5 flex items-center gap-4"
-            style={{ background: 'hsl(var(--card))' }}
+            className="w-full rounded-2xl p-5 flex items-center gap-4 bg-card border border-border"
           >
             <div className="relative flex-shrink-0">
               <SpyIcon size={56} />
-              <div className="absolute -bottom-0.5 -right-0.5 rounded-full p-0.5" style={{ background: 'hsl(var(--muted))' }}>
+              <div className="absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 bg-muted">
                 <Lock className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
             </div>
@@ -138,10 +137,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* ═══ ZONE 3: Deine Profile ═══ */}
+      {/* ═══ ACCOUNTS SECTION ═══ */}
       {profiles.length > 0 && (
-        <div className="px-5 pt-12 pb-3 space-y-4">
-          <div className="border-t-2 border-border/60 -mx-5 mb-6" />
+        <div className="px-5 mt-8 pb-3 space-y-4">
           <div className="px-1 mb-1 flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div>
@@ -158,8 +156,8 @@ const Dashboard = () => {
               onTap={handleProfileTap} onAssignSpy={handleMoveSpy} index={i} isDragging={isDragging} isHovered={hoveredProfileId === profile.id} />
           ))}
           <button onClick={() => navigate("/add-profile")}
-            className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 min-h-[44px] text-muted-foreground"
-            style={{ fontSize: '0.875rem', background: 'hsl(var(--card))' }}>
+            className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 min-h-[44px] text-muted-foreground bg-card border border-border"
+            style={{ fontSize: '0.875rem' }}>
             <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
           </button>
         </div>
