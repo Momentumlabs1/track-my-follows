@@ -203,6 +203,25 @@
     font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
   }
+
+  /* ─── Scan line animation ─── */
+  @keyframes scanLine {
+    0% { transform: translateY(-100%); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(300%); opacity: 0; }
+  }
+  .animate-scan {
+    animation: scanLine 3.5s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 12px 2px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 24px 6px hsl(var(--primary) / 0.5); }
+  }
+  .animate-pulse-glow {
+    animation: pulseGlow 2.5s ease-in-out infinite;
+  }
 }
 
 /* ─── Legal content ─── */
