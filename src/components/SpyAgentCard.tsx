@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useNavigate } from "react-router-dom";
