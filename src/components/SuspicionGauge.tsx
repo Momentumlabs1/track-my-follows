@@ -29,66 +29,68 @@ export function SuspicionGauge({ score, weeklyScores }: SuspicionGaugeProps) {
     return "🚩";
   };
 
-  const radius = 70;
-  const circumference = Math.PI * radius;
+  const size = 160;
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
   const color = getColor();
 
   return (
     <div className="flex flex-col items-center">
-      {/* Gauge */}
-      <div className="relative">
-        <svg width="200" height="110" viewBox="0 0 200 110" className="overflow-visible">
-          {/* Glow effect */}
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Background arc */}
-          <path
-            d="M 15 95 A 70 70 0 0 1 185 95"
+      {/* Circular ring gauge */}
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {/* Background ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
             stroke="hsl(var(--muted))"
-            strokeWidth="14"
-            strokeLinecap="round"
+            strokeWidth={strokeWidth}
           />
-          {/* Progress arc */}
-          <motion.path
-            d="M 15 95 A 70 70 0 0 1 185 95"
+          {/* Progress ring */}
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
             stroke={color}
-            strokeWidth="14"
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: circumference - progress }}
             transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
-            filter="url(#glow)"
+            style={{
+              transform: "rotate(-90deg)",
+              transformOrigin: "center",
+              filter: `drop-shadow(0 0 6px ${color})`,
+            }}
           />
         </svg>
-        {/* Score overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
+        {/* Score centered */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.span
-            className="text-4xl font-extrabold text-foreground tabular-nums"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            className="text-foreground font-extrabold tabular-nums"
+            style={{ fontSize: "3rem", lineHeight: 1 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
           >
             {score}
           </motion.span>
-          <span className="text-[11px] text-muted-foreground font-medium -mt-1">{t("suspicion.score_label")}</span>
+          <span className="text-muted-foreground font-medium" style={{ fontSize: "0.6875rem" }}>
+            {t("suspicion.score_label")}
+          </span>
         </div>
       </div>
 
       {/* Label */}
-      <div className="flex items-center gap-2 mt-2">
-        <span className="text-xl">{getEmoji()}</span>
-        <span className="text-sm font-bold" style={{ color }}>{getLabel()}</span>
+      <div className="flex items-center gap-2 mt-3">
+        <span style={{ fontSize: "1.25rem" }}>{getEmoji()}</span>
+        <span className="font-bold" style={{ color, fontSize: "1rem" }}>{getLabel()}</span>
       </div>
 
       {/* Mini sparkline */}
@@ -109,7 +111,7 @@ export function SuspicionGauge({ score, weeklyScores }: SuspicionGaugeProps) {
         </div>
       )}
       {weeklyScores && weeklyScores.length > 1 && (
-        <p className="text-[10px] text-muted-foreground mt-1">{t("suspicion.trend_4_weeks")}</p>
+        <p className="text-muted-foreground mt-1" style={{ fontSize: "0.625rem" }}>{t("suspicion.trend_4_weeks")}</p>
       )}
     </div>
   );
