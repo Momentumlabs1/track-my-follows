@@ -1,39 +1,29 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Spy Command Center Split umbauen
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Änderungen
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+**Layout-Swap & Proportionen** (`src/pages/Dashboard.tsx`):
+- **Links = Profil-Info** (bekommt ~60% Platz), **Rechts = Spy-Icon** (~40%)
+- Diagonale clipPaths spiegeln: Profil-Seite (hell/weiß) links, dunkle Spy-Seite rechts
+- Profil-Seite wird heller: `rgba(255,255,255,0.92)` statt dem aktuellen pink-tint
+- Text auf der hellen Seite wird dunkel (`text-foreground`) statt weiß
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**Follower/Following entfernen, Gender-Bar einbauen**:
+- Follower/Following-Zeile komplett raus
+- Neuer Hook-Call: `useProfileFollowings(spyProfile?.id)` um die Gender-Daten der Followings zu holen
+- Unter dem `@username` kommt ein kompakter horizontaler Gender-Bar (gleiche Breite wie der Name):
+  - Pink = female, Blau = male, Grau = unknown
+  - Keine Labels, nur der farbige Balken (schlank, ~4px hoch, abgerundet)
+  - Darunter optional ganz klein: `♀ 62% · ♂ 31%`
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
-
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**SpyWidget-Position**:
+- SpyWidget wandert in die rechte Spalte, Spy-Icon zeigt nach rechts (bereits der Fall, nur Position tauschen)
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+
+| Datei | Änderung |
+|---|---|
+| `Dashboard.tsx` | clipPaths spiegeln, Seiten tauschen, Follower-Counts entfernen, Gender-Bar einfügen mit `useProfileFollowings` |
 
