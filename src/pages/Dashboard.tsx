@@ -84,6 +84,9 @@ const Dashboard = () => {
 
       {/* ═══ ZONE 2: Spy Bereich ═══ */}
       <div className="px-5 -mt-16">
+        <p className="uppercase tracking-[0.13em] font-bold text-muted-foreground mb-2.5" style={{ fontSize: '0.625rem' }}>
+          🕵️ Dein Spion
+        </p>
         {isPro ? (
           <SpyWidget
             spyProfile={spyProfile}
