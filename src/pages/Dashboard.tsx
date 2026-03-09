@@ -167,20 +167,27 @@ const Dashboard = () => {
                             size={44}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                             <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
                               @{spyProfile.username}
                             </p>
-                            {genderStats && genderStats.total > 0 && (
-                              <>
-                                <div className="flex h-1 w-full rounded-full overflow-hidden mt-1.5">
-                                  {genderStats.fPct > 0 && <div style={{ width: `${genderStats.fPct}%` }} className="bg-pink-500" />}
-                                  {genderStats.mPct > 0 && <div style={{ width: `${genderStats.mPct}%` }} className="bg-blue-500" />}
-                                  {genderStats.uPct > 0 && <div style={{ width: `${genderStats.uPct}%` }} className="bg-muted-foreground/30" />}
-                                </div>
-                                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.5625rem" }}>
-                                  ♀ {genderStats.fPct}% · ♂ {genderStats.mPct}%
-                                </p>
-                              </>
+                            {recentEvents.total > 0 && (
+                              <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.625rem" }}>
+                                {recentEvents.gained > 0 && `+${recentEvents.gained} Follows`}
+                                {recentEvents.gained > 0 && recentEvents.lost > 0 && " · "}
+                                {recentEvents.lost > 0 && `-${recentEvents.lost} Unfollows`}
+                              </p>
+                            )}
+                            {recentEvents.avatars.length > 0 && (
+                              <div className="flex -space-x-1.5 mt-1.5">
+                                {recentEvents.avatars.map((ev) => (
+                                  <img
+                                    key={ev.id}
+                                    src={ev.profile_pic_url || "/placeholder.svg"}
+                                    alt={ev.username}
+                                    className="w-5 h-5 rounded-full border border-background object-cover"
+                                  />
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>
