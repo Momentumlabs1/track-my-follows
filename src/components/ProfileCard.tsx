@@ -63,7 +63,7 @@ export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileI
     return followEvents
       .filter(e => e.event_type === "follow" && !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 4);
+      .slice(0, 6);
   }, [followEvents]);
 
   const followerCount = profile.follower_count ?? profile.last_follower_count;
