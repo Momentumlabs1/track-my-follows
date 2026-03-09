@@ -88,6 +88,20 @@ const Dashboard = () => {
   }, [moveSpy, profiles]);
 
   const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
+  const { data: spyFollowEvents = [] } = useFollowEvents(spyProfile?.id);
+  const { data: spyFollowings = [] } = useProfileFollowings(spyProfile?.id);
+
+  const suspicion = useMemo(() => {
+    if (!spyProfile) return null;
+    return analyzeSuspicion(
+      spyFollowEvents,
+      spyFollowings,
+      spyProfile.follower_count ?? 0,
+      spyProfile.following_count ?? 0,
+      t,
+    );
+  }, [spyFollowEvents, spyFollowings, spyProfile, t]);
+
   const recentEvents = useMemo(() => {
     const nonInitial = followerEvents.filter((e) => !e.is_initial);
     const gained = nonInitial.filter((e) => e.event_type === "gained").length;
