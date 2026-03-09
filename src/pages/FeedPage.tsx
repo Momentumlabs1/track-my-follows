@@ -210,11 +210,11 @@ const FeedPage = () => {
 
       {/* Filter pills */}
       <div className="px-5 mb-4">
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {([{ key: "all" as FilterType, label: t("feed.all", "Alle") }, { key: "follows" as FilterType, label: t("feed.follows", "Follows") }]).map((f) => (
             <button key={f.key} onClick={() => { setFilter(f.key); setVisibleCount(50); }}
-              className={`px-4 py-2 rounded-xl font-semibold min-h-[40px] transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
-              style={{ fontSize: '0.8125rem' }}>
+              className={`flex-1 px-4 py-2 rounded-2xl font-semibold min-h-[44px] transition-colors ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+              style={{ fontSize: '0.9375rem' }}>
               {f.label}
             </button>
           ))}

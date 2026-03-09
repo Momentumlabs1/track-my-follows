@@ -5,7 +5,9 @@
   "feed": {
     "today": "Today",
     "yesterday": "Yesterday",
-    "whats_new": "What's new?",
+    "whats_new": "Trending now",
+    "subtitle": "Your personal activity feed",
+    "tap_for_details": "Tap for details →",
     "all": "All",
     "follows": "Follows",
     "unfollows": "Unfollows",
