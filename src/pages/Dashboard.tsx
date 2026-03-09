@@ -147,6 +147,55 @@ const Dashboard = () => {
                 />
               </div>
 
+              {/* ═══ "Spy Connected" overlay animation ═══ */}
+              <AnimatePresence>
+                {showSpyConnected && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 z-30 rounded-[1.75rem] flex flex-col items-center justify-center overflow-hidden"
+                    style={{ background: "linear-gradient(135deg, hsl(340 40% 14%), hsl(340 50% 22%))" }}
+                  >
+                    {/* Radial pulse */}
+                    <motion.div
+                      className="absolute inset-0 rounded-[1.75rem]"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.3] }}
+                      transition={{ duration: 1.2, ease: "easeOut" }}
+                      style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.5), transparent 70%)" }}
+                    />
+                    {/* Spy icon bounce */}
+                    <motion.div
+                      initial={{ scale: 0, rotate: -30 }}
+                      animate={{ scale: [0, 1.3, 1], rotate: [−30, 10, 0] }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    >
+                      <SpyIcon size={40} glow />
+                    </motion.div>
+                    {/* Connection line */}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: "60%" }}
+                      transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
+                      className="h-[2px] mt-2 rounded-full"
+                      style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)" }}
+                    />
+                    {/* Text */}
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.3 }}
+                      className="text-primary-foreground font-bold mt-2 text-center"
+                      style={{ fontSize: "0.75rem" }}
+                    >
+                      🕵️ Spion verbunden mit @{connectedUsername}
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Content layer */}
               <div className="relative z-10 flex items-center p-3 gap-2">
                 {/* Profile side (left, 60%) */}
