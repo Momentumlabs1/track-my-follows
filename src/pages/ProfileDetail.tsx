@@ -151,9 +151,15 @@ const ProfileDetail = () => {
     return { locked: false, lockType: null };
   };
 
+  // If no "new" events exist, treat initial events as the display list
+  const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
+  const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
+  const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
+  const onlyInitialFollowers = newFollowerEventsList.length === 0 && initialFollowerEventsList.length > 0;
+
   const tabs = [
-    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, ...getTabLock("new_follows") },
-    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, ...getTabLock("new_followers") },
+    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: displayFollowEvents.length, ...getTabLock("new_follows") },
+    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: displayFollowerEvents.length, ...getTabLock("new_followers") },
     { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
     { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, ...getTabLock("insights") },
   ];
@@ -409,10 +415,10 @@ const ProfileDetail = () => {
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
-            <EventList events={newFollowEvents.map(mapFollowEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={timeAgo}
+            <EventList events={displayFollowEvents.map(mapFollowEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={onlyInitialFollows ? timeAgo : timeAgo}
               emptyIcon="✨" emptyText={t("profile_detail.no_new_events")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-              sectionTitle={initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined} />
-            {initialFollowEvents.length > 0 && (
+              sectionTitle={!onlyInitialFollows && initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined} />
+            {!onlyInitialFollows && initialFollowEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
                 <EventList events={initialFollowEvents.map(e => ({ ...mapFollowEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="✨" emptyText="" emptySubText="" />
@@ -423,10 +429,10 @@ const ProfileDetail = () => {
 
         {activeTab === "new_followers" && (
           <div className="space-y-4">
-            <EventList events={newFollowerEventsList.map(mapFollowerEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={timeAgo}
+            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? timeAgo : timeAgo}
               emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-              sectionTitle={initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
-            {initialFollowerEventsList.length > 0 && (
+              sectionTitle={!onlyInitialFollowers && initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
+            {!onlyInitialFollowers && initialFollowerEventsList.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
                 <EventList events={initialFollowerEventsList.map(e => ({ ...mapFollowerEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="👥" emptyText="" emptySubText="" />

@@ -1,16 +1,39 @@
 
 
-## Problem
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-Nach dem ersten Scan zeigen "Folgt neu" und "Neue Follower" einen leeren Zustand ("Noch keine neuen Follows erkannt"), obwohl die gescannten Accounts unten als "Beim ersten Scan vorhanden" separat aufgelistet werden. Der User will, dass die Liste direkt die Accounts in der Reihenfolge zeigt, wie Instagram/HikerAPI sie zurückgibt — auch beim ersten Scan.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-## Lösung
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-**`src/pages/ProfileDetail.tsx`** — Wenn es keine "echten neuen" Events gibt (nur Initial-Scan), zeige die Initial-Events direkt als Hauptliste an (chronologisch sortiert per sequentiellen Timestamps). Kein leerer Zustand + separate Sektion, sondern eine einzige Liste.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-Konkret:
-- **"Folgt neu" Tab**: Wenn `newFollowEvents` leer ist aber `initialFollowEvents` existieren → zeige `initialFollowEvents` als Hauptliste (ohne "Bestehend"-Label, mit normalem Zeitformat)
-- **"Neue Follower" Tab**: Gleiche Logik für `initialFollowerEventsList`
-- Wenn es sowohl neue als auch initiale Events gibt → behalte die aktuelle Trennung bei (neue oben, initiale unten als "Beim ersten Scan vorhanden")
-- Tab-Counter zeigt die Gesamtanzahl (neue + initiale) wenn nur initiale vorhanden
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
