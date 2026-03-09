@@ -53,6 +53,7 @@ const ProfileDetail = () => {
   const [activeTab, setActiveTab] = useState<TabId>("new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
+  const [spyScanMenuOpen, setSpyScanMenuOpen] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
