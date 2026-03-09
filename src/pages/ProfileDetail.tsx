@@ -52,7 +52,9 @@ const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabId>("new_follows");
+  const location = useLocation();
+  const initialTab = (location.state as { activeTab?: TabId } | null)?.activeTab;
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab || "new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const [spyScanMenuOpen, setSpyScanMenuOpen] = useState(false);
