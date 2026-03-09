@@ -242,9 +242,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Accounts section */}
+      {/* Accounts section — lower z-index so dragged icon floats above */}
       {profiles.length > 0 && (
-        <div className="px-5 mt-5 pb-3 space-y-4">
+        <div className="relative z-10 px-5 mt-5 pb-3 space-y-4">
           <div className="px-1 mb-1 flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div>
