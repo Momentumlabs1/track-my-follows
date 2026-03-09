@@ -116,29 +116,30 @@ const Dashboard = () => {
               </div>
 
               {/* RIGHT — Dark Spy half */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
-                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
-                }}
-              />
-              {/* Scan-line effect on dark side */}
-              <div
-                className="absolute inset-0 pointer-events-none opacity-[0.06]"
-                style={{
-                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
-                  backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
-                }}
-              />
-
-              {/* Diagonal glow line */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
-                }}
-              />
+              <div className="absolute inset-0 rounded-[1.75rem] overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
+                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                  }}
+                />
+                {/* Scan-line effect on dark side */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                  style={{
+                    clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
+                    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
+                  }}
+                />
+                {/* Diagonal glow line */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
+                  }}
+                />
+              </div>
 
               {/* Content layer */}
               <div className="relative z-10 flex items-center p-3 gap-2">
