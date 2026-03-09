@@ -95,9 +95,22 @@ const Dashboard = () => {
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
         {/* Top bar */}
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
-          <span className="text-primary-foreground/60 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
-            Spy-Secret
-          </span>
+          {isPro ? (
+            <span
+              className="font-black tracking-wider uppercase flex items-center gap-1.5"
+              style={{
+                fontSize: "0.6875rem",
+                color: "rgba(255,255,255,0.95)",
+                textShadow: "0 0 12px rgba(255,255,255,0.5), 0 0 24px rgba(255,200,220,0.3)",
+              }}
+            >
+              ✦ Spy Secret Pro
+            </span>
+          ) : (
+            <span className="text-primary-foreground/40 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
+              Spy Secret
+            </span>
+          )}
           {profiles.length > 0 && (
             <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>
               {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
@@ -108,13 +121,12 @@ const Dashboard = () => {
         <div className="px-6 pb-2">
           <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Willkommen zurück
+            Willkommen zurück, Spy-{spyNumber}
           </motion.h1>
-          <p className="text-primary-foreground/80 font-mono font-bold mt-1" style={{ fontSize: "0.875rem", letterSpacing: "0.05em" }}>
-            Spy-{spyNumber}
-          </p>
-          <p className="text-primary-foreground/55 mt-1" style={{ fontSize: "0.8125rem" }}>
-            {t("dashboard.greeting_subtitle", "Dein Spion ist aktiv – hier ist dein Überblick.")}
+          <p className="text-primary-foreground/55 mt-1.5" style={{ fontSize: "0.8125rem" }}>
+            {isPro
+              ? t("dashboard.greeting_subtitle_pro", "Dein Spion ist aktiv — hier ist dein Überblick.")
+              : t("dashboard.greeting_subtitle_free", "Schalte deinen Spion frei für volle Kontrolle.")}
           </p>
         </div>
 
@@ -269,19 +281,35 @@ const Dashboard = () => {
           ) : (
             <button
               onClick={() => { haptic.light(); showPaywall("spy_agent"); }}
-              className="w-full relative rounded-[1.75rem] overflow-hidden min-h-[100px] flex items-center gap-3 p-4"
-              style={{ background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 22%))", boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}
+              className="w-full relative rounded-[1.75rem] overflow-hidden"
+              style={{ background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", filter: "grayscale(0.6)", opacity: 0.7 }}
             >
-              <div className="rounded-full p-2 border border-primary-foreground/30 bg-primary-foreground/10">
-                <Lock className="h-5 w-5 text-primary-foreground/85" />
-              </div>
-              <div className="text-start">
-                <p className="font-semibold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
-                  {t("paywall.unlock_spy_agent", "Spy Agent freischalten")}
-                </p>
-                <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
-                  {t("spy.spy_description")}
-                </p>
+              {/* Scan-line effect */}
+              <div
+                className="absolute inset-0 rounded-[1.75rem] pointer-events-none opacity-[0.06]"
+                style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)" }}
+              />
+              <div className="relative z-10 flex items-stretch px-2 py-2 gap-1" style={{ minHeight: "150px" }}>
+                {/* Empty profile side */}
+                <div className="flex flex-col" style={{ width: "65%" }}>
+                  <p className="text-white/30 font-bold uppercase tracking-widest px-3 pt-0.5 pb-0" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", lineHeight: 1.2 }}>
+                    Spion nicht aktiv
+                  </p>
+                  <div className="mt-1 flex-1 rounded-[1.25rem] px-3 py-2.5 bg-white/[0.04] flex flex-col justify-center items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary-foreground/40" />
+                    <p className="text-primary-foreground/50 font-semibold text-center" style={{ fontSize: "0.75rem" }}>
+                      {t("paywall.unlock_spy_agent", "Spy Agent freischalten")}
+                    </p>
+                    <p className="text-primary-foreground/30 text-center" style={{ fontSize: "0.6875rem" }}>
+                      {t("spy.spy_description")}
+                    </p>
+                  </div>
+                </div>
+                {/* Greyed spy side */}
+                <div className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white/[0.04]" style={{ width: "35%", filter: "grayscale(1)", opacity: 0.4 }}>
+                  <SpyIcon size={40} />
+                  <p className="text-primary-foreground/40 font-bold mt-1" style={{ fontSize: "0.5rem" }}>GESPERRT</p>
+                </div>
               </div>
             </button>
           )}
