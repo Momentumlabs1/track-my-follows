@@ -173,6 +173,7 @@ const Dashboard = () => {
                 </div>
               </button>
             )}
+            </div>
           </div>
 
           {profiles.length > 0 && (
