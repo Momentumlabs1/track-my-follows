@@ -35,18 +35,18 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-50 bg-background pb-[env(safe-area-inset-bottom)]" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
-      <div className="flex items-center justify-around" style={{ height: '50px' }}>
+      <div className="flex items-center justify-around" style={{ height: '60px' }}>
         {navItems.map((item) => (
           <Link
             key={item.to}
             to={item.to}
             onClick={() => haptic.light()}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-h-[44px]"
+            className="flex flex-col items-center justify-center gap-1 flex-1 h-full min-h-[48px]"
           >
             <span className={item.isActive ? "text-primary" : "text-muted-foreground"}>
               {item.icon(item.isActive)}
             </span>
-            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.625rem' }}>
+            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>
               {item.label}
             </span>
           </Link>
