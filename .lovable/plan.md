@@ -1,39 +1,41 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Agent-Drag über gesamten Bildschirm + Spy-Zone Animationen
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem
+1. **Agent verschwindet beim Draggen** hinter dem weissen Content-Bereich wegen `overflow-hidden` auf dem Header
+2. Keine Animation wenn Spy einem neuen Account zugewiesen wird
+3. Spy-Zone reagiert visuell nicht auf Drag-Status
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Lösung
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+#### 1. Drag-Clipping fixen (`Dashboard.tsx`)
+- `overflow-hidden` vom Header-Container entfernen
+- Stattdessen nur die SVG-Kurven mit eigenem `overflow-hidden` versehen
+- SpyWidget braucht `position: fixed` oder sehr hohen `z-index` während des Drags — das macht framer-motion bereits über `whileDrag: { zIndex: 9999 }`, aber der Parent clippt es. Fix: Den SpyWidget über ein **React Portal** (`createPortal`) rendern während `isDragging === true`, damit er aus dem DOM-Fluss raus ist und über allem schwebt
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+#### 2. Spy-Zone reagiert auf Drag (`Dashboard.tsx`)
+- Wenn `isDragging === true`: Der überwachte Account im Spy-Bereich wird **ausgegraut** (opacity 0.3, grayscale filter)
+- Wenn Agent losgelassen wird ohne Ziel: Account wird wieder farbig (opacity 1, kein filter)
+- Animiert über `motion.div` mit `animate={{ opacity: isDragging ? 0.3 : 1, filter: isDragging ? "grayscale(1)" : "grayscale(0)" }}`
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+#### 3. Professionelle Zuweisung-Animation (`Dashboard.tsx` + `SpyAgentCard.tsx`)
+- Neuer State: `assigningProfileId` — wird gesetzt wenn ein Account dem Spy zugewiesen wird
+- **Animation-Sequenz** bei erfolgreicher Zuweisung:
+  1. Der neue Account (ProfileCard) bekommt `layoutId` und animiert nach oben zum Spy-Bereich (framer-motion `AnimatePresence` + `layout`)
+  2. Der alte Account im Spy-Bereich faded aus (`exit={{ opacity: 0, scale: 0.8 }}`)
+  3. Der neue Account erscheint im Spy-Bereich (`initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}`)
+- Agent snappt zurück zu seinem Platz (bereits via `dragSnapToOrigin`)
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+#### 4. SpyWidget aus overflow-hidden befreien (`SpyAgentCard.tsx`)
+- Während des Drags: Render über `ReactDOM.createPortal(dragElement, document.body)` damit der Agent über **allem** schwebt
+- Alternativ einfacher: `overflow-hidden` nur auf den SVG-Wrapper setzen, nicht auf den gesamten Header-Container
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+
+| Datei | Änderung |
+|---|---|
+| `Dashboard.tsx` | `overflow-hidden` entfernen/umstrukturieren, Spy-Zone Fade bei Drag, Zuweisungs-Animation |
+| `SpyAgentCard.tsx` | Portal-Rendering während Drag für volle Bildschirm-Mobilität |
+| `ProfileCard.tsx` | Keine Änderung nötig (hat bereits `data-profile-id` und drop-target highlighting) |
 
