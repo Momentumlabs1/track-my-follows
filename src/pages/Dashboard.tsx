@@ -51,14 +51,16 @@ const Dashboard = () => {
   const handleProfileTap = useCallback((profileId: string) => navigate(`/profile/${profileId}`), [navigate]);
   const handleMoveSpy = useCallback((profileId: string) => {
     setJustAssigned(true);
+    setDroppedOnProfileId(profileId);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
         const p = profiles.find((profile) => profile.id === profileId);
         if (p) toast.success(`Spion überwacht jetzt @${p.username} 🕵️`);
         try { navigator.vibrate?.(50); } catch {}
         setTimeout(() => setJustAssigned(false), 600);
+        setTimeout(() => setDroppedOnProfileId(null), 800);
       },
-      onError: () => setJustAssigned(false),
+      onError: () => { setJustAssigned(false); setDroppedOnProfileId(null); },
     });
   }, [moveSpy, profiles]);
 
