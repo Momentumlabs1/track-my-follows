@@ -16,7 +16,7 @@ export function BottomNav() {
     {
       to: "/feed",
       label: t("nav.feed", "Feed"),
-      icon: (active: boolean) => <Newspaper className="h-6 w-6" strokeWidth={active ? 2 : 1.5} />,
+      icon: (active: boolean) => <Newspaper className="h-7 w-7" strokeWidth={active ? 2 : 1.5} />,
       isActive: location.pathname === "/feed",
     },
     {
