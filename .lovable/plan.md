@@ -1,39 +1,27 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Dark Mode Spy-Karte: Alles schwarz + neues Layout
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Was sich ändert
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+**1. Spy-Bereich (rechts) – kein Weiß mehr, stattdessen leicht helleres Schwarz**
+- `dark:bg-white/90` wird ersetzt durch `dark:bg-white/[0.08]` — ein subtil helleres Schwarz, das sich vom Profil-Bereich abhebt ohne weiß zu sein.
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**2. Profil-Bereich (links) – Layout-Umstrukturierung**
+- "Spion angesetzt auf" wird aus dem Account-Rechteck herausgenommen und darüber platziert, direkt im dunklen Spy-Bereich.
+- Das Account-Rechteck wird nach unten bündig ausgerichtet (`self-end` / `mt-auto`), sodass es am unteren Rand des Gesamtrechtecks sitzt.
+- Oben entsteht Freiraum für den Label-Text.
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+### Konkreter Umbau (Dashboard.tsx, Zeilen 187-262)
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+**Content-Layer** wird von `flex items-center` zu `flex items-stretch` geändert, damit beide Seiten die volle Höhe nutzen.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**Linke Seite (Profile):** Wird zu einer Flex-Column mit:
+- Label "Spion angesetzt auf" oben, **außerhalb** des Account-Rechtecks, im dunklen Bereich
+- Account-Rechteck unten bündig (`mt-auto`), mit `dark:bg-white/[0.06]` statt `dark:bg-black/80`
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**Rechte Seite (Spy):** `dark:bg-white/90` → `dark:bg-white/[0.08]` — subtiler Kontrast zum linken Bereich.
+
+### Datei
+- `src/pages/Dashboard.tsx` — einzige Änderung
 
