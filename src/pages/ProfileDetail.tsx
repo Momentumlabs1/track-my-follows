@@ -508,7 +508,7 @@ const ProfileDetail = () => {
 
               {/* Unfollow Check */}
               <button
-                onClick={() => { setSpyScanMenuOpen(false); }}
+                onClick={() => { setSpyScanMenuOpen(false); setActiveTab("unfollowed"); tabsRef.current?.scrollIntoView({ behavior: "smooth" }); }}
                 className="w-full native-card p-4 flex items-center gap-3 text-start"
               >
                 <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
