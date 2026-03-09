@@ -62,6 +62,12 @@ const Dashboard = () => {
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
 
+  // Sort profiles: spy profile goes to the bottom
+  const sortedProfiles = useMemo(() =>
+    [...profiles].sort((a, b) => (a.has_spy === b.has_spy ? 0 : a.has_spy ? 1 : -1)),
+    [profiles]
+  );
+
   const handleProfileTap = useCallback((profileId: string) => navigate(`/profile/${profileId}`), [navigate]);
   const handleMoveSpy = useCallback((profileId: string) => {
     setJustAssigned(true);
