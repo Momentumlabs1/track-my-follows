@@ -242,16 +242,6 @@ const Dashboard = () => {
             </button>
           )}
 
-          {profiles.length > 0 && (
-            <p className="text-primary-foreground/65 mt-3 text-center" style={{ fontSize: "0.75rem" }}>
-              {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
-              {spyProfile?.last_scanned_at && (
-                <>
-                  {" "}· Letzter Scan: {new Date(spyProfile.last_scanned_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
-                </>
-              )}
-            </p>
-          )}
         </div>
 
         {/* curved bottom — clipped independently */}
