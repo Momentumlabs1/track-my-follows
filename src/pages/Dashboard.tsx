@@ -133,11 +133,7 @@ const Dashboard = () => {
                 }}
               />
 
-              {/* LEFT — Light profile area with border from dark bg */}
-              <div
-                className="absolute inset-y-2 left-2 rounded-[1.25rem]"
-                style={{ width: "62%", background: "rgba(255,240,245,0.95)", boxShadow: "0 2px 12px -4px rgba(0,0,0,0.15)" }}
-              />
+              {/* Light profile area is now inline in the content layer */}
 
               {/* ═══ "Spy Connected" overlay animation ═══ */}
               <AnimatePresence>
