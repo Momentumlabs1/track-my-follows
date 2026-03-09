@@ -3,7 +3,6 @@ import { X, Check, Crown, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib/native";
@@ -11,9 +10,9 @@ import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib
 type Period = "weekly" | "monthly" | "yearly";
 
 const PRICES: Record<Period, { price: string; unit: string; trial: boolean }> = {
-  weekly: { price: "8.99", unit: "per_week", trial: false },
-  monthly: { price: "14.99", unit: "per_month", trial: true },
-  yearly: { price: "49.99", unit: "per_year", trial: true },
+  weekly: { price: "4,95", unit: "per_week", trial: false },
+  monthly: { price: "14,95", unit: "per_month", trial: true },
+  yearly: { price: "99,95", unit: "per_year", trial: true },
 };
 
 export function PaywallSheet() {
@@ -23,8 +22,9 @@ export function PaywallSheet() {
   const [selected, setSelected] = useState<Period>("yearly");
   const [loading, setLoading] = useState(false);
 
-  const weeklyEquiv = selected === "yearly" ? (49.99 / 52).toFixed(2) : selected === "monthly" ? (14.99 / 4.33).toFixed(2) : "8.99";
-  const savingsPercent = selected === "yearly" ? 89 : selected === "monthly" ? 62 : 0;
+  // Calculate savings: yearly = 99.95 vs weekly*52 = 257.40 → ~61% savings
+  const weeklyEquiv = selected === "yearly" ? (99.95 / 52).toFixed(2) : selected === "monthly" ? (14.95 / 4.33).toFixed(2) : "4,95";
+  const savingsPercent = selected === "yearly" ? 61 : selected === "monthly" ? 30 : 0;
 
   const features = [
     t("paywall.feature_profiles"),
@@ -45,21 +45,6 @@ export function PaywallSheet() {
         await purchase(user.id, PRODUCTS[selected]);
         haptic.success();
         await refetch();
-        closePaywall();
-      } else if (import.meta.env.DEV) {
-        // ⚠️ TODO BEFORE LAUNCH: Remove development mode subscription bypass
-        const { error } = await supabase.from("subscriptions").upsert({
-          user_id: user.id,
-          plan_type: "pro",
-          billing_period: selected,
-          status: "active",
-          max_tracked_profiles: 5,
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }, { onConflict: "user_id" });
-        if (error) throw error;
-        haptic.success();
-        await refetch();
-        toast.success("Pro activated! 🎉");
         closePaywall();
       } else {
         toast.info(t("settings.manage_in_app_store"));
@@ -146,7 +131,7 @@ export function PaywallSheet() {
                     >
                       {period === "yearly" && (
                         <span className="absolute -top-2.5 start-1/2 -translate-x-1/2 gradient-bg text-primary-foreground text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap">
-                          {t("paywall.save_percent", { percent: 89 })}
+                          {t("paywall.save_percent", { percent: 61 })}
                         </span>
                       )}
                       <p className="text-[11px] font-semibold text-muted-foreground mb-1">{t(`paywall.${period}`)}</p>
@@ -174,6 +159,11 @@ export function PaywallSheet() {
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `${t("paywall.continue")} (${t(`paywall.${selected}`)})`}
               </button>
 
+              {/* Apple-required subscription disclosure */}
+              <p className="text-center text-[11px] text-muted-foreground mt-4 px-2 leading-relaxed">
+                Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen.
+              </p>
+
               <div className="flex items-center justify-center gap-4 mt-4">
                 <button onClick={handleRestore} className="text-[11px] text-muted-foreground hover:text-foreground min-h-[44px] px-2">
                   {t("paywall.restore")}
@@ -183,7 +173,6 @@ export function PaywallSheet() {
                 <span className="text-muted-foreground text-[10px]">·</span>
                 <button onClick={() => closePaywall()} className="text-[11px] text-muted-foreground hover:text-foreground min-h-[44px] px-2">{t("paywall.privacy")}</button>
               </div>
-              <p className="text-center text-[10px] text-muted-foreground mt-2">{t("paywall.cancel_note")}</p>
             </div>
           </motion.div>
         </>

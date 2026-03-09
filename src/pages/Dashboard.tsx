@@ -60,7 +60,7 @@ const Dashboard = () => {
     setShowSpyConnected(true);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
-        if (targetProfile) toast.success(`Spion überwacht jetzt @${targetProfile.username} 🕵️`);
+        if (targetProfile) toast.success(`Tracking aktiv für @${targetProfile.username} 🕵️`);
         try { navigator.vibrate?.(50); } catch {}
         setTimeout(() => setJustAssigned(false), 600);
         setTimeout(() => setDroppedOnProfileId(null), 800);
@@ -88,7 +88,7 @@ const Dashboard = () => {
         {/* Top bar */}
         <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
           <span className="text-primary-foreground/60 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
-            SpySecret
+            Spy-Secret
           </span>
           {profiles.length > 0 && (
             <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>

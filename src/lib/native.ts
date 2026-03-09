@@ -32,10 +32,11 @@ export const haptic = {
   },
 };
 
+// Product IDs matching RevenueCat / App Store Connect
 export const PRODUCTS = {
-  weekly: 'trackiq_pro_weekly',
-  monthly: 'trackiq_pro_monthly',
-  yearly: 'trackiq_pro_yearly',
+  weekly: 'spysecret_pro_weekly',
+  monthly: 'spysecret_pro_monthly',
+  yearly: 'spysecret_pro_yearly',
 } as const;
 
 export const purchase = async (userId: string, productId: string) => {

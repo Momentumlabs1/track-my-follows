@@ -69,7 +69,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (data) {
-        const isPro = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+        // Check if user has Pro access:
+        // 1. Active or in_trial status
+        // 2. OR expired/canceled but still within paid period (current_period_end > now)
+        const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+        const isWithinPaidPeriod = 
+          data.plan_type === "pro" && 
+          ["expired", "canceled"].includes(data.status) && 
+          data.current_period_end && 
+          new Date(data.current_period_end) > new Date();
+        
+        const isPro = isActiveOrTrial || isWithinPaidPeriod;
+
         setState({
           plan: isPro ? "pro" : "free",
           status: (data.status as SubscriptionState["status"]) || "active",

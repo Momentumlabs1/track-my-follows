@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { Bell, Trash2, LogOut, Globe, Crown, Palette, Lock, Scale, FileText, RotateCcw, ExternalLink, Loader2 } from "lucide-react";
+import { Trash2, LogOut, Globe, Crown, Palette, Scale, RotateCcw, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ const languages = [
 const Settings = () => {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
-  const { plan, status, billingPeriod, maxProfiles, showPaywall, canUsePush, refetch } = useSubscription();
+  const { plan, status, billingPeriod, maxProfiles, showPaywall, refetch } = useSubscription();
   const navigate = useNavigate();
   const [currentLang, setCurrentLang] = useState(i18n.language);
   const { theme, setTheme } = useTheme();
@@ -106,11 +106,6 @@ const Settings = () => {
       setShowDeleteConfirm(false);
     }
   };
-
-  const notifications = [
-    { label: t("settings.notif_follows"), desc: t("settings.notif_follows_desc"), on: true },
-    { label: t("settings.notif_unfollows"), desc: t("settings.notif_unfollows_desc"), on: true },
-  ];
 
   const themeOptions = [
     { value: "light", label: "☀️", name: t("settings.light") },
@@ -230,41 +225,6 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Notifications */}
-            <div className="ios-card">
-              <div className="flex items-center gap-2.5 mb-4">
-                <Bell className="h-4 w-4 text-accent" />
-                <h2 className="font-bold text-sm">{t("settings.notifications")}</h2>
-              </div>
-              <div className="space-y-3">
-                {notifications.map((item) => (
-                  <div key={item.label} className="flex items-center justify-between py-1">
-                    <div>
-                      <p className="text-[13px] font-semibold">{item.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{item.desc}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!canUsePush) { showPaywall("push"); return; }
-                        haptic.light();
-                      }}
-                      className={`h-7 w-12 rounded-full relative transition-all min-h-[44px] min-w-[44px] flex items-center ${
-                        !canUsePush ? "bg-muted opacity-50 justify-center" : item.on ? "gradient-bg shadow-lg shadow-primary/20" : "bg-muted"
-                      }`}
-                    >
-                      {!canUsePush && <Lock className="h-3 w-3 text-muted-foreground" />}
-                      {canUsePush && (
-                        <span className={`absolute top-1 h-5 w-5 rounded-full bg-card transition-all ${item.on ? "end-1" : "start-1"}`} />
-                      )}
-                    </button>
-                  </div>
-                ))}
-                {!canUsePush && (
-                  <p className="text-[10px] text-muted-foreground">{t("settings.pro_required_push")}</p>
-                )}
-              </div>
-            </div>
-
             {/* Legal */}
             <div className="ios-card">
               <div className="flex items-center gap-2.5 mb-3">
@@ -289,6 +249,10 @@ const Settings = () => {
                   Widerrufsbelehrung
                 </button>
               </div>
+              {/* Instagram/Meta Disclaimer */}
+              <p className="text-[10px] text-muted-foreground/60 mt-4 leading-relaxed">
+                Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt.
+              </p>
             </div>
 
             {/* Logout */}
