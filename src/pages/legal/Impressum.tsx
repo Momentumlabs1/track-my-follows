@@ -26,7 +26,7 @@ export default function Impressum() {
 
       <h2>Steuerdaten</h2>
       <p>Steuernummer: 46 594/8339</p>
-      <p>UID-Nummer: [ATU XXXXXXXX – BITTE EINFÜGEN sobald erhalten]</p>
+      <p>UID-Nummer: Beantragt</p>
 
       <h2>Anwendbare Rechtsvorschriften</h2>
       <p>Gewerbeordnung (GewO), E-Commerce-Gesetz (ECG), Unternehmensgesetzbuch (UGB)</p>
@@ -50,6 +50,9 @@ export default function Impressum() {
 
       <h2>Urheberrecht</h2>
       <p>Die durch den Betreiber erstellten Inhalte und Werke unterliegen dem österreichischen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung der Smart Trading AI GmbH.</p>
+
+      <h2>Hinweis zu Instagram / Meta</h2>
+      <p>Spy-Secret ist ein unabhängiges Produkt der Smart Trading AI GmbH und ist in keiner Weise mit Instagram, Meta Platforms, Inc. oder deren Tochtergesellschaften verbunden, assoziiert, autorisiert, unterstützt oder offiziell anerkannt. Instagram ist eine eingetragene Marke von Meta Platforms, Inc.</p>
 
       <p className="mt-6 text-muted-foreground">Stand: Februar 2026</p>
     </LegalPage>
