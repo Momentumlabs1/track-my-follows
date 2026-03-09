@@ -1,14 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Pencil, Loader2, Search, Eye, ChevronRight } from "lucide-react";
+import { ArrowLeft, Pencil, Loader2, Search, Eye, ChevronRight, Clock, UserX, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SpyIcon } from "@/components/SpyIcon";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { Progress } from "@/components/ui/progress";
 import { useSpyProfile } from "@/hooks/useSpyProfile";
-import { useFollowEvents } from "@/hooks/useTrackedProfiles";
-import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -19,31 +17,11 @@ export default function SpyDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { spyProfile } = useSpyProfile();
-  const { data: followEvents = [] } = useFollowEvents(spyProfile?.id);
-  const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
 
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [pushScanning, setPushScanning] = useState(false);
   const [unfollowScanning, setUnfollowScanning] = useState(false);
-
-  // Recent events (last 5) - must be before early return
-  const recentEvents = useMemo(() => {
-    if (!spyProfile) return [];
-    const allEvents = [
-      ...followEvents.filter(e => !e.is_initial).map(e => ({
-        id: e.id, detected_at: e.detected_at, type: e.event_type,
-        username: e.target_username, source: "follow" as const,
-      })),
-      ...followerEvents.filter(e => !e.is_initial).map(e => ({
-        id: e.id, detected_at: e.detected_at, type: e.event_type,
-        username: e.username, source: "follower" as const,
-      })),
-    ];
-    return allEvents
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 5);
-  }, [followEvents, followerEvents, spyProfile]);
 
   if (!spyProfile) {
     return (
@@ -63,13 +41,7 @@ export default function SpyDetail() {
   const spyName = (profileAny.spy_name as string) || "Spion 🕵️";
   const pushRemaining = (profileAny.push_scans_today as number) ?? 4;
   const unfollowRemaining = (profileAny.unfollow_scans_today as number) ?? 1;
-  const totalScans = (profileAny.total_scans_executed as number) || 0;
-  const totalFollows = (profileAny.total_follows_detected as number) || 0;
-  const totalUnfollows = (profileAny.total_unfollows_detected as number) || 0;
   const spyAssignedAt = spyProfile.spy_assigned_at;
-  const daysSince = spyAssignedAt ? Math.floor((Date.now() - new Date(spyAssignedAt).getTime()) / 86400000) : 0;
-
-  const avgPerDay = daysSince > 0 ? ((totalFollows + totalUnfollows) / daysSince).toFixed(1) : "0";
 
   const handleSaveName = async () => {
     if (!nameValue.trim() || nameValue.trim() === spyName) {
@@ -80,6 +52,12 @@ export default function SpyDetail() {
     queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
     setEditingName(false);
     toast.success("Name gespeichert ✅");
+  };
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+    queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+    queryClient.invalidateQueries({ queryKey: ["follower_events"] });
   };
 
   const handlePushScan = async () => {
@@ -96,16 +74,15 @@ export default function SpyDetail() {
       if (error) throw error;
       if (data?.error) {
         toast.error(data.error);
-      } else {
-        const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-        toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+        setPushScanning(false);
+        return;
       }
-      queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["follow_events"] });
-      queryClient.invalidateQueries({ queryKey: ["follower_events"] });
-    } catch (err) {
+      const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
+      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      invalidateAll();
+      navigate(`/profile/${spyProfile.id}`);
+    } catch {
       toast.error("Scan fehlgeschlagen");
-    } finally {
       setPushScanning(false);
     }
   };
@@ -124,40 +101,24 @@ export default function SpyDetail() {
       if (error) throw error;
       if (data?.error) {
         toast.error(data.error);
-      } else {
-        const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
-        toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`);
+        setUnfollowScanning(false);
+        return;
       }
-      queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["follow_events"] });
-      queryClient.invalidateQueries({ queryKey: ["follower_events"] });
-    } catch (err) {
+      const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
+      toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`);
+      invalidateAll();
+      navigate(`/profile/${spyProfile.id}`, { state: { activeTab: "unfollowed" } });
+    } catch {
       toast.error("Unfollow-Check fehlgeschlagen");
-    } finally {
       setUnfollowScanning(false);
     }
   };
 
-  const formatEventTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const isYesterday = d.toDateString() === new Date(now.getTime() - 86400000).toDateString();
-    const time = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    if (isToday) return `Heute ${time}`;
-    if (isYesterday) return "Gestern";
-    return d.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
-  };
-
-  const getEventEmoji = (type: string, source: string) => {
-    if (source === "follow") return type === "unfollow" ? "🔴" : "🟢";
-    return type === "lost" ? "🟠" : "🔵";
-  };
-
-  const getEventLabel = (type: string, source: string) => {
-    if (source === "follow") return type === "unfollow" ? "hat entfolgt" : "folgt jetzt";
-    return type === "lost" ? "Follower verloren" : "neuer Follower";
-  };
+  const features = [
+    { icon: <Clock className="h-4 w-4 text-primary" />, label: t("spy_detail.feature_hourly", "Stündliche Scans"), desc: t("spy_detail.feature_hourly_desc", "Automatisch jede Stunde neue Follows & Follower erkennen") },
+    { icon: <UserX className="h-4 w-4 text-destructive" />, label: t("spy_detail.feature_unfollow", "Unfollow-Erkennung"), desc: t("spy_detail.feature_unfollow_desc", "Sofort wissen, wenn jemand entfolgt wird") },
+    { icon: <Users className="h-4 w-4 text-brand-blue" />, label: t("spy_detail.feature_gender", "Geschlechteranalyse"), desc: t("spy_detail.feature_gender_desc", "Erfahre, wem dein Ziel wirklich folgt") },
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -170,7 +131,7 @@ export default function SpyDetail() {
         <div className="w-10" />
       </div>
 
-      {/* Spy Profile Header */}
+      {/* Spy Identity */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -209,24 +170,62 @@ export default function SpyDetail() {
         <p className="text-[12px] text-muted-foreground mt-1">
           {t("spy_detail.spy_since", "Spion seit")}: {spyAssignedAt ? new Date(spyAssignedAt).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </p>
-
-        {/* Watched profile link */}
-        <button
-          onClick={() => navigate(`/profile/${spyProfile.id}`)}
-          className="flex items-center gap-2 mt-3 bg-muted/50 rounded-full px-4 py-2 hover:bg-muted transition-colors"
-        >
-          <InstagramAvatar
-            src={spyProfile.avatar_url}
-            alt={spyProfile.username}
-            fallbackInitials={spyProfile.username}
-            size={24}
-          />
-          <span className="text-[13px] font-semibold text-foreground">@{spyProfile.username}</span>
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
       </motion.div>
 
-      {/* Action Buttons */}
+      {/* Current Assignment */}
+      <div className="px-4 mt-6">
+        <p className="section-header px-1 mb-3">{t("spy_detail.current_mission", "Aktueller Einsatz")}</p>
+        <button
+          onClick={() => navigate(`/profile/${spyProfile.id}`)}
+          className="w-full native-card p-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+        >
+          <div className="relative">
+            <div className="avatar-ring">
+              <div className="rounded-full bg-background p-[2px]">
+                <InstagramAvatar
+                  src={spyProfile.avatar_url}
+                  alt={spyProfile.username}
+                  fallbackInitials={spyProfile.username}
+                  size={48}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 text-start">
+            <p className="text-[14px] font-bold text-foreground">@{spyProfile.username}</p>
+            <p className="text-[12px] text-muted-foreground">
+              {spyProfile.follower_count ? `${spyProfile.follower_count.toLocaleString()} Follower` : ""} · {spyProfile.following_count ? `${spyProfile.following_count.toLocaleString()} Following` : ""}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        </button>
+      </div>
+
+      {/* Storytelling: What can your spy do? */}
+      <div className="px-4 mt-6">
+        <p className="section-header px-1 mb-3">{t("spy_detail.capabilities", "Was kann dein Spion?")}</p>
+        <div className="native-card p-4 space-y-3">
+          {features.map((f, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.08 }}
+              className="flex items-start gap-3"
+            >
+              <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center">
+                {f.icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-semibold text-foreground">{f.label}</p>
+                <p className="text-[11px] text-muted-foreground leading-snug">{f.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scan Actions */}
       <div className="px-4 mt-6 grid grid-cols-2 gap-3">
         {/* Push Scan */}
         <button
@@ -252,7 +251,7 @@ export default function SpyDetail() {
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
           <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-            {pushRemaining} von 4 übrig heute
+            {pushRemaining} von 4 übrig
           </p>
           <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
         </button>
@@ -281,56 +280,11 @@ export default function SpyDetail() {
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
           <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-            {unfollowRemaining} von 1 übrig heute
+            {unfollowRemaining} von 1 übrig
           </p>
           <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
         </button>
       </div>
-
-      {/* Stats */}
-      <div className="px-4 mt-6">
-        <p className="section-header px-1 mb-3">📊 {t("spy_detail.spy_report", "Spion-Bericht")}</p>
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-2.5">
-          <StatRow label={t("spy_detail.total_missions", "Gesamte Einsätze")} value={String(totalScans)} />
-          <StatRow label={t("spy_detail.follows_detected", "Neue Follows erkannt")} value={String(totalFollows)} />
-          <StatRow label={t("spy_detail.unfollows_detected", "Unfollows erkannt")} value={String(totalUnfollows)} />
-          <StatRow label={t("spy_detail.active_days", "Aktiv seit")} value={`${daysSince} Tage`} />
-          <StatRow label={t("spy_detail.avg_changes", "Durchschn. Änderungen/Tag")} value={avgPerDay} />
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="px-4 mt-6">
-        <p className="section-header px-1 mb-3">{t("spy_detail.last_activity", "Letzte Aktivität")}</p>
-        {recentEvents.length > 0 ? (
-          <div className="space-y-2">
-            {recentEvents.map((event) => (
-              <div key={event.id} className="flex items-center gap-3 rounded-xl bg-card border border-border p-3">
-                <span className="text-[11px] text-muted-foreground w-16 flex-shrink-0">
-                  {formatEventTime(event.detected_at)}
-                </span>
-                <span className="text-sm">{getEventEmoji(event.type, event.source)}</span>
-                <span className="text-[12px] text-foreground font-medium truncate">
-                  @{event.username} {getEventLabel(event.type, event.source)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-xl bg-card border border-border p-6 text-center">
-            <p className="text-[12px] text-muted-foreground">Noch keine Aktivität erkannt</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[12px] text-muted-foreground">{label}</span>
-      <span className="text-[13px] font-bold text-foreground">{value}</span>
     </div>
   );
 }

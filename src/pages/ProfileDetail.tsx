@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, Lock, Info } from "lucide-react";
 import { UnfollowCheckButton } from "@/components/UnfollowCheckButton";
@@ -52,7 +52,9 @@ const ProfileDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabId>("new_follows");
+  const location = useLocation();
+  const initialTab = (location.state as { activeTab?: TabId } | null)?.activeTab;
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab || "new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
   const [spyScanMenuOpen, setSpyScanMenuOpen] = useState(false);
@@ -350,14 +352,27 @@ const ProfileDetail = () => {
       )}
 
       {!profile.baseline_complete && !profile.is_private && (profile.following_count ?? 0) > 0 &&
-        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (
-        <div className="px-5 mb-4">
-          <div className="flex items-center gap-2 native-card p-4">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
-          </div>
-        </div>
-      )}
+        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (() => {
+          const profileAge = Date.now() - new Date(profile.created_at).getTime();
+          const timedOut = profileAge > 10 * 60 * 1000;
+          return (
+            <div className="px-5 mb-4">
+              <div className="flex items-center gap-2 native-card p-4">
+                {timedOut ? (
+                  <>
+                    <Info className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_unavailable", "Gender-Analyse derzeit nicht verfügbar")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       {/* ─── Tabs ─── */}
       <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
