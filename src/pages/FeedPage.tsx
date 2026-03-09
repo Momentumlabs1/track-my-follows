@@ -107,7 +107,8 @@ const FeedPage = () => {
             Spy<span className="text-primary">Secret</span>
           </span>
         </div>
-        <h1 className="font-bold text-foreground" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t("feed.whats_new", "What's new?")}</h1>
+        <h1 className="font-bold text-foreground" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em' }}>{t("feed.whats_new")}</h1>
+        <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{t("feed.subtitle")}</p>
       </div>
 
       {/* ═══ Spy of the Day – bold pink gradient card ═══ */}
