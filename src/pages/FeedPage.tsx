@@ -21,7 +21,7 @@ const FeedPage = () => {
   const navigate = useNavigate();
   const { plan, showPaywall } = useSubscription();
   const isPro = plan === "pro";
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [visibleCount, setVisibleCount] = useState(50);
   const [visibleCount, setVisibleCount] = useState(50);
 
   const { data: profiles = [] } = useTrackedProfiles();
