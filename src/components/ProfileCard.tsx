@@ -55,16 +55,9 @@ interface ProfileCardProps {
 export const ProfileCard = memo(function ProfileCard({ profile, hasSpy, profileId, onTap, index, isDragging, isHovered, isDropped }: ProfileCardProps) {
   const { t } = useTranslation();
   const shortTime = useShortTimeAgo();
-  const { data: followEvents = [] } = useFollowEvents(profileId);
+  const { data: recentFollowings = [] } = useRecentFollowings(profileId);
 
   const isDropTarget = isHovered === true;
-
-  const recentFollows = useMemo(() => {
-    return followEvents
-      .filter(e => e.event_type === "follow" && !e.is_initial)
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime())
-      .slice(0, 6);
-  }, [followEvents]);
 
   const followerCount = profile.follower_count ?? profile.last_follower_count;
   const followingCount = profile.following_count ?? profile.last_following_count;
