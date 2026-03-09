@@ -197,7 +197,7 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-stretch px-2 py-2 gap-1" style={{ minHeight: "150px" }}>
+              <div className="relative z-10 flex items-stretch px-2 pt-1 pb-2 gap-1" style={{ minHeight: "150px" }}>
                 {/* Profile side (left, 65%) */}
                 <motion.div
                   className="flex flex-col h-full"
@@ -210,13 +210,13 @@ const Dashboard = () => {
                 >
                   {/* Label sits in the dark spy area, above the profile box */}
                   {spyProfile && (
-                    <p className="text-white/50 font-bold uppercase tracking-widest px-3 pt-0.5 pb-0" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", lineHeight: 1.2 }}>
+                    <p className="text-white/60 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
                       Spion angesetzt auf
                     </p>
                   )}
 
-                  {/* Profile box – flush with bottom */}
-                  <div className="mt-1 flex-1 rounded-[1.25rem] px-3 py-2.5 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
+                  {/* Profile box – flush with bottom of card */}
+                  <div className="flex-1 rounded-[1.25rem] px-3 py-2.5 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
