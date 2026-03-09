@@ -1,10 +1,9 @@
 import { useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { TrackedProfile } from "@/hooks/useTrackedProfiles";
-import spyGif from "@/assets/spy-logo-animated.gif";
 
 interface SpyWidgetProps {
   spyProfile: TrackedProfile | null;
@@ -47,7 +46,6 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
     }
   }, [findProfileUnderPoint, onHoverProfileChange]);
 
-  // ── Floating spy icon on the curve — draggable ──
   return (
     <motion.div
       ref={dragRef}
@@ -55,7 +53,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
       dragSnapToOrigin
       dragElastic={0.15}
       dragMomentum={false}
-      whileDrag={{ scale: 1.18, zIndex: 9999 }}
+      whileDrag={{ scale: 1.14, zIndex: 9999 }}
       onPointerDown={(e) => {
         e.stopPropagation();
         tapStartTime.current = Date.now();
@@ -70,7 +68,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         onDragStateChange(false);
         const rect = dragRef.current?.getBoundingClientRect();
         const profileId = rect ? findProfileUnderPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) : null;
-        if (profileId && spyProfile && profileId !== spyProfile.id) {
+        if (profileId && (!spyProfile || profileId !== spyProfile.id)) {
           onDragMoveSpy(profileId);
           try { navigator.vibrate?.(50); } catch {}
         }
@@ -79,21 +77,14 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
       onPointerUp={() => {
         if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy");
       }}
-      className="flex flex-col items-center cursor-grab active:cursor-grabbing touch-none select-none"
+      className="flex w-[116px] flex-col items-center justify-center rounded-2xl border border-primary-foreground/30 bg-primary-foreground/10 px-2 py-3 cursor-grab active:cursor-grabbing touch-none select-none"
+      aria-label={t("spy.your_spy", "Spion öffnen")}
     >
-      {/* Circular frame with glow */}
-      <div className="rounded-full p-1 bg-background shadow-lg animate-pulse-glow" style={{ border: '2.5px solid hsl(var(--primary) / 0.4)' }}>
-        <div className="rounded-full overflow-hidden" style={{ width: 60, height: 60 }}>
-          <img
-            src={spyGif}
-            alt="Spy Agent"
-            className="w-full h-full object-contain"
-            draggable={false}
-          />
-        </div>
+      <div className={`rounded-full p-1.5 bg-background border border-primary/40 ${isDragging ? "animate-pulse-glow" : ""}`}>
+        <SpyIcon size={82} glow />
       </div>
-      <span className="text-muted-foreground mt-0.5" style={{ fontSize: '0.5625rem', fontWeight: 700 }}>
-        ↕ {t("spy.drag_hint", "Ziehen")}
+      <span className="mt-1 text-primary-foreground/75 text-center leading-tight" style={{ fontSize: "0.5625rem", fontWeight: 700 }}>
+        {t("spy.drag_hint", "Ziehen")} · {t("spy.your_spy", "Spion")}
       </span>
     </motion.div>
   );
