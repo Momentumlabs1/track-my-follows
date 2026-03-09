@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Lock } from "lucide-react";
+import { Plus, Lock, Users } from "lucide-react";
 import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
