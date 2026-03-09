@@ -305,6 +305,7 @@ const Dashboard = () => {
               index={i}
               isDragging={isDragging}
               isHovered={hoveredProfileId === profile.id}
+              isDropped={droppedOnProfileId === profile.id}
             />
           ))}
 
