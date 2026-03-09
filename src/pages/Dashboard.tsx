@@ -8,7 +8,7 @@ import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
-import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
