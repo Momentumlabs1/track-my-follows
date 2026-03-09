@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Lock, Users } from "lucide-react";
 import { SpyWidget } from "@/components/SpyAgentCard";
@@ -7,6 +7,7 @@ import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
+import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
