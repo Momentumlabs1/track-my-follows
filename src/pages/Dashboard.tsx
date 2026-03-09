@@ -121,9 +121,12 @@ const Dashboard = () => {
         <div className="px-6 pb-2">
           <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Willkommen zurück, Spy-{spyNumber}
+            Willkommen zurück
           </motion.h1>
-          <p className="text-primary-foreground/55 mt-1.5" style={{ fontSize: "0.8125rem" }}>
+          <p className="text-primary-foreground/80 font-mono font-bold mt-1" style={{ fontSize: "0.875rem", letterSpacing: "0.05em" }}>
+            Spy-{spyNumber}
+          </p>
+          <p className="text-primary-foreground/55 mt-1" style={{ fontSize: "0.8125rem" }}>
             {isPro
               ? t("dashboard.greeting_subtitle_pro", "Dein Spion ist aktiv — hier ist dein Überblick.")
               : t("dashboard.greeting_subtitle_free", "Schalte deinen Spion frei für volle Kontrolle.")}
@@ -197,10 +200,10 @@ const Dashboard = () => {
               </AnimatePresence>
 
               {/* Content layer */}
-              <div className="relative z-10 flex items-stretch px-2 pt-1 pb-2 gap-1" style={{ minHeight: "150px" }}>
+              <div className="relative z-10 flex items-stretch p-2 gap-1" style={{ minHeight: "160px" }}>
                 {/* Profile side (left, 65%) */}
                 <motion.div
-                  className="flex flex-col h-full"
+                  className="flex flex-col"
                   style={{ width: "65%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
@@ -208,15 +211,15 @@ const Dashboard = () => {
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Label sits in the dark spy area, above the profile box */}
+                  {/* Label */}
                   {spyProfile && (
-                    <p className="text-white/60 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.625rem", letterSpacing: "0.12em" }}>
+                    <p className="text-white/70 font-extrabold uppercase tracking-widest px-3 pt-1 pb-1" style={{ fontSize: "0.6875rem", letterSpacing: "0.14em" }}>
                       Spion angesetzt auf
                     </p>
                   )}
 
-                  {/* Profile box – flush with bottom of card */}
-                  <div className="flex-1 rounded-[1.25rem] px-3 py-2.5 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
+                  {/* Profile box – fills remaining space, flush bottom */}
+                  <div className="flex-1 rounded-[1.25rem] px-3 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
