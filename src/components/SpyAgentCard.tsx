@@ -80,8 +80,8 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
       className="flex w-[116px] flex-col items-center justify-center rounded-2xl border border-primary-foreground/30 bg-primary-foreground/10 px-2 py-3 cursor-grab active:cursor-grabbing touch-none select-none"
       aria-label={t("spy.your_spy", "Spion öffnen")}
     >
-      <div className={`rounded-full p-1.5 bg-background border border-primary/40 ${isDragging ? "animate-pulse-glow" : ""}`}>
-        <SpyIcon size={82} glow />
+      <div className={isDragging ? "animate-pulse-glow" : ""}>
+        <SpyIcon size={88} glow />
       </div>
       <span className="mt-1 text-primary-foreground/75 text-center leading-tight" style={{ fontSize: "0.5625rem", fontWeight: 700 }}>
         {t("spy.drag_hint", "Ziehen")} · {t("spy.your_spy", "Spion")}
