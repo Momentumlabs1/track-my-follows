@@ -529,7 +529,6 @@ const ProfileDetail = () => {
     </div>
   );
 };
-};
 
 // ── Helpers ──
 function mapFollowEvent(e: any) {
