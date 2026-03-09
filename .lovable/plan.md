@@ -1,39 +1,47 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Problem
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Aktuell bekommen beim **Initial-Scan** alle ~200 Accounts denselben Timestamp (`now`). Die UI sortiert nach `detected_at DESC` → zufällige Reihenfolge, weil alle identisch sind.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Beim **Folge-Scan** (Stunde 1+) bekommen neue Accounts einen `Math.random() * spanMs` Timestamp → ebenfalls keine garantierte Reihenfolge untereinander.
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**Instagram liefert Page 1 in einer Relevanz-/Aktualitätsreihenfolge.** Account[0] ist der relevanteste/neueste. Wenn du jetzt jemandem folgst und dann scannst, steht dieser Account ganz oben in der API-Antwort.
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+## Lösung: Sequenzielle Timestamps bewahren die API-Reihenfolge
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### `syncNewFollows` (Zeile 119-144)
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**Initial-Scan**: Statt allen `now` zu geben → sequenzielle absteigende Timestamps:
+```
+Account[0] → now                  (neuester/relevantester)
+Account[1] → now - 1 Sekunde
+Account[2] → now - 2 Sekunden
+...
+Account[199] → now - 199 Sekunden
+```
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**Folge-Scan**: Statt `Math.random() * spanMs` → ebenfalls sequenziell absteigend innerhalb des Scan-Zeitfensters, damit die Reihenfolge erhalten bleibt.
+
+### `syncNewFollowers` (Zeile 169-200)
+
+Exakt gleiche Logik.
+
+### Ergebnis
+
+Wenn du jemandem folgst und dann einen Scan triggerst:
+1. HikerAPI liefert den neuen Follow als ersten Account auf Page 1
+2. Er ist nicht in der DB → wird als `newEntry[0]` erkannt
+3. Bekommt den **neuesten Timestamp** (`now`)
+4. UI sortiert nach `detected_at DESC` → zeigt ihn **ganz oben**
+
+Das ist exakt was "The Ick" und andere Competitor-Apps machen.
+
+### Betroffene Datei
+
+**`supabase/functions/trigger-scan/index.ts`** — Zwei Stellen:
+- `syncNewFollows`: Zeile 122-124 (Timestamp-Logik)
+- `syncNewFollowers`: Zeile 171-173 (Timestamp-Logik)
+
+Kein DB-Change nötig. Kein Frontend-Change nötig — die UI sortiert bereits nach `detected_at DESC`.
 
