@@ -1,9 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Lock, Users } from "lucide-react";
-import { useFollowEvents } from "@/hooks/useTrackedProfiles";
-import { useProfileFollowings } from "@/hooks/useProfileFollowings";
-import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { SpyIcon } from "@/components/SpyIcon";
@@ -11,7 +8,7 @@ import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
-import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,28 +84,6 @@ const Dashboard = () => {
     });
   }, [moveSpy, profiles]);
 
-  const { data: followerEvents = [] } = useFollowerEvents(spyProfile?.id);
-  const { data: spyFollowEvents = [] } = useFollowEvents(spyProfile?.id);
-  const { data: spyFollowings = [] } = useProfileFollowings(spyProfile?.id);
-
-  const suspicion = useMemo(() => {
-    if (!spyProfile) return null;
-    return analyzeSuspicion(
-      spyFollowEvents,
-      spyFollowings,
-      spyProfile.follower_count ?? 0,
-      spyProfile.following_count ?? 0,
-      t,
-    );
-  }, [spyFollowEvents, spyFollowings, spyProfile, t]);
-
-  const recentEvents = useMemo(() => {
-    const nonInitial = followerEvents.filter((e) => !e.is_initial);
-    const gained = nonInitial.filter((e) => e.event_type === "gained").length;
-    const lost = nonInitial.filter((e) => e.event_type === "lost").length;
-    const avatars = nonInitial.slice(0, 4);
-    return { gained, lost, avatars, total: nonInitial.length };
-  }, [followerEvents]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -273,36 +248,6 @@ const Dashboard = () => {
                             </div>
                           </div>
 
-                          {/* Suspicion indicator */}
-                          {suspicion && (
-                            <div className="flex items-center gap-2 mt-2.5 px-1">
-                              <div
-                                className="h-2.5 w-2.5 rounded-full shrink-0"
-                                style={{
-                                  backgroundColor: suspicion.overallScore <= 35
-                                    ? "hsl(145, 100%, 45%)"
-                                    : suspicion.overallScore <= 55
-                                      ? "hsl(50, 100%, 52%)"
-                                      : "hsl(338, 100%, 58%)",
-                                  boxShadow: `0 0 6px ${suspicion.overallScore <= 35 ? "hsl(145, 100%, 45%)" : suspicion.overallScore <= 55 ? "hsl(50, 100%, 52%)" : "hsl(338, 100%, 58%)"}`,
-                                }}
-                              />
-                              <span className="font-bold tabular-nums" style={{
-                                fontSize: "0.8125rem",
-                                color: suspicion.overallScore <= 35
-                                  ? "hsl(145, 80%, 40%)"
-                                  : suspicion.overallScore <= 55
-                                    ? "hsl(50, 80%, 40%)"
-                                    : "hsl(338, 80%, 50%)",
-                              }}>
-                                {suspicion.overallScore}%
-                              </span>
-                              <span className="text-muted-foreground font-medium" style={{ fontSize: "0.6875rem" }}>
-                                {suspicion.label}
-                              </span>
-                              <span style={{ fontSize: "0.75rem" }}>{suspicion.emoji}</span>
-                            </div>
-                          )}
                         </motion.button>
                       ) : (
                         <motion.div
