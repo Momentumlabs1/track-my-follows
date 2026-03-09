@@ -110,29 +110,29 @@ const Dashboard = () => {
 
           {isPro ? (
             <div className="relative rounded-[1.75rem] overflow-hidden min-h-[140px]" style={{ boxShadow: "0 8px 32px -8px rgba(0,0,0,0.25)" }}>
-              {/* LEFT — Dark Spy half */}
+              {/* LEFT — Light profile half */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: "rgba(255,255,255,0.92)",
+                  clipPath: "polygon(0 0, 68% 0, 48% 100%, 0 100%)",
+                }}
+              />
+
+              {/* RIGHT — Dark Spy half */}
               <div
                 className="absolute inset-0"
                 style={{
                   background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))",
-                  clipPath: "polygon(0 0, 62% 0, 42% 100%, 0 100%)",
+                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
                 }}
               />
               {/* Scan-line effect on dark side */}
               <div
                 className="absolute inset-0 pointer-events-none opacity-[0.06]"
                 style={{
-                  clipPath: "polygon(0 0, 62% 0, 42% 100%, 0 100%)",
+                  clipPath: "polygon(64% 0, 100% 0, 100% 100%, 44% 100%)",
                   backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)",
-                }}
-              />
-
-              {/* RIGHT — Light profile half */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08))",
-                  clipPath: "polygon(58% 0, 100% 0, 100% 100%, 38% 100%)",
                 }}
               />
 
@@ -140,26 +140,16 @@ const Dashboard = () => {
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: "linear-gradient(135deg, transparent 47%, rgba(255,255,255,0.2) 49%, rgba(255,255,255,0.2) 51%, transparent 53%)",
+                  background: "linear-gradient(135deg, transparent 53%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.08) 57%, transparent 59%)",
                 }}
               />
 
               {/* Content layer */}
               <div className="relative z-10 flex items-center p-4 gap-2">
-                {/* Spy side */}
-                <div className="flex flex-col items-center justify-center" style={{ width: "42%" }}>
-                  <SpyWidget
-                    spyProfile={spyProfile}
-                    onDragMoveSpy={handleMoveSpy}
-                    isDragging={isDragging}
-                    onDragStateChange={setIsDragging}
-                    onHoverProfileChange={setHoveredProfileId}
-                  />
-                </div>
-
-                {/* Profile side */}
+                {/* Profile side (left, 60%) */}
                 <motion.div
-                  className="flex-1 min-w-0"
+                  className="min-w-0"
+                  style={{ width: "60%" }}
                   animate={{
                     opacity: isDragging ? 0.3 : 1,
                     filter: isDragging ? "grayscale(1)" : "grayscale(0)",
@@ -177,7 +167,7 @@ const Dashboard = () => {
                         onClick={() => navigate(`/profile/${spyProfile.id}`)}
                         className="w-full text-start"
                       >
-                        <span className="text-primary-foreground/75 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
+                        <span className="text-foreground/50 font-bold uppercase tracking-wider block" style={{ fontSize: "0.5625rem" }}>
                           🔒 Aktuell im Fokus
                         </span>
                         <div className="flex items-center gap-2.5 mt-1.5">
@@ -187,26 +177,21 @@ const Dashboard = () => {
                             fallbackInitials={spyProfile.username}
                             size={44}
                           />
-                          <div className="min-w-0">
-                            <p className="font-bold text-primary-foreground truncate" style={{ fontSize: "0.9375rem" }}>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>
                               @{spyProfile.username}
                             </p>
-                            {(followerCount != null || followingCount != null) && (
-                              <p className="text-primary-foreground/70 mt-0.5" style={{ fontSize: "0.6875rem" }}>
-                                {followerCount != null && (
-                                  <>
-                                    <span className="font-semibold text-primary-foreground">{formatCount(followerCount)}</span> Follower
-                                  </>
-                                )}
-                                {followerCount != null && followingCount != null && (
-                                  <span className="text-primary-foreground/40"> · </span>
-                                )}
-                                {followingCount != null && (
-                                  <>
-                                    <span className="font-semibold text-primary-foreground">{formatCount(followingCount)}</span> Following
-                                  </>
-                                )}
-                              </p>
+                            {genderStats && genderStats.total > 0 && (
+                              <>
+                                <div className="flex h-1 w-full rounded-full overflow-hidden mt-1.5">
+                                  {genderStats.fPct > 0 && <div style={{ width: `${genderStats.fPct}%` }} className="bg-pink-500" />}
+                                  {genderStats.mPct > 0 && <div style={{ width: `${genderStats.mPct}%` }} className="bg-blue-500" />}
+                                  {genderStats.uPct > 0 && <div style={{ width: `${genderStats.uPct}%` }} className="bg-muted-foreground/30" />}
+                                </div>
+                                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.5625rem" }}>
+                                  ♀ {genderStats.fPct}% · ♂ {genderStats.mPct}%
+                                </p>
+                              </>
                             )}
                           </div>
                         </div>
@@ -218,16 +203,27 @@ const Dashboard = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <p className="font-bold text-primary-foreground" style={{ fontSize: "0.875rem" }}>
+                        <p className="font-bold text-foreground" style={{ fontSize: "0.875rem" }}>
                           {t("spy.assign_your_spy")}
                         </p>
-                        <p className="text-primary-foreground/70 mt-1" style={{ fontSize: "0.75rem" }}>
+                        <p className="text-muted-foreground mt-1" style={{ fontSize: "0.75rem" }}>
                           {t("spy.spy_description")}
                         </p>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </motion.div>
+
+                {/* Spy side (right, 40%) */}
+                <div className="flex flex-col items-center justify-center" style={{ width: "40%" }}>
+                  <SpyWidget
+                    spyProfile={spyProfile}
+                    onDragMoveSpy={handleMoveSpy}
+                    isDragging={isDragging}
+                    onDragStateChange={setIsDragging}
+                    onHoverProfileChange={setHoveredProfileId}
+                  />
+                </div>
               </div>
             </div>
           ) : (
