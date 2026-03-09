@@ -198,7 +198,7 @@ const Dashboard = () => {
                 >
                   {/* Label sits in the dark spy area, above the profile box */}
                   {spyProfile && (
-                    <p className="text-white/50 font-bold uppercase tracking-widest px-3 pt-1 pb-1" style={{ fontSize: "0.5625rem", letterSpacing: "0.1em" }}>
+                    <p className="text-white/50 font-bold uppercase tracking-widest px-3 pt-0.5 pb-0" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", lineHeight: 1.2 }}>
                       Spion angesetzt auf
                     </p>
                   )}
