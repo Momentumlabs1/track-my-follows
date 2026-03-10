@@ -281,9 +281,9 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.followers")}</p>
+            <p className="mt-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("dashboard.followers")}</p>
           </div>
-          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
+          <div className="native-card p-4 text-center">
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.following_count ?? 0)}
