@@ -239,9 +239,7 @@ const ProfileDetail = () => {
               className="flex items-center justify-center"
               style={{
                 width: 70, height: 70, borderRadius: 9999,
-                background: "rgba(255,255,255,0.06)",
-                backdropFilter: "blur(12px)",
-                border: "0.5px solid rgba(255,255,255,0.08)",
+                background: "#2C2C2E",
               }}
               animate={hasSpy ? { boxShadow: ["0 0 0px rgba(255,45,85,0)", "0 0 16px rgba(255,45,85,0.3)", "0 0 0px rgba(255,45,85,0)"] } : {}}
               transition={hasSpy ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
