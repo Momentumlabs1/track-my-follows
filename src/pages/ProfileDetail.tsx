@@ -437,7 +437,7 @@ const ProfileDetail = () => {
                   <GenderDistributionBar
                     femaleCount={femaleCount}
                     maleCount={maleCount}
-                    unknownCount={profile.gender_unknown_count ?? 0}
+                    unknownCount={unknownGenderCount}
                   />
                 )}
 
