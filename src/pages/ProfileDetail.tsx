@@ -325,8 +325,8 @@ const ProfileDetail = () => {
                 ♂ {maleCount}
               </span>
             </div>
-            <p style={{ fontSize: "0.6875rem", color: "#636366" }}>
-              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung")}
+            <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
+              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung basierend auf analysierten Accounts")}
             </p>
             {unknownGenderCount > 0 && (
               <p style={{ fontSize: "0.6875rem", color: "#48484A" }}>
