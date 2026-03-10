@@ -25,8 +25,8 @@ export interface SuspicionFactor {
 }
 
 export function analyzeSuspicion(
-  followEvents: Array<{ event_type: string; target_display_name?: string | null; detected_at: string }>,
-  profileFollowings: Array<{ following_display_name?: string | null }>,
+  followEvents: Array<{ event_type: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null }>,
+  profileFollowings: Array<{ following_display_name?: string | null; gender_tag?: string | null }>,
   followerCount: number,
   followingCount: number,
   t?: (key: string, opts?: Record<string, unknown>) => string,
@@ -43,10 +43,17 @@ export function analyzeSuspicion(
     : followEvents.filter((e) => e.event_type === "follow");
 
   for (const entry of allNames) {
-    const name = "following_display_name" in entry
-      ? (entry as { following_display_name?: string | null }).following_display_name
-      : (entry as { target_display_name?: string | null }).target_display_name;
-    const gender = detectGender(name);
+    // Prefer DB gender_tag, fallback to client-side detection
+    const dbTag = "gender_tag" in entry ? (entry as { gender_tag?: string | null }).gender_tag : null;
+    let gender: string;
+    if (dbTag === "female" || dbTag === "male") {
+      gender = dbTag;
+    } else {
+      const name = "following_display_name" in entry
+        ? (entry as { following_display_name?: string | null }).following_display_name
+        : (entry as { target_display_name?: string | null }).target_display_name;
+      gender = detectGender(name);
+    }
     if (gender === "female") femaleCount++;
     else if (gender === "male") maleCount++;
     else unknownCount++;
@@ -76,6 +83,7 @@ export function analyzeSuspicion(
   // 2. Recent follow activity (max 30)
   const recentFollows = followEvents.filter((e) => {
     if (e.event_type !== "follow") return false;
+    if (e.is_initial) return false;
     return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   }).length;
   const activityRate = followingCount > 0 ? (recentFollows / followingCount) * 100 : 0;
@@ -99,6 +107,7 @@ export function analyzeSuspicion(
   // 3. Follow/Unfollow churn (max 15)
   const recentUnfollows = followEvents.filter((e) => {
     if (e.event_type !== "unfollow") return false;
+    if (e.is_initial) return false;
     return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   }).length;
   const churnRate = recentFollows > 0 ? recentUnfollows / recentFollows : 0;
@@ -139,6 +148,7 @@ export function analyzeSuspicion(
   // 5. Night activity (max 5) - filtered to last 7 days
   const nightFollows = followEvents.filter((e) => {
     if (e.event_type !== "follow") return false;
+    if (e.is_initial) return false;
     if (Date.now() - new Date(e.detected_at).getTime() >= 7 * 24 * 60 * 60 * 1000) return false;
     const hour = new Date(e.detected_at).getHours();
     return hour >= 23 || hour <= 5;
