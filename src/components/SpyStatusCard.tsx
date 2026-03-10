@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { SpyIcon } from "@/components/SpyIcon";
 import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
 
 interface SpyStatusCardProps {
@@ -12,14 +13,16 @@ type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
 interface LevelConfig {
   key: SpyLevel;
   color: string;
+  bgTint: string;
+  borderTint: string;
   index: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { key: "gelassen", color: "hsl(142 71% 45%)", index: 0 },
-  { key: "aufmerksam", color: "hsl(45 100% 51%)", index: 1 },
-  { key: "wachsam", color: "hsl(30 100% 50%)", index: 2 },
-  { key: "alarmiert", color: "hsl(4 90% 58%)", index: 3 },
+  { key: "gelassen", color: "hsl(142 71% 45%)", bgTint: "hsl(142 71% 45% / 0.08)", borderTint: "hsl(142 71% 45% / 0.15)", index: 0 },
+  { key: "aufmerksam", color: "hsl(45 100% 51%)", bgTint: "hsl(45 100% 51% / 0.08)", borderTint: "hsl(45 100% 51% / 0.15)", index: 1 },
+  { key: "wachsam", color: "hsl(30 100% 50%)", bgTint: "hsl(30 100% 50% / 0.08)", borderTint: "hsl(30 100% 50% / 0.15)", index: 2 },
+  { key: "alarmiert", color: "hsl(4 90% 58%)", bgTint: "hsl(4 90% 58% / 0.08)", borderTint: "hsl(4 90% 58% / 0.15)", index: 3 },
 ];
 
 function getSpyLevel(score: number): SpyLevel {
@@ -56,18 +59,25 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="native-card p-5 mb-5"
+      transition={{ delay: 0.15 }}
+      className="rounded-2xl p-5 mb-5 border"
+      style={{
+        background: levelConfig.bgTint,
+        borderColor: levelConfig.borderTint,
+      }}
     >
-      {/* Title */}
-      <p className="text-muted-foreground mb-3" style={{ fontSize: "0.8125rem" }}>
-        {t("spy_status.title", "Dein Spy ist...")}
-      </p>
+      {/* Title row with SpyIcon */}
+      <div className="flex items-center gap-2 mb-3">
+        <SpyIcon size={24} />
+        <p className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
+          {t("spy_status.title", "Dein Spy ist...")}
+        </p>
+      </div>
 
       {/* Level label */}
       <p
         className="font-extrabold mb-1"
-        style={{ fontSize: "1.375rem", color: levelConfig.color, lineHeight: 1.2 }}
+        style={{ fontSize: "1.5rem", color: levelConfig.color, lineHeight: 1.2 }}
       >
         {labelMap[level]}
       </p>
@@ -91,9 +101,9 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
             key={l.key}
             className="flex-1 rounded-full"
             style={{
-              height: 4,
+              height: 6,
               background: l.index <= levelConfig.index ? levelConfig.color : "hsl(var(--border))",
-              opacity: l.index <= levelConfig.index ? 1 : 0.4,
+              opacity: l.index <= levelConfig.index ? 1 : 0.3,
               transition: "background 0.4s, opacity 0.4s",
             }}
           />
