@@ -1,0 +1,5 @@
+DELETE FROM follower_events WHERE profile_id = 'f64da3a4-1eaa-4ddc-9f61-d07c44a121cc';
+DELETE FROM follow_events WHERE tracked_profile_id = 'f64da3a4-1eaa-4ddc-9f61-d07c44a121cc';
+DELETE FROM profile_followings WHERE tracked_profile_id = 'f64da3a4-1eaa-4ddc-9f61-d07c44a121cc';
+DELETE FROM profile_followers WHERE tracked_profile_id = 'f64da3a4-1eaa-4ddc-9f61-d07c44a121cc';
+UPDATE tracked_profiles SET initial_scan_done = false, baseline_complete = false, last_scanned_at = NULL, last_following_count = NULL, last_follower_count = NULL, previous_following_count = NULL, previous_follower_count = NULL, total_follows_detected = 0, total_unfollows_detected = 0, total_scans_executed = 0, gender_female_count = 0, gender_male_count = 0, gender_unknown_count = 0, gender_sample_size = 0, pending_unfollow_hint = 0 WHERE id = 'f64da3a4-1eaa-4ddc-9f61-d07c44a121cc';
