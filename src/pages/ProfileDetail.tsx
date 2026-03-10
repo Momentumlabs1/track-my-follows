@@ -329,7 +329,7 @@ const ProfileDetail = () => {
               {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung basierend auf analysierten Accounts")}
             </p>
             {unknownGenderCount > 0 && (
-              <p style={{ fontSize: "0.6875rem", color: "#48484A" }}>
+              <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", opacity: 0.6 }}>
                 {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
               </p>
             )}
