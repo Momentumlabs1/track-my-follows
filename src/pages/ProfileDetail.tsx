@@ -270,67 +270,7 @@ const ProfileDetail = () => {
           </div>
         </div>
 
-        {/* ─── Gender Card — full width, bigger ─── */}
-        {showGender && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="native-card p-5 mt-3"
-            style={{ borderRadius: '16px' }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-extrabold" style={{ fontSize: '1.5rem', color: 'hsl(var(--primary))' }}>♀ {femalePct}%</span>
-              <span className="font-extrabold" style={{ fontSize: '1.5rem', color: 'hsl(var(--brand-blue))' }}>♂ {malePct}%</span>
-            </div>
-            <div className="h-3 rounded-full overflow-hidden flex" style={{ background: 'hsl(var(--muted))' }}>
-              <motion.div
-                className="h-full"
-                style={{ background: 'hsl(var(--primary))' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${femalePct}%` }}
-                transition={{ duration: 0.8 }}
-              />
-              <motion.div
-                className="h-full"
-                style={{ background: 'hsl(var(--brand-blue))' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${malePct}%` }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-              />
-            </div>
-            <p className="text-muted-foreground text-center mt-2" style={{ fontSize: '0.8125rem' }}>
-              {femaleCount} {t("gender.female", "Frauen")} · {maleCount} {t("gender.male", "Männer")}
-            </p>
-          </motion.div>
-        )}
-
-        {/* ─── Suspicion Level ─── */}
-        {suspicionAnalysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mt-3 relative"
-          >
-            {(!canUseStats || (!hasSpy && isPro)) && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-                {!isPro ? (
-                  <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                    <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-                  </button>
-                ) : (
-                  <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                    <SpyIcon size={14} /> {t("spy.spy_required")}
-                  </button>
-                )}
-              </div>
-            )}
-            <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-              <SuspicionMeter analysis={suspicionAnalysis} />
-            </div>
-          </motion.div>
-        )}
+        {/* Suspicion score moved to insights tab */}
       </motion.div>
 
       {/* ─── Banners ─── */}
