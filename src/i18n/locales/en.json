@@ -152,7 +152,9 @@
     "based_on": "Based on {{count}} detected names",
     "not_detected": "({{count}} not detected)",
     "safe": "Very Safe",
-    "suspicious": "Getting Suspicious",
+    "unauffaellig": "Inconspicuous",
+    "leicht_auffaellig": "Slightly noticeable",
+    "suspicious": "Suspicious",
     "verySuspicious": "Very Suspicious",
     "genderRatio": "Gender Ratio",
     "genderRatioDesc": "{{percent}}% female accounts",
@@ -164,7 +166,8 @@
     "followingFollowerRatioDesc": "Ratio: {{ratio}}x",
     "nightActivity": "Late Night Activity",
     "nightActivityDesc": "Following people between 11pm-5am",
-    "trend_4_weeks": "4 week trend"
+    "trend_4_weeks": "4 week trend",
+    "spy_report": "Spy Report"
   },
   "events": {
     "new_follower": "New follower",

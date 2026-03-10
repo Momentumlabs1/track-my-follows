@@ -428,9 +428,12 @@ const ProfileDetail = () => {
           </div>
         )}
 
-        {activeTab === "insights" && (
-          <div className="space-y-4">
-            {/* 7-Day Insights moved here */}
+        {activeTab === "insights" && (() => {
+          const trackingDays = Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000));
+          const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
+          const hasEnoughData = realEventCount >= 2;
+
+          return (
             <div className="relative">
               {(!canUseStats || (!hasSpy && isPro)) && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
@@ -445,15 +448,37 @@ const ProfileDetail = () => {
                   )}
                 </div>
               )}
-              <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-                <InsightsBubbleGrid followEvents={followEvents} followerEvents={followerEvents} profileFollowings={followings} profileCreatedAt={profile.created_at} />
+              <div className={`space-y-3 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
+                {/* 1. Gender distribution bar (all followings) */}
+                {showGender && (
+                  <GenderDistributionBar
+                    femaleCount={femaleCount}
+                    maleCount={maleCount}
+                    unknownCount={profile.gender_unknown_count ?? 0}
+                  />
+                )}
+
+                {/* 2. New follows bubbles */}
+                <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
+
+                {/* 3+4. Suspicion score + chips */}
+                {suspicionAnalysis && (
+                  <SuspicionScoreCard
+                    analysis={suspicionAnalysis}
+                    trackingDays={trackingDays}
+                    hasEnoughData={hasEnoughData}
+                  />
+                )}
+
+                {/* 5. Activity heatmap */}
+                <ActivityHeatmap events={followEvents} />
+
+                {/* 6. Weekly activity */}
+                <WeeklyActivityChart events={followEvents} />
               </div>
             </div>
-            <ActivityHeatmap events={followEvents} />
-            <GenderBreakdownChart events={followEvents} />
-            <WeeklyActivityChart events={followEvents} />
-          </div>
-        )}
+          );
+        })()}
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
