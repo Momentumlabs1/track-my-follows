@@ -108,17 +108,11 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
-  // Gender from followings
-  const { femaleCount, maleCount, unknownGenderCount } = useMemo(() => {
-    let f = 0, m = 0, u = 0;
-    for (const fw of followings) {
-      if (fw.gender_tag === "female") f++;
-      else if (fw.gender_tag === "male") m++;
-      else u++;
-    }
-    return { femaleCount: f, maleCount: m, unknownGenderCount: u };
-  }, [followings]);
-  const showGender = followings.length > 0 && (femaleCount + maleCount) > 0;
+  // Gender from DB aggregates (NOT frontend array)
+  const femaleCount = profile?.gender_female_count ?? 0;
+  const maleCount = profile?.gender_male_count ?? 0;
+  const unknownGenderCount = profile?.gender_unknown_count ?? 0;
+  const showGender = (femaleCount + maleCount) > 0;
 
   const handleScan = async () => {
     if (isFreeAndScanned) { showPaywall("scan"); return; }
