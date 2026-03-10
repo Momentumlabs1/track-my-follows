@@ -174,7 +174,6 @@ const ProfileDetail = () => {
     { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: displayFollowEvents.length, ...getTabLock("new_follows") },
     { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: displayFollowerEvents.length, ...getTabLock("new_followers") },
     { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
-    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, ...getTabLock("insights") },
   ];
 
   if (isLoading) {
