@@ -22,7 +22,6 @@ export interface SuspicionFactor {
   icon: string;
   simpleLabel: string;
   level: FactorLevel;
-  /** Raw value to display in chips (e.g. "65%", "18%") */
   displayValue: string;
 }
 
@@ -57,7 +56,6 @@ export function analyzeSuspicion(
   let unknownCount = 0;
 
   for (const ev of recentFollowEvents) {
-    // Priority: 1) profile_followings gender_tag, 2) event gender_tag, 3) detectGender fallback
     const fromFollowings = followingGenderMap.get(ev.target_username);
     let gender: string;
     if (fromFollowings) {
@@ -75,7 +73,7 @@ export function analyzeSuspicion(
   const totalKnown = femaleCount + maleCount;
   const femalePercent = totalKnown > 0 ? Math.round((femaleCount / totalKnown) * 100) : 50;
   let genderScore = 0;
-  if (totalKnown >= 3) { // min 3 known gender needed
+  if (totalKnown >= 3) {
     if (femalePercent > 80) genderScore = 40;
     else if (femalePercent > 70) genderScore = 30;
     else if (femalePercent > 60) genderScore = 20;
@@ -136,47 +134,22 @@ export function analyzeSuspicion(
     displayValue: `${Math.round(churnRate * 100)}%`,
   });
 
-  // ── 4. Following/Follower ratio (max 10) ──
+  // ── 4. Following/Follower ratio (max 15) ──
   const ratio = followerCount > 0 ? followingCount / followerCount : followingCount > 0 ? 5 : 1;
   let ratioScore = 0;
-  if (ratio > 3) ratioScore = 10;
-  else if (ratio > 2) ratioScore = 7;
-  else if (ratio > 1.5) ratioScore = 4;
-  const ratioLevel: FactorLevel = ratioScore >= 7 ? "danger" : ratioScore >= 4 ? "warning" : "safe";
+  if (ratio > 3) ratioScore = 15;
+  else if (ratio > 2) ratioScore = 10;
+  else if (ratio > 1.5) ratioScore = 5;
+  const ratioLevel: FactorLevel = ratioScore >= 10 ? "danger" : ratioScore >= 5 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.followingFollowerRatio"),
     description: tr("suspicion.followingFollowerRatioDesc", { ratio: ratio.toFixed(1) }),
     score: ratioScore,
-    maxScore: 10,
+    maxScore: 15,
     icon: "⚖️",
     simpleLabel: `${ratio.toFixed(1)}x`,
     level: ratioLevel,
     displayValue: `${ratio.toFixed(1)}x`,
-  });
-
-  // ── 5. Night activity (max 5) ──
-  const nightFollows = followEvents.filter((e) => {
-    if (e.event_type !== "follow" && e.event_type !== "new_following") return false;
-    if (e.is_initial) return false;
-    if (Date.now() - new Date(e.detected_at).getTime() >= SEVEN_DAYS) return false;
-    const hour = new Date(e.detected_at).getHours();
-    return hour >= 23 || hour <= 5;
-  }).length;
-  const nightRatio = recentFollows > 0 ? nightFollows / recentFollows : 0;
-  let nightScore = 0;
-  if (nightRatio > 0.5) nightScore = 5;
-  else if (nightRatio > 0.3) nightScore = 3;
-  else if (nightRatio > 0.1) nightScore = 1;
-  const nightLevel: FactorLevel = nightScore >= 5 ? "danger" : nightScore >= 1 ? "warning" : "safe";
-  factors.push({
-    name: tr("suspicion.nightActivity"),
-    description: tr("suspicion.nightActivityDesc"),
-    score: nightScore,
-    maxScore: 5,
-    icon: "🌙",
-    simpleLabel: `${Math.round(nightRatio * 100)}%`,
-    level: nightLevel,
-    displayValue: `${Math.round(nightRatio * 100)}%`,
   });
 
   const overallScore = Math.min(100, factors.reduce((sum, f) => sum + f.score, 0));

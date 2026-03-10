@@ -10,11 +10,8 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { GenderDistributionBar } from "@/components/GenderDistributionBar";
 import { NewFollowsBubbles } from "@/components/NewFollowsBubbles";
 import { SuspicionScoreCard } from "@/components/SuspicionScoreCard";
-import { ActivityHeatmap } from "@/components/ActivityHeatmap";
-import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +54,6 @@ const ProfileDetail = () => {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab || "new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
-  const [spyScanMenuOpen, setSpyScanMenuOpen] = useState(false);
   const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -74,8 +70,6 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
-  // Free users can see new_follows and new_followers without blur
-  const shouldBlurFollows = isPro ? false : false; // Free users see data unblurred for basic tabs
 
   const newFollowEvents = useMemo(() =>
     followEvents.filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial && (e as Record<string, unknown>).direction === "following")
@@ -113,7 +107,7 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
-  // Gender data from actual followings (not profile counters which may be 0)
+  // Gender from followings
   const { femaleCount, maleCount, unknownGenderCount } = useMemo(() => {
     let f = 0, m = 0, u = 0;
     for (const fw of followings) {
@@ -190,38 +184,32 @@ const ProfileDetail = () => {
     );
   }
 
+  const genderTotal = femaleCount + maleCount;
+  const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;
+  const malePct = genderTotal > 0 ? 100 - femalePct : 0;
+
   return (
     <div className="min-h-screen bg-background pb-28">
-      {/* ─── Header ─── */}
+      {/* ─── Navigation Bar ─── */}
       <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <span className="text-muted-foreground font-medium" style={{ fontSize: '0.875rem' }}>@{profile.username}</span>
         <div className="flex items-center">
-          {/* Spy icon in header — small, no glow */}
-          {hasSpy && (
-            <button
-              onClick={() => setSpyScanMenuOpen(true)}
-              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label={t("spy.your_spy", "Spion")}
-            >
-              <SpyIcon size={28} />
-            </button>
-          )}
-          <button onClick={handleScan} disabled={isScanning || profile.is_private} className="p-2 text-muted-foreground min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-30">
-            {isScanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
-          </button>
           <button onClick={handleDelete} className="p-2 -me-2 text-muted-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Trash2 className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* ─── Hero — always centered ─── */}
+      {/* ═══ BEREICH 1: HEADER ═══ */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-4 pb-6">
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative">
+
+        {/* Avatar + Spy side by side */}
+        <div className="flex items-center justify-center gap-6 mb-5">
+          {/* Profile avatar */}
+          <div className="flex flex-col items-center">
             {hasSpy ? (
               <div className="avatar-ring">
                 <div className="rounded-full bg-background p-[2px]">
@@ -232,47 +220,138 @@ const ProfileDetail = () => {
               <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
             )}
           </div>
-          <p className="text-foreground font-extrabold mt-3" style={{ fontSize: '1.375rem' }}>@{profile.username}</p>
-          {profile.display_name && <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{profile.display_name}</p>}
+
+          {/* Spy circle */}
+          <button
+            onClick={() => {
+              if (hasSpy) navigate("/spy");
+              else if (isPro) setMoveSpyOpen(true);
+              else showPaywall("spy");
+            }}
+            className="flex flex-col items-center gap-1.5"
+          >
+            <motion.div
+              className="flex items-center justify-center"
+              style={{
+                width: 70, height: 70, borderRadius: 9999,
+                background: "rgba(255,255,255,0.06)",
+                backdropFilter: "blur(12px)",
+                border: "0.5px solid rgba(255,255,255,0.08)",
+              }}
+              animate={hasSpy ? { boxShadow: ["0 0 0px rgba(255,45,85,0)", "0 0 16px rgba(255,45,85,0.3)", "0 0 0px rgba(255,45,85,0)"] } : {}}
+              transition={hasSpy ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
+            >
+              {hasSpy ? (
+                <SpyIcon size={32} />
+              ) : (
+                <Lock className="h-6 w-6 text-muted-foreground" style={{ opacity: 0.5 }} />
+              )}
+            </motion.div>
+            <span style={{ fontSize: "0.75rem", opacity: 0.5, color: "hsl(var(--foreground))" }}>
+              {hasSpy ? "Spy" : t("spy.assign_short", "Spy zuweisen")}
+            </span>
+          </button>
+        </div>
+
+        {/* Username + Bio */}
+        <div className="text-center mb-5">
+          <p className="text-foreground font-extrabold" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
+          {profile.display_name && <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.875rem', opacity: 0.6 }}>{profile.display_name}</p>}
           {hasSpy ? (
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center justify-center gap-1.5 mt-2">
               <span className="h-2 w-2 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
               <span className="text-brand-green font-semibold" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_active")}</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center justify-center gap-1.5 mt-2">
               <ScanStatus lastScannedAt={profile.last_scanned_at} />
             </div>
           )}
         </div>
 
-        {/* ─── Stats row ─── */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="native-card p-4 text-center" style={{ borderRadius: '16px' }}>
+        {/* Follower / Following stats */}
+        <div className="grid grid-cols-2 gap-4 mb-5">
+          <div
+            className="p-4 text-center"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(24px)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              borderRadius: "16px",
+            }}
+          >
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-extrabold text-foreground" style={{ fontSize: '2rem', lineHeight: 1.1 }}>{formatCount(profile.follower_count ?? 0)}</span>
+              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+                {formatCount(profile.follower_count ?? 0)}
+              </span>
               {followerDelta !== null && followerDelta !== 0 && (
-                <span className={`font-bold flex items-center ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
+                <span className={`font-bold ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
                   {followerDelta > 0 ? "+" : ""}{followerDelta}
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1 font-medium" style={{ fontSize: '0.8125rem' }}>{t("dashboard.followers")}</p>
+            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.followers")}</p>
           </div>
-          <div className="native-card p-4 text-center" style={{ borderRadius: '16px' }}>
+          <div
+            className="p-4 text-center"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(24px)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              borderRadius: "16px",
+            }}
+          >
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-extrabold text-foreground" style={{ fontSize: '2rem', lineHeight: 1.1 }}>{formatCount(profile.following_count ?? 0)}</span>
+              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+                {formatCount(profile.following_count ?? 0)}
+              </span>
               {followingDelta !== null && followingDelta !== 0 && (
-                <span className={`font-bold flex items-center ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
+                <span className={`font-bold ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
                   {followingDelta > 0 ? "+" : ""}{followingDelta}
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1 font-medium" style={{ fontSize: '0.8125rem' }}>{t("dashboard.following")}</p>
+            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.following")}</p>
           </div>
         </div>
 
-        {/* Suspicion score moved to insights tab */}
+        {/* Gender distribution bar */}
+        {showGender && (
+          <div>
+            <div className="flex items-center gap-3 mb-1.5">
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#FF2D55" }}>
+                ♀ {femaleCount}
+              </span>
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden flex" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <motion.div
+                  className="h-full"
+                  style={{ background: "#FF2D55", borderRadius: "3px 0 0 3px" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${femalePct}%` }}
+                  transition={{ duration: 0.8 }}
+                />
+                <motion.div
+                  className="h-full"
+                  style={{ background: "#007AFF", borderRadius: "0 3px 3px 0" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${malePct}%` }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                />
+              </div>
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#007AFF" }}>
+                ♂ {maleCount}
+              </span>
+            </div>
+            <p style={{ fontSize: "0.6875rem", opacity: 0.4, color: "hsl(var(--foreground))" }}>
+              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung")}
+            </p>
+            {unknownGenderCount > 0 && (
+              <p style={{ fontSize: "0.6875rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+                {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
+              </p>
+            )}
+          </div>
+        )}
       </motion.div>
 
       {/* ─── Banners ─── */}
@@ -302,9 +381,7 @@ const ProfileDetail = () => {
         </div>
       )}
 
-      {/* Old gender banner removed — gender is now shown in Insights tab */}
-
-      {/* ─── Tabs ─── */}
+      {/* ═══ BEREICH 2: TABS ═══ */}
       <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
         <div className="flex gap-2 w-max">
           {tabs.map((tab) => (
@@ -335,7 +412,7 @@ const ProfileDetail = () => {
         </div>
       </div>
 
-      {/* ─── Tab Content ─── */}
+      {/* ═══ BEREICH 3: TAB CONTENT ═══ */}
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
@@ -429,20 +506,11 @@ const ProfileDetail = () => {
                   )}
                 </div>
               )}
-              <div className={`space-y-3 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
-                {/* 1. Gender distribution bar (all followings) */}
-                {showGender && (
-                  <GenderDistributionBar
-                    femaleCount={femaleCount}
-                    maleCount={maleCount}
-                    unknownCount={unknownGenderCount}
-                  />
-                )}
-
-                {/* 2. New follows bubbles */}
+              <div className={`space-y-4 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
+                {/* 3A: Gender Bubbles */}
                 <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
 
-                {/* 3+4. Suspicion score + chips */}
+                {/* 3B: Suspicion Score Card with Chips */}
                 {suspicionAnalysis && (
                   <SuspicionScoreCard
                     analysis={suspicionAnalysis}
@@ -450,12 +518,6 @@ const ProfileDetail = () => {
                     hasEnoughData={hasEnoughData}
                   />
                 )}
-
-                {/* 5. Activity heatmap */}
-                <ActivityHeatmap events={followEvents} />
-
-                {/* 6. Weekly activity */}
-                <WeeklyActivityChart events={followEvents} />
               </div>
             </div>
           );
@@ -463,65 +525,6 @@ const ProfileDetail = () => {
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
-
-      {/* Spy Scan Actions Sheet */}
-      {hasSpy && spyScanMenuOpen && (
-        <div className="fixed inset-0 z-50" onClick={() => setSpyScanMenuOpen(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl p-6 pb-[calc(env(safe-area-inset-bottom)+24px)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-5" />
-            <div className="flex items-center gap-3 mb-5">
-              <SpyIcon size={40} />
-              <div>
-                <p className="font-bold text-foreground" style={{ fontSize: '1rem' }}>{profile.spy_name || t("spy.default_name", "Spion 🕵️")}</p>
-                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("spy.scan_actions_subtitle", "Wähle eine Aktion")}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => { setSpyScanMenuOpen(false); handleScan(); }}
-                disabled={isScanning || profile.is_private}
-                className="w-full native-card p-4 flex items-center gap-3 text-start disabled:opacity-40"
-              >
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <RefreshCw className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.push_scan", "Push-Scan")}</p>
-                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("spy.push_scan_desc", "Sofortiger Following + Follower Scan")}</p>
-                </div>
-                <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                  {profile.push_scans_today ?? 0}/4
-                </span>
-              </button>
-
-              <button
-                onClick={() => { setSpyScanMenuOpen(false); setActiveTab("unfollowed"); tabsRef.current?.scrollIntoView({ behavior: "smooth" }); }}
-                className="w-full native-card p-4 flex items-center gap-3 text-start"
-              >
-                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <span style={{ fontSize: '1.125rem' }}>🔍</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.unfollow_check", "Entfolger aufdecken")}</p>
-                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("spy.unfollow_check_desc", "Wer hat entfolgt? (1x/Tag)")}</p>
-                </div>
-                <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                  {profile.unfollow_scans_today ?? 0}/2
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };
