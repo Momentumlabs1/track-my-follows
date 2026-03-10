@@ -10,11 +10,11 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { InsightsBubbleGrid } from "@/components/InsightsBubbleGrid";
+import { GenderDistributionBar } from "@/components/GenderDistributionBar";
+import { NewFollowsBubbles } from "@/components/NewFollowsBubbles";
+import { SuspicionScoreCard } from "@/components/SuspicionScoreCard";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
-import { GenderBreakdownChart } from "@/components/GenderBreakdownChart";
 import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
-import { SuspicionMeter } from "@/components/SuspicionMeter";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { supabase } from "@/integrations/supabase/client";
