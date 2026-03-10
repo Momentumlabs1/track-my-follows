@@ -10,11 +10,11 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { InsightsBubbleGrid } from "@/components/InsightsBubbleGrid";
+import { GenderDistributionBar } from "@/components/GenderDistributionBar";
+import { NewFollowsBubbles } from "@/components/NewFollowsBubbles";
+import { SuspicionScoreCard } from "@/components/SuspicionScoreCard";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
-import { GenderBreakdownChart } from "@/components/GenderBreakdownChart";
 import { WeeklyActivityChart } from "@/components/WeeklyActivityChart";
-import { SuspicionMeter } from "@/components/SuspicionMeter";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -270,67 +270,7 @@ const ProfileDetail = () => {
           </div>
         </div>
 
-        {/* ─── Gender Card — full width, bigger ─── */}
-        {showGender && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="native-card p-5 mt-3"
-            style={{ borderRadius: '16px' }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-extrabold" style={{ fontSize: '1.5rem', color: 'hsl(var(--primary))' }}>♀ {femalePct}%</span>
-              <span className="font-extrabold" style={{ fontSize: '1.5rem', color: 'hsl(var(--brand-blue))' }}>♂ {malePct}%</span>
-            </div>
-            <div className="h-3 rounded-full overflow-hidden flex" style={{ background: 'hsl(var(--muted))' }}>
-              <motion.div
-                className="h-full"
-                style={{ background: 'hsl(var(--primary))' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${femalePct}%` }}
-                transition={{ duration: 0.8 }}
-              />
-              <motion.div
-                className="h-full"
-                style={{ background: 'hsl(var(--brand-blue))' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${malePct}%` }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-              />
-            </div>
-            <p className="text-muted-foreground text-center mt-2" style={{ fontSize: '0.8125rem' }}>
-              {femaleCount} {t("gender.female", "Frauen")} · {maleCount} {t("gender.male", "Männer")}
-            </p>
-          </motion.div>
-        )}
-
-        {/* ─── Suspicion Level ─── */}
-        {suspicionAnalysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mt-3 relative"
-          >
-            {(!canUseStats || (!hasSpy && isPro)) && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-                {!isPro ? (
-                  <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                    <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-                  </button>
-                ) : (
-                  <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                    <SpyIcon size={14} /> {t("spy.spy_required")}
-                  </button>
-                )}
-              </div>
-            )}
-            <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-              <SuspicionMeter analysis={suspicionAnalysis} />
-            </div>
-          </motion.div>
-        )}
+        {/* Suspicion score moved to insights tab */}
       </motion.div>
 
       {/* ─── Banners ─── */}
@@ -488,9 +428,12 @@ const ProfileDetail = () => {
           </div>
         )}
 
-        {activeTab === "insights" && (
-          <div className="space-y-4">
-            {/* 7-Day Insights moved here */}
+        {activeTab === "insights" && (() => {
+          const trackingDays = Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000));
+          const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
+          const hasEnoughData = realEventCount >= 2;
+
+          return (
             <div className="relative">
               {(!canUseStats || (!hasSpy && isPro)) && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
@@ -505,15 +448,37 @@ const ProfileDetail = () => {
                   )}
                 </div>
               )}
-              <div className={(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}>
-                <InsightsBubbleGrid followEvents={followEvents} followerEvents={followerEvents} profileFollowings={followings} profileCreatedAt={profile.created_at} />
+              <div className={`space-y-3 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
+                {/* 1. Gender distribution bar (all followings) */}
+                {showGender && (
+                  <GenderDistributionBar
+                    femaleCount={femaleCount}
+                    maleCount={maleCount}
+                    unknownCount={profile.gender_unknown_count ?? 0}
+                  />
+                )}
+
+                {/* 2. New follows bubbles */}
+                <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
+
+                {/* 3+4. Suspicion score + chips */}
+                {suspicionAnalysis && (
+                  <SuspicionScoreCard
+                    analysis={suspicionAnalysis}
+                    trackingDays={trackingDays}
+                    hasEnoughData={hasEnoughData}
+                  />
+                )}
+
+                {/* 5. Activity heatmap */}
+                <ActivityHeatmap events={followEvents} />
+
+                {/* 6. Weekly activity */}
+                <WeeklyActivityChart events={followEvents} />
               </div>
             </div>
-            <ActivityHeatmap events={followEvents} />
-            <GenderBreakdownChart events={followEvents} />
-            <WeeklyActivityChart events={followEvents} />
-          </div>
-        )}
+          );
+        })()}
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />

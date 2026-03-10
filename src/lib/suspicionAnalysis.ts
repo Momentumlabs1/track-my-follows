@@ -22,37 +22,50 @@ export interface SuspicionFactor {
   icon: string;
   simpleLabel: string;
   level: FactorLevel;
+  /** Raw value to display in chips (e.g. "65%", "18%") */
+  displayValue: string;
 }
 
 export function analyzeSuspicion(
-  followEvents: Array<{ event_type: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null }>,
-  profileFollowings: Array<{ following_display_name?: string | null; gender_tag?: string | null }>,
+  followEvents: Array<{ event_type: string; target_username: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null; gender_tag?: string | null }>,
+  profileFollowings: Array<{ following_username: string; following_display_name?: string | null; gender_tag?: string | null }>,
   followerCount: number,
   followingCount: number,
   t?: (key: string, opts?: Record<string, unknown>) => string,
 ): SuspicionBreakdown {
   const tr = t || ((key: string) => key);
   const factors: SuspicionFactor[] = [];
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
-  // 1. Gender ratio (max 40)
+  // Build a lookup map from profile_followings for gender matching
+  const followingGenderMap = new Map<string, string>();
+  for (const f of profileFollowings) {
+    if (f.gender_tag === "female" || f.gender_tag === "male") {
+      followingGenderMap.set(f.following_username, f.gender_tag);
+    }
+  }
+
+  // ── 1. Gender ratio (max 40) — based on NEW follows in last 7 days only ──
+  const recentFollowEvents = followEvents.filter((e) => {
+    if (e.event_type !== "follow" && e.event_type !== "new_following") return false;
+    if (e.is_initial) return false;
+    return Date.now() - new Date(e.detected_at).getTime() < SEVEN_DAYS;
+  });
+
   let femaleCount = 0;
   let maleCount = 0;
   let unknownCount = 0;
-  const allNames = profileFollowings.length > 0
-    ? profileFollowings
-    : followEvents.filter((e) => e.event_type === "follow");
 
-  for (const entry of allNames) {
-    // Prefer DB gender_tag, fallback to client-side detection
-    const dbTag = "gender_tag" in entry ? (entry as { gender_tag?: string | null }).gender_tag : null;
+  for (const ev of recentFollowEvents) {
+    // Priority: 1) profile_followings gender_tag, 2) event gender_tag, 3) detectGender fallback
+    const fromFollowings = followingGenderMap.get(ev.target_username);
     let gender: string;
-    if (dbTag === "female" || dbTag === "male") {
-      gender = dbTag;
+    if (fromFollowings) {
+      gender = fromFollowings;
+    } else if (ev.gender_tag === "female" || ev.gender_tag === "male") {
+      gender = ev.gender_tag;
     } else {
-      const name = "following_display_name" in entry
-        ? (entry as { following_display_name?: string | null }).following_display_name
-        : (entry as { target_display_name?: string | null }).target_display_name;
-      gender = detectGender(name);
+      gender = detectGender(ev.target_display_name);
     }
     if (gender === "female") femaleCount++;
     else if (gender === "male") maleCount++;
@@ -62,37 +75,32 @@ export function analyzeSuspicion(
   const totalKnown = femaleCount + maleCount;
   const femalePercent = totalKnown > 0 ? Math.round((femaleCount / totalKnown) * 100) : 50;
   let genderScore = 0;
-  if (totalKnown >= 5) {
+  if (totalKnown >= 3) { // min 3 known gender needed
     if (femalePercent > 80) genderScore = 40;
     else if (femalePercent > 70) genderScore = 30;
     else if (femalePercent > 60) genderScore = 20;
     else if (femalePercent > 55) genderScore = 10;
   }
-  const genderSimple = femalePercent > 70 ? tr("simple.mostly_women") : femalePercent < 40 ? tr("simple.mostly_men") : tr("simple.balanced");
   const genderLevel: FactorLevel = genderScore >= 30 ? "danger" : genderScore >= 10 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.genderRatio"),
     description: tr("suspicion.genderRatioDesc", { percent: femalePercent }),
     score: genderScore,
     maxScore: 40,
-    icon: "👩",
-    simpleLabel: genderSimple,
+    icon: "♀",
+    simpleLabel: `${femalePercent}%`,
     level: genderLevel,
+    displayValue: totalKnown >= 3 ? `${femalePercent}%` : "–",
   });
 
-  // 2. Recent follow activity (max 30)
-  const recentFollows = followEvents.filter((e) => {
-    if (e.event_type !== "follow") return false;
-    if (e.is_initial) return false;
-    return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
-  }).length;
+  // ── 2. Recent follow activity (max 30) ──
+  const recentFollows = recentFollowEvents.length;
   const activityRate = followingCount > 0 ? (recentFollows / followingCount) * 100 : 0;
   let activityScore = 0;
   if (activityRate > 10) activityScore = 30;
   else if (activityRate > 5) activityScore = 20;
   else if (activityRate > 2) activityScore = 10;
   else if (activityRate > 0.5) activityScore = 5;
-  const activitySimple = activityScore >= 20 ? tr("simple.very_active", { count: recentFollows }) : activityScore >= 5 ? tr("simple.normal_activity") : tr("simple.low_activity");
   const activityLevel: FactorLevel = activityScore >= 20 ? "danger" : activityScore >= 5 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.followActivity"),
@@ -100,22 +108,22 @@ export function analyzeSuspicion(
     score: activityScore,
     maxScore: 30,
     icon: "📈",
-    simpleLabel: activitySimple,
+    simpleLabel: `${Math.round(activityRate)}%`,
     level: activityLevel,
+    displayValue: `${Math.round(activityRate)}%`,
   });
 
-  // 3. Follow/Unfollow churn (max 15)
+  // ── 3. Follow/Unfollow churn (max 15) ──
   const recentUnfollows = followEvents.filter((e) => {
-    if (e.event_type !== "unfollow") return false;
+    if (e.event_type !== "unfollow" && e.event_type !== "unfollowed") return false;
     if (e.is_initial) return false;
-    return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
+    return Date.now() - new Date(e.detected_at).getTime() < SEVEN_DAYS;
   }).length;
   const churnRate = recentFollows > 0 ? recentUnfollows / recentFollows : 0;
   let churnScore = 0;
   if (churnRate > 0.5) churnScore = 15;
   else if (churnRate > 0.3) churnScore = 10;
   else if (churnRate > 0.1) churnScore = 5;
-  const churnSimple = churnScore >= 10 ? tr("simple.high_churn") : churnScore >= 5 ? tr("simple.some_churn") : tr("simple.no_churn");
   const churnLevel: FactorLevel = churnScore >= 10 ? "danger" : churnScore >= 5 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.followUnfollow"),
@@ -123,17 +131,17 @@ export function analyzeSuspicion(
     score: churnScore,
     maxScore: 15,
     icon: "🔄",
-    simpleLabel: churnSimple,
+    simpleLabel: `${Math.round(churnRate * 100)}%`,
     level: churnLevel,
+    displayValue: `${Math.round(churnRate * 100)}%`,
   });
 
-  // 4. Following/Follower ratio (max 10)
+  // ── 4. Following/Follower ratio (max 10) ──
   const ratio = followerCount > 0 ? followingCount / followerCount : followingCount > 0 ? 5 : 1;
   let ratioScore = 0;
   if (ratio > 3) ratioScore = 10;
   else if (ratio > 2) ratioScore = 7;
   else if (ratio > 1.5) ratioScore = 4;
-  const ratioSimple = ratioScore >= 7 ? tr("simple.high_ratio") : tr("simple.normal_ratio");
   const ratioLevel: FactorLevel = ratioScore >= 7 ? "danger" : ratioScore >= 4 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.followingFollowerRatio"),
@@ -141,15 +149,16 @@ export function analyzeSuspicion(
     score: ratioScore,
     maxScore: 10,
     icon: "⚖️",
-    simpleLabel: ratioSimple,
+    simpleLabel: `${ratio.toFixed(1)}x`,
     level: ratioLevel,
+    displayValue: `${ratio.toFixed(1)}x`,
   });
 
-  // 5. Night activity (max 5) - filtered to last 7 days
+  // ── 5. Night activity (max 5) ──
   const nightFollows = followEvents.filter((e) => {
-    if (e.event_type !== "follow") return false;
+    if (e.event_type !== "follow" && e.event_type !== "new_following") return false;
     if (e.is_initial) return false;
-    if (Date.now() - new Date(e.detected_at).getTime() >= 7 * 24 * 60 * 60 * 1000) return false;
+    if (Date.now() - new Date(e.detected_at).getTime() >= SEVEN_DAYS) return false;
     const hour = new Date(e.detected_at).getHours();
     return hour >= 23 || hour <= 5;
   }).length;
@@ -158,7 +167,6 @@ export function analyzeSuspicion(
   if (nightRatio > 0.5) nightScore = 5;
   else if (nightRatio > 0.3) nightScore = 3;
   else if (nightRatio > 0.1) nightScore = 1;
-  const nightSimple = nightScore >= 5 ? tr("simple.lots_night") : nightScore >= 1 ? tr("simple.some_night") : tr("simple.no_night");
   const nightLevel: FactorLevel = nightScore >= 5 ? "danger" : nightScore >= 1 ? "warning" : "safe";
   factors.push({
     name: tr("suspicion.nightActivity"),
@@ -166,16 +174,17 @@ export function analyzeSuspicion(
     score: nightScore,
     maxScore: 5,
     icon: "🌙",
-    simpleLabel: nightSimple,
+    simpleLabel: `${Math.round(nightRatio * 100)}%`,
     level: nightLevel,
+    displayValue: `${Math.round(nightRatio * 100)}%`,
   });
 
   const overallScore = Math.min(100, factors.reduce((sum, f) => sum + f.score, 0));
 
   let label: string;
   let emoji: string;
-  if (overallScore <= 15) { label = tr("suspicion.safe"); emoji = "😇"; }
-  else if (overallScore <= 35) { label = tr("suspicion.safe"); emoji = "😊"; }
+  if (overallScore <= 15) { label = tr("suspicion.unauffaellig"); emoji = "😇"; }
+  else if (overallScore <= 35) { label = tr("suspicion.leicht_auffaellig"); emoji = "😊"; }
   else if (overallScore <= 55) { label = tr("suspicion.suspicious"); emoji = "🤨"; }
   else if (overallScore <= 75) { label = tr("suspicion.verySuspicious"); emoji = "😬"; }
   else { label = "Red Flag!"; emoji = "🚩"; }

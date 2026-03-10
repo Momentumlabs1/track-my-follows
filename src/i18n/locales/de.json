@@ -152,6 +152,8 @@
     "based_on": "Basierend auf {{count}} erkannten Namen",
     "not_detected": "({{count}} nicht erkannt)",
     "safe": "Alles sicher",
+    "unauffaellig": "Unauffällig",
+    "leicht_auffaellig": "Leicht auffällig",
     "suspicious": "Verdächtig",
     "verySuspicious": "Sehr verdächtig",
     "genderRatio": "Gender-Ratio",
@@ -164,7 +166,8 @@
     "followingFollowerRatioDesc": "Ratio: {{ratio}}x",
     "nightActivity": "Nachtaktivität",
     "nightActivityDesc": "Folgt Personen zwischen 23-05 Uhr",
-    "trend_4_weeks": "4 Wochen Trend"
+    "trend_4_weeks": "4 Wochen Trend",
+    "spy_report": "Spion-Bericht"
   },
   "events": {
     "new_follower": "Neuer Follower",
