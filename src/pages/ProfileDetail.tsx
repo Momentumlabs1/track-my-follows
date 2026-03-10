@@ -418,7 +418,7 @@ const ProfileDetail = () => {
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
-            <EventList events={displayFollowEvents.map(mapFollowEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollows ? timeAgo : timeAgo}
+            <EventList events={displayFollowEvents.map(mapFollowEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollows ? () => t("initial_scan_label", "Beim Start erkannt") : timeAgo}
               emptyIcon="✨" emptyText={t("profile_detail.no_new_events")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
               sectionTitle={!onlyInitialFollows && initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined} />
             {!onlyInitialFollows && initialFollowEvents.length > 0 && (
@@ -432,7 +432,7 @@ const ProfileDetail = () => {
 
         {activeTab === "new_followers" && (
           <div className="space-y-4">
-            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? timeAgo : timeAgo}
+            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? () => t("initial_scan_label", "Beim Start erkannt") : timeAgo}
               emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
               sectionTitle={!onlyInitialFollowers && initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
             {!onlyInitialFollowers && initialFollowerEventsList.length > 0 && (

@@ -1,44 +1,39 @@
 
 
-## Plan: Initial-Events direkt als Hauptliste anzeigen
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Was sich ändert
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-**Datei: `src/pages/ProfileDetail.tsx`** — nur diese Datei wird geändert.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-### Änderungen
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-1. **Initial-Events Sortierung**: Statt `detected_at` DESC wird die DB-Insert-Reihenfolge beibehalten. Da die Events mit sequenziellen Timestamps (`now - i*1s`) eingefügt werden, bleibt die Sortierung nach `detected_at` DESC korrekt — sie entspricht der API-Reihenfolge. Keine Änderung nötig.
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-2. **Hauptliste bei nur Initial-Events**: Bereits implementiert (Zeilen 158-161, `displayFollowEvents` / `displayFollowerEvents`). Das funktioniert schon.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-3. **Zeitanzeige bei Initial-Events**: Wenn `onlyInitialFollows` oder `onlyInitialFollowers`, wird `timeAgo` durch eine Funktion ersetzt die "Beim Start erkannt" zurückgibt statt "vor X Minuten". Aktuell wird `timeAgo` (echte Zeitdifferenz) auch für Initial-Events verwendet — das erzeugt die Fake-Chronologie.
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-4. **Gemischte Liste (echte + initial)**: Echte Events oben, darunter Initial-Events als "Beim Start erkannt" Sektion — das ist bereits so implementiert (Zeilen 424-429, 438-443).
-
-5. **Tab Counter**: Bereits korrekt — `displayFollowEvents.length` wird verwendet (Zeile 164-165).
-
-### Konkrete Code-Änderungen
-
-**Zeilen 421-422** — "Folgt neu" Tab: Bei `onlyInitialFollows` eine andere `timeAgo`-Funktion übergeben die `"Beim Start erkannt"` zurückgibt:
-```tsx
-<EventList 
-  events={displayFollowEvents.map(mapFollowEvent)} 
-  shouldBlur={false} 
-  showPaywall={showPaywall} 
-  timeAgo={onlyInitialFollows ? () => t("initial_scan_label", "Beim Start erkannt") : timeAgo}
-  ...
-```
-
-**Zeilen 435-436** — "Neue Follower" Tab: Gleiches Prinzip:
-```tsx
-<EventList 
-  events={displayFollowerEvents.map(mapFollowerEvent)} 
-  shouldBlur={false} 
-  showPaywall={showPaywall} 
-  timeAgo={onlyInitialFollowers ? () => t("initial_scan_label", "Beim Start erkannt") : timeAgo}
-  ...
-```
-
-Das ist alles. Die restliche Logik (Counter, gemischte Listen, Sektionen) funktioniert bereits korrekt.
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
