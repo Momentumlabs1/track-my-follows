@@ -10,6 +10,8 @@ export interface SuspicionBreakdown {
   emoji: string;
   factors: SuspicionFactor[];
   genderStats: { female: number; male: number; unknown: number; total: number; femalePercent: number };
+  spyLevel: "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
+  spyLevelDescription: string;
 }
 
 export type FactorLevel = "safe" | "warning" | "danger";
