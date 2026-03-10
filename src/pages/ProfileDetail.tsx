@@ -180,13 +180,17 @@ const ProfileDetail = () => {
     );
   }
 
-  // Gender data from profile
-  const femaleCount = profile.gender_female_count ?? 0;
-  const maleCount = profile.gender_male_count ?? 0;
-  const genderTotal = femaleCount + maleCount;
-  const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;
-  const malePct = genderTotal > 0 ? 100 - femalePct : 0;
-  const showGender = (profile.following_count ?? 0) > 0 && genderTotal > 0;
+  // Gender data from actual followings (not profile counters which may be 0)
+  const { femaleCount, maleCount, unknownGenderCount } = useMemo(() => {
+    let f = 0, m = 0, u = 0;
+    for (const fw of followings) {
+      if (fw.gender_tag === "female") f++;
+      else if (fw.gender_tag === "male") m++;
+      else u++;
+    }
+    return { femaleCount: f, maleCount: m, unknownGenderCount: u };
+  }, [followings]);
+  const showGender = followings.length > 0 && (femaleCount + maleCount) > 0;
 
   return (
     <div className="min-h-screen bg-background pb-28">
