@@ -424,7 +424,7 @@ const ProfileDetail = () => {
             {!onlyInitialFollows && initialFollowEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
-                <EventList events={initialFollowEvents.map(e => ({ ...mapFollowEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="✨" emptyText="" emptySubText="" />
+                <EventList events={initialFollowEvents.map(e => ({ ...mapFollowEvent(e), isRead: true }))} shouldBlur={false} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="✨" emptyText="" emptySubText="" />
               </div>
             )}
           </div>
