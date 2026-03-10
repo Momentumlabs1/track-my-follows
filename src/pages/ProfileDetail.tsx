@@ -359,6 +359,7 @@ const ProfileDetail = () => {
             </div>
           )}
           <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+            <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
             <SpyFindings
               followEvents={followEvents}
               followerEvents={followerEvents}
@@ -367,7 +368,6 @@ const ProfileDetail = () => {
               followingCount={profile.following_count ?? 0}
             />
             <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
-            <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
           </div>
         </div>
       </motion.div>
