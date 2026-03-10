@@ -336,7 +336,7 @@ const ProfileDetail = () => {
           </div>
         )}
 
-        {/* ═══ ANALYSIS: Bubbles + Score (above tabs) ═══ */}
+        {/* ═══ ANALYSIS: Spy Findings + Weekly + Status ═══ */}
         <div className="relative mb-2">
           {insightsLocked && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
@@ -351,11 +351,16 @@ const ProfileDetail = () => {
               )}
             </div>
           )}
-          <div className={`space-y-4 ${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-            <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
-            {suspicionAnalysis && (
-              <SuspicionScoreCard analysis={suspicionAnalysis} trackingDays={trackingDays} hasEnoughData={hasEnoughData} />
-            )}
+          <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+            <SpyFindings
+              followEvents={followEvents}
+              followerEvents={followerEvents}
+              profileFollowings={followings}
+              followerCount={profile.follower_count ?? 0}
+              followingCount={profile.following_count ?? 0}
+            />
+            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+            <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
           </div>
         </div>
       </motion.div>
