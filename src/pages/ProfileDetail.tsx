@@ -108,16 +108,14 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
-  // Gender from DB aggregates, fallback to followings array
-  let femaleCount = profile?.gender_female_count ?? 0;
-  let maleCount = profile?.gender_male_count ?? 0;
-  let unknownGenderCount = profile?.gender_unknown_count ?? 0;
-  if (femaleCount + maleCount + unknownGenderCount === 0 && followings.length > 0) {
-    for (const f of followings) {
-      if (f.gender_tag === 'female') femaleCount++;
-      else if (f.gender_tag === 'male') maleCount++;
-      else unknownGenderCount++;
-    }
+  // Gender ALWAYS from profileFollowings (all current followings)
+  let femaleCount = 0;
+  let maleCount = 0;
+  let unknownGenderCount = 0;
+  for (const f of followings) {
+    if (f.gender_tag === 'female') femaleCount++;
+    else if (f.gender_tag === 'male') maleCount++;
+    else unknownGenderCount++;
   }
   const showGender = (femaleCount + maleCount) > 0;
 
@@ -305,81 +303,82 @@ const ProfileDetail = () => {
           </div>
         </div>
 
-        {/* Gender distribution bar */}
+        {/* ═══ BLOCK 2: Gender distribution — from profileFollowings ═══ */}
         {showGender && (
-          <div className="mb-5">
-            <div className="flex items-center gap-3 mb-1.5">
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#FF2D55" }}>
-                ♀ {femaleCount}
-              </span>
-              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "hsl(var(--card-elevated))" }}>
-                <motion.div
-                  className="h-full"
-                  style={{ background: "#FF2D55", borderRadius: "4px 0 0 4px" }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${femalePct}%` }}
-                  transition={{ duration: 0.8 }}
-                />
-                <motion.div
-                  className="h-full"
-                  style={{ background: "#007AFF", borderRadius: "0 4px 4px 0" }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${malePct}%` }}
-                  transition={{ duration: 0.8, delay: 0.1 }}
-                />
+          <div className="mb-2">
+            <p className="section-header mb-3">{t("insights_new.gender_subtitle", "Geschlechterverteilung")}</p>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: "2rem", fontWeight: 900, color: "#FF2D55" }}>{femaleCount}</span>
+                <span style={{ fontSize: "1.25rem", color: "#FF2D55" }}>♀</span>
+                <span className="text-muted-foreground text-sm ml-1">{femalePct}%</span>
               </div>
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#007AFF" }}>
-                ♂ {maleCount}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm mr-1">{malePct}%</span>
+                <span style={{ fontSize: "1.25rem", color: "#007AFF" }}>♂</span>
+                <span style={{ fontSize: "2rem", fontWeight: 900, color: "#007AFF" }}>{maleCount}</span>
+              </div>
             </div>
-            <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
-              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung basierend auf analysierten Accounts")}
-            </p>
+            <div className="h-3 rounded-full overflow-hidden flex">
+              <motion.div
+                style={{ background: "#FF2D55", transition: "width 0.6s ease" }}
+                className="h-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${femalePct}%` }}
+                transition={{ duration: 0.8 }}
+              />
+              <motion.div
+                style={{ background: "#007AFF", transition: "width 0.6s ease" }}
+                className="h-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${malePct}%` }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+              />
+            </div>
             {unknownGenderCount > 0 && (
-              <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", opacity: 0.6 }}>
-                {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
+              <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.6875rem" }}>
+                + {unknownGenderCount} {t("insights_new.not_identifiable", "nicht erkannt")}
               </p>
             )}
           </div>
         )}
-
-        {/* ═══ ANALYSIS SECTIONS ═══ */}
-        <div className="relative mb-2">
-          {insightsLocked && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-              {!isPro ? (
-                <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                  <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-                </button>
-              ) : (
-                <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                  <SpyIcon size={14} /> {t("spy.spy_required")}
-                </button>
-              )}
-            </div>
-          )}
-          <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-            {/* 1. Spy Status — Hero, no card */}
-            <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
-
-            <div className="border-t border-border/20 mx-4 my-4" />
-
-            {/* 2. Weekly Gender Bubbles */}
-            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
-
-            <div className="border-t border-border/20 mx-4 my-4" />
-
-            {/* 3. Spy Findings — horizontal scroll chips */}
-            <SpyFindings
-              followEvents={followEvents}
-              followerEvents={followerEvents}
-              profileFollowings={followings}
-              followerCount={profile.follower_count ?? 0}
-              followingCount={profile.following_count ?? 0}
-            />
-          </div>
-        </div>
       </motion.div>
+
+      {/* ═══ ANALYSIS SECTIONS ═══ */}
+      <div className="px-5 relative mb-2">
+        {insightsLocked && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
+            {!isPro ? (
+              <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
+              </button>
+            ) : (
+              <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                <SpyIcon size={14} /> {t("spy.spy_required")}
+              </button>
+            )}
+          </div>
+        )}
+        <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+          {/* Block 3: Spy Status — Hero */}
+          <div className="border-t border-border/20 my-5" />
+          <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
+
+          {/* Block 4: Spy Findings — 4 unique cards */}
+          <div className="border-t border-border/20 my-5" />
+          <SpyFindings
+            followEvents={followEvents}
+            followerEvents={followerEvents}
+            profileFollowings={followings}
+            followerCount={profile.follower_count ?? 0}
+            followingCount={profile.following_count ?? 0}
+          />
+
+          {/* Block 5: Weekly gender — gradient bubbles */}
+          <div className="border-t border-border/20 my-5" />
+          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+        </div>
+      </div>
 
       {/* ─── Banners ─── */}
       {isPro && !hasSpy && (

@@ -26,10 +26,10 @@ export function SpyFindings({
 }: SpyFindingsProps) {
   const { t } = useTranslation();
 
-  const tiles = useMemo(() => {
+  const data = useMemo(() => {
     const now = Date.now();
 
-    // ── 1. Frauen-Anteil — aus ALLEN profileFollowings (is_current), NICHT 7d ──
+    // ── 1. Frauen-Anteil — aus ALLEN profileFollowings ──
     let totalFemale = 0;
     let totalMale = 0;
     for (const f of profileFollowings) {
@@ -37,7 +37,7 @@ export function SpyFindings({
       else if (f.gender_tag === "male") totalMale++;
     }
     const totalClassified = totalFemale + totalMale;
-    let femalePercent: number | null = totalClassified >= 3
+    const femalePercent: number | null = totalClassified >= 3
       ? Math.round((totalFemale / totalClassified) * 100)
       : null;
 
@@ -100,64 +100,125 @@ export function SpyFindings({
       else { networkLabel = t("spy_findings.very_active_network", "Sehr aktiv"); networkLevel = "danger"; }
     }
 
-    return [
-      { icon: Heart, label: t("spy_findings.female_ratio", "Frauen-Anteil"), value: femalePercent !== null ? `${femalePercent}%` : "–", level: femaleLevel },
-      { icon: TrendingUp, label: t("spy_findings.follow_tempo", "Follow-Tempo"), value: tempoLabel, level: tempoLevel },
-      { icon: Repeat, label: t("spy_findings.loyalty", "Treue-Index"), value: loyaltyLabel, level: loyaltyLevel },
-      { icon: Users, label: t("spy_findings.network_style", "Netzwerk-Stil"), value: networkLabel, level: networkLevel },
-    ];
+    return {
+      femalePercent, femaleLevel,
+      tempoLabel, tempoLevel,
+      loyaltyLabel, loyaltyLevel,
+      networkLabel, networkLevel,
+    };
   }, [followEvents, followerEvents, profileFollowings, followerCount, followingCount, t]);
 
-  const levelColors = {
-    safe: { bg: "hsl(142 71% 45% / 0.06)", border: "hsl(142 71% 45% / 0.12)", icon: "hsl(142 71% 45%)" },
-    warning: { bg: "hsl(45 100% 51% / 0.06)", border: "hsl(45 100% 51% / 0.12)", icon: "hsl(45 100% 51%)" },
-    danger: { bg: "hsl(4 90% 58% / 0.06)", border: "hsl(4 90% 58% / 0.12)", icon: "hsl(4 90% 58%)" },
+  const levelColor = (level: "safe" | "warning" | "danger") => {
+    if (level === "danger") return "#FF3B30";
+    if (level === "warning") return "#FF9500";
+    return "#34C759";
+  };
+
+  const levelBg = (level: "safe" | "warning" | "danger") => {
+    if (level === "danger") return "rgba(255,59,48,0.08)";
+    if (level === "warning") return "rgba(255,149,0,0.08)";
+    return "rgba(52,199,89,0.08)";
+  };
+
+  const levelBorder = (level: "safe" | "warning" | "danger") => {
+    if (level === "danger") return "rgba(255,59,48,0.2)";
+    if (level === "warning") return "rgba(255,149,0,0.2)";
+    return "rgba(52,199,89,0.2)";
   };
 
   return (
-    <div className="mb-5">
-      <p className="section-header px-1 mb-3">
+    <div className="mb-2 px-1">
+      <p className="section-header mb-3">
         {t("spy_findings.title", "Das hat der Spy gefunden")}
       </p>
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
-        {tiles.map((tile, i) => {
-          const colors = levelColors[tile.level];
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.06 }}
-              className="flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border"
+
+      {/* Card 1: Frauen-Anteil — wide card with donut */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-3xl p-5 mb-3"
+        style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.5)" }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+              {t("spy_findings.female_ratio", "Frauen-Anteil")}
+            </p>
+            <p style={{
+              fontSize: "3rem",
+              fontWeight: 900,
+              color: levelColor(data.femaleLevel),
+              lineHeight: 1,
+            }}>
+              {data.femalePercent !== null ? `${data.femalePercent}%` : "–"}
+            </p>
+          </div>
+          {data.femalePercent !== null && (
+            <div
               style={{
-                background: colors.bg,
-                borderColor: colors.border,
-                minWidth: "140px",
+                width: 64, height: 64, borderRadius: "50%",
+                background: `conic-gradient(#FF2D55 0% ${data.femalePercent}%, #007AFF ${data.femalePercent}% 100%)`,
+                boxShadow: "0 4px 16px rgba(255,45,85,0.3)",
               }}
-            >
-              <tile.icon
-                className="flex-shrink-0"
-                size={16}
-                style={{ color: colors.icon }}
-              />
-              <div>
-                <p
-                  className="font-extrabold text-foreground"
-                  style={{ fontSize: "1rem", lineHeight: 1.1 }}
-                >
-                  {tile.value}
-                </p>
-                <p
-                  className="text-muted-foreground"
-                  style={{ fontSize: "0.625rem" }}
-                >
-                  {tile.label}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
+            />
+          )}
+        </div>
+      </motion.div>
+
+      {/* Cards 2+3: Follow-Tempo + Treue-Index side by side */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.16 }}
+          className="rounded-2xl p-4"
+          style={{ background: levelBg(data.tempoLevel), border: `1px solid ${levelBorder(data.tempoLevel)}` }}
+        >
+          <TrendingUp size={20} style={{ color: levelColor(data.tempoLevel), marginBottom: 8 }} />
+          <p style={{ fontSize: "1.375rem", fontWeight: 800, color: "hsl(var(--foreground))" }}>
+            {data.tempoLabel}
+          </p>
+          <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
+            {t("spy_findings.follow_tempo", "Follow-Tempo")}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22 }}
+          className="rounded-2xl p-4"
+          style={{ background: levelBg(data.loyaltyLevel), border: `1px solid ${levelBorder(data.loyaltyLevel)}` }}
+        >
+          <Repeat size={20} style={{ color: levelColor(data.loyaltyLevel), marginBottom: 8 }} />
+          <p style={{ fontSize: "1.375rem", fontWeight: 800, color: "hsl(var(--foreground))" }}>
+            {data.loyaltyLabel}
+          </p>
+          <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
+            {t("spy_findings.loyalty", "Treue-Index")}
+          </p>
+        </motion.div>
       </div>
+
+      {/* Card 4: Netzwerk-Stil — wide banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.28 }}
+        className="rounded-2xl px-5 py-4 flex items-center justify-between"
+        style={{ background: "hsl(var(--secondary))", border: "none" }}
+      >
+        <div>
+          <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+            {t("spy_findings.network_style", "Netzwerk-Stil")}
+          </p>
+          <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "hsl(var(--foreground))" }}>
+            {data.networkLabel}
+          </p>
+        </div>
+        <Users size={32} className="text-muted-foreground" style={{ opacity: 0.3 }} />
+      </motion.div>
     </div>
   );
 }
