@@ -66,7 +66,7 @@ const FeedPage = () => {
       };
     });
     return [...fromFollows, ...fromFollowers]
-      .filter((e) => !e.is_initial && (isPro || e.source === "follower"))
+      .filter((e) => !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
   }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
 

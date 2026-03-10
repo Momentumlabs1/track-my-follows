@@ -74,6 +74,8 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
+  // Free users can see new_follows and new_followers without blur
+  const shouldBlurFollows = isPro ? false : false; // Free users see data unblurred for basic tabs
 
   const newFollowEvents = useMemo(() =>
     followEvents.filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial && (e as Record<string, unknown>).direction === "following")
@@ -145,7 +147,8 @@ const ProfileDetail = () => {
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
-    if (tabId === "new_follows") return { locked: plan === "free", lockType: plan === "free" ? "paywall" : null };
+    // Free users can see "new_follows" and "new_followers" (1x/day scan)
+    if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
     if (plan === "free") return { locked: true, lockType: "paywall" };
     if (!hasSpy) return { locked: true, lockType: "spy" };
     return { locked: false, lockType: null };
@@ -415,13 +418,13 @@ const ProfileDetail = () => {
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
-            <EventList events={displayFollowEvents.map(mapFollowEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={onlyInitialFollows ? timeAgo : timeAgo}
+            <EventList events={displayFollowEvents.map(mapFollowEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollows ? timeAgo : timeAgo}
               emptyIcon="✨" emptyText={t("profile_detail.no_new_events")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
               sectionTitle={!onlyInitialFollows && initialFollowEvents.length > 0 && newFollowEvents.length > 0 ? t("recently_detected") : undefined} />
             {!onlyInitialFollows && initialFollowEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
-                <EventList events={initialFollowEvents.map(e => ({ ...mapFollowEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="✨" emptyText="" emptySubText="" />
+                <EventList events={initialFollowEvents.map(e => ({ ...mapFollowEvent(e), isRead: true }))} shouldBlur={false} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="✨" emptyText="" emptySubText="" />
               </div>
             )}
           </div>
@@ -429,13 +432,13 @@ const ProfileDetail = () => {
 
         {activeTab === "new_followers" && (
           <div className="space-y-4">
-            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? timeAgo : timeAgo}
+            <EventList events={displayFollowerEvents.map(mapFollowerEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={onlyInitialFollowers ? timeAgo : timeAgo}
               emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
               sectionTitle={!onlyInitialFollowers && initialFollowerEventsList.length > 0 && newFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
             {!onlyInitialFollowers && initialFollowerEventsList.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
-                <EventList events={initialFollowerEventsList.map(e => ({ ...mapFollowerEvent(e), isRead: true }))} shouldBlur={shouldBlur} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="👥" emptyText="" emptySubText="" />
+                <EventList events={initialFollowerEventsList.map(e => ({ ...mapFollowerEvent(e), isRead: true }))} shouldBlur={false} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="👥" emptyText="" emptySubText="" />
               </div>
             )}
           </div>
