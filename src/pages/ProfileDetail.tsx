@@ -320,41 +320,64 @@ const ProfileDetail = () => {
 
         {/* Gender distribution bar */}
         {showGender && (
-          <div>
+          <div className="mb-5">
             <div className="flex items-center gap-3 mb-1.5">
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#FF2D55" }}>
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#FF2D55" }}>
                 ♀ {femaleCount}
               </span>
-              <div className="flex-1 h-1.5 rounded-full overflow-hidden flex" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
                 <motion.div
                   className="h-full"
-                  style={{ background: "#FF2D55", borderRadius: "3px 0 0 3px" }}
+                  style={{ background: "#FF2D55", borderRadius: "4px 0 0 4px" }}
                   initial={{ width: 0 }}
                   animate={{ width: `${femalePct}%` }}
                   transition={{ duration: 0.8 }}
                 />
                 <motion.div
                   className="h-full"
-                  style={{ background: "#007AFF", borderRadius: "0 3px 3px 0" }}
+                  style={{ background: "#007AFF", borderRadius: "0 4px 4px 0" }}
                   initial={{ width: 0 }}
                   animate={{ width: `${malePct}%` }}
                   transition={{ duration: 0.8, delay: 0.1 }}
                 />
               </div>
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#007AFF" }}>
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#007AFF" }}>
                 ♂ {maleCount}
               </span>
             </div>
-            <p style={{ fontSize: "0.6875rem", opacity: 0.4, color: "hsl(var(--foreground))" }}>
+            <p style={{ fontSize: "0.6875rem", color: "#636366" }}>
               {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung")}
             </p>
             {unknownGenderCount > 0 && (
-              <p style={{ fontSize: "0.6875rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+              <p style={{ fontSize: "0.6875rem", color: "#48484A" }}>
                 {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
               </p>
             )}
           </div>
         )}
+
+        {/* ═══ ANALYSIS: Bubbles + Score (above tabs) ═══ */}
+        <div className="relative mb-2">
+          {insightsLocked && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
+              {!isPro ? (
+                <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                  <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
+                </button>
+              ) : (
+                <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                  <SpyIcon size={14} /> {t("spy.spy_required")}
+                </button>
+              )}
+            </div>
+          )}
+          <div className={`space-y-4 ${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+            <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
+            {suspicionAnalysis && (
+              <SuspicionScoreCard analysis={suspicionAnalysis} trackingDays={trackingDays} hasEnoughData={hasEnoughData} />
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* ─── Banners ─── */}
