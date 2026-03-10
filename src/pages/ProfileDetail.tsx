@@ -298,7 +298,7 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.following")}</p>
+            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.following")}</p>
           </div>
         </div>
 
