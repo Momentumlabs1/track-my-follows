@@ -13,6 +13,7 @@ interface WeeklyGenderCardsProps {
     following_display_name?: string | null;
     following_avatar_url?: string | null;
     gender_tag?: string | null;
+    first_seen_at?: string;
   }>;
 }
 
@@ -55,55 +56,88 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     return map;
   }, [profileFollowings]);
 
-  const { femaleFollows, maleFollows } = useMemo(() => {
+  const { femaleFollows, maleFollows, isOverallMode } = useMemo(() => {
     const female: GenderedFollow[] = [];
     const male: GenderedFollow[] = [];
     const now = Date.now();
 
-    const realFollows = followEvents.filter(
+    // Check if there are real (non-initial) follow events
+    const hasRealEvents = followEvents.some(
       (e) =>
-        (e.event_type === "follow" || e.event_type === "new_following") &&
         !(e as any).is_initial &&
-        (e as any).direction === "following" &&
-        now - new Date(e.detected_at).getTime() < SEVEN_DAYS
+        (e.event_type === "follow" || e.event_type === "new_following") &&
+        (e as any).direction === "following"
     );
 
-    for (const ev of realFollows) {
-      const fromMap = followingMap.get(ev.target_username);
-      let gender: string;
-      if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
-      else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") gender = (ev as any).gender_tag;
-      else gender = detectGender(ev.target_display_name);
+    if (hasRealEvents) {
+      // Use 7d real events
+      const realFollows = followEvents.filter(
+        (e) =>
+          (e.event_type === "follow" || e.event_type === "new_following") &&
+          !(e as any).is_initial &&
+          (e as any).direction === "following" &&
+          now - new Date(e.detected_at).getTime() < SEVEN_DAYS
+      );
 
-      const entry: GenderedFollow = {
-        username: ev.target_username,
-        displayName: fromMap?.displayName || ev.target_display_name,
-        avatarUrl: fromMap?.avatar || ev.target_avatar_url,
-        detectedAt: ev.detected_at,
-      };
+      for (const ev of realFollows) {
+        const fromMap = followingMap.get(ev.target_username);
+        let gender: string;
+        if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
+        else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") gender = (ev as any).gender_tag;
+        else gender = detectGender(ev.target_display_name);
 
-      if (gender === "female") female.push(entry);
-      else if (gender === "male") male.push(entry);
+        const entry: GenderedFollow = {
+          username: ev.target_username,
+          displayName: fromMap?.displayName || ev.target_display_name,
+          avatarUrl: fromMap?.avatar || ev.target_avatar_url,
+          detectedAt: ev.detected_at,
+        };
+
+        if (gender === "female") female.push(entry);
+        else if (gender === "male") male.push(entry);
+      }
+
+      female.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
+      male.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
+
+      return { femaleFollows: female, maleFollows: male, isOverallMode: false };
     }
 
-    female.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
-    male.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
+    // Fallback: show from profileFollowings directly
+    for (const f of profileFollowings) {
+      if (f.gender_tag === "female" || f.gender_tag === "male") {
+        const entry: GenderedFollow = {
+          username: f.following_username,
+          displayName: f.following_display_name,
+          avatarUrl: f.following_avatar_url,
+          detectedAt: f.first_seen_at || new Date().toISOString(),
+        };
+        if (f.gender_tag === "female") female.push(entry);
+        else male.push(entry);
+      }
+    }
 
-    return { femaleFollows: female, maleFollows: male };
-  }, [followEvents, followingMap]);
+    return { femaleFollows: female, maleFollows: male, isOverallMode: true };
+  }, [followEvents, followingMap, profileFollowings]);
 
-  const bothEmpty = femaleFollows.length === 0 && maleFollows.length === 0;
+  const femaleCount = femaleFollows.length;
+  const maleCount = maleFollows.length;
+  const bothEmpty = femaleCount === 0 && maleCount === 0;
+  const total = femaleCount + maleCount;
+  const femalePercent = total > 0 ? Math.round((femaleCount / total) * 100) : 50;
 
   const sheetData = sheetGender === "female" ? femaleFollows : maleFollows;
   const sheetTitle = sheetGender === "female"
-    ? t("weekly.women_followed", "Frauen gefolgt") + ` (${femaleFollows.length})`
-    : t("weekly.men_followed", "Männern gefolgt") + ` (${maleFollows.length})`;
+    ? t("weekly.women_followed", "Frauen gefolgt") + ` (${femaleCount})`
+    : t("weekly.men_followed", "Männern gefolgt") + ` (${maleCount})`;
 
   return (
     <>
       <div className="mb-5">
         <p className="section-header px-1 mb-3">
-          {t("weekly.title", "In der letzten Woche")}
+          {isOverallMode
+            ? t("weekly.overall_title", "Geschlechterverteilung")
+            : t("weekly.title", "In der letzten Woche")}
         </p>
 
         {bothEmpty ? (
@@ -115,30 +149,78 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
             }}
           >
             <p className="text-muted-foreground" style={{ fontSize: "0.8125rem" }}>
-              {t("weekly.no_activity", "Noch keine Aktivität in der letzten Woche")}
+              {t("weekly.no_activity", "Noch keine Aktivität")}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <GenderCard
-              gender="female"
-              count={femaleFollows.length}
-              label={t("weekly.women_followed", "Frauen gefolgt")}
-              items={femaleFollows.slice(0, 3)}
-              totalExtra={Math.max(0, femaleFollows.length - 3)}
-              onTap={() => femaleFollows.length > 0 && setSheetGender("female")}
-              t={t}
-            />
-            <GenderCard
-              gender="male"
-              count={maleFollows.length}
-              label={t("weekly.men_followed", "Männern gefolgt")}
-              items={maleFollows.slice(0, 3)}
-              totalExtra={Math.max(0, maleFollows.length - 3)}
-              onTap={() => maleFollows.length > 0 && setSheetGender("male")}
-              t={t}
-            />
-          </div>
+          <>
+            {/* Two solid bubbles */}
+            <div className="flex gap-4 justify-center mb-4">
+              {/* Female */}
+              <button
+                onClick={() => femaleCount > 0 && setSheetGender("female")}
+                className="flex flex-col items-center gap-2"
+                style={{ opacity: femaleCount === 0 ? 0.4 : 1 }}
+              >
+                <div
+                  className="flex flex-col items-center justify-center rounded-full"
+                  style={{
+                    width: 110,
+                    height: 110,
+                    background: "#FF2D55",
+                    boxShadow: femaleCount > 0 ? "0 8px 24px rgba(255,45,85,0.35)" : "none",
+                  }}
+                >
+                  <span style={{ fontSize: "2rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
+                    {femaleCount}
+                  </span>
+                  <span style={{ fontSize: "1rem", color: "rgba(255,255,255,0.8)" }}>♀</span>
+                </div>
+                <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+                  {t("weekly.women_followed", "Frauen gefolgt")}
+                </span>
+              </button>
+
+              {/* Male */}
+              <button
+                onClick={() => maleCount > 0 && setSheetGender("male")}
+                className="flex flex-col items-center gap-2"
+                style={{ opacity: maleCount === 0 ? 0.4 : 1 }}
+              >
+                <div
+                  className="flex flex-col items-center justify-center rounded-full"
+                  style={{
+                    width: 110,
+                    height: 110,
+                    background: "#007AFF",
+                    boxShadow: maleCount > 0 ? "0 8px 24px rgba(0,122,255,0.35)" : "none",
+                  }}
+                >
+                  <span style={{ fontSize: "2rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
+                    {maleCount}
+                  </span>
+                  <span style={{ fontSize: "1rem", color: "rgba(255,255,255,0.8)" }}>♂</span>
+                </div>
+                <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+                  {t("weekly.men_followed", "Männern gefolgt")}
+                </span>
+              </button>
+            </div>
+
+            {/* Gender ratio bar */}
+            {total > 0 && (
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--border))" }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${femalePercent}%`,
+                    background: "linear-gradient(90deg, #FF2D55, #FF2D55)",
+                    transition: "width 0.6s ease",
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -199,99 +281,5 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
         )}
       </AnimatePresence>
     </>
-  );
-}
-
-function GenderCard({
-  gender,
-  count,
-  label,
-  items,
-  totalExtra,
-  onTap,
-  t,
-}: {
-  gender: "female" | "male";
-  count: number;
-  label: string;
-  items: GenderedFollow[];
-  totalExtra: number;
-  onTap: () => void;
-  t: (key: string, opts?: any) => string;
-}) {
-  const isFemale = gender === "female";
-  const isEmpty = count === 0;
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: isFemale ? 0.1 : 0.16 }}
-      onClick={onTap}
-      className="text-start rounded-2xl p-4 flex flex-col gap-3 border transition-opacity"
-      style={{
-        background: isFemale
-          ? "hsl(347 100% 59% / 0.06)"
-          : "hsl(210 100% 56% / 0.06)",
-        borderColor: isFemale
-          ? "hsl(347 100% 59% / 0.12)"
-          : "hsl(210 100% 56% / 0.12)",
-        opacity: isEmpty ? 0.5 : 1,
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-baseline gap-2">
-        <span
-          className="font-extrabold tabular-nums"
-          style={{
-            fontSize: "1.75rem",
-            lineHeight: 1,
-            color: isFemale ? "hsl(347 100% 59%)" : "hsl(210 100% 56%)",
-          }}
-        >
-          {count}
-        </span>
-        <span
-          className="font-bold"
-          style={{
-            fontSize: "1rem",
-            color: isFemale ? "hsl(347 100% 59%)" : "hsl(210 100% 56%)",
-            opacity: 0.7,
-          }}
-        >
-          {isFemale ? "♀" : "♂"}
-        </span>
-      </div>
-      <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-        {label}
-      </span>
-
-      {/* Preview accounts */}
-      {items.length > 0 && (
-        <div className="flex flex-col gap-2 mt-1">
-          {items.map((item) => (
-            <div key={item.username} className="flex items-center gap-2 min-w-0">
-              <InstagramAvatar
-                src={item.avatarUrl}
-                alt={item.username}
-                fallbackInitials={item.username}
-                size={24}
-              />
-              <span
-                className="text-foreground truncate"
-                style={{ fontSize: "0.75rem" }}
-              >
-                @{item.username}
-              </span>
-            </div>
-          ))}
-          {totalExtra > 0 && (
-            <span className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
-              +{totalExtra} {t("weekly.more_count", "weitere")}
-            </span>
-          )}
-        </div>
-      )}
-    </motion.button>
   );
 }
