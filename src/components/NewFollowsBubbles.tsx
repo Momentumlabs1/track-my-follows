@@ -99,16 +99,7 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
 
   return (
     <>
-      <div
-        className="p-5"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          backdropFilter: "blur(24px)",
-          border: "0.5px solid rgba(255,255,255,0.08)",
-          borderRadius: "20px",
-          padding: "20px",
-        }}
-      >
+      <div style={{ background: "#1C1C1E", borderRadius: 20, padding: 20 }}>
         <p className="text-foreground font-semibold mb-1" style={{ fontSize: "0.875rem" }}>
           {t("insights_new.new_followed", "Neu gefolgt")}
         </p>
@@ -126,15 +117,15 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
               className="flex flex-col items-center justify-center"
               style={{
                 width: 100, height: 100, borderRadius: 9999,
-                background: "rgba(255,45,85,0.12)",
+                background: "#FF2D55",
               }}
             >
-              <span style={{ fontSize: "1.75rem" }}>👩</span>
-              <span className="font-bold tabular-nums" style={{ fontSize: "2rem", color: "#FF2D55", lineHeight: 1, letterSpacing: "-0.5px" }}>
+              <span style={{ fontSize: "1.5rem" }}>👩</span>
+              <span className="font-bold tabular-nums text-white" style={{ fontSize: "1.75rem", lineHeight: 1, letterSpacing: "-0.5px" }}>
                 {femaleFollows.length}
               </span>
             </motion.div>
-            <span className="text-muted-foreground" style={{ fontSize: "0.875rem", opacity: 0.6 }}>
+            <span style={{ fontSize: "0.8125rem", color: "#8E8E93" }}>
               {t("gender.female", "Frauen")}
             </span>
           </button>
@@ -151,21 +142,21 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
               className="flex flex-col items-center justify-center"
               style={{
                 width: 100, height: 100, borderRadius: 9999,
-                background: "rgba(0,122,255,0.12)",
+                background: "#007AFF",
               }}
             >
-              <span style={{ fontSize: "1.75rem" }}>👨</span>
-              <span className="font-bold tabular-nums" style={{ fontSize: "2rem", color: "#007AFF", lineHeight: 1, letterSpacing: "-0.5px" }}>
+              <span style={{ fontSize: "1.5rem" }}>👨</span>
+              <span className="font-bold tabular-nums text-white" style={{ fontSize: "1.75rem", lineHeight: 1, letterSpacing: "-0.5px" }}>
                 {maleFollows.length}
               </span>
             </motion.div>
-            <span className="text-muted-foreground" style={{ fontSize: "0.875rem", opacity: 0.6 }}>
+            <span style={{ fontSize: "0.8125rem", color: "#8E8E93" }}>
               {t("gender.male", "Männer")}
             </span>
           </button>
         </div>
 
-        <p className="text-center" style={{ fontSize: "0.75rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+        <p className="text-center" style={{ fontSize: "0.6875rem", color: "#48484A" }}>
           {t("insights_new.since_tracking", "Tippe für Details")}
         </p>
       </div>
@@ -185,7 +176,8 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl max-h-[70vh] flex flex-col"
+              className="absolute bottom-0 left-0 right-0 rounded-t-3xl max-h-[70vh] flex flex-col"
+              style={{ background: "#1C1C1E" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-5 pb-3 flex items-center justify-between border-b border-border flex-shrink-0">

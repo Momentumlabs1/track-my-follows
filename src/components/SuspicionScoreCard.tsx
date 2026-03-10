@@ -10,9 +10,9 @@ interface SuspicionScoreCardProps {
 }
 
 const levelBgColor: Record<FactorLevel, string> = {
-  safe: "rgba(52,199,89,0.1)",
-  warning: "rgba(255,214,10,0.1)",
-  danger: "rgba(255,59,48,0.1)",
+  safe: "#1B3A2A",
+  warning: "#3A3420",
+  danger: "#3A1B1B",
 };
 
 const levelTextColor: Record<FactorLevel, string> = {
@@ -67,35 +67,26 @@ export function SuspicionScoreCard({ analysis, trackingDays, hasEnoughData }: Su
   if (!hasEnoughData) {
     const progressPct = Math.min(100, Math.round((trackingDays / 7) * 100));
     return (
-      <div
-        className="text-center"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          backdropFilter: "blur(24px)",
-          border: "0.5px solid rgba(255,255,255,0.08)",
-          borderRadius: "20px",
-          padding: "32px 20px",
-        }}
-      >
+      <div className="text-center" style={{ background: "#1C1C1E", borderRadius: 20, padding: "32px 20px" }}>
         <span style={{ fontSize: "2.5rem" }} className="block mb-3">📊</span>
         <p className="font-semibold text-foreground mb-1" style={{ fontSize: "1rem" }}>
           {t("insights_new.building_title", "Analyse wird aufgebaut")}
         </p>
-        <p className="text-muted-foreground mb-5" style={{ fontSize: "0.875rem", opacity: 0.6 }}>
+        <p className="mb-5" style={{ fontSize: "0.875rem", color: "#8E8E93" }}>
           {t("insights_new.since_x_days", "Seit {{days}} Tagen aktiv", { days: trackingDays })}
           {"\n"}
           {t("insights_new.no_real_events_short", "Sobald genug Aktivität erkannt wird, siehst du hier den Verdachts-Score.")}
         </p>
-        <div className="h-2 rounded-full overflow-hidden mb-2" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <div className="overflow-hidden mb-2" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
           <motion.div
-            className="h-full rounded-full"
-            style={{ background: "hsl(var(--primary))" }}
+            className="h-full"
+            style={{ background: "hsl(var(--primary))", borderRadius: 4 }}
             initial={{ width: 0 }}
             animate={{ width: `${progressPct}%` }}
             transition={{ duration: 0.8 }}
           />
         </div>
-        <p style={{ fontSize: "0.75rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+        <p style={{ fontSize: "0.75rem", color: "#48484A" }}>
           {trackingDays} / 7 {t("insights.days", "Tage")}
         </p>
       </div>
@@ -103,33 +94,25 @@ export function SuspicionScoreCard({ analysis, trackingDays, hasEnoughData }: Su
   }
 
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        backdropFilter: "blur(24px)",
-        border: "0.5px solid rgba(255,255,255,0.08)",
-        borderRadius: "20px",
-        padding: "20px",
-      }}
-    >
+    <div style={{ background: "#1C1C1E", borderRadius: 20, padding: 24 }}>
       {/* Score header */}
-      <p className="text-center" style={{ fontSize: "0.875rem", opacity: 0.4, color: "hsl(var(--foreground))" }}>
+      <p className="text-center" style={{ fontSize: "0.875rem", color: "#636366" }}>
         {t("suspicion.score_label", "Verdachts-Score")}
       </p>
 
       <div className="flex flex-col items-center py-3">
         <CountUp target={overallScore} color={scoreColor} />
         <span className="mt-1" style={{ fontSize: "1.5rem" }}>{emoji}</span>
-        <p className="text-foreground font-semibold mt-1" style={{ fontSize: "1rem", opacity: 0.7 }}>
+        <p className="text-foreground font-semibold mt-1" style={{ fontSize: "1rem", color: "#AEAEB2" }}>
           {label}
         </p>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 rounded-full overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
+      <div className="overflow-hidden mb-4" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
         <motion.div
-          className="h-full rounded-full"
-          style={{ background: scoreColor }}
+          className="h-full"
+          style={{ background: scoreColor, borderRadius: 4 }}
           initial={{ width: 0 }}
           animate={{ width: `${overallScore}%` }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -137,7 +120,7 @@ export function SuspicionScoreCard({ analysis, trackingDays, hasEnoughData }: Su
       </div>
 
       {/* 4 Chips — horizontal scroll */}
-      <div className="overflow-x-auto -mx-5 px-5">
+      <div className="overflow-x-auto -mx-6 px-6">
         <div className="flex gap-2.5 w-max">
           {factors.map((factor, i) => (
             <motion.div
@@ -147,19 +130,19 @@ export function SuspicionScoreCard({ analysis, trackingDays, hasEnoughData }: Su
               transition={{ delay: 0.2 + i * 0.08 }}
               className="flex flex-col items-center flex-shrink-0"
               style={{
-                minWidth: "85px",
+                minWidth: 85,
                 padding: "14px 12px",
                 background: levelBgColor[factor.level],
-                borderRadius: "16px",
+                borderRadius: 16,
               }}
             >
               <span className="font-bold tabular-nums" style={{ fontSize: "1.25rem", color: levelTextColor[factor.level], lineHeight: 1.2 }}>
                 {factor.icon} {factor.displayValue}
               </span>
-              <span className="mt-1" style={{ fontSize: "0.6875rem", opacity: 0.5, color: "hsl(var(--foreground))" }}>
+              <span className="mt-1" style={{ fontSize: "0.6875rem", color: "#8E8E93" }}>
                 {chipLabels[i]?.[isDE ? "de" : "en"] || factor.name}
               </span>
-              <span style={{ fontSize: "0.625rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+              <span style={{ fontSize: "0.625rem", color: "#48484A" }}>
                 {factor.score}/{factor.maxScore}
               </span>
             </motion.div>
@@ -168,7 +151,7 @@ export function SuspicionScoreCard({ analysis, trackingDays, hasEnoughData }: Su
       </div>
 
       {/* Footer */}
-      <p className="text-center mt-4" style={{ fontSize: "0.75rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+      <p className="text-center mt-4" style={{ fontSize: "0.6875rem", color: "#48484A" }}>
         {t("insights_new.last_7_days", "Letzte 7 Tage")}
       </p>
     </div>

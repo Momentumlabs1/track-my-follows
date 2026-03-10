@@ -41,7 +41,7 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-type TabId = "new_follows" | "new_followers" | "unfollowed" | "insights";
+type TabId = "new_follows" | "new_followers" | "unfollowed";
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
@@ -159,6 +159,12 @@ const ProfileDetail = () => {
     return { locked: false, lockType: null };
   };
 
+  // Insights data (shown above tabs now)
+  const trackingDays = Math.floor((Date.now() - new Date(profile?.created_at ?? Date.now()).getTime()) / (24 * 60 * 60 * 1000));
+  const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
+  const hasEnoughData = realEventCount >= 2;
+  const insightsLocked = !canUseStats || (!hasSpy && isPro);
+
   const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
   const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
   const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
@@ -168,7 +174,6 @@ const ProfileDetail = () => {
     { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: displayFollowEvents.length, ...getTabLock("new_follows") },
     { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: displayFollowerEvents.length, ...getTabLock("new_followers") },
     { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
-    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, ...getTabLock("insights") },
   ];
 
   if (isLoading) {
@@ -234,9 +239,7 @@ const ProfileDetail = () => {
               className="flex items-center justify-center"
               style={{
                 width: 70, height: 70, borderRadius: 9999,
-                background: "rgba(255,255,255,0.06)",
-                backdropFilter: "blur(12px)",
-                border: "0.5px solid rgba(255,255,255,0.08)",
+                background: "#2C2C2E",
               }}
               animate={hasSpy ? { boxShadow: ["0 0 0px rgba(255,45,85,0)", "0 0 16px rgba(255,45,85,0.3)", "0 0 0px rgba(255,45,85,0)"] } : {}}
               transition={hasSpy ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
@@ -271,15 +274,7 @@ const ProfileDetail = () => {
 
         {/* Follower / Following stats */}
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div
-            className="p-4 text-center"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              backdropFilter: "blur(24px)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-              borderRadius: "16px",
-            }}
-          >
+          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.follower_count ?? 0)}
@@ -290,17 +285,9 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.followers")}</p>
+            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.followers")}</p>
           </div>
-          <div
-            className="p-4 text-center"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              backdropFilter: "blur(24px)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-              borderRadius: "16px",
-            }}
-          >
+          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.following_count ?? 0)}
@@ -311,47 +298,70 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.following")}</p>
+            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.following")}</p>
           </div>
         </div>
 
         {/* Gender distribution bar */}
         {showGender && (
-          <div>
+          <div className="mb-5">
             <div className="flex items-center gap-3 mb-1.5">
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#FF2D55" }}>
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#FF2D55" }}>
                 ♀ {femaleCount}
               </span>
-              <div className="flex-1 h-1.5 rounded-full overflow-hidden flex" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
                 <motion.div
                   className="h-full"
-                  style={{ background: "#FF2D55", borderRadius: "3px 0 0 3px" }}
+                  style={{ background: "#FF2D55", borderRadius: "4px 0 0 4px" }}
                   initial={{ width: 0 }}
                   animate={{ width: `${femalePct}%` }}
                   transition={{ duration: 0.8 }}
                 />
                 <motion.div
                   className="h-full"
-                  style={{ background: "#007AFF", borderRadius: "0 3px 3px 0" }}
+                  style={{ background: "#007AFF", borderRadius: "0 4px 4px 0" }}
                   initial={{ width: 0 }}
                   animate={{ width: `${malePct}%` }}
                   transition={{ duration: 0.8, delay: 0.1 }}
                 />
               </div>
-              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "0.875rem", color: "#007AFF" }}>
+              <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#007AFF" }}>
                 ♂ {maleCount}
               </span>
             </div>
-            <p style={{ fontSize: "0.6875rem", opacity: 0.4, color: "hsl(var(--foreground))" }}>
+            <p style={{ fontSize: "0.6875rem", color: "#636366" }}>
               {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung")}
             </p>
             {unknownGenderCount > 0 && (
-              <p style={{ fontSize: "0.6875rem", opacity: 0.3, color: "hsl(var(--foreground))" }}>
+              <p style={{ fontSize: "0.6875rem", color: "#48484A" }}>
                 {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
               </p>
             )}
           </div>
         )}
+
+        {/* ═══ ANALYSIS: Bubbles + Score (above tabs) ═══ */}
+        <div className="relative mb-2">
+          {insightsLocked && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
+              {!isPro ? (
+                <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                  <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
+                </button>
+              ) : (
+                <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                  <SpyIcon size={14} /> {t("spy.spy_required")}
+                </button>
+              )}
+            </div>
+          )}
+          <div className={`space-y-4 ${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+            <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
+            {suspicionAnalysis && (
+              <SuspicionScoreCard analysis={suspicionAnalysis} trackingDays={trackingDays} hasEnoughData={hasEnoughData} />
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* ─── Banners ─── */}
@@ -486,42 +496,7 @@ const ProfileDetail = () => {
           </div>
         )}
 
-        {activeTab === "insights" && (() => {
-          const trackingDays = Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000));
-          const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
-          const hasEnoughData = realEventCount >= 2;
-
-          return (
-            <div className="relative">
-              {(!canUseStats || (!hasSpy && isPro)) && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-                  {!isPro ? (
-                    <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                      <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-                    </button>
-                  ) : (
-                    <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                      <SpyIcon size={14} /> {t("spy.spy_required")}
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className={`space-y-4 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
-                {/* 3A: Gender Bubbles */}
-                <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
-
-                {/* 3B: Suspicion Score Card with Chips */}
-                {suspicionAnalysis && (
-                  <SuspicionScoreCard
-                    analysis={suspicionAnalysis}
-                    trackingDays={trackingDays}
-                    hasEnoughData={hasEnoughData}
-                  />
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {/* Insights tab removed — analysis shown above tabs */}
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
