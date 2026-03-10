@@ -305,7 +305,7 @@ const ProfileDetail = () => {
               <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#FF2D55" }}>
                 ♀ {femaleCount}
               </span>
-              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
+              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "hsl(var(--card-elevated))" }}>
                 <motion.div
                   className="h-full"
                   style={{ background: "#FF2D55", borderRadius: "4px 0 0 4px" }}
