@@ -92,6 +92,8 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     return { femaleFollows: female, maleFollows: male };
   }, [followEvents, followingMap]);
 
+  const bothEmpty = femaleFollows.length === 0 && maleFollows.length === 0;
+
   const sheetData = sheetGender === "female" ? femaleFollows : maleFollows;
   const sheetTitle = sheetGender === "female"
     ? t("weekly.women_followed", "Frauen gefolgt") + ` (${femaleFollows.length})`
@@ -103,28 +105,41 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
         <p className="section-header px-1 mb-3">
           {t("weekly.title", "In der letzten Woche")}
         </p>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Female card */}
-          <GenderCard
-            gender="female"
-            count={femaleFollows.length}
-            label={t("weekly.women_followed", "Frauen gefolgt")}
-            items={femaleFollows.slice(0, 3)}
-            totalExtra={Math.max(0, femaleFollows.length - 3)}
-            onTap={() => femaleFollows.length > 0 && setSheetGender("female")}
-            t={t}
-          />
-          {/* Male card */}
-          <GenderCard
-            gender="male"
-            count={maleFollows.length}
-            label={t("weekly.men_followed", "Männern gefolgt")}
-            items={maleFollows.slice(0, 3)}
-            totalExtra={Math.max(0, maleFollows.length - 3)}
-            onTap={() => maleFollows.length > 0 && setSheetGender("male")}
-            t={t}
-          />
-        </div>
+
+        {bothEmpty ? (
+          <div
+            className="rounded-2xl p-5 text-center border"
+            style={{
+              background: "hsl(var(--muted) / 0.3)",
+              borderColor: "hsl(var(--border))",
+            }}
+          >
+            <p className="text-muted-foreground" style={{ fontSize: "0.8125rem" }}>
+              {t("weekly.no_activity", "Noch keine Aktivität in der letzten Woche")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <GenderCard
+              gender="female"
+              count={femaleFollows.length}
+              label={t("weekly.women_followed", "Frauen gefolgt")}
+              items={femaleFollows.slice(0, 3)}
+              totalExtra={Math.max(0, femaleFollows.length - 3)}
+              onTap={() => femaleFollows.length > 0 && setSheetGender("female")}
+              t={t}
+            />
+            <GenderCard
+              gender="male"
+              count={maleFollows.length}
+              label={t("weekly.men_followed", "Männern gefolgt")}
+              items={maleFollows.slice(0, 3)}
+              totalExtra={Math.max(0, maleFollows.length - 3)}
+              onTap={() => maleFollows.length > 0 && setSheetGender("male")}
+              t={t}
+            />
+          </div>
+        )}
       </div>
 
       {/* Bottom Sheet */}
