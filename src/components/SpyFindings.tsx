@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart, TrendingUp, Repeat, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { detectGender } from "@/lib/genderDetection";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 interface SpyFindingsProps {
@@ -30,15 +29,25 @@ export function SpyFindings({
   const tiles = useMemo(() => {
     const now = Date.now();
 
-    // Build gender lookup
-    const genderMap = new Map<string, string>();
+    // ── 1. Frauen-Anteil — aus ALLEN profileFollowings (is_current), NICHT 7d ──
+    let totalFemale = 0;
+    let totalMale = 0;
     for (const f of profileFollowings) {
-      if (f.gender_tag === "female" || f.gender_tag === "male") {
-        genderMap.set(f.following_username, f.gender_tag);
-      }
+      if (f.gender_tag === "female") totalFemale++;
+      else if (f.gender_tag === "male") totalMale++;
+    }
+    const totalClassified = totalFemale + totalMale;
+    let femalePercent: number | null = totalClassified >= 3
+      ? Math.round((totalFemale / totalClassified) * 100)
+      : null;
+
+    let femaleLevel: "safe" | "warning" | "danger" = "safe";
+    if (femalePercent !== null) {
+      if (femalePercent > 70) femaleLevel = "danger";
+      else if (femalePercent > 55) femaleLevel = "warning";
     }
 
-    // Recent follows (7d, non-initial, following direction)
+    // ── 2. Follow-Tempo (7d real follows) ──
     const recentFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -47,7 +56,6 @@ export function SpyFindings({
         now - new Date(e.detected_at).getTime() < SEVEN_DAYS
     );
 
-    // Recent unfollows (7d)
     const recentUnfollows = followEvents.filter(
       (e) =>
         (e.event_type === "unfollow" || e.event_type === "unfollowed") &&
@@ -56,36 +64,6 @@ export function SpyFindings({
         now - new Date(e.detected_at).getTime() < SEVEN_DAYS
     );
 
-    // 1. Frauen-Anteil — 7d first, fallback to overall followings
-    let femaleNew = 0;
-    let maleNew = 0;
-    for (const ev of recentFollows) {
-      const fromMap = genderMap.get(ev.target_username);
-      let gender: string;
-      if (fromMap) gender = fromMap;
-      else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") gender = (ev as any).gender_tag;
-      else gender = detectGender(ev.target_display_name);
-      if (gender === "female") femaleNew++;
-      else if (gender === "male") maleNew++;
-    }
-    let classifiedCount = femaleNew + maleNew;
-    let femalePercent: number | null = classifiedCount >= 3 ? Math.round((femaleNew / classifiedCount) * 100) : null;
-
-    // Fallback: use overall followings gender if no 7d data
-    if (femalePercent === null && profileFollowings.length > 0) {
-      let totalF = 0, totalM = 0;
-      for (const f of profileFollowings) {
-        if (f.gender_tag === "female") totalF++;
-        else if (f.gender_tag === "male") totalM++;
-      }
-      const totalClassified = totalF + totalM;
-      if (totalClassified >= 3) {
-        femalePercent = Math.round((totalF / totalClassified) * 100);
-        classifiedCount = totalClassified;
-      }
-    }
-
-    // 2. Follow-Tempo
     const followCount = recentFollows.length;
     let tempoLabel: string;
     let tempoLevel: "safe" | "warning" | "danger";
@@ -94,7 +72,7 @@ export function SpyFindings({
     else if (followCount <= 10) { tempoLabel = t("spy_findings.active", "Aktiv"); tempoLevel = "warning"; }
     else { tempoLabel = t("spy_findings.very_active", "Sehr aktiv"); tempoLevel = "danger"; }
 
-    // 3. Treue-Index
+    // ── 3. Treue-Index ──
     const totalChurnEvents = recentFollows.length + recentUnfollows.length;
     let loyaltyLabel: string;
     let loyaltyLevel: "safe" | "warning" | "danger";
@@ -108,7 +86,7 @@ export function SpyFindings({
       else { loyaltyLabel = t("spy_findings.changing", "Wechselhaft"); loyaltyLevel = "danger"; }
     }
 
-    // 4. Netzwerk-Stil
+    // ── 4. Netzwerk-Stil ──
     let networkLabel: string;
     let networkLevel: "safe" | "warning" | "danger";
     if (followerCount <= 0) {
@@ -120,13 +98,6 @@ export function SpyFindings({
       else if (ratio <= 1.5) { networkLabel = t("spy_findings.balanced", "Ausgeglichen"); networkLevel = "safe"; }
       else if (ratio <= 3) { networkLabel = t("spy_findings.exploratory", "Entdeckend"); networkLevel = "warning"; }
       else { networkLabel = t("spy_findings.very_active_network", "Sehr aktiv"); networkLevel = "danger"; }
-    }
-
-    // Frauen-Anteil level
-    let femaleLevel: "safe" | "warning" | "danger" = "safe";
-    if (femalePercent !== null) {
-      if (femalePercent > 70) femaleLevel = "danger";
-      else if (femalePercent > 55) femaleLevel = "warning";
     }
 
     return [
@@ -148,7 +119,7 @@ export function SpyFindings({
       <p className="section-header px-1 mb-3">
         {t("spy_findings.title", "Das hat der Spy gefunden")}
       </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
         {tiles.map((tile, i) => {
           const colors = levelColors[tile.level];
           return (
@@ -157,29 +128,32 @@ export function SpyFindings({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.06 }}
-              className="rounded-2xl p-4 flex flex-col gap-2 border"
+              className="flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl border"
               style={{
                 background: colors.bg,
                 borderColor: colors.border,
+                minWidth: "140px",
               }}
             >
               <tile.icon
                 className="flex-shrink-0"
-                size={18}
+                size={16}
                 style={{ color: colors.icon }}
               />
-              <span
-                className="font-bold text-foreground"
-                style={{ fontSize: "1.125rem", lineHeight: 1.2 }}
-              >
-                {tile.value}
-              </span>
-              <span
-                className="text-muted-foreground"
-                style={{ fontSize: "0.6875rem" }}
-              >
-                {tile.label}
-              </span>
+              <div>
+                <p
+                  className="font-extrabold text-foreground"
+                  style={{ fontSize: "1rem", lineHeight: 1.1 }}
+                >
+                  {tile.value}
+                </p>
+                <p
+                  className="text-muted-foreground"
+                  style={{ fontSize: "0.625rem" }}
+                >
+                  {tile.label}
+                </p>
+              </div>
             </motion.div>
           );
         })}

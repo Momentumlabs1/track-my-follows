@@ -13,16 +13,14 @@ type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
 interface LevelConfig {
   key: SpyLevel;
   color: string;
-  bgTint: string;
-  borderTint: string;
   index: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { key: "gelassen", color: "hsl(142 71% 45%)", bgTint: "hsl(142 71% 45% / 0.08)", borderTint: "hsl(142 71% 45% / 0.15)", index: 0 },
-  { key: "aufmerksam", color: "hsl(45 100% 51%)", bgTint: "hsl(45 100% 51% / 0.08)", borderTint: "hsl(45 100% 51% / 0.15)", index: 1 },
-  { key: "wachsam", color: "hsl(30 100% 50%)", bgTint: "hsl(30 100% 50% / 0.08)", borderTint: "hsl(30 100% 50% / 0.15)", index: 2 },
-  { key: "alarmiert", color: "hsl(4 90% 58%)", bgTint: "hsl(4 90% 58% / 0.08)", borderTint: "hsl(4 90% 58% / 0.15)", index: 3 },
+  { key: "gelassen", color: "hsl(142 71% 45%)", index: 0 },
+  { key: "aufmerksam", color: "hsl(45 100% 51%)", index: 1 },
+  { key: "wachsam", color: "hsl(30 100% 50%)", index: 2 },
+  { key: "alarmiert", color: "hsl(4 90% 58%)", index: 3 },
 ];
 
 function getSpyLevel(score: number): SpyLevel {
@@ -60,30 +58,33 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
-      className="rounded-2xl p-5 mb-5 border"
-      style={{
-        background: levelConfig.bgTint,
-        borderColor: levelConfig.borderTint,
-      }}
+      className="mb-6 px-1"
     >
-      {/* Title row with SpyIcon */}
+      {/* Title row */}
       <div className="flex items-center gap-2 mb-3">
-        <SpyIcon size={24} />
+        <SpyIcon size={20} />
         <p className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
           {t("spy_status.title", "Dein Spy ist...")}
         </p>
       </div>
 
-      {/* Level label */}
-      <p
-        className="font-extrabold mb-1"
-        style={{ fontSize: "1.5rem", color: levelConfig.color, lineHeight: 1.2 }}
-      >
-        {labelMap[level]}
-      </p>
+      {/* Big level label */}
+      <div className="flex items-end gap-3 mb-2">
+        <SpyIcon size={32} glow />
+        <span
+          style={{
+            fontSize: "3rem",
+            fontWeight: 900,
+            lineHeight: 1,
+            color: levelConfig.color,
+          }}
+        >
+          {labelMap[level]}
+        </span>
+      </div>
 
       {/* Description */}
-      <p className="text-muted-foreground mb-4" style={{ fontSize: "0.8125rem" }}>
+      <p className="text-muted-foreground mb-4" style={{ fontSize: "0.875rem" }}>
         {descMap[level]}
       </p>
 
@@ -94,19 +95,35 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
         </p>
       )}
 
-      {/* 4-segment indicator */}
-      <div className="flex gap-1.5">
+      {/* 4-segment bar */}
+      <div className="flex gap-1.5 mb-1">
         {LEVELS.map((l) => (
           <div
             key={l.key}
             className="flex-1 rounded-full"
             style={{
-              height: 6,
+              height: 8,
               background: l.index <= levelConfig.index ? levelConfig.color : "hsl(var(--border))",
-              opacity: l.index <= levelConfig.index ? 1 : 0.3,
+              opacity: l.index <= levelConfig.index ? 1 : 0.25,
               transition: "background 0.4s, opacity 0.4s",
             }}
           />
+        ))}
+      </div>
+
+      {/* Level labels under bar */}
+      <div className="flex justify-between mt-1">
+        {LEVELS.map((l) => (
+          <span
+            key={l.key}
+            style={{
+              fontSize: "0.625rem",
+              color: l.index === levelConfig.index ? levelConfig.color : "hsl(var(--muted-foreground))",
+              fontWeight: l.index === levelConfig.index ? 700 : 400,
+            }}
+          >
+            {labelMap[l.key]}
+          </span>
         ))}
       </div>
     </motion.div>

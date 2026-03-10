@@ -484,9 +484,11 @@
   },
   "weekly": {
     "title": "In the last week",
+    "overall_title": "Gender distribution",
     "women_followed": "Women followed",
     "men_followed": "Men followed",
-    "more_count": "more"
+    "more_count": "more",
+    "no_activity": "No activity yet"
   },
   "spy_status": {
     "title": "Your Spy is...",

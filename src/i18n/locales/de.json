@@ -502,9 +502,11 @@
   },
   "weekly": {
     "title": "In der letzten Woche",
+    "overall_title": "Geschlechterverteilung",
     "women_followed": "Frauen gefolgt",
     "men_followed": "Männern gefolgt",
-    "more_count": "weitere"
+    "more_count": "weitere",
+    "no_activity": "Noch keine Aktivität"
   },
   "spy_status": {
     "title": "Dein Spy ist...",
