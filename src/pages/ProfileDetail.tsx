@@ -274,15 +274,7 @@ const ProfileDetail = () => {
 
         {/* Follower / Following stats */}
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div
-            className="p-4 text-center"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              backdropFilter: "blur(24px)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-              borderRadius: "16px",
-            }}
-          >
+          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.follower_count ?? 0)}
@@ -293,17 +285,9 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem', opacity: 0.5 }}>{t("dashboard.followers")}</p>
+            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.followers")}</p>
           </div>
-          <div
-            className="p-4 text-center"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              backdropFilter: "blur(24px)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-              borderRadius: "16px",
-            }}
-          >
+          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.following_count ?? 0)}
