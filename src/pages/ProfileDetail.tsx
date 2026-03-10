@@ -126,7 +126,61 @@ const ProfileDetail = () => {
   const showGender = followings.length > 0 && (femaleCount + maleCount) > 0;
 
   const handleScan = async () => {
-...
+    if (isFreeAndScanned) { showPaywall("scan"); return; }
+    setIsScanning(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("trigger-scan", {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+        body: { profileId: id },
+      });
+      if (res.error) throw res.error;
+      const resData = res.data as { error?: string; results?: Array<{ error?: string }> };
+      if (resData?.error === "PAYWALL_REQUIRED") { showPaywall("scan"); }
+      else if (resData?.results?.[0]?.error) { toast.error(t("profile_detail.scan_error", { error: resData.results[0].error })); }
+      else { toast.success(t("profile_detail.scan_complete")); }
+      queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+      queryClient.invalidateQueries({ queryKey: ["follower_events"] });
+      queryClient.invalidateQueries({ queryKey: ["profile_followings"] });
+    } catch (err) {
+      toast.error(t("profile_detail.scan_failed", { error: err instanceof Error ? err.message : String(err) }));
+    } finally { setIsScanning(false); }
+  };
+
+  const handleDelete = () => {
+    if (!id) return;
+    deleteProfile.mutate(id, { onSuccess: () => navigate("/dashboard", { replace: true }) });
+  };
+
+  const followerDelta = (profile?.previous_follower_count != null && profile.previous_follower_count > 0)
+    ? (profile.follower_count ?? 0) - profile.previous_follower_count : null;
+  const followingDelta = (profile?.previous_following_count != null && profile.previous_following_count > 0)
+    ? (profile.following_count ?? 0) - profile.previous_following_count : null;
+
+  const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
+    if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
+    if (plan === "free") return { locked: true, lockType: "paywall" };
+    if (!hasSpy) return { locked: true, lockType: "spy" };
+    return { locked: false, lockType: null };
+  };
+
+  const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
+  const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
+  const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
+  const onlyInitialFollowers = newFollowerEventsList.length === 0 && initialFollowerEventsList.length > 0;
+
+  const tabs = [
+    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: displayFollowEvents.length, ...getTabLock("new_follows") },
+    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: displayFollowerEvents.length, ...getTabLock("new_followers") },
+    { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
+    { id: "insights" as TabId, label: t("profile.insights_tab", "Insights"), count: null, ...getTabLock("insights") },
+  ];
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
