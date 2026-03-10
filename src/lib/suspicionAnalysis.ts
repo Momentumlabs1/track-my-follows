@@ -83,6 +83,7 @@ export function analyzeSuspicion(
   // 2. Recent follow activity (max 30)
   const recentFollows = followEvents.filter((e) => {
     if (e.event_type !== "follow") return false;
+    if (e.is_initial) return false;
     return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   }).length;
   const activityRate = followingCount > 0 ? (recentFollows / followingCount) * 100 : 0;
