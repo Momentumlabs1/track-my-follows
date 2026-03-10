@@ -159,6 +159,12 @@ const ProfileDetail = () => {
     return { locked: false, lockType: null };
   };
 
+  // Insights data (shown above tabs now)
+  const trackingDays = Math.floor((Date.now() - new Date(profile?.created_at ?? Date.now()).getTime()) / (24 * 60 * 60 * 1000));
+  const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
+  const hasEnoughData = realEventCount >= 2;
+  const insightsLocked = !canUseStats || (!hasSpy && isPro);
+
   const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
   const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
   const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
