@@ -41,7 +41,7 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-type TabId = "new_follows" | "new_followers" | "unfollowed" | "insights";
+type TabId = "new_follows" | "new_followers" | "unfollowed";
 
 const ProfileDetail = () => {
   const { t } = useTranslation();
