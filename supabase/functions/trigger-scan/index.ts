@@ -88,7 +88,7 @@ async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string)
   const baseUrl = endpoint === "following"
     ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`
     : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
-  const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
+  const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
   const parsed = parseChunkResponse(await res.json());
