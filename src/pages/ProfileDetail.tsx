@@ -270,7 +270,7 @@ const ProfileDetail = () => {
 
         {/* Follower / Following stats */}
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
+          <div className="native-card p-4 text-center">
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.follower_count ?? 0)}
