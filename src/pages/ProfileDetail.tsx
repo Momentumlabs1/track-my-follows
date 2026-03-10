@@ -108,10 +108,17 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
-  // Gender from DB aggregates (NOT frontend array)
-  const femaleCount = profile?.gender_female_count ?? 0;
-  const maleCount = profile?.gender_male_count ?? 0;
-  const unknownGenderCount = profile?.gender_unknown_count ?? 0;
+  // Gender from DB aggregates, fallback to followings array
+  let femaleCount = profile?.gender_female_count ?? 0;
+  let maleCount = profile?.gender_male_count ?? 0;
+  let unknownGenderCount = profile?.gender_unknown_count ?? 0;
+  if (femaleCount + maleCount + unknownGenderCount === 0 && followings.length > 0) {
+    for (const f of followings) {
+      if (f.gender_tag === 'female') femaleCount++;
+      else if (f.gender_tag === 'male') maleCount++;
+      else unknownGenderCount++;
+    }
+  }
   const showGender = (femaleCount + maleCount) > 0;
 
   const handleScan = async () => {
