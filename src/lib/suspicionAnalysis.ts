@@ -148,6 +148,7 @@ export function analyzeSuspicion(
   // 5. Night activity (max 5) - filtered to last 7 days
   const nightFollows = followEvents.filter((e) => {
     if (e.event_type !== "follow") return false;
+    if (e.is_initial) return false;
     if (Date.now() - new Date(e.detected_at).getTime() >= 7 * 24 * 60 * 60 * 1000) return false;
     const hour = new Date(e.detected_at).getHours();
     return hour >= 23 || hour <= 5;
