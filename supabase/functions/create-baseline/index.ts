@@ -200,8 +200,8 @@ Deno.serve(async (req) => {
 
       do {
         const url = nextMaxId
-          ? `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}&max_id=${nextMaxId}`
-          : `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}`;
+          ? `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}&max_id=${nextMaxId}&order=date_followed_latest`
+          : `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}&order=date_followed_latest`;
 
         const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
         if (res.status === 404) { await res.text(); break; }
