@@ -107,6 +107,7 @@ export function analyzeSuspicion(
   // 3. Follow/Unfollow churn (max 15)
   const recentUnfollows = followEvents.filter((e) => {
     if (e.event_type !== "unfollow") return false;
+    if (e.is_initial) return false;
     return Date.now() - new Date(e.detected_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   }).length;
   const churnRate = recentFollows > 0 ? recentUnfollows / recentFollows : 0;
