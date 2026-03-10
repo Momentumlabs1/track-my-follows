@@ -1,0 +1,1 @@
+UPDATE profiles SET plan_id = '5e46817f-9dd1-4419-a908-6e4f17a23840' WHERE user_id = '8ffe8fd7-779f-4335-90a4-3d520ca3131e';
