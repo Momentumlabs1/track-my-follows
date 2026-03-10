@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
 
     if (followingCount > 10000) {
       console.log(`[create-baseline] ${username}: ${followingCount} followings > 10K, sampling page 1 only`);
-      const url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}`;
+      const url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}&order=date_followed_latest`;
       const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
       if (!res.ok) throw new Error(`Following fetch failed: ${res.status}`);
       const parsed = parseChunkResponse(await res.json());
