@@ -74,6 +74,8 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
+  // Free users can see new_follows and new_followers without blur
+  const shouldBlurFollows = isPro ? false : false; // Free users see data unblurred for basic tabs
 
   const newFollowEvents = useMemo(() =>
     followEvents.filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial && (e as Record<string, unknown>).direction === "following")
