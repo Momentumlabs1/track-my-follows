@@ -481,5 +481,42 @@
     "lost_followers": "Verlorene Follower",
     "summary": "Zusammenfassung",
     "gender_distribution": "Gender-Verteilung der neuen Follows: {{percent}}% weiblich"
+  },
+  "spy_findings": {
+    "title": "Das hat der Spy gefunden",
+    "female_ratio": "Frauen-Anteil",
+    "follow_tempo": "Follow-Tempo",
+    "loyalty": "Treue-Index",
+    "network_style": "Netzwerk-Stil",
+    "quiet": "Ruhig",
+    "normal": "Normal",
+    "active": "Aktiv",
+    "very_active": "Sehr aktiv",
+    "stable": "Stabil",
+    "lightly_changing": "Leicht wechselnd",
+    "changing": "Wechselhaft",
+    "selective": "Selektiv",
+    "balanced": "Ausgeglichen",
+    "exploratory": "Entdeckend",
+    "very_active_network": "Sehr aktiv"
+  },
+  "weekly": {
+    "title": "In der letzten Woche",
+    "women_followed": "Frauen gefolgt",
+    "men_followed": "Männern gefolgt",
+    "more_count": "weitere"
+  },
+  "spy_status": {
+    "title": "Dein Spy ist...",
+    "gelassen": "Gelassen",
+    "aufmerksam": "Aufmerksam",
+    "wachsam": "Wachsam",
+    "alarmiert": "Alarmiert",
+    "gelassen_desc": "Sieht alles normal aus",
+    "aufmerksam_desc": "Leichte Auffälligkeiten erkannt",
+    "wachsam_desc": "Mehrere Signale erkannt",
+    "alarmiert_desc": "Stark auffälliges Muster",
+    "early_estimate": "Frühe Einschätzung · wenig Aktivität",
+    "no_clear_signals": "Noch keine klaren Auffälligkeiten — dein Spy sammelt erste Signale"
   }
 }

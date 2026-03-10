@@ -10,6 +10,8 @@ export interface SuspicionBreakdown {
   emoji: string;
   factors: SuspicionFactor[];
   genderStats: { female: number; male: number; unknown: number; total: number; femalePercent: number };
+  spyLevel: "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
+  spyLevelDescription: string;
 }
 
 export type FactorLevel = "safe" | "warning" | "danger";
@@ -162,11 +164,20 @@ export function analyzeSuspicion(
   else if (overallScore <= 75) { label = tr("suspicion.verySuspicious"); emoji = "😬"; }
   else { label = "Red Flag!"; emoji = "🚩"; }
 
+  let spyLevel: "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
+  let spyLevelDescription: string;
+  if (overallScore <= 15) { spyLevel = "gelassen"; spyLevelDescription = tr("spy_status.gelassen_desc"); }
+  else if (overallScore <= 40) { spyLevel = "aufmerksam"; spyLevelDescription = tr("spy_status.aufmerksam_desc"); }
+  else if (overallScore <= 65) { spyLevel = "wachsam"; spyLevelDescription = tr("spy_status.wachsam_desc"); }
+  else { spyLevel = "alarmiert"; spyLevelDescription = tr("spy_status.alarmiert_desc"); }
+
   return {
     overallScore,
     label,
     emoji,
     factors,
     genderStats: { female: femaleCount, male: maleCount, unknown: unknownCount, total: femaleCount + maleCount + unknownCount, femalePercent },
+    spyLevel,
+    spyLevelDescription,
   };
 }

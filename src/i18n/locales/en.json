@@ -463,5 +463,42 @@
     "lost_followers": "Lost followers",
     "summary": "Summary",
     "gender_distribution": "Gender distribution of new follows: {{percent}}% female"
+  },
+  "spy_findings": {
+    "title": "What the Spy found",
+    "female_ratio": "Female ratio",
+    "follow_tempo": "Follow tempo",
+    "loyalty": "Loyalty index",
+    "network_style": "Network style",
+    "quiet": "Quiet",
+    "normal": "Normal",
+    "active": "Active",
+    "very_active": "Very active",
+    "stable": "Stable",
+    "lightly_changing": "Slightly changing",
+    "changing": "Volatile",
+    "selective": "Selective",
+    "balanced": "Balanced",
+    "exploratory": "Exploratory",
+    "very_active_network": "Very active"
+  },
+  "weekly": {
+    "title": "In the last week",
+    "women_followed": "Women followed",
+    "men_followed": "Men followed",
+    "more_count": "more"
+  },
+  "spy_status": {
+    "title": "Your Spy is...",
+    "gelassen": "Relaxed",
+    "aufmerksam": "Attentive",
+    "wachsam": "Watchful",
+    "alarmiert": "Alarmed",
+    "gelassen_desc": "Everything looks normal",
+    "aufmerksam_desc": "Minor anomalies detected",
+    "wachsam_desc": "Multiple signals detected",
+    "alarmiert_desc": "Strongly suspicious pattern",
+    "early_estimate": "Early estimate · limited activity",
+    "no_clear_signals": "No clear anomalies yet — your Spy is gathering first signals"
   }
 }

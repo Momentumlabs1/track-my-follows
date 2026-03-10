@@ -10,8 +10,9 @@ import { useTrackedProfiles, useFollowEvents, useDeleteTrackedProfile } from "@/
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
-import { NewFollowsBubbles } from "@/components/NewFollowsBubbles";
-import { SuspicionScoreCard } from "@/components/SuspicionScoreCard";
+import { SpyFindings } from "@/components/SpyFindings";
+import { WeeklyGenderCards } from "@/components/WeeklyGenderCards";
+import { SpyStatusCard } from "@/components/SpyStatusCard";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
 import { MoveSpySheet } from "@/components/MoveSpySheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,17 +108,11 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
-  // Gender from followings
-  const { femaleCount, maleCount, unknownGenderCount } = useMemo(() => {
-    let f = 0, m = 0, u = 0;
-    for (const fw of followings) {
-      if (fw.gender_tag === "female") f++;
-      else if (fw.gender_tag === "male") m++;
-      else u++;
-    }
-    return { femaleCount: f, maleCount: m, unknownGenderCount: u };
-  }, [followings]);
-  const showGender = followings.length > 0 && (femaleCount + maleCount) > 0;
+  // Gender from DB aggregates (NOT frontend array)
+  const femaleCount = profile?.gender_female_count ?? 0;
+  const maleCount = profile?.gender_male_count ?? 0;
+  const unknownGenderCount = profile?.gender_unknown_count ?? 0;
+  const showGender = (femaleCount + maleCount) > 0;
 
   const handleScan = async () => {
     if (isFreeAndScanned) { showPaywall("scan"); return; }
@@ -239,7 +234,8 @@ const ProfileDetail = () => {
               className="flex items-center justify-center"
               style={{
                 width: 70, height: 70, borderRadius: 9999,
-                background: "#2C2C2E",
+                background: "hsl(var(--card-elevated))",
+                border: "1px solid hsl(var(--border))",
               }}
               animate={hasSpy ? { boxShadow: ["0 0 0px rgba(255,45,85,0)", "0 0 16px rgba(255,45,85,0.3)", "0 0 0px rgba(255,45,85,0)"] } : {}}
               transition={hasSpy ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
@@ -274,7 +270,7 @@ const ProfileDetail = () => {
 
         {/* Follower / Following stats */}
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
+          <div className="native-card p-4 text-center">
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.follower_count ?? 0)}
@@ -285,9 +281,9 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.followers")}</p>
+            <p className="mt-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("dashboard.followers")}</p>
           </div>
-          <div className="p-4 text-center" style={{ background: "#1C1C1E", borderRadius: "16px" }}>
+          <div className="native-card p-4 text-center">
             <div className="flex items-baseline justify-center gap-1">
               <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(profile.following_count ?? 0)}
@@ -298,7 +294,7 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="mt-1" style={{ fontSize: '0.75rem', color: "#8E8E93" }}>{t("dashboard.following")}</p>
+            <p className="mt-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("dashboard.following")}</p>
           </div>
         </div>
 
@@ -309,7 +305,7 @@ const ProfileDetail = () => {
               <span className="font-bold tabular-nums flex-shrink-0" style={{ fontSize: "1rem", color: "#FF2D55" }}>
                 ♀ {femaleCount}
               </span>
-              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "#2C2C2E" }}>
+              <div className="flex-1 overflow-hidden flex" style={{ height: 8, borderRadius: 4, background: "hsl(var(--card-elevated))" }}>
                 <motion.div
                   className="h-full"
                   style={{ background: "#FF2D55", borderRadius: "4px 0 0 4px" }}
@@ -329,18 +325,18 @@ const ProfileDetail = () => {
                 ♂ {maleCount}
               </span>
             </div>
-            <p style={{ fontSize: "0.6875rem", color: "#636366" }}>
-              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung")}
+            <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
+              {t("insights_new.gender_subtitle", "Geschlechterverteilung · Schätzung basierend auf analysierten Accounts")}
             </p>
             {unknownGenderCount > 0 && (
-              <p style={{ fontSize: "0.6875rem", color: "#48484A" }}>
+              <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", opacity: 0.6 }}>
                 {unknownGenderCount} {t("insights_new.not_identifiable", "nicht identifizierbar")}
               </p>
             )}
           </div>
         )}
 
-        {/* ═══ ANALYSIS: Bubbles + Score (above tabs) ═══ */}
+        {/* ═══ ANALYSIS: Spy Findings + Weekly + Status ═══ */}
         <div className="relative mb-2">
           {insightsLocked && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
@@ -355,11 +351,16 @@ const ProfileDetail = () => {
               )}
             </div>
           )}
-          <div className={`space-y-4 ${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-            <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
-            {suspicionAnalysis && (
-              <SuspicionScoreCard analysis={suspicionAnalysis} trackingDays={trackingDays} hasEnoughData={hasEnoughData} />
-            )}
+          <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+            <SpyFindings
+              followEvents={followEvents}
+              followerEvents={followerEvents}
+              profileFollowings={followings}
+              followerCount={profile.follower_count ?? 0}
+              followingCount={profile.following_count ?? 0}
+            />
+            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+            <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
           </div>
         </div>
       </motion.div>

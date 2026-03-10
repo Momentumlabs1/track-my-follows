@@ -6,7 +6,7 @@ import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { detectGender } from "@/lib/genderDetection";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
-interface NewFollowsBubblesProps {
+interface WeeklyGenderCardsProps {
   followEvents: FollowEvent[];
   profileFollowings: Array<{
     following_username: string;
@@ -23,6 +23,8 @@ interface GenderedFollow {
   detectedAt: string;
 }
 
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
 function useTimeAgoShort() {
   const { t } = useTranslation();
   return (dateStr: string): string => {
@@ -36,7 +38,7 @@ function useTimeAgoShort() {
   };
 }
 
-export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollowsBubblesProps) {
+export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGenderCardsProps) {
   const { t } = useTranslation();
   const [sheetGender, setSheetGender] = useState<"female" | "male" | null>(null);
   const timeAgo = useTimeAgoShort();
@@ -56,24 +58,22 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
   const { femaleFollows, maleFollows } = useMemo(() => {
     const female: GenderedFollow[] = [];
     const male: GenderedFollow[] = [];
+    const now = Date.now();
 
     const realFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
         !(e as any).is_initial &&
-        (e as any).direction === "following"
+        (e as any).direction === "following" &&
+        now - new Date(e.detected_at).getTime() < SEVEN_DAYS
     );
 
     for (const ev of realFollows) {
       const fromMap = followingMap.get(ev.target_username);
       let gender: string;
-      if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) {
-        gender = fromMap.gender;
-      } else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") {
-        gender = (ev as any).gender_tag;
-      } else {
-        gender = detectGender(ev.target_display_name);
-      }
+      if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
+      else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") gender = (ev as any).gender_tag;
+      else gender = detectGender(ev.target_display_name);
 
       const entry: GenderedFollow = {
         username: ev.target_username,
@@ -94,71 +94,37 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
 
   const sheetData = sheetGender === "female" ? femaleFollows : maleFollows;
   const sheetTitle = sheetGender === "female"
-    ? t("insights_new.new_women_title", "👩 Neue Frauen ({{count}})", { count: femaleFollows.length })
-    : t("insights_new.new_men_title", "👨 Neue Männer ({{count}})", { count: maleFollows.length });
+    ? t("weekly.women_followed", "Frauen gefolgt") + ` (${femaleFollows.length})`
+    : t("weekly.men_followed", "Männern gefolgt") + ` (${maleFollows.length})`;
 
   return (
     <>
-      <div style={{ background: "#1C1C1E", borderRadius: 20, padding: 20 }}>
-        <p className="text-foreground font-semibold mb-1" style={{ fontSize: "0.875rem" }}>
-          {t("insights_new.new_followed", "Neu gefolgt")}
+      <div className="mb-5">
+        <p className="section-header px-1 mb-3">
+          {t("weekly.title", "In der letzten Woche")}
         </p>
-
-        <div className="flex items-center justify-center gap-8 py-5">
-          {/* Female bubble */}
-          <button
-            onClick={() => femaleFollows.length > 0 && setSheetGender("female")}
-            className="flex flex-col items-center gap-2"
-          >
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: femaleFollows.length === 0 ? 0.3 : 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="flex flex-col items-center justify-center"
-              style={{
-                width: 100, height: 100, borderRadius: 9999,
-                background: "#FF2D55",
-              }}
-            >
-              <span style={{ fontSize: "1.5rem" }}>👩</span>
-              <span className="font-bold tabular-nums text-white" style={{ fontSize: "1.75rem", lineHeight: 1, letterSpacing: "-0.5px" }}>
-                {femaleFollows.length}
-              </span>
-            </motion.div>
-            <span style={{ fontSize: "0.8125rem", color: "#8E8E93" }}>
-              {t("gender.female", "Frauen")}
-            </span>
-          </button>
-
-          {/* Male bubble */}
-          <button
-            onClick={() => maleFollows.length > 0 && setSheetGender("male")}
-            className="flex flex-col items-center gap-2"
-          >
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: maleFollows.length === 0 ? 0.3 : 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.08 }}
-              className="flex flex-col items-center justify-center"
-              style={{
-                width: 100, height: 100, borderRadius: 9999,
-                background: "#007AFF",
-              }}
-            >
-              <span style={{ fontSize: "1.5rem" }}>👨</span>
-              <span className="font-bold tabular-nums text-white" style={{ fontSize: "1.75rem", lineHeight: 1, letterSpacing: "-0.5px" }}>
-                {maleFollows.length}
-              </span>
-            </motion.div>
-            <span style={{ fontSize: "0.8125rem", color: "#8E8E93" }}>
-              {t("gender.male", "Männer")}
-            </span>
-          </button>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Female card */}
+          <GenderCard
+            gender="female"
+            count={femaleFollows.length}
+            label={t("weekly.women_followed", "Frauen gefolgt")}
+            items={femaleFollows.slice(0, 3)}
+            totalExtra={Math.max(0, femaleFollows.length - 3)}
+            onTap={() => femaleFollows.length > 0 && setSheetGender("female")}
+            t={t}
+          />
+          {/* Male card */}
+          <GenderCard
+            gender="male"
+            count={maleFollows.length}
+            label={t("weekly.men_followed", "Männern gefolgt")}
+            items={maleFollows.slice(0, 3)}
+            totalExtra={Math.max(0, maleFollows.length - 3)}
+            onTap={() => maleFollows.length > 0 && setSheetGender("male")}
+            t={t}
+          />
         </div>
-
-        <p className="text-center" style={{ fontSize: "0.6875rem", color: "#48484A" }}>
-          {t("insights_new.since_tracking", "Tippe für Details")}
-        </p>
       </div>
 
       {/* Bottom Sheet */}
@@ -177,7 +143,7 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="absolute bottom-0 left-0 right-0 rounded-t-3xl max-h-[70vh] flex flex-col"
-              style={{ background: "#1C1C1E" }}
+              style={{ background: "hsl(var(--card))" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-5 pb-3 flex items-center justify-between border-b border-border flex-shrink-0">
@@ -193,8 +159,7 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
                     href={`https://instagram.com/${item.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-5 py-3"
-                    style={{ borderBottom: "0.5px solid hsl(var(--border))" }}
+                    className="flex items-center gap-3 px-5 py-3 border-b border-border"
                   >
                     <InstagramAvatar src={item.avatarUrl} alt={item.username} fallbackInitials={item.username} size={40} />
                     <div className="flex-1 min-w-0">
@@ -210,7 +175,7 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
                 ))}
                 {sheetData.length === 0 && (
                   <p className="text-muted-foreground text-center py-8" style={{ fontSize: "0.875rem" }}>
-                    {t("insights_new.no_entries", "Keine Einträge")}
+                    {t("profile.noEventsYet", "Keine Einträge")}
                   </p>
                 )}
               </div>
@@ -219,5 +184,99 @@ export function NewFollowsBubbles({ followEvents, profileFollowings }: NewFollow
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+function GenderCard({
+  gender,
+  count,
+  label,
+  items,
+  totalExtra,
+  onTap,
+  t,
+}: {
+  gender: "female" | "male";
+  count: number;
+  label: string;
+  items: GenderedFollow[];
+  totalExtra: number;
+  onTap: () => void;
+  t: (key: string, opts?: any) => string;
+}) {
+  const isFemale = gender === "female";
+  const isEmpty = count === 0;
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: isFemale ? 0.1 : 0.16 }}
+      onClick={onTap}
+      className="text-start rounded-2xl p-4 flex flex-col gap-3 border transition-opacity"
+      style={{
+        background: isFemale
+          ? "hsl(347 100% 59% / 0.06)"
+          : "hsl(210 100% 56% / 0.06)",
+        borderColor: isFemale
+          ? "hsl(347 100% 59% / 0.12)"
+          : "hsl(210 100% 56% / 0.12)",
+        opacity: isEmpty ? 0.5 : 1,
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-baseline gap-2">
+        <span
+          className="font-extrabold tabular-nums"
+          style={{
+            fontSize: "1.75rem",
+            lineHeight: 1,
+            color: isFemale ? "hsl(347 100% 59%)" : "hsl(210 100% 56%)",
+          }}
+        >
+          {count}
+        </span>
+        <span
+          className="font-bold"
+          style={{
+            fontSize: "1rem",
+            color: isFemale ? "hsl(347 100% 59%)" : "hsl(210 100% 56%)",
+            opacity: 0.7,
+          }}
+        >
+          {isFemale ? "♀" : "♂"}
+        </span>
+      </div>
+      <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+        {label}
+      </span>
+
+      {/* Preview accounts */}
+      {items.length > 0 && (
+        <div className="flex flex-col gap-2 mt-1">
+          {items.map((item) => (
+            <div key={item.username} className="flex items-center gap-2 min-w-0">
+              <InstagramAvatar
+                src={item.avatarUrl}
+                alt={item.username}
+                fallbackInitials={item.username}
+                size={24}
+              />
+              <span
+                className="text-foreground truncate"
+                style={{ fontSize: "0.75rem" }}
+              >
+                @{item.username}
+              </span>
+            </div>
+          ))}
+          {totalExtra > 0 && (
+            <span className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
+              +{totalExtra} {t("weekly.more_count", "weitere")}
+            </span>
+          )}
+        </div>
+      )}
+    </motion.button>
   );
 }
