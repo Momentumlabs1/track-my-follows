@@ -1,39 +1,56 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Problem
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Die HikerAPI-Calls für Following-Listen verwenden aktuell keine Sortierung. Instagram gibt standardmassig nach "Relevanz/Interaktion" sortiert zuruck, nicht chronologisch. Andere Spy-Tools (Dolphin Radar etc.) nutzen den Parameter `order=date_followed_latest`, um die neuesten Follows zuerst zu bekommen.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+## Betroffene Stellen
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+### 1. `trigger-scan/index.ts` — Zeile 87
+```typescript
+// AKTUELL:
+const url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
+// FIX (nur fur "following"):
+// Wenn endpoint === "following", &order=date_followed_latest anhangen
+```
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+### 2. `smart-scan/index.ts` — Zeile 90 (fetchPage1) und Zeilen 107-109 (fetchAllPages)
+Gleiche Anderung: Fur `endpoint === "following"` den order-Parameter anhangen.
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### 3. `create-baseline/index.ts` — Zeilen 155 und 161
+Die paginierten Following-Calls brauchen ebenfalls `&order=date_followed_latest`.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+## Konkrete Anderungen
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**In allen drei Dateien** wird die URL-Konstruktion fur Following-Endpoints um `&order=date_followed_latest` erganzt. Fur Follower-Endpoints bleibt alles gleich (Follower-Sortierung stimmt bereits).
+
+**trigger-scan `fetchPage1`** (Z.87):
+```typescript
+const orderParam = endpoint === "following" ? "&order=date_followed_latest" : "";
+const url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}${orderParam}`;
+```
+
+**smart-scan `fetchPage1`** (Z.90): Gleich.
+
+**smart-scan `fetchAllPages`** (Z.107-109):
+```typescript
+const orderParam = endpoint === "following" ? "&order=date_followed_latest" : "";
+const url = nextMaxId
+  ? `...&max_id=${nextMaxId}${orderParam}`
+  : `...?user_id=${userId}${orderParam}`;
+```
+
+**create-baseline** (Z.155, 161): `&order=date_followed_latest` an beide Following-URLs anhangen.
+
+## Daten-Reset fur @timwger
+
+Per SQL (insert tool):
+1. `tracked_profile_id` fur username `timwger` aus `tracked_profiles` holen
+2. `DELETE FROM follow_events WHERE tracked_profile_id = '<id>'`
+3. `DELETE FROM profile_followings WHERE tracked_profile_id = '<id>'`
+4. `UPDATE tracked_profiles SET initial_scan_done = false, baseline_complete = false, last_scanned_at = NULL WHERE id = '<id>'`
+
+## Neu-Scan
+
+Nach Deploy der Edge Functions und Daten-Reset manuell einen Scan triggern (App offnen, Profil auswahlen, Refresh). Die Following-Liste sollte dann chronologisch sortiert sein und mit Dolphin Radar ubereinstimmen.
 
