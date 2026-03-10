@@ -25,8 +25,8 @@ export interface SuspicionFactor {
 }
 
 export function analyzeSuspicion(
-  followEvents: Array<{ event_type: string; target_display_name?: string | null; detected_at: string }>,
-  profileFollowings: Array<{ following_display_name?: string | null }>,
+  followEvents: Array<{ event_type: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null }>,
+  profileFollowings: Array<{ following_display_name?: string | null; gender_tag?: string | null }>,
   followerCount: number,
   followingCount: number,
   t?: (key: string, opts?: Record<string, unknown>) => string,
@@ -43,10 +43,17 @@ export function analyzeSuspicion(
     : followEvents.filter((e) => e.event_type === "follow");
 
   for (const entry of allNames) {
-    const name = "following_display_name" in entry
-      ? (entry as { following_display_name?: string | null }).following_display_name
-      : (entry as { target_display_name?: string | null }).target_display_name;
-    const gender = detectGender(name);
+    // Prefer DB gender_tag, fallback to client-side detection
+    const dbTag = "gender_tag" in entry ? (entry as { gender_tag?: string | null }).gender_tag : null;
+    let gender: string;
+    if (dbTag === "female" || dbTag === "male") {
+      gender = dbTag;
+    } else {
+      const name = "following_display_name" in entry
+        ? (entry as { following_display_name?: string | null }).following_display_name
+        : (entry as { target_display_name?: string | null }).target_display_name;
+      gender = detectGender(name);
+    }
     if (gender === "female") femaleCount++;
     else if (gender === "male") maleCount++;
     else unknownCount++;
