@@ -303,43 +303,35 @@ const ProfileDetail = () => {
           </div>
         </div>
 
-        {/* ═══ BLOCK 2: Gender distribution — from profileFollowings ═══ */}
+        {/* ═══ BLOCK 2: Gender ratio bar ═══ */}
         {showGender && (
           <div className="mb-2">
-            <p className="section-header mb-3">{t("insights_new.gender_subtitle", "Geschlechterverteilung")}</p>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: "2rem", fontWeight: 900, color: "#FF2D55" }}>{femaleCount}</span>
-                <span style={{ fontSize: "1.25rem", color: "#FF2D55" }}>♀</span>
-                <span className="text-muted-foreground text-sm ml-1">{femalePct}%</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span style={{ fontSize: "1rem", color: "#FF2D55" }}>♀</span>
+                <span className="text-muted-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>{femalePct}%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm mr-1">{malePct}%</span>
-                <span style={{ fontSize: "1.25rem", color: "#007AFF" }}>♂</span>
-                <span style={{ fontSize: "2rem", fontWeight: 900, color: "#007AFF" }}>{maleCount}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>{malePct}%</span>
+                <span style={{ fontSize: "1rem", color: "#007AFF" }}>♂</span>
               </div>
             </div>
-            <div className="h-3 rounded-full overflow-hidden flex">
+            <div className="h-2.5 rounded-full overflow-hidden flex">
               <motion.div
-                style={{ background: "#FF2D55", transition: "width 0.6s ease" }}
+                style={{ background: "#FF2D55" }}
                 className="h-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${femalePct}%` }}
                 transition={{ duration: 0.8 }}
               />
               <motion.div
-                style={{ background: "#007AFF", transition: "width 0.6s ease" }}
+                style={{ background: "#007AFF" }}
                 className="h-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${malePct}%` }}
                 transition={{ duration: 0.8, delay: 0.1 }}
               />
             </div>
-            {unknownGenderCount > 0 && (
-              <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.6875rem" }}>
-                + {unknownGenderCount} {t("insights_new.not_identifiable", "nicht erkannt")}
-              </p>
-            )}
           </div>
         )}
       </motion.div>
