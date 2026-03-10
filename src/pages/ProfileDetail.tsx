@@ -145,7 +145,8 @@ const ProfileDetail = () => {
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
-    if (tabId === "new_follows") return { locked: plan === "free", lockType: plan === "free" ? "paywall" : null };
+    // Free users can see "new_follows" and "new_followers" (1x/day scan)
+    if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
     if (plan === "free") return { locked: true, lockType: "paywall" };
     if (!hasSpy) return { locked: true, lockType: "spy" };
     return { locked: false, lockType: null };
