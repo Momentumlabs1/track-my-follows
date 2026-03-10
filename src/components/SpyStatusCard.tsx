@@ -54,37 +54,31 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.15 }}
-      className="mb-6 px-1"
-    >
+    <div className="mb-2 px-1">
       {/* Title row */}
-      <div className="flex items-center gap-2 mb-3">
-        <SpyIcon size={20} />
+      <div className="flex items-center gap-3 mb-1">
+        <SpyIcon size={28} glow />
         <p className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
           {t("spy_status.title", "Dein Spy ist...")}
         </p>
       </div>
 
       {/* Big level label */}
-      <div className="flex items-end gap-3 mb-2">
-        <SpyIcon size={32} glow />
-        <span
-          style={{
-            fontSize: "3rem",
-            fontWeight: 900,
-            lineHeight: 1,
-            color: levelConfig.color,
-          }}
-        >
-          {labelMap[level]}
-        </span>
-      </div>
+      <p
+        style={{
+          fontSize: "3.5rem",
+          fontWeight: 900,
+          lineHeight: 1,
+          color: levelConfig.color,
+          marginBottom: "0.5rem",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {labelMap[level]}
+      </p>
 
       {/* Description */}
-      <p className="text-muted-foreground mb-4" style={{ fontSize: "0.875rem" }}>
+      <p className="text-muted-foreground mb-5" style={{ fontSize: "0.9375rem" }}>
         {descMap[level]}
       </p>
 
@@ -96,36 +90,37 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
       )}
 
       {/* 4-segment bar */}
-      <div className="flex gap-1.5 mb-1">
+      <div className="flex gap-1.5 mb-2">
         {LEVELS.map((l) => (
-          <div
+          <motion.div
             key={l.key}
             className="flex-1 rounded-full"
             style={{
-              height: 8,
+              height: 10,
               background: l.index <= levelConfig.index ? levelConfig.color : "hsl(var(--border))",
-              opacity: l.index <= levelConfig.index ? 1 : 0.25,
-              transition: "background 0.4s, opacity 0.4s",
+              opacity: l.index <= levelConfig.index ? 1 : 0.2,
             }}
+            animate={l.index === levelConfig.index ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
+            transition={{ duration: 1.5, repeat: Infinity }}
           />
         ))}
       </div>
 
       {/* Level labels under bar */}
-      <div className="flex justify-between mt-1">
+      <div className="flex justify-between">
         {LEVELS.map((l) => (
           <span
             key={l.key}
             style={{
               fontSize: "0.625rem",
-              color: l.index === levelConfig.index ? levelConfig.color : "hsl(var(--muted-foreground))",
-              fontWeight: l.index === levelConfig.index ? 700 : 400,
+              color: l.key === level ? levelConfig.color : "hsl(var(--muted-foreground))",
+              fontWeight: l.key === level ? 700 : 400,
             }}
           >
             {labelMap[l.key]}
           </span>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
