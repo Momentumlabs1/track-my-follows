@@ -87,8 +87,9 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
 
 // ── Fetch page 1 only ──
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const orderParam = endpoint === "following" ? "&order=date_followed_latest" : "";
-  const url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}${orderParam}`;
+  const baseUrl = endpoint === "following"
+    ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`
+    : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
   const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
