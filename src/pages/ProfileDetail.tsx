@@ -512,42 +512,7 @@ const ProfileDetail = () => {
           </div>
         )}
 
-        {activeTab === "insights" && (() => {
-          const trackingDays = Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (24 * 60 * 60 * 1000));
-          const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
-          const hasEnoughData = realEventCount >= 2;
-
-          return (
-            <div className="relative">
-              {(!canUseStats || (!hasSpy && isPro)) && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-                  {!isPro ? (
-                    <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                      <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-                    </button>
-                  ) : (
-                    <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                      <SpyIcon size={14} /> {t("spy.spy_required")}
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className={`space-y-4 ${(!canUseStats || (!hasSpy && isPro)) ? "blur-md pointer-events-none" : ""}`}>
-                {/* 3A: Gender Bubbles */}
-                <NewFollowsBubbles followEvents={followEvents} profileFollowings={followings} />
-
-                {/* 3B: Suspicion Score Card with Chips */}
-                {suspicionAnalysis && (
-                  <SuspicionScoreCard
-                    analysis={suspicionAnalysis}
-                    trackingDays={trackingDays}
-                    hasEnoughData={hasEnoughData}
-                  />
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {/* Insights tab removed — analysis shown above tabs */}
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
