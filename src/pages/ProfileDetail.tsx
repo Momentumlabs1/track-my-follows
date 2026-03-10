@@ -113,6 +113,18 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
   }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
 
+  // Gender data from actual followings (not profile counters which may be 0)
+  const { femaleCount, maleCount, unknownGenderCount } = useMemo(() => {
+    let f = 0, m = 0, u = 0;
+    for (const fw of followings) {
+      if (fw.gender_tag === "female") f++;
+      else if (fw.gender_tag === "male") m++;
+      else u++;
+    }
+    return { femaleCount: f, maleCount: m, unknownGenderCount: u };
+  }, [followings]);
+  const showGender = followings.length > 0 && (femaleCount + maleCount) > 0;
+
   const handleScan = async () => {
     if (isFreeAndScanned) { showPaywall("scan"); return; }
     setIsScanning(true);
@@ -147,14 +159,12 @@ const ProfileDetail = () => {
     ? (profile.following_count ?? 0) - profile.previous_following_count : null;
 
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
-    // Free users can see "new_follows" and "new_followers" (1x/day scan)
     if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
     if (plan === "free") return { locked: true, lockType: "paywall" };
     if (!hasSpy) return { locked: true, lockType: "spy" };
     return { locked: false, lockType: null };
   };
 
-  // If no "new" events exist, treat initial events as the display list
   const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
   const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
   const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
@@ -179,14 +189,6 @@ const ProfileDetail = () => {
       </div>
     );
   }
-
-  // Gender data from profile
-  const femaleCount = profile.gender_female_count ?? 0;
-  const maleCount = profile.gender_male_count ?? 0;
-  const genderTotal = femaleCount + maleCount;
-  const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;
-  const malePct = genderTotal > 0 ? 100 - femalePct : 0;
-  const showGender = (profile.following_count ?? 0) > 0 && genderTotal > 0;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -300,28 +302,7 @@ const ProfileDetail = () => {
         </div>
       )}
 
-      {!profile.baseline_complete && !profile.is_private && (profile.following_count ?? 0) > 0 &&
-        (profile.gender_female_count ?? 0) === 0 && (profile.gender_male_count ?? 0) === 0 && (profile.gender_unknown_count ?? 0) === 0 && (() => {
-          const profileAge = Date.now() - new Date(profile.created_at).getTime();
-          const timedOut = profileAge > 10 * 60 * 1000;
-          return (
-            <div className="px-5 mb-4">
-              <div className="flex items-center gap-2 native-card p-4">
-                {timedOut ? (
-                  <>
-                    <Info className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_unavailable", "Gender-Analyse derzeit nicht verfügbar")}</span>
-                  </>
-                ) : (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-primary font-medium" style={{ fontSize: '0.8125rem' }}>{t("gender_analysis_running")}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+      {/* Old gender banner removed — gender is now shown in Insights tab */}
 
       {/* ─── Tabs ─── */}
       <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
@@ -454,7 +435,7 @@ const ProfileDetail = () => {
                   <GenderDistributionBar
                     femaleCount={femaleCount}
                     maleCount={maleCount}
-                    unknownCount={profile.gender_unknown_count ?? 0}
+                    unknownCount={unknownGenderCount}
                   />
                 )}
 
