@@ -1,0 +1,1 @@
+UPDATE subscriptions SET plan_type = 'pro', status = 'active', max_tracked_profiles = 9999 WHERE user_id = '8ffe8fd7-779f-4335-90a4-3d520ca3131e';
