@@ -294,28 +294,34 @@ const ProfileDetail = () => {
         {/* Gender ratio inline */}
         {showGender && (
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-2">
               <span style={{ fontSize: "0.875rem", color: "#FF2D55" }}>♀</span>
-              <div className="flex-1 h-2 rounded-full overflow-hidden flex">
-                <motion.div
-                  style={{ background: "#FF2D55" }}
-                  className="h-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${femalePct}%` }}
-                  transition={{ duration: 0.8 }}
-                />
-                <motion.div
-                  style={{ background: "#007AFF" }}
-                  className="h-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${malePct}%` }}
-                  transition={{ duration: 0.8, delay: 0.1 }}
-                />
+              <div className="flex-1 relative">
+                <div className="h-2 rounded-full overflow-hidden flex">
+                  <motion.div
+                    style={{ background: "#FF2D55" }}
+                    className="h-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${femalePct}%` }}
+                    transition={{ duration: 0.8 }}
+                  />
+                  <motion.div
+                    style={{ background: "#007AFF" }}
+                    className="h-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${malePct}%` }}
+                    transition={{ duration: 0.8, delay: 0.1 }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-muted-foreground" style={{ fontSize: "0.625rem", color: "#FF2D55" }}>{femalePct}%</span>
+                  <span className="text-muted-foreground" style={{ fontSize: "0.625rem", color: "#007AFF" }}>{malePct}%</span>
+                </div>
               </div>
               <span style={{ fontSize: "0.875rem", color: "#007AFF" }}>♂</span>
             </div>
-            <p className="text-center text-muted-foreground" style={{ fontSize: '0.625rem' }}>
-              {femalePct}% {t("gender.female_short", "weiblich")} · {followingCount} Accounts{unknownGenderCount > 0 ? ` · ${unknownGenderCount} ${t("gender.unknown_short", "n.e.")}` : ''}
+            <p className="text-center text-muted-foreground mt-1" style={{ fontSize: '0.5625rem', opacity: 0.5 }}>
+              {t("gender.estimate_note", "Gender Ratio basiert auf Schätzungen")}
             </p>
           </div>
         )}
