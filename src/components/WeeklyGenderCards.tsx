@@ -137,8 +137,8 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                 opacity: femaleCount === 0 ? 0.4 : 1,
               }}
             >
-              <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-                <span style={{ fontSize: "5rem", lineHeight: 1, opacity: 0.2 }}>👩</span>
+              <div className="absolute inset-0 flex items-end justify-center">
+                <img src={silhouetteFemale} alt="" className="w-full h-full object-cover rounded-3xl" style={{ opacity: 0.3 }} />
               </div>
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
