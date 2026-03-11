@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, Repeat, Users } from "lucide-react";
+
 import { useTranslation } from "react-i18next";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
