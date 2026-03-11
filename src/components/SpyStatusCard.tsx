@@ -1,14 +1,21 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Info } from "lucide-react";
+import { Info, ChevronDown } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
+import { SpyFindings } from "@/components/SpyFindings";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
+import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
 interface SpyStatusCardProps {
   analysis: SuspicionBreakdown | null;
   realEventCount: number;
+  followEvents?: FollowEvent[];
+  followerEvents?: Array<{ event_type: string; is_initial?: boolean | null; detected_at: string; username: string }>;
+  profileFollowings?: Array<{ following_username: string; gender_tag?: string | null }>;
+  followerCount?: number;
+  followingCount?: number;
 }
 
 type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
@@ -35,9 +42,18 @@ function getSpyLevel(score: number): SpyLevel {
   return "alarmiert";
 }
 
-export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) {
+export function SpyStatusCard({
+  analysis,
+  realEventCount,
+  followEvents = [],
+  followerEvents = [],
+  profileFollowings = [],
+  followerCount = 0,
+  followingCount = 0,
+}: SpyStatusCardProps) {
   const { t } = useTranslation();
   const [infoOpen, setInfoOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const score = analysis?.overallScore ?? 0;
   const level = getSpyLevel(score);
@@ -65,12 +81,21 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
+  const handleCardClick = () => {
+    setExpanded((prev) => !prev);
+  };
+
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setInfoOpen(true);
+  };
+
   return (
     <>
       <div className="mb-2">
         <button
           type="button"
-          onClick={() => setInfoOpen(true)}
+          onClick={handleCardClick}
           className="w-full text-left rounded-3xl overflow-hidden transition-transform active:scale-[0.98]"
           style={{
             background: `linear-gradient(135deg, ${levelConfig.color}15, ${levelConfig.color}08)`,
@@ -110,7 +135,7 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
                 </div>
               </div>
 
-              {/* Right side: label + level + score on one line */}
+              {/* Right side: label + level + score */}
               <div className="flex-1 min-w-0">
                 <p className="text-muted-foreground mb-0.5" style={{ fontSize: "0.6875rem" }}>
                   {t("spy_status.your_spy_is", "Dein Spy ist:")}
@@ -143,12 +168,18 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
               </div>
 
               {/* Info hint */}
-              <Info className="flex-shrink-0 text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+              <button
+                type="button"
+                onClick={handleInfoClick}
+                className="flex-shrink-0 p-1"
+              >
+                <Info className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+              </button>
             </div>
           </div>
 
           {/* Level segments footer */}
-          <div className="px-5 pb-4 pt-1">
+          <div className="px-5 pb-3 pt-1">
             <div className="flex gap-1.5 mb-1.5">
               {LEVELS.map((l) => {
                 const isActive = l.index <= levelConfig.index;
@@ -183,8 +214,39 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
               ))}
             </div>
           </div>
+
+          {/* Chevron indicator */}
+          <div className="flex justify-center pb-2">
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+            </motion.div>
+          </div>
         </button>
       </div>
+
+      {/* Collapsible SpyFindings */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <SpyFindings
+              followEvents={followEvents}
+              followerEvents={followerEvents}
+              profileFollowings={profileFollowings}
+              followerCount={followerCount}
+              followingCount={followingCount}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Info Sheet */}
       <Sheet open={infoOpen} onOpenChange={setInfoOpen}>

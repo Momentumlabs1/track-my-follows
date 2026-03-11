@@ -372,13 +372,10 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-          {/* Spy Status Hero */}
-          <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
-
-          <div className="border-t border-border/20 my-5" />
-
-          {/* Spy Findings */}
-          <SpyFindings
+          {/* Spy Status Hero + collapsible Findings */}
+          <SpyStatusCard
+            analysis={suspicionAnalysis}
+            realEventCount={realEventCount}
             followEvents={followEvents}
             followerEvents={followerEvents}
             profileFollowings={followings}
