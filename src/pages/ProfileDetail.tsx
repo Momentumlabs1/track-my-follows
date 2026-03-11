@@ -258,7 +258,7 @@ const ProfileDetail = () => {
                   />
                 </svg>
                 <button onClick={() => navigate("/spy")}>
-                  <SpyIcon size={48} glow />
+                  <SpyIcon size={60} glow />
                 </button>
               </div>
             )}
