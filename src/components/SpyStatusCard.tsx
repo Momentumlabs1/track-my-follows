@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Info, ChevronDown } from "lucide-react";
+import { Info, ChevronRight } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpyFindings } from "@/components/SpyFindings";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -68,7 +68,7 @@ export function SpyStatusCard({
 
   const descMap: Record<SpyLevel, string> = {
     gelassen: realEventCount === 0
-      ? t("spy_status.no_clear_signals", "Dein Spy wurde gerade aktiviert und sammelt ab jetzt Daten. Die Analyse wird genauer je länger der Spy aktiv ist.")
+      ? t("spy_status.no_clear_signals", "Dein Spy wurde gerade aktiviert und sammelt ab jetzt Daten.")
       : t("spy_status.gelassen_desc", "Alles sieht normal aus"),
     aufmerksam: t("spy_status.aufmerksam_desc", "Leichte Auffälligkeiten im Follow-Verhalten"),
     wachsam: t("spy_status.wachsam_desc", "Mehrere verdächtige Signale erkannt"),
@@ -92,14 +92,30 @@ export function SpyStatusCard({
 
   return (
     <>
+      {/* Section container */}
       <div className="mb-2">
+        {/* Section header */}
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <SpyIcon size={18} />
+          <span className="text-sm font-bold text-foreground">
+            {t("spy_status.section_title", "Spy-Analyse")}
+          </span>
+          <span className="text-xs text-muted-foreground ml-1">
+            {realEventCount === 0
+              ? t("spy_status.section_desc_early", "Dein Spion sammelt gerade erste Daten…")
+              : t("spy_status.section_desc", "Dein Spion analysiert das Follow-Verhalten")}
+          </span>
+        </div>
+
+        {/* Main card */}
         <button
           type="button"
           onClick={handleCardClick}
-          className="w-full text-left rounded-3xl overflow-hidden transition-transform active:scale-[0.98]"
+          className="w-full text-left rounded-3xl overflow-hidden transition-all active:scale-[0.98]"
           style={{
             background: `linear-gradient(135deg, ${levelConfig.color}15, ${levelConfig.color}08)`,
             border: `1px solid ${levelConfig.color}30`,
+            boxShadow: `0 4px 20px -4px ${levelConfig.color}20, 0 1px 3px 0 hsl(var(--foreground) / 0.05)`,
           }}
         >
           <div className="p-5">
@@ -135,7 +151,7 @@ export function SpyStatusCard({
                 </div>
               </div>
 
-              {/* Right side: label + level + score */}
+              {/* Right side: label + level + score + description */}
               <div className="flex-1 min-w-0">
                 <p className="text-muted-foreground mb-0.5" style={{ fontSize: "0.6875rem" }}>
                   {t("spy_status.your_spy_is", "Dein Spy ist:")}
@@ -165,16 +181,28 @@ export function SpyStatusCard({
                     </span>
                   </span>
                 </div>
+                {/* Status description */}
+                <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.75rem", lineHeight: 1.3 }}>
+                  {descMap[level]}
+                </p>
               </div>
 
-              {/* Info hint */}
-              <button
-                type="button"
-                onClick={handleInfoClick}
-                className="flex-shrink-0 p-1"
-              >
-                <Info className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
-              </button>
+              {/* Info + Chevron */}
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={handleInfoClick}
+                  className="p-1"
+                >
+                  <Info className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+                </button>
+                <motion.div
+                  animate={{ rotate: expanded ? 90 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChevronRight className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.5 }} />
+                </motion.div>
+              </div>
             </div>
           </div>
 
@@ -215,19 +243,26 @@ export function SpyStatusCard({
             </div>
           </div>
 
-          {/* Chevron indicator with hint */}
-          <div className="flex flex-col items-center pb-3 gap-0.5">
-            <p className="text-muted-foreground font-medium uppercase tracking-wider" style={{ fontSize: "0.5625rem", opacity: 0.5 }}>
+          {/* CTA pill */}
+          <div className="flex justify-center pb-4">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors"
+              style={{
+                background: `${levelConfig.color}18`,
+                color: levelConfig.color,
+                border: `1px solid ${levelConfig.color}25`,
+              }}
+            >
               {expanded
                 ? t("spy_status.tap_to_close", "Analyse ausblenden")
-                : t("spy_status.tap_for_analysis", "Tippe für detaillierte Analyse")}
-            </p>
-            <motion.div
-              animate={{ rotate: expanded ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown className="text-muted-foreground" style={{ width: 14, height: 14, opacity: 0.4 }} />
-            </motion.div>
+                : t("spy_status.tap_for_analysis", "Analyse anzeigen")}
+              <motion.div
+                animate={{ rotate: expanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronRight style={{ width: 12, height: 12 }} />
+              </motion.div>
+            </span>
           </div>
         </button>
       </div>

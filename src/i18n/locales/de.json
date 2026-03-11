@@ -510,6 +510,9 @@
   },
   "spy_status": {
     "title": "Dein Spy ist...",
+    "section_title": "Spy-Analyse",
+    "section_desc": "Dein Spion analysiert das Follow-Verhalten",
+    "section_desc_early": "Dein Spion sammelt gerade erste Daten…",
     "gelassen": "Gelassen",
     "aufmerksam": "Aufmerksam",
     "wachsam": "Wachsam",
@@ -520,7 +523,7 @@
     "alarmiert_desc": "Stark auffälliges Muster",
     "early_estimate": "Frühe Einschätzung · wenig Aktivität",
     "no_clear_signals": "Noch keine klaren Auffälligkeiten — dein Spy sammelt erste Signale",
-    "tap_for_analysis": "Tippe für detaillierte Analyse",
+    "tap_for_analysis": "Analyse anzeigen",
     "tap_to_close": "Analyse ausblenden"
   }
 }
