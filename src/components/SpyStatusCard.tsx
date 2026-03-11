@@ -22,17 +22,16 @@ type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
 
 interface LevelConfig {
   key: SpyLevel;
-  label: string;
   color: string;
   emoji: string;
   index: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { key: "gelassen", label: "Gelassen", color: "hsl(142 71% 45%)", emoji: "😌", index: 0 },
-  { key: "aufmerksam", label: "Aufmerksam", color: "hsl(45 100% 51%)", emoji: "🤨", index: 1 },
-  { key: "wachsam", label: "Wachsam", color: "hsl(30 100% 50%)", emoji: "😠", index: 2 },
-  { key: "alarmiert", label: "Alarmiert", color: "hsl(4 90% 58%)", emoji: "🚨", index: 3 },
+  { key: "gelassen", color: "hsl(142 71% 45%)", emoji: "😌", index: 0 },
+  { key: "aufmerksam", color: "hsl(45 100% 51%)", emoji: "🤨", index: 1 },
+  { key: "wachsam", color: "hsl(30 100% 50%)", emoji: "😠", index: 2 },
+  { key: "alarmiert", color: "hsl(4 90% 58%)", emoji: "🚨", index: 3 },
 ];
 
 function getSpyLevel(score: number): SpyLevel {
@@ -75,190 +74,93 @@ export function SpyStatusCard({
     alarmiert: t("spy_status.alarmiert_desc", "Stark auffälliges Verhaltensmuster"),
   };
 
-  const ringSize = 100;
-  const strokeWidth = 5;
+  const ringSize = 120;
+  const strokeWidth = 6;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
-  const handleCardClick = () => {
-    setExpanded((prev) => !prev);
-  };
-
-  const handleInfoClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setInfoOpen(true);
-  };
-
   return (
     <>
-      {/* Section container */}
-      <div className="mb-2">
-        {/* Main card */}
+      <div className="my-4">
+        {/* Section title */}
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <SpyIcon size={18} />
+          <span className="text-sm font-bold text-foreground">
+            {t("spy_status.section_title", "Deine Spy-Analyse")}
+          </span>
+        </div>
+
+        {/* Card */}
         <button
           type="button"
-          onClick={handleCardClick}
-          className="w-full text-left rounded-3xl overflow-hidden transition-all active:scale-[0.98]"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="relative w-full rounded-2xl border border-primary/20 bg-card p-6 text-center transition-all active:scale-[0.98]"
           style={{
-            border: `1px solid hsl(var(--primary) / 0.25)`,
-            boxShadow: `0 4px 20px -4px hsl(var(--primary) / 0.15), 0 1px 3px 0 hsl(var(--foreground) / 0.05)`,
+            boxShadow: "0 2px 12px -4px hsl(var(--primary) / 0.12)",
           }}
         >
-          {/* Pink header bar */}
-          <div
-            className="flex items-center gap-2 px-4 py-2.5"
-            style={{
-              background: `linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.1))`,
-            }}
+          {/* Info icon top-right */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setInfoOpen(true); }}
+            className="absolute top-4 right-4 p-1"
           >
-            <SpyIcon size={18} />
-            <span className="text-sm font-bold text-foreground whitespace-nowrap">
-              {t("spy_status.section_title", "Spy-Analyse")}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {realEventCount === 0
-                ? t("spy_status.section_desc_early", "Dein Spion sammelt gerade erste Daten…")
-                : t("spy_status.section_desc", "Dein Spion analysiert das Follow-Verhalten")}
-            </span>
-          </div>
+            <Info className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+          </button>
 
-          {/* Card body */}
-          <div
-            className="p-5"
-            style={{
-              background: `linear-gradient(135deg, ${levelConfig.color}10, ${levelConfig.color}05)`,
-            }}
-          >
-            <div className="flex items-center gap-5">
-              {/* Score Ring with SpyIcon */}
-              <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
-                <svg width={ringSize} height={ringSize} className="rotate-[-90deg]">
-                  <circle
-                    cx={ringSize / 2}
-                    cy={ringSize / 2}
-                    r={radius}
-                    fill="none"
-                    stroke={levelConfig.color}
-                    strokeWidth={strokeWidth}
-                    opacity={0.15}
-                  />
-                  <motion.circle
-                    cx={ringSize / 2}
-                    cy={ringSize / 2}
-                    r={radius}
-                    fill="none"
-                    stroke={levelConfig.color}
-                    strokeWidth={strokeWidth}
-                    strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: scoreOffset }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <SpyIcon size={48} glow />
-                </div>
-              </div>
-
-              {/* Right side: label + level + score + description */}
-              <div className="flex-1 min-w-0">
-                <p className="text-muted-foreground mb-0.5" style={{ fontSize: "0.6875rem" }}>
-                  {t("spy_status.your_spy_is", "Dein Spy ist:")}
-                </p>
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <span
-                    className="font-black"
-                    style={{
-                      fontSize: "1.5rem",
-                      lineHeight: 1.1,
-                      color: levelConfig.color,
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    {labelMap[level]}
-                  </span>
-                  <span style={{ fontSize: "1.25rem" }}>{levelConfig.emoji}</span>
-                  <span className="flex items-baseline gap-0.5">
-                    <span
-                      className="font-extrabold tabular-nums"
-                      style={{ fontSize: "0.875rem", color: levelConfig.color }}
-                    >
-                      {score}
-                    </span>
-                    <span className="text-muted-foreground" style={{ fontSize: "0.625rem" }}>
-                      /100
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Info + Chevron */}
-              <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={handleInfoClick}
-                  className="p-1"
-                >
-                  <Info className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
-                </button>
-                <motion.div
-                  animate={{ rotate: expanded ? 90 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ChevronRight className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.5 }} />
-                </motion.div>
+          {/* Centered ring + spy icon */}
+          <div className="flex flex-col items-center">
+            <div className="relative" style={{ width: ringSize, height: ringSize }}>
+              <svg width={ringSize} height={ringSize} className="rotate-[-90deg]">
+                <circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={levelConfig.color}
+                  strokeWidth={strokeWidth}
+                  opacity={0.15}
+                />
+                <motion.circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={levelConfig.color}
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: scoreOffset }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <SpyIcon size={56} glow />
               </div>
             </div>
-          </div>
 
-          {/* Level segments footer */}
-          <div className="px-5 pb-3 pt-1">
-            <div className="flex gap-1.5 mb-1.5">
-              {LEVELS.map((l) => {
-                const isActive = l.index <= levelConfig.index;
-                const isCurrent = l.index === levelConfig.index;
-                return (
-                  <motion.div
-                    key={l.key}
-                    className="flex-1 rounded-full"
-                    style={{
-                      height: 8,
-                      background: isActive ? levelConfig.color : "hsl(var(--border))",
-                      opacity: isActive ? 1 : 0.15,
-                    }}
-                    animate={isCurrent ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                );
-              })}
+            {/* Level + Score */}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="font-bold text-lg" style={{ color: levelConfig.color }}>
+                {labelMap[level]}
+              </span>
+              <span className="text-lg">{levelConfig.emoji}</span>
+              <span className="text-muted-foreground text-sm">·</span>
+              <span className="font-bold text-sm tabular-nums" style={{ color: levelConfig.color }}>
+                {score}
+              </span>
+              <span className="text-muted-foreground text-xs">/100</span>
             </div>
-            <div className="flex justify-between">
-              {LEVELS.map((l) => (
-                <span
-                  key={l.key}
-                  style={{
-                    fontSize: "0.5625rem",
-                    color: l.key === level ? levelConfig.color : "hsl(var(--muted-foreground))",
-                    fontWeight: l.key === level ? 700 : 400,
-                  }}
-                >
-                  {labelMap[l.key]}
-                </span>
-              ))}
-            </div>
-          </div>
 
-          {/* CTA pill */}
-          <div className="flex justify-center pb-4">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors"
-              style={{
-                background: `hsl(var(--primary) / 0.15)`,
-                color: `hsl(var(--primary))`,
-                border: `1px solid hsl(var(--primary) / 0.25)`,
-              }}
-            >
+            {/* Description */}
+            <p className="text-muted-foreground text-xs mt-1">
+              {descMap[level]}
+            </p>
+
+            {/* CTA pill */}
+            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-5 py-2 text-xs font-bold">
               {expanded
                 ? t("spy_status.tap_to_close", "Analyse ausblenden")
                 : t("spy_status.tap_for_analysis", "Analyse anzeigen")}
