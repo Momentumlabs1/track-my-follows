@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { detectGender } from "@/lib/genderDetection";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
+import silhouetteFemale from "@/assets/silhouette-female.png";
+import silhouetteMale from "@/assets/silhouette-male.png";
 
 interface WeeklyGenderCardsProps {
   followEvents: FollowEvent[];
