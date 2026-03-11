@@ -328,6 +328,19 @@ const ProfileDetail = () => {
             </p>
           </div>
         )}
+        {/* Gender analysis running but all unknown */}
+        {!showGender && followings.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: "0.875rem", color: "#FF2D55" }}>♀</span>
+              <div className="flex-1 h-2 rounded-full" style={{ background: "hsl(var(--border))" }} />
+              <span style={{ fontSize: "0.875rem", color: "#007AFF" }}>♂</span>
+            </div>
+            <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
+              {t("gender.analysis_running", "Geschlechteranalyse läuft...")} · {followings.length} Accounts
+            </p>
+          </div>
+        )}
       </motion.div>
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
