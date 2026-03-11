@@ -1,39 +1,26 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## SpyStatusCard als eigenstandiger Bereich mit besserer Interaktions-Affordance
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem
+Die SpyStatusCard sieht aktuell wie ein flaches UI-Element aus -- man erkennt nicht intuitiv, dass man drauftippen kann um die detaillierte Analyse zu sehen. Es fehlt ein klarer visueller "Bereich"-Charakter.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Plan
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**Datei: `src/components/SpyStatusCard.tsx`**
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+1. **Sektions-Header hinzufuegen** -- Ueber der Karte einen kleinen Titel-Bereich mit SpyIcon + "Spy-Analyse" Label, aehnlich wie andere Sektionen auf der Seite. Kurzer Beschreibungstext darunter, z.B. "Dein Spion analysiert das Follow-Verhalten" oder bei `realEventCount === 0`: "Dein Spion sammelt gerade erste Daten..."
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+2. **Karte interaktiver gestalten**:
+   - Dezenten Chevron-Pfeil rechts oder einen subtilen "Tap-Ripple"-Effekt hinzufuegen
+   - Den unteren "TIPPE FUER DETAILLIERTE ANALYSE"-Bereich prominenter machen: groessere Schrift, weniger transparent, evtl. als Pill-Button-Style statt nur Text
+   - Leichter Schatten/Elevation auf die Karte um sie als eigenen klickbaren Bereich abzuheben
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+3. **Info-Text zum Spy integrieren**: Unter dem Level-Indikator (vor dem Chevron) eine einzeilige Beschreibung des aktuellen Status einblenden (aus `descMap`), z.B. "Alles sieht normal aus" bei Gelassen. Das gibt dem Bereich mehr Inhalt und Kontext.
+
+4. **Visueller Container**: Die gesamte Sektion (Header + Karte) in einen eigenen `native-card`-artigen Container wrappen mit etwas mehr Padding, damit es sich klar von den anderen Bereichen absetzt.
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+- `src/components/SpyStatusCard.tsx` -- Haupt-Aenderungen
+- `src/i18n/locales/de.json` + `en.json` -- Neue Keys fuer Sektions-Header/Beschreibung
 
