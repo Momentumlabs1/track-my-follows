@@ -227,42 +227,17 @@ const ProfileDetail = () => {
       {/* ═══ HEADER ═══ */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-2 pb-5">
 
-        {/* Avatar + Spy connection */}
+        {/* Avatar */}
         <div className="flex flex-col items-center mb-4">
-          <div className="relative">
-            <button
-              onClick={() => {
-                if (hasSpy) navigate("/spy");
-                else if (isPro) setMoveSpyOpen(true);
-                else showPaywall("spy");
-              }}
-            >
-              {hasSpy ? (
-                <div style={{ padding: 3, borderRadius: 9999, background: "linear-gradient(135deg, #FF2D55, #FF6B8A)" }}>
-                  <div className="rounded-full bg-background p-[2px]">
-                    <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={68} />
-                  </div>
-                </div>
-              ) : (
+          {hasSpy ? (
+            <div style={{ padding: 3, borderRadius: 9999, background: "linear-gradient(135deg, #FF2D55, #FF6B8A)" }}>
+              <div className="rounded-full bg-background p-[2px]">
                 <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={68} />
-              )}
-            </button>
-
-            {hasSpy && (
-              <div className="absolute top-1/2 -translate-y-1/2 flex items-center" style={{ left: '100%' }}>
-                <svg width="40" height="4" className="mx-1">
-                  <line x1="0" y1="2" x2="40" y2="2"
-                    stroke="hsl(347 100% 59%)" strokeWidth="2"
-                    strokeDasharray="4 4"
-                    className="animate-dash-move"
-                  />
-                </svg>
-                <button onClick={() => navigate("/spy")}>
-                  <SpyIcon size={60} glow />
-                </button>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={68} />
+          )}
 
           <p className="text-foreground font-extrabold mt-2" style={{ fontSize: '1.125rem' }}>@{profile.username}</p>
           {!hasSpy && (
@@ -390,6 +365,9 @@ const ProfileDetail = () => {
             profileFollowings={followings}
             followerCount={followerCount}
             followingCount={followingCount}
+            lastScannedAt={profile.last_scanned_at}
+            totalScans={profile.total_scans_executed}
+            pushScansToday={profile.push_scans_today}
           />
         </div>
       </div>
