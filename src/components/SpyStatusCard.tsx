@@ -94,31 +94,41 @@ export function SpyStatusCard({
     <>
       {/* Section container */}
       <div className="mb-2">
-        {/* Section header */}
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <SpyIcon size={18} />
-          <span className="text-sm font-bold text-foreground">
-            {t("spy_status.section_title", "Spy-Analyse")}
-          </span>
-          <span className="text-xs text-muted-foreground ml-1">
-            {realEventCount === 0
-              ? t("spy_status.section_desc_early", "Dein Spion sammelt gerade erste Daten…")
-              : t("spy_status.section_desc", "Dein Spion analysiert das Follow-Verhalten")}
-          </span>
-        </div>
-
         {/* Main card */}
         <button
           type="button"
           onClick={handleCardClick}
           className="w-full text-left rounded-3xl overflow-hidden transition-all active:scale-[0.98]"
           style={{
-            background: `linear-gradient(135deg, ${levelConfig.color}15, ${levelConfig.color}08)`,
-            border: `1px solid ${levelConfig.color}30`,
-            boxShadow: `0 4px 20px -4px ${levelConfig.color}20, 0 1px 3px 0 hsl(var(--foreground) / 0.05)`,
+            border: `1px solid hsl(var(--primary) / 0.25)`,
+            boxShadow: `0 4px 20px -4px hsl(var(--primary) / 0.15), 0 1px 3px 0 hsl(var(--foreground) / 0.05)`,
           }}
         >
-          <div className="p-5">
+          {/* Pink header bar */}
+          <div
+            className="flex items-center gap-2 px-4 py-2.5"
+            style={{
+              background: `linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.1))`,
+            }}
+          >
+            <SpyIcon size={18} />
+            <span className="text-sm font-bold text-foreground whitespace-nowrap">
+              {t("spy_status.section_title", "Spy-Analyse")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {realEventCount === 0
+                ? t("spy_status.section_desc_early", "Dein Spion sammelt gerade erste Daten…")
+                : t("spy_status.section_desc", "Dein Spion analysiert das Follow-Verhalten")}
+            </span>
+          </div>
+
+          {/* Card body */}
+          <div
+            className="p-5"
+            style={{
+              background: `linear-gradient(135deg, ${levelConfig.color}10, ${levelConfig.color}05)`,
+            }}
+          >
             <div className="flex items-center gap-5">
               {/* Score Ring with SpyIcon */}
               <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
@@ -181,10 +191,6 @@ export function SpyStatusCard({
                     </span>
                   </span>
                 </div>
-                {/* Status description */}
-                <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.75rem", lineHeight: 1.3 }}>
-                  {descMap[level]}
-                </p>
               </div>
 
               {/* Info + Chevron */}
@@ -248,9 +254,9 @@ export function SpyStatusCard({
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors"
               style={{
-                background: `${levelConfig.color}18`,
-                color: levelConfig.color,
-                border: `1px solid ${levelConfig.color}25`,
+                background: `hsl(var(--primary) / 0.15)`,
+                color: `hsl(var(--primary))`,
+                border: `1px solid hsl(var(--primary) / 0.25)`,
               }}
             >
               {expanded
