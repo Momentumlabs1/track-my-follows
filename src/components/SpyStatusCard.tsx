@@ -99,9 +99,9 @@ export function SpyStatusCard({
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
-  // Background ring: subtle glow based on level
-  const bgGlowColor = `hsl(${levelConfig.color} / 0.08)`;
-  const borderGlowColor = `hsl(${levelConfig.color} / 0.2)`;
+  // Card uses primary pink, only the ring uses level color
+  const bgGlowColor = `hsl(var(--primary) / 0.08)`;
+  const borderGlowColor = `hsl(var(--primary) / 0.2)`;
 
   return (
     <>
@@ -119,7 +119,7 @@ export function SpyStatusCard({
           style={{
             background: `linear-gradient(180deg, ${bgGlowColor}, hsl(var(--card)))`,
             border: `1px solid ${borderGlowColor}`,
-            boxShadow: `0 0 40px -12px hsl(${levelConfig.color} / 0.25), 0 2px 8px -2px hsl(var(--foreground) / 0.05)`,
+            boxShadow: `0 0 40px -12px hsl(var(--primary) / 0.25), 0 2px 8px -2px hsl(var(--foreground) / 0.05)`,
           }}
         >
           {/* Info icon */}
