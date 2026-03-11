@@ -215,13 +215,18 @@ export function SpyStatusCard({
             </div>
           </div>
 
-          {/* Chevron indicator */}
-          <div className="flex justify-center pb-2">
+          {/* Chevron indicator with hint */}
+          <div className="flex flex-col items-center pb-3 gap-0.5">
+            <p className="text-muted-foreground font-medium uppercase tracking-wider" style={{ fontSize: "0.5625rem", opacity: 0.5 }}>
+              {expanded
+                ? t("spy_status.tap_to_close", "Analyse ausblenden")
+                : t("spy_status.tap_for_analysis", "Tippe für detaillierte Analyse")}
+            </p>
             <motion.div
               animate={{ rotate: expanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
             >
-              <ChevronDown className="text-muted-foreground" style={{ width: 16, height: 16, opacity: 0.4 }} />
+              <ChevronDown className="text-muted-foreground" style={{ width: 14, height: 14, opacity: 0.4 }} />
             </motion.div>
           </div>
         </button>
