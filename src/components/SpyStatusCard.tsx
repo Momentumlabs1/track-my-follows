@@ -16,14 +16,13 @@ interface LevelConfig {
   color: string;
   emoji: string;
   index: number;
-  scoreRange: [number, number];
 }
 
 const LEVELS: LevelConfig[] = [
-  { key: "gelassen", label: "Gelassen", color: "hsl(142 71% 45%)", emoji: "😌", index: 0, scoreRange: [0, 15] },
-  { key: "aufmerksam", label: "Aufmerksam", color: "hsl(45 100% 51%)", emoji: "🤨", index: 1, scoreRange: [16, 40] },
-  { key: "wachsam", label: "Wachsam", color: "hsl(30 100% 50%)", emoji: "😠", index: 2, scoreRange: [41, 65] },
-  { key: "alarmiert", label: "Alarmiert", color: "hsl(4 90% 58%)", emoji: "🚨", index: 3, scoreRange: [66, 100] },
+  { key: "gelassen", label: "Gelassen", color: "hsl(142 71% 45%)", emoji: "😌", index: 0 },
+  { key: "aufmerksam", label: "Aufmerksam", color: "hsl(45 100% 51%)", emoji: "🤨", index: 1 },
+  { key: "wachsam", label: "Wachsam", color: "hsl(30 100% 50%)", emoji: "😠", index: 2 },
+  { key: "alarmiert", label: "Alarmiert", color: "hsl(4 90% 58%)", emoji: "🚨", index: 3 },
 ];
 
 function getSpyLevel(score: number): SpyLevel {
@@ -56,8 +55,7 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
     alarmiert: t("spy_status.alarmiert_desc", "Stark auffälliges Verhaltensmuster"),
   };
 
-  // Score ring SVG params
-  const ringSize = 88;
+  const ringSize = 100;
   const strokeWidth = 5;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -68,38 +66,25 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
       <div
         className="rounded-3xl overflow-hidden"
         style={{
-          background: "hsl(var(--card))",
-          border: "1px solid hsl(var(--border) / 0.3)",
+          background: `linear-gradient(135deg, ${levelConfig.color}15, ${levelConfig.color}08)`,
+          border: `1px solid ${levelConfig.color}30`,
         }}
       >
-        {/* Top accent stripe */}
-        <div className="h-1 w-full" style={{ background: levelConfig.color }} />
-
         <div className="p-5">
-          {/* Row: Spy icon + label */}
-          <div className="flex items-center gap-2.5 mb-4">
-            <SpyIcon size={24} glow />
-            <span className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
-              {t("spy_status.title", "Dein Spy ist...")}
-            </span>
-          </div>
-
           {/* Main content: Ring + Right side */}
           <div className="flex items-center gap-5">
             {/* ═══ Score Ring with SpyIcon ═══ */}
             <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
               <svg width={ringSize} height={ringSize} className="rotate-[-90deg]">
-                {/* Background track */}
                 <circle
                   cx={ringSize / 2}
                   cy={ringSize / 2}
                   r={radius}
                   fill="none"
-                  stroke="hsl(var(--border))"
+                  stroke={levelConfig.color}
                   strokeWidth={strokeWidth}
-                  opacity={0.3}
+                  opacity={0.15}
                 />
-                {/* Score arc */}
                 <motion.circle
                   cx={ringSize / 2}
                   cy={ringSize / 2}
@@ -114,15 +99,13 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
                   transition={{ duration: 1.2, ease: "easeOut" }}
                 />
               </svg>
-              {/* SpyIcon in center */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <SpyIcon size={36} glow />
+                <SpyIcon size={48} glow />
               </div>
             </div>
 
             {/* ═══ Right side content ═══ */}
             <div className="flex-1 min-w-0">
-              {/* Level name + emoji */}
               <div className="flex items-center gap-2 mb-1">
                 <span
                   className="font-black"
@@ -138,7 +121,6 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
                 <span style={{ fontSize: "1.5rem" }}>{levelConfig.emoji}</span>
               </div>
 
-              {/* Score number */}
               <div className="flex items-baseline gap-0.5 mb-1.5">
                 <span
                   className="font-extrabold tabular-nums"
@@ -151,7 +133,6 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
                 </span>
               </div>
 
-              {/* Description */}
               <p className="text-muted-foreground" style={{ fontSize: "0.75rem", lineHeight: 1.4 }}>
                 {descMap[level]}
               </p>
@@ -160,7 +141,7 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
         </div>
 
         {/* ═══ Level segments footer ═══ */}
-        <div className="px-5 pb-4 pt-2" style={{ background: "hsl(var(--card) / 0.6)" }}>
+        <div className="px-5 pb-4 pt-2">
           <div className="flex gap-1.5 mb-1.5">
             {LEVELS.map((l) => {
               const isActive = l.index <= levelConfig.index;
