@@ -183,7 +183,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                 opacity: maleCount === 0 ? 0.4 : 1,
               }}
             >
-              <div className="absolute inset-0 flex items-end justify-center">
+              <div className="absolute inset-0">
                 <img src={silhouetteMale} alt="" className="w-full h-full object-cover rounded-3xl" style={{ opacity: 0.3 }} />
               </div>
               <div className="absolute top-4 left-4">
@@ -194,21 +194,23 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                   {t("weekly.new_men", "neue Männer")}
                 </p>
               </div>
-            </div>
-            <div className="flex gap-1.5 mt-2">
-              {maleFollows.slice(0, 4).map((f) => (
-                <InstagramAvatar
-                  key={f.username}
-                  src={f.avatarUrl}
-                  alt={f.username}
-                  fallbackInitials={f.username}
-                  size={36}
-                />
-              ))}
+              <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
+                {maleFollows.slice(0, 4).map((f) => (
+                  <InstagramAvatar
+                    key={f.username}
+                    src={f.avatarUrl}
+                    alt={f.username}
+                    fallbackInitials={f.username}
+                    size={30}
+                  />
+                ))}
+              </div>
               {maleCount === 0 && (
-                <p className="text-muted-foreground" style={{ fontSize: "0.6875rem" }}>
-                  {t("weekly.no_activity", "Keine neue Aktivität")}
-                </p>
+                <div className="absolute bottom-3 left-3">
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.6)" }}>
+                    {t("weekly.no_activity", "Keine neue Aktivität")}
+                  </p>
+                </div>
               )}
             </div>
           </button>
