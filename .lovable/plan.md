@@ -1,39 +1,51 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## SpyStatusCard Redesign -- Cleaner, Bigger Spy, Circle-Chart Ring
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Konzept
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Die Karte wird komplett umstrukturiert zu einem cleanen, zentrierten Layout:
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+1. **Titel oben**: "Deine Spy-Analyse" als einfacher Text-Header uber der Karte (nicht in der Karte)
+2. **Grosser SpyIcon zentriert** (~80px) im Kreis-Ring, der Ring selbst IST das Diagramm (Score von 0-100 als Kreisfortschritt) -- wie ein Donut-Chart um den Spy herum
+3. **Ring-Farbe = Level-Farbe**, Hintergrund-Ring dezent
+4. **Darunter**: Level-Label + Score als kompakte Zeile, z.B. "Gelassen 😌 · 0/100"
+5. **Darunter**: Kurzer Info-Text (descMap) als muted-foreground
+6. **CTA-Pill**: "Analyse anzeigen >" in solidem Pink (gleicher Stil wie "Folgt neu"-Button -- `bg-primary text-primary-foreground`)
+7. **Level-Segmente entfernen** -- der Ring visualisiert den Score bereits
+8. **Pink-Header-Bar entfernen** -- stattdessen sauberer `native-card`-Hintergrund mit primary border
+9. **Mehr Padding** (`my-4` statt `mb-2`) um Abstand zu anderen Sections
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+### Layout (vertikal zentriert)
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+```text
+     Deine Spy-Analyse          <- Section title, outside card
+  ┌─────────────────────────┐
+  │                         │
+  │      ╭── ring ──╮       │   <- Score-Ring (120px) als Kreisdiagramm
+  │      │  🕵️ big  │       │      SpyIcon 64px zentriert
+  │      ╰──────────╯       │
+  │                         │
+  │    Gelassen 😌 · 0/100  │   <- Level + Score
+  │  Sammelt gerade Daten…  │   <- Status-Beschreibung
+  │                         │
+  │   [ Analyse anzeigen > ]│   <- Solid pink pill button
+  │                         │
+  └─────────────────────────┘
+```
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+### Aenderungen in `src/components/SpyStatusCard.tsx`
+
+- **Ring vergroessern**: `ringSize = 120`, `strokeWidth = 6`, SpyIcon `size={64}`
+- **Layout zentrieren**: Alles `flex flex-col items-center text-center`
+- **Pink-Header entfernen**: Kein separater Header-Bereich mehr
+- **Level-Segmente (4 Balken) entfernen**: Ring genuegt als Visualisierung
+- **Info/Chevron** in den Card-Body integrieren (Info-Icon oben rechts, dezent)
+- **CTA-Pill solid pink**: `bg-primary text-primary-foreground` statt transparent
+- **Section title** "Deine Spy-Analyse" als `text-sm font-bold` ueber der Karte
+- **Padding**: `my-4` um die gesamte Sektion, `p-6` im Card-Body
+- **Karten-Hintergrund**: `native-card` Style mit `border border-primary/20`
 
 ### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+- `src/components/SpyStatusCard.tsx`
 
