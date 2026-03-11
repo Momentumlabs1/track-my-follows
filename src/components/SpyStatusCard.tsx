@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Info, ChevronDown, Zap, Clock } from "lucide-react";
+import { Info, ChevronDown } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpyFindings } from "@/components/SpyFindings";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
