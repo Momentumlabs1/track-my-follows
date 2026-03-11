@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.create-baseline]
 verify_jwt = false
+
+[functions.retag-gender]
+verify_jwt = false
