@@ -254,9 +254,9 @@ export function SpyStatusCard({
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors"
               style={{
-                background: `${levelConfig.color}18`,
-                color: levelConfig.color,
-                border: `1px solid ${levelConfig.color}25`,
+                background: `hsl(var(--primary) / 0.15)`,
+                color: `hsl(var(--primary))`,
+                border: `1px solid hsl(var(--primary) / 0.25)`,
               }}
             >
               {expanded
