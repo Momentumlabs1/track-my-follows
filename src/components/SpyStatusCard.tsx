@@ -100,8 +100,8 @@ export function SpyStatusCard({
   const scoreOffset = circumference - (score / 100) * circumference;
 
   // Card uses brighter primary pink
-  const bgGlowColor = `hsl(var(--primary) / 0.15)`;
-  const borderGlowColor = `hsl(var(--primary) / 0.3)`;
+  const bgGlowColor = `hsl(var(--primary) / 0.22)`;
+  const borderGlowColor = `hsl(var(--primary) / 0.35)`;
 
   return (
     <>
