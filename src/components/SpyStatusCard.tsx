@@ -93,7 +93,7 @@ export function SpyStatusCard({
   };
 
   // Ring config - compact
-  const ringSize = 110;
+  const ringSize = 120;
   const strokeWidth = 4;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
