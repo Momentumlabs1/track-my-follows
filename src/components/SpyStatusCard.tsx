@@ -132,7 +132,7 @@ export function SpyStatusCard({
             <Info className="text-muted-foreground" style={{ width: 14, height: 14 }} />
           </button>
 
-          <div className="flex flex-col items-center px-6 pt-8 pb-6">
+          <div className="flex flex-col items-center px-5 pt-6 pb-5">
             {/* Mood Ring with Spy */}
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
               {/* Ambient glow behind ring */}
@@ -144,7 +144,6 @@ export function SpyStatusCard({
               />
 
               <svg width={ringSize} height={ringSize} className="rotate-[-90deg] relative z-10">
-                {/* Background track */}
                 <circle
                   cx={ringSize / 2}
                   cy={ringSize / 2}
@@ -153,7 +152,6 @@ export function SpyStatusCard({
                   stroke={`hsl(${levelConfig.color} / 0.1)`}
                   strokeWidth={strokeWidth}
                 />
-                {/* Score arc */}
                 <motion.circle
                   cx={ringSize / 2}
                   cy={ringSize / 2}
@@ -169,72 +167,30 @@ export function SpyStatusCard({
                 />
               </svg>
 
-              {/* Spy icon centered */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={64} glow />
+                <SpyIcon size={56} glow />
               </div>
             </div>
 
-            {/* Level label */}
-            <div className="mt-4 flex items-center gap-2">
-              <span
-                className="font-black text-xl tracking-tight"
-                style={{ color: levelColor }}
-              >
+            {/* Level + Score inline */}
+            <div className="mt-3 flex items-center gap-1.5">
+              <span className="font-black text-base tracking-tight" style={{ color: levelColor }}>
                 {labelMap[level]}
               </span>
-              <span className="text-xl">{levelConfig.emoji}</span>
-            </div>
-
-            {/* Score */}
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span
-                className="font-extrabold text-2xl tabular-nums"
-                style={{ color: levelColor }}
-              >
-                {score}
-              </span>
-              <span className="text-muted-foreground text-xs font-medium">/100</span>
+              <span className="text-base">{levelConfig.emoji}</span>
+              <span className="text-muted-foreground text-xs">·</span>
+              <span className="font-extrabold text-sm tabular-nums" style={{ color: levelColor }}>{score}</span>
+              <span className="text-muted-foreground" style={{ fontSize: "0.625rem" }}>/100</span>
             </div>
 
             {/* Description */}
-            <p className="text-muted-foreground text-xs mt-1.5 max-w-[200px]">
+            <p className="text-muted-foreground text-xs mt-1">
               {descMap[level]}
             </p>
 
-            {/* Scan stats pills */}
-            <div className="flex items-center gap-2 mt-4">
-              {lastScannedAt && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-muted-foreground"
-                  style={{ fontSize: "0.625rem", background: "hsl(var(--foreground) / 0.05)" }}
-                >
-                  <Clock style={{ width: 10, height: 10 }} />
-                  {timeAgoShort(lastScannedAt)}
-                </span>
-              )}
-              {pushScansToday != null && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-muted-foreground"
-                  style={{ fontSize: "0.625rem", background: "hsl(var(--foreground) / 0.05)" }}
-                >
-                  <Zap style={{ width: 10, height: 10 }} />
-                  {pushScansToday} {t("spy_status.scans_today", "Scans heute")}
-                </span>
-              )}
-              {totalScans != null && totalScans > 0 && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-muted-foreground"
-                  style={{ fontSize: "0.625rem", background: "hsl(var(--foreground) / 0.05)" }}
-                >
-                  {totalScans} {t("spy_status.total_scans", "gesamt")}
-                </span>
-              )}
-            </div>
-
             {/* CTA */}
             <motion.div
-              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold shadow-lg"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-5 py-2 text-xs font-bold shadow-lg"
               style={{ boxShadow: "0 4px 14px -3px hsl(var(--primary) / 0.4)" }}
               whileTap={{ scale: 0.95 }}
             >
