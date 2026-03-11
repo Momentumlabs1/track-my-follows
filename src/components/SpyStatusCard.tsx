@@ -93,15 +93,15 @@ export function SpyStatusCard({
   };
 
   // Ring config - compact
-  const ringSize = 110;
+  const ringSize = 120;
   const strokeWidth = 4;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
-  // Card uses primary pink, only the ring uses level color
-  const bgGlowColor = `hsl(var(--primary) / 0.08)`;
-  const borderGlowColor = `hsl(var(--primary) / 0.2)`;
+  // Card uses brighter primary pink
+  const bgGlowColor = `hsl(var(--primary) / 0.15)`;
+  const borderGlowColor = `hsl(var(--primary) / 0.3)`;
 
   return (
     <>
@@ -168,7 +168,7 @@ export function SpyStatusCard({
               </svg>
 
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={56} glow />
+                <SpyIcon size={72} glow />
               </div>
             </div>
 
