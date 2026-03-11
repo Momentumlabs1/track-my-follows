@@ -191,10 +191,6 @@ export function SpyStatusCard({
                     </span>
                   </span>
                 </div>
-                {/* Status description */}
-                <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.75rem", lineHeight: 1.3 }}>
-                  {descMap[level]}
-                </p>
               </div>
 
               {/* Info + Chevron */}
