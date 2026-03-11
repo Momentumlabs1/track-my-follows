@@ -222,6 +222,13 @@
   .animate-pulse-glow {
     animation: pulseGlow 2.5s ease-in-out infinite;
   }
+
+  @keyframes dashMove {
+    to { stroke-dashoffset: -16; }
+  }
+  .animate-dash-move {
+    animation: dashMove 1.5s linear infinite;
+  }
 }
 
 /* ─── Legal content ─── */
