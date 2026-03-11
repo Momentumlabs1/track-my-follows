@@ -92,9 +92,9 @@ export function SpyStatusCard({
     alarmiert: t("spy_status.alarmiert_desc", "Stark auffälliges Verhalten"),
   };
 
-  // Ring config
-  const ringSize = 140;
-  const strokeWidth = 5;
+  // Ring config - compact
+  const ringSize = 110;
+  const strokeWidth = 4;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
