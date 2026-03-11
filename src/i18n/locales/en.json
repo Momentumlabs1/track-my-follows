@@ -465,28 +465,28 @@
     "gender_distribution": "Gender distribution of new follows: {{percent}}% female"
   },
   "spy_findings": {
-    "title": "What the Spy found",
+    "title": "Spy Analysis",
     "female_ratio": "Female ratio",
-    "follow_tempo": "Follow tempo",
-    "loyalty": "Loyalty index",
-    "network_style": "Network style",
-    "quiet": "Quiet",
-    "normal": "Normal",
-    "active": "Active",
-    "very_active": "Very active",
-    "stable": "Stable",
-    "lightly_changing": "Slightly changing",
-    "changing": "Volatile",
-    "selective": "Selective",
-    "balanced": "Balanced",
-    "exploratory": "Exploratory",
-    "very_active_network": "Very active"
+    "ghost_desc": "Followed & quickly unfollowed",
+    "private_accounts": "Private Accounts",
+    "private_desc": "Among new follows",
+    "followback_rate": "Followback rate",
+    "followback_low": "Few follow back – one-sided interest",
+    "followback_mid": "Some follow back",
+    "followback_high": "Many follow back – mutual interest",
+    "not_enough_data": "Not enough data yet"
+  },
+  "gender": {
+    "female_short": "female",
+    "unknown_short": "unrecognized"
   },
   "weekly": {
-    "title": "In the last week",
+    "title": "New follows this week",
     "overall_title": "Gender distribution",
     "women_followed": "Women followed",
     "men_followed": "Men followed",
+    "new_women": "new women",
+    "new_men": "new men",
     "more_count": "more",
     "no_activity": "No activity yet"
   },
