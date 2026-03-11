@@ -30,25 +30,7 @@ export function SpyFindings({
   const data = useMemo(() => {
     const now = Date.now();
 
-    // ── 1. Frauen-Anteil — aus ALLEN profileFollowings ──
-    let totalFemale = 0;
-    let totalMale = 0;
-    for (const f of profileFollowings) {
-      if (f.gender_tag === "female") totalFemale++;
-      else if (f.gender_tag === "male") totalMale++;
-    }
-    const totalClassified = totalFemale + totalMale;
-    const femalePercent: number | null = totalClassified >= 3
-      ? Math.round((totalFemale / totalClassified) * 100)
-      : null;
-
-    let femaleLevel: "safe" | "warning" | "danger" = "safe";
-    if (femalePercent !== null) {
-      if (femalePercent > 70) femaleLevel = "danger";
-      else if (femalePercent > 55) femaleLevel = "warning";
-    }
-
-    // ── 2. Ghost-Follows (30d) — follow + unfollow same username within 48h ──
+    // ── 1. Ghost-Follows (30d) — follow + unfollow same username within 48h ──
     const recentFollowsAll = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -75,7 +57,7 @@ export function SpyFindings({
     }
     const hasGhostData = recentFollowsAll.length >= 2;
 
-    // ── 3. Private Accounts (7d new follows) ──
+    // ── 2. Private Accounts (7d new follows) ──
     const recentFollows7d = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -88,7 +70,7 @@ export function SpyFindings({
       ? Math.round((privateCount / recentFollows7d.length) * 100)
       : null;
 
-    // ── 4. Followback-Rate (7d) ──
+    // ── 3. Followback-Rate (7d) ──
     const followedUsernames = new Set(recentFollows7d.map((e) => e.target_username));
     const followbackCount = followerEvents.filter(
       (e) => e.event_type === "gained" && followedUsernames.has(e.username)
@@ -98,8 +80,6 @@ export function SpyFindings({
       : null;
 
     return {
-      femalePercent,
-      femaleLevel,
       ghostCount,
       hasGhostData,
       privatePct,
@@ -109,51 +89,11 @@ export function SpyFindings({
     };
   }, [followEvents, followerEvents, profileFollowings, followerCount, followingCount]);
 
-  const levelColor = (level: "safe" | "warning" | "danger") => {
-    if (level === "danger") return "#FF3B30";
-    if (level === "warning") return "#FF9500";
-    return "#34C759";
-  };
-
   return (
     <div className="mb-2">
       <p className="section-header mb-3 flex items-center gap-1.5">
         🔍 {t("spy_findings.title", "Spy-Analyse")}
       </p>
-
-      {/* Card 1: Frauen-Anteil — wide card with donut */}
-      <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-[20px] p-5 mb-3"
-        style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-              {t("spy_findings.female_ratio", "Frauen-Anteil")}
-            </p>
-            <p style={{
-              fontSize: "3rem",
-              fontWeight: 900,
-              color: levelColor(data.femaleLevel),
-              lineHeight: 1,
-            }}>
-              {data.femalePercent !== null ? `${data.femalePercent}%` : "–"}
-            </p>
-          </div>
-          {data.femalePercent !== null && (
-            <div
-              style={{
-                width: 64, height: 64, borderRadius: "50%",
-                background: `conic-gradient(#FF2D55 0% ${data.femalePercent}%, #007AFF ${data.femalePercent}% 100%)`,
-                boxShadow: "0 4px 16px rgba(255,45,85,0.3)",
-              }}
-            />
-          )}
-        </div>
-      </motion.div>
 
       {/* Cards 2+3: Ghost-Follows + Private Accounts side by side */}
       <div className="grid grid-cols-2 gap-3 mb-3">
