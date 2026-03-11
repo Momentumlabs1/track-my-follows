@@ -99,9 +99,9 @@ export function SpyStatusCard({
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
-  // Card uses primary pink, only the ring uses level color
-  const bgGlowColor = `hsl(var(--primary) / 0.08)`;
-  const borderGlowColor = `hsl(var(--primary) / 0.2)`;
+  // Card uses brighter primary pink
+  const bgGlowColor = `hsl(var(--primary) / 0.15)`;
+  const borderGlowColor = `hsl(var(--primary) / 0.3)`;
 
   return (
     <>
