@@ -54,72 +54,85 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
   };
 
   return (
-    <div className="mb-2 px-1">
-      {/* Title row */}
-      <div className="flex items-center gap-3 mb-1">
-        <SpyIcon size={28} glow />
-        <p className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
-          {t("spy_status.title", "Dein Spy ist...")}
-        </p>
-      </div>
-
-      {/* Big level label */}
-      <p
+    <div className="mb-2">
+      <div
+        className="rounded-3xl overflow-hidden"
         style={{
-          fontSize: "3.5rem",
-          fontWeight: 900,
-          lineHeight: 1,
-          color: levelConfig.color,
-          marginBottom: "0.5rem",
-          letterSpacing: "-0.02em",
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--border) / 0.3)",
         }}
       >
-        {labelMap[level]}
-      </p>
+        {/* Top accent stripe */}
+        <div className="h-1 w-full" style={{ background: levelConfig.color }} />
 
-      {/* Description */}
-      <p className="text-muted-foreground mb-5" style={{ fontSize: "0.9375rem" }}>
-        {descMap[level]}
-      </p>
+        <div className="p-5">
+          {/* Row: Spy icon + label */}
+          <div className="flex items-center gap-2.5 mb-3">
+            <SpyIcon size={24} glow />
+            <span className="text-muted-foreground font-medium" style={{ fontSize: "0.8125rem" }}>
+              {t("spy_status.title", "Dein Spy ist...")}
+            </span>
+          </div>
 
-      {/* Early estimate disclaimer */}
-      {realEventCount > 0 && realEventCount < 5 && (
-        <p className="text-muted-foreground mb-4" style={{ fontSize: "0.6875rem", opacity: 0.6 }}>
-          {t("spy_status.early_estimate", "Frühe Einschätzung · wenig Aktivität")}
-        </p>
-      )}
-
-      {/* 4-segment bar */}
-      <div className="flex gap-1.5 mb-2">
-        {LEVELS.map((l) => (
-          <motion.div
-            key={l.key}
-            className="flex-1 rounded-full"
+          {/* HERO level label */}
+          <p
             style={{
-              height: 10,
-              background: l.index <= levelConfig.index ? levelConfig.color : "hsl(var(--border))",
-              opacity: l.index <= levelConfig.index ? 1 : 0.2,
-            }}
-            animate={l.index === levelConfig.index ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-        ))}
-      </div>
-
-      {/* Level labels under bar */}
-      <div className="flex justify-between">
-        {LEVELS.map((l) => (
-          <span
-            key={l.key}
-            style={{
-              fontSize: "0.625rem",
-              color: l.key === level ? levelConfig.color : "hsl(var(--muted-foreground))",
-              fontWeight: l.key === level ? 700 : 400,
+              fontSize: "3.25rem",
+              fontWeight: 900,
+              lineHeight: 1,
+              color: levelConfig.color,
+              marginBottom: "0.375rem",
+              letterSpacing: "-0.02em",
             }}
           >
-            {labelMap[l.key]}
-          </span>
-        ))}
+            {labelMap[level]}
+          </p>
+
+          {/* Description */}
+          <p className="text-muted-foreground" style={{ fontSize: "0.875rem", marginBottom: "1rem" }}>
+            {descMap[level]}
+          </p>
+
+          {/* Early estimate */}
+          {realEventCount > 0 && realEventCount < 5 && (
+            <p className="text-muted-foreground mb-3" style={{ fontSize: "0.6875rem", opacity: 0.5 }}>
+              ⏳ {t("spy_status.early_estimate", "Frühe Einschätzung · wenig Aktivität")}
+            </p>
+          )}
+        </div>
+
+        {/* Bar section – darker footer */}
+        <div className="px-5 pb-4 pt-2" style={{ background: "hsl(var(--card) / 0.6)" }}>
+          <div className="flex gap-1.5 mb-1.5">
+            {LEVELS.map((l) => (
+              <motion.div
+                key={l.key}
+                className="flex-1 rounded-full"
+                style={{
+                  height: 8,
+                  background: l.index <= levelConfig.index ? levelConfig.color : "hsl(var(--border))",
+                  opacity: l.index <= levelConfig.index ? 1 : 0.15,
+                }}
+                animate={l.index === levelConfig.index ? { scaleY: [1, 1.3, 1] } : { scaleY: 1 }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between">
+            {LEVELS.map((l) => (
+              <span
+                key={l.key}
+                style={{
+                  fontSize: "0.5625rem",
+                  color: l.key === level ? levelConfig.color : "hsl(var(--muted-foreground))",
+                  fontWeight: l.key === level ? 700 : 400,
+                }}
+              >
+                {labelMap[l.key]}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

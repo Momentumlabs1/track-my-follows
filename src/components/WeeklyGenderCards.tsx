@@ -61,7 +61,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     const male: GenderedFollow[] = [];
     const now = Date.now();
 
-    // Only use real (non-initial) follow events from the last 7 days
     const realFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -104,7 +103,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
 
   return (
     <>
-      <div className="mb-2 px-1">
+      <div className="mb-2">
         <p className="section-header mb-3">
           {t("weekly.title", "Diese Woche neu gefolgt")}
         </p>
@@ -125,7 +124,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               }}
             >
               <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-                <span style={{ fontSize: "5rem", lineHeight: 1, opacity: 0.3 }}>👩</span>
+                <span style={{ fontSize: "5rem", lineHeight: 1, opacity: 0.2 }}>👩</span>
               </div>
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
@@ -169,7 +168,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               }}
             >
               <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-                <span style={{ fontSize: "5rem", lineHeight: 1, opacity: 0.3 }}>👨</span>
+                <span style={{ fontSize: "5rem", lineHeight: 1, opacity: 0.2 }}>👨</span>
               </div>
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>

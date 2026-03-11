@@ -36,10 +36,21 @@ function useTimeAgo() {
   };
 }
 
-function formatCount(n: number): string {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
+// Defensive: handles object/null/NaN from Supabase
+function safeNum(v: unknown): number | null {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  if (typeof v === 'object' && v !== null) {
+    const n = (v as any).count ?? (v as any).value ?? Object.values(v as any)[0];
+    return typeof n === 'number' && !isNaN(n) ? n : null;
+  }
+  return null;
+}
+
+function formatCount(n: unknown): string {
+  const num = safeNum(n) ?? 0;
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return String(Math.round(num));
 }
 
 type TabId = "new_follows" | "new_followers" | "unfollowed";
@@ -71,6 +82,14 @@ const ProfileDetail = () => {
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
+
+  // Safe counts
+  const followerCount = safeNum(profile?.follower_count) ?? 0;
+  const followingCount = safeNum(profile?.following_count) ?? 0;
+  const prevFollowers = safeNum(profile?.previous_follower_count);
+  const prevFollowing = safeNum(profile?.previous_following_count);
+  const followerDelta = (prevFollowers != null && prevFollowers > 0) ? followerCount - prevFollowers : null;
+  const followingDelta = (prevFollowing != null && prevFollowing > 0) ? followingCount - prevFollowing : null;
 
   const newFollowEvents = useMemo(() =>
     followEvents.filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && !(e as Record<string, unknown>).is_initial && (e as Record<string, unknown>).direction === "following")
@@ -105,10 +124,10 @@ const ProfileDetail = () => {
   // Suspicion analysis
   const suspicionAnalysis = useMemo(() => {
     if (followEvents.length === 0 && followings.length === 0) return null;
-    return analyzeSuspicion(followEvents, followings, profile?.follower_count ?? 0, profile?.following_count ?? 0, t);
-  }, [followEvents, followings, profile?.follower_count, profile?.following_count, t]);
+    return analyzeSuspicion(followEvents, followings, followerCount, followingCount, t);
+  }, [followEvents, followings, followerCount, followingCount, t]);
 
-  // Gender ALWAYS from profileFollowings (all current followings)
+  // Gender from profileFollowings (all current)
   let femaleCount = 0;
   let maleCount = 0;
   let unknownGenderCount = 0;
@@ -117,7 +136,10 @@ const ProfileDetail = () => {
     else if (f.gender_tag === 'male') maleCount++;
     else unknownGenderCount++;
   }
-  const showGender = (femaleCount + maleCount) > 0;
+  const genderTotal = femaleCount + maleCount;
+  const showGender = genderTotal > 0;
+  const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;
+  const malePct = genderTotal > 0 ? 100 - femalePct : 0;
 
   const handleScan = async () => {
     if (isFreeAndScanned) { showPaywall("scan"); return; }
@@ -147,11 +169,6 @@ const ProfileDetail = () => {
     deleteProfile.mutate(id, { onSuccess: () => navigate("/dashboard", { replace: true }) });
   };
 
-  const followerDelta = (profile?.previous_follower_count != null && profile.previous_follower_count > 0)
-    ? (profile.follower_count ?? 0) - profile.previous_follower_count : null;
-  const followingDelta = (profile?.previous_following_count != null && profile.previous_following_count > 0)
-    ? (profile.following_count ?? 0) - profile.previous_following_count : null;
-
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
     if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
     if (plan === "free") return { locked: true, lockType: "paywall" };
@@ -159,10 +176,7 @@ const ProfileDetail = () => {
     return { locked: false, lockType: null };
   };
 
-  // Insights data (shown above tabs now)
-  const trackingDays = Math.floor((Date.now() - new Date(profile?.created_at ?? Date.now()).getTime()) / (24 * 60 * 60 * 1000));
   const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
-  const hasEnoughData = realEventCount >= 2;
   const insightsLocked = !canUseStats || (!hasSpy && isPro);
 
   const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
@@ -189,10 +203,6 @@ const ProfileDetail = () => {
     );
   }
 
-  const genderTotal = femaleCount + maleCount;
-  const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;
-  const malePct = genderTotal > 0 ? 100 - femalePct : 0;
-
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* ─── Navigation Bar ─── */}
@@ -200,138 +210,113 @@ const ProfileDetail = () => {
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
-        <span className="text-muted-foreground font-medium" style={{ fontSize: '0.875rem' }}>@{profile.username}</span>
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleScan}
+            disabled={isScanning}
+            className="p-2 text-muted-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            {isScanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+          </button>
           <button onClick={handleDelete} className="p-2 -me-2 text-muted-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
             <Trash2 className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* ═══ BEREICH 1: HEADER ═══ */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-4 pb-6">
+      {/* ═══ HEADER ═══ */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="px-5 pt-2 pb-5">
 
-        {/* Avatar + Spy side by side */}
-        <div className="flex items-center justify-center gap-6 mb-5">
-          {/* Profile avatar */}
-          <div className="flex flex-col items-center">
-            {hasSpy ? (
-              <div className="avatar-ring">
-                <div className="rounded-full bg-background p-[2px]">
-                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
-                </div>
-              </div>
-            ) : (
-              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={80} />
-            )}
-          </div>
-
-          {/* Spy circle */}
+        {/* Avatar centered with spy badge */}
+        <div className="flex flex-col items-center mb-4">
           <button
             onClick={() => {
               if (hasSpy) navigate("/spy");
               else if (isPro) setMoveSpyOpen(true);
               else showPaywall("spy");
             }}
-            className="flex flex-col items-center gap-1.5"
+            className="relative"
           >
-            <motion.div
-              className="flex items-center justify-center"
-              style={{
-                width: 70, height: 70, borderRadius: 9999,
-                background: "hsl(var(--card-elevated))",
-                border: "1px solid hsl(var(--border))",
-              }}
-              animate={hasSpy ? { boxShadow: ["0 0 0px rgba(255,45,85,0)", "0 0 16px rgba(255,45,85,0.3)", "0 0 0px rgba(255,45,85,0)"] } : {}}
-              transition={hasSpy ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
-            >
-              {hasSpy ? (
-                <SpyIcon size={32} />
-              ) : (
-                <Lock className="h-6 w-6 text-muted-foreground" style={{ opacity: 0.5 }} />
-              )}
-            </motion.div>
-            <span style={{ fontSize: "0.75rem", opacity: 0.5, color: "hsl(var(--foreground))" }}>
-              {hasSpy ? "Spy" : t("spy.assign_short", "Spy zuweisen")}
-            </span>
+            {hasSpy ? (
+              <div style={{ padding: 3, borderRadius: 9999, background: "linear-gradient(135deg, #FF2D55, #FF6B8A)" }}>
+                <div className="rounded-full bg-background p-[2px]">
+                  <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={68} />
+                </div>
+              </div>
+            ) : (
+              <InstagramAvatar src={profile.avatar_url} alt={profile.username} fallbackInitials={profile.username} size={68} />
+            )}
+            {hasSpy && (
+              <div className="absolute -bottom-1 -end-1 rounded-full bg-background p-[2px]">
+                <SpyIcon size={20} />
+              </div>
+            )}
           </button>
         </div>
 
-        {/* Username + Bio */}
-        <div className="text-center mb-5">
-          <p className="text-foreground font-extrabold" style={{ fontSize: '1.25rem' }}>@{profile.username}</p>
-          {profile.display_name && <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.875rem', opacity: 0.6 }}>{profile.display_name}</p>}
+        {/* Username + status */}
+        <div className="text-center mb-4">
+          <p className="text-foreground font-extrabold" style={{ fontSize: '1.125rem' }}>@{profile.username}</p>
           {hasSpy ? (
-            <div className="flex items-center justify-center gap-1.5 mt-2">
+            <div className="flex items-center justify-center gap-1.5 mt-1">
               <span className="h-2 w-2 rounded-full bg-brand-green" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
-              <span className="text-brand-green font-semibold" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_active")}</span>
+              <span className="text-brand-green font-semibold" style={{ fontSize: '0.75rem' }}>{t("spy.spy_active")}</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-1.5 mt-2">
+            <div className="flex items-center justify-center gap-1.5 mt-1">
               <ScanStatus lastScannedAt={profile.last_scanned_at} />
             </div>
           )}
         </div>
 
-        {/* Follower / Following stats */}
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="native-card p-4 text-center">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
-                {formatCount(profile.follower_count ?? 0)}
-              </span>
-              {followerDelta !== null && followerDelta !== 0 && (
-                <span className={`font-bold ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
-                  {followerDelta > 0 ? "+" : ""}{followerDelta}
+        {/* Stats row */}
+        <div className="flex justify-center gap-4 mb-4">
+          {[
+            { label: t("dashboard.followers"), value: followerCount, delta: followerDelta },
+            { label: t("dashboard.following"), value: followingCount, delta: followingDelta },
+          ].map((s) => (
+            <div key={s.label} className="px-5 py-3 rounded-2xl text-center" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)", minWidth: 120 }}>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+                  {formatCount(s.value)}
                 </span>
-              )}
+                {s.delta != null && s.delta !== 0 && (
+                  <span className={`font-bold ${s.delta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.75rem' }}>
+                    {s.delta > 0 ? "+" : ""}{s.delta}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{s.label}</p>
             </div>
-            <p className="mt-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("dashboard.followers")}</p>
-          </div>
-          <div className="native-card p-4 text-center">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.5rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
-                {formatCount(profile.following_count ?? 0)}
-              </span>
-              {followingDelta !== null && followingDelta !== 0 && (
-                <span className={`font-bold ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.8125rem' }}>
-                  {followingDelta > 0 ? "+" : ""}{followingDelta}
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t("dashboard.following")}</p>
-          </div>
+          ))}
         </div>
 
-        {/* ═══ BLOCK 2: Gender ratio bar ═══ */}
+        {/* Gender ratio inline */}
         {showGender && (
-          <div className="mb-2">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <span style={{ fontSize: "1rem", color: "#FF2D55" }}>♀</span>
-                <span className="text-muted-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>{femalePct}%</span>
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span style={{ fontSize: "0.875rem", color: "#FF2D55" }}>♀</span>
+              <div className="flex-1 h-2 rounded-full overflow-hidden flex">
+                <motion.div
+                  style={{ background: "#FF2D55" }}
+                  className="h-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${femalePct}%` }}
+                  transition={{ duration: 0.8 }}
+                />
+                <motion.div
+                  style={{ background: "#007AFF" }}
+                  className="h-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${malePct}%` }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>{malePct}%</span>
-                <span style={{ fontSize: "1rem", color: "#007AFF" }}>♂</span>
-              </div>
+              <span style={{ fontSize: "0.875rem", color: "#007AFF" }}>♂</span>
             </div>
-            <div className="h-2.5 rounded-full overflow-hidden flex">
-              <motion.div
-                style={{ background: "#FF2D55" }}
-                className="h-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${femalePct}%` }}
-                transition={{ duration: 0.8 }}
-              />
-              <motion.div
-                style={{ background: "#007AFF" }}
-                className="h-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${malePct}%` }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-              />
-            </div>
+            <p className="text-center text-muted-foreground" style={{ fontSize: '0.625rem' }}>
+              {femalePct}% {t("gender.female_short", "weiblich")} · {followingCount} Accounts{unknownGenderCount > 0 ? ` · ${unknownGenderCount} ${t("gender.unknown_short", "n.e.")}` : ''}
+            </p>
           </div>
         )}
       </motion.div>
@@ -352,22 +337,23 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-          {/* Block 3: Spy Status — Hero */}
-          <div className="border-t border-border/20 my-5" />
+          {/* Spy Status Hero */}
           <SpyStatusCard analysis={suspicionAnalysis} realEventCount={realEventCount} />
 
-          {/* Block 4: Spy Findings — 4 unique cards */}
           <div className="border-t border-border/20 my-5" />
+
+          {/* Spy Findings */}
           <SpyFindings
             followEvents={followEvents}
             followerEvents={followerEvents}
             profileFollowings={followings}
-            followerCount={profile.follower_count ?? 0}
-            followingCount={profile.following_count ?? 0}
+            followerCount={followerCount}
+            followingCount={followingCount}
           />
 
-          {/* Block 5: Weekly gender — gradient bubbles */}
           <div className="border-t border-border/20 my-5" />
+
+          {/* Weekly gender bubbles */}
           <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
         </div>
       </div>
@@ -399,7 +385,7 @@ const ProfileDetail = () => {
         </div>
       )}
 
-      {/* ═══ BEREICH 2: TABS ═══ */}
+      {/* ═══ TABS ═══ */}
       <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
         <div className="flex gap-2 w-max">
           {tabs.map((tab) => (
@@ -416,7 +402,7 @@ const ProfileDetail = () => {
               className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold flex items-center gap-1.5 min-h-[40px] transition-colors ${
                 activeTab === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
-              style={{ fontSize: '0.8125rem', background: activeTab === tab.id ? undefined : 'hsl(var(--card))', border: activeTab === tab.id ? undefined : '1px solid hsl(var(--border))' }}
+              style={{ fontSize: '0.8125rem', background: activeTab === tab.id ? undefined : 'hsl(var(--card))', border: activeTab === tab.id ? undefined : '1px solid hsl(var(--border) / 0.3)' }}
             >
               {tab.label}
               {tab.count !== null && (
@@ -430,7 +416,7 @@ const ProfileDetail = () => {
         </div>
       </div>
 
-      {/* ═══ BEREICH 3: TAB CONTENT ═══ */}
+      {/* ═══ TAB CONTENT ═══ */}
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
@@ -503,8 +489,6 @@ const ProfileDetail = () => {
             )}
           </div>
         )}
-
-        {/* Insights tab removed — analysis shown above tabs */}
       </motion.div>
 
       <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
