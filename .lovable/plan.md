@@ -1,39 +1,48 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Avatar + Spy-Icon mit animierter Verbindungslinie
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Konzept
+Statt Avatar zentriert mit kleinem Badge → Avatar und SpyIcon **nebeneinander** mit einer animierten Verbindungslinie dazwischen. Die Linie symbolisiert "Agent trackt diesen Account". "Spy aktiv" Text wird entfernt.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Layout
+```text
+    [Avatar 68px] ----~~~~~---- [SpyIcon 36px]
+                  (animated line)
+```
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+### Änderungen in `src/pages/ProfileDetail.tsx` (Lines 230-269)
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+**1. Avatar-Block neu:** Horizontal statt vertikal zentriert
+- Avatar links (68px, pink ring wenn spy)
+- SVG-Linie in der Mitte (~60px breit), animiert mit einem "Dash-Offset" Effekt (wandernde Punkte/Striche von Avatar zum Spy)
+- SpyIcon rechts (36px, mit glow)
+- Alles in einer `flex items-center justify-center gap-0` Row
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+**2. Animierte Linie:** SVG `<line>` mit `strokeDasharray` + CSS `@keyframes` für laufende Dash-Animation:
+```tsx
+<svg width="60" height="2" className="mx-2">
+  <line x1="0" y1="1" x2="60" y2="1" 
+    stroke="#FF2D55" strokeWidth="2" 
+    strokeDasharray="4 4"
+    style={{ animation: "dashMove 1.5s linear infinite" }}
+  />
+</svg>
+```
+Plus keyframes in `src/index.css`:
+```css
+@keyframes dashMove {
+  to { stroke-dashoffset: -16; }
+}
+```
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**3. "Spy aktiv" entfernen:** Die Verbindungslinie macht den Status klar. Wenn kein Spy → kein SpyIcon, keine Linie, nur Avatar zentriert wie bisher. ScanStatus bleibt für non-spy profiles.
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**4. Username:** Bleibt zentriert darunter, ohne "Spy aktiv" Zeile.
+
+### Dateien
+| Datei | Änderung |
+|-------|---------|
+| `src/pages/ProfileDetail.tsx` | Header-Block Lines 230-269 umbauen |
+| `src/index.css` | `@keyframes dashMove` hinzufügen |
 
