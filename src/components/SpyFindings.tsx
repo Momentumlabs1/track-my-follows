@@ -30,15 +30,22 @@ export function SpyFindings({
   const data = useMemo(() => {
     const now = Date.now();
 
-    // ── 1. Ghost-Follows (30d) — follow + unfollow same username within 48h ──
-    const recentFollowsAll = followEvents.filter(
+    // ── Real events (not initial) ──
+    const realFollows7d = followEvents.filter(
+      (e) =>
+        (e.event_type === "follow" || e.event_type === "new_following") &&
+        !(e as any).is_initial &&
+        (e as any).direction === "following" &&
+        now - new Date(e.detected_at).getTime() < SEVEN_DAYS
+    );
+    const realFollows30d = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
         !(e as any).is_initial &&
         (e as any).direction === "following" &&
         now - new Date(e.detected_at).getTime() < THIRTY_DAYS
     );
-    const recentUnfollowsAll = followEvents.filter(
+    const realUnfollows30d = followEvents.filter(
       (e) =>
         (e.event_type === "unfollow" || e.event_type === "unfollowed") &&
         !(e as any).is_initial &&
@@ -46,46 +53,58 @@ export function SpyFindings({
         now - new Date(e.detected_at).getTime() < THIRTY_DAYS
     );
 
-    let ghostCount = 0;
-    for (const follow of recentFollowsAll) {
-      const matchingUnfollow = recentUnfollowsAll.find(
-        (u) =>
-          u.target_username === follow.target_username &&
-          Math.abs(new Date(u.detected_at).getTime() - new Date(follow.detected_at).getTime()) < 48 * 60 * 60 * 1000
-      );
-      if (matchingUnfollow) ghostCount++;
-    }
-    const hasGhostData = recentFollowsAll.length >= 2;
-
-    // ── 2. Private Accounts (7d new follows) ──
-    const recentFollows7d = followEvents.filter(
+    // ── Initial events as fallback ──
+    const initialFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
-        !(e as any).is_initial &&
-        (e as any).direction === "following" &&
-        now - new Date(e.detected_at).getTime() < SEVEN_DAYS
+        (e as any).is_initial === true &&
+        (e as any).direction === "following"
     );
-    const privateCount = recentFollows7d.filter((e) => (e as any).target_is_private === true).length;
-    const privatePct: number | null = recentFollows7d.length > 0
-      ? Math.round((privateCount / recentFollows7d.length) * 100)
-      : null;
 
-    // ── 3. Followback-Rate (7d) ──
-    const followedUsernames = new Set(recentFollows7d.map((e) => e.target_username));
+    const hasRealData = realFollows7d.length >= 2;
+    const isEarlyStage = !hasRealData;
+
+    // ── 1. Ghost-Follows (30d) — need real follow+unfollow pairs ──
+    let ghostCount = 0;
+    if (!isEarlyStage) {
+      for (const follow of realFollows30d) {
+        const matchingUnfollow = realUnfollows30d.find(
+          (u) =>
+            u.target_username === follow.target_username &&
+            Math.abs(new Date(u.detected_at).getTime() - new Date(follow.detected_at).getTime()) < 48 * 60 * 60 * 1000
+        );
+        if (matchingUnfollow) ghostCount++;
+      }
+    }
+    const hasGhostData = !isEarlyStage && realFollows30d.length >= 2;
+
+    // ── 2. Private Accounts — can use initial as fallback! ──
+    const privateSource = hasRealData ? realFollows7d : initialFollows;
+    const privateCount = privateSource.filter((e) => (e as any).target_is_private === true).length;
+    const privatePct: number | null = privateSource.length > 0
+      ? Math.round((privateCount / privateSource.length) * 100)
+      : null;
+    const hasPrivateData = privateSource.length > 0;
+    const privateIsInitial = !hasRealData && initialFollows.length > 0;
+
+    // ── 3. Followback-Rate (7d) — needs real events ──
+    const followedUsernames = new Set(realFollows7d.map((e) => e.target_username));
     const followbackCount = followerEvents.filter(
       (e) => e.event_type === "gained" && followedUsernames.has(e.username)
     ).length;
-    const followbackRate: number | null = recentFollows7d.length > 0
-      ? Math.round((followbackCount / recentFollows7d.length) * 100)
+    const followbackRate: number | null = !isEarlyStage && realFollows7d.length > 0
+      ? Math.round((followbackCount / realFollows7d.length) * 100)
       : null;
 
     return {
       ghostCount,
       hasGhostData,
       privatePct,
-      hasPrivateData: recentFollows7d.length > 0,
+      hasPrivateData,
+      privateIsInitial,
       followbackRate,
-      hasFollowbackData: recentFollows7d.length > 0,
+      hasFollowbackData: !isEarlyStage && realFollows7d.length > 0,
+      isEarlyStage,
     };
   }, [followEvents, followerEvents, profileFollowings, followerCount, followingCount]);
 
@@ -95,7 +114,7 @@ export function SpyFindings({
         🔍 {t("spy_findings.title", "Spy-Analyse")}
       </p>
 
-      {/* Cards 2+3: Ghost-Follows + Private Accounts side by side */}
+      {/* Cards: Ghost-Follows + Private Accounts side by side */}
       <div className="grid grid-cols-2 gap-3 mb-3">
         <motion.div
           initial={{ opacity: 0, y: 6 }}
@@ -106,7 +125,7 @@ export function SpyFindings({
         >
           <span style={{ fontSize: "1.5rem" }}>👻</span>
           <p style={{ fontSize: "1.75rem", fontWeight: 900, color: "hsl(var(--foreground))", lineHeight: 1, marginTop: 8 }}>
-            {data.hasGhostData ? data.ghostCount : "–"}
+            {data.hasGhostData ? data.ghostCount : "—"}
           </p>
           <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", marginTop: 4 }}>
             Ghost-Follows
@@ -114,7 +133,9 @@ export function SpyFindings({
           <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6, marginTop: 2 }}>
             {data.hasGhostData
               ? t("spy_findings.ghost_desc", "Gefolgt & schnell entfolgt")
-              : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
+              : data.isEarlyStage
+                ? t("spy_findings.after_next_scan", "Wird nach dem nächsten Scan sichtbar")
+                : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
           </p>
         </motion.div>
 
@@ -127,20 +148,22 @@ export function SpyFindings({
         >
           <span style={{ fontSize: "1.5rem" }}>🔒</span>
           <p style={{ fontSize: "1.75rem", fontWeight: 900, color: "hsl(var(--foreground))", lineHeight: 1, marginTop: 8 }}>
-            {data.privatePct !== null ? `${data.privatePct}%` : "–"}
+            {data.privatePct !== null ? `${data.privatePct}%` : "—"}
           </p>
           <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", marginTop: 4 }}>
             {t("spy_findings.private_accounts", "Private Accounts")}
           </p>
           <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6, marginTop: 2 }}>
             {data.hasPrivateData
-              ? t("spy_findings.private_desc", "Bei neuen Follows")
+              ? data.privateIsInitial
+                ? t("spy_findings.based_on_initial", "Basierend auf erstem Scan")
+                : t("spy_findings.private_desc", "Bei neuen Follows")
               : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
           </p>
         </motion.div>
       </div>
 
-      {/* Card 4: Followback-Rate — wide banner */}
+      {/* Card: Followback-Rate — wide banner */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -154,7 +177,7 @@ export function SpyFindings({
               🔁 {t("spy_findings.followback_rate", "Followback-Rate")}
             </p>
             <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "hsl(var(--foreground))" }}>
-              {data.followbackRate !== null ? `${data.followbackRate}%` : "–"}
+              {data.followbackRate !== null ? `${data.followbackRate}%` : "—"}
             </p>
           </div>
         </div>
@@ -180,7 +203,9 @@ export function SpyFindings({
         )}
         {data.followbackRate === null && (
           <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6 }}>
-            {t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
+            {data.isEarlyStage
+              ? t("spy_findings.after_next_scan", "Wird nach dem nächsten Scan sichtbar")
+              : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
           </p>
         )}
       </motion.div>

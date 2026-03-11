@@ -52,7 +52,7 @@ export function SpyStatusCard({ analysis, realEventCount }: SpyStatusCardProps) 
 
   const descMap: Record<SpyLevel, string> = {
     gelassen: realEventCount === 0
-      ? t("spy_status.no_clear_signals", "Keine Auffälligkeiten — dein Spy sammelt Signale")
+      ? t("spy_status.no_clear_signals", "Dein Spy wurde gerade aktiviert und sammelt ab jetzt Daten. Die Analyse wird genauer je länger der Spy aktiv ist.")
       : t("spy_status.gelassen_desc", "Alles sieht normal aus"),
     aufmerksam: t("spy_status.aufmerksam_desc", "Leichte Auffälligkeiten im Follow-Verhalten"),
     wachsam: t("spy_status.wachsam_desc", "Mehrere verdächtige Signale erkannt"),
