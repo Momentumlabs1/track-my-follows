@@ -1,5 +1,6 @@
-// create-baseline v2 — redeployed 2026-03-07
+// create-baseline v3 — shared gender detection
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { detectGender } from "../_shared/genderDetection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,23 +18,6 @@ interface FollowingUser {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// ── Gender detection (copied from smart-scan) ──
-const FEMALE_NAMES = new Set(["anna","maria","laura","lisa","sarah","sophie","julia","lena","hannah","emma","lea","mia","nina","jana","alina","lara","clara","elena","melanie","nadine","stefanie","christina","katharina","alexandra","bianca","daniela","jessica","sandra","sabrina","tamara","vanessa","jennifer","michaela","verena","denise","jasmin","carina","manuela","martina","petra","silvia","claudia","monika","amelie","charlotte","luisa","emily","ashley","samantha","brittany","taylor","olivia","madison","chloe","grace","natalie","victoria","amber","nicole","rachel","megan","kate","rebecca","amanda","stephanie","heather","lauren","bella","sophia","ava","isabella","harper","ella","scarlett","aria","lily","zoe","riley","michelle","tiffany","ayse","fatma","emine","hatice","zeynep","elif","merve","busra","esra","tugba","selin","dilara","nur","buse","ceren","irem","gamze","gizem","pinar","derya","defne","carmen","lucia","paula","sofia","valentina","camila","gabriela","andrea","ana","rosa","adriana","diana","carolina","alejandra","fatima","aisha","maryam","layla","sara","nour","hana","amira","dina","rania","yasmin","lina","maya","nadia","salma","sana","zahra","khadija","reem","zara","dana","natasha","katya","olga","tatiana","irina","svetlana","marina","daria","polina","anastasia","kristina","milena","ivana","jelena","vera"]);
-const MALE_NAMES = new Set(["max","lukas","leon","paul","jonas","felix","david","moritz","julian","niklas","tobias","daniel","stefan","michael","thomas","alexander","christian","florian","markus","patrick","dominik","sebastian","bernhard","wolfgang","franz","josef","andreas","martin","peter","hans","karl","helmut","gerhard","manfred","manuel","ben","tim","james","john","robert","william","richard","joseph","charles","christopher","matthew","anthony","mark","donald","steven","andrew","brian","joshua","kevin","jason","ryan","jacob","ethan","noah","liam","mason","logan","alex","tyler","brandon","dylan","connor","luke","jack","owen","chris","mehmet","mustafa","ahmet","ali","hasan","ibrahim","murat","ismail","osman","yusuf","emre","burak","serkan","volkan","cem","baris","arda","kerem","kaan","can","hakan","mohammed","muhammad","ahmed","omar","khalid","hassan","hussein","saif","amir","tariq","youssef","karim","nabil","bilal","hamza","abdullah","nasser","samir","walid","faisal","rami","ivan","vladimir","sergei","dmitri","alexei","nikola","milan","dragan","boris","andrej","marko","pavel","oleg","nikolai"]);
-
-function detectGender(fullName: string | null | undefined): string {
-  if (!fullName) return "unknown";
-  const cleaned = fullName.replace(/[\u{1F600}-\u{1F9FF}]/gu, "").trim();
-  const parts = cleaned.split(/\s+/);
-  if (!parts[0]) return "unknown";
-  const firstName = parts[0].toLowerCase().replace(/[^a-z]/g, "");
-  if (!firstName || firstName.length < 2) return "unknown";
-  if (FEMALE_NAMES.has(firstName)) return "female";
-  if (MALE_NAMES.has(firstName)) return "male";
-  if (firstName.endsWith("a") && firstName.length > 3) return "female";
-  return "unknown";
-}
 
 function categorizeFollow(followerCount: number | null | undefined, isPrivate: boolean | undefined): string {
   if (isPrivate) return "private";
