@@ -319,21 +319,6 @@ const ProfileDetail = () => {
         )}
       </motion.div>
 
-      {/* ═══ Early Stage Banner ═══ */}
-      {realEventCount === 0 && !insightsLocked && (
-        <div className="mx-5 mb-4 flex items-start gap-3 p-4 rounded-2xl"
-          style={{ background: "hsl(var(--primary) / 0.06)", border: "1px solid hsl(var(--primary) / 0.15)" }}>
-          <SpyIcon size={24} />
-          <div>
-            <p className="text-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>
-              {t("profile_detail.spy_just_started", "Dein Spy ist gerade gestartet")}
-            </p>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: "0.75rem", lineHeight: 1.4 }}>
-              {t("profile_detail.spy_just_started_desc", "Die Analyse wird genauer mit jedem Scan. Erste Ergebnisse erscheinen innerhalb von 24 Stunden.")}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
       <div className="px-5 relative mb-2">
@@ -351,11 +336,6 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-          {/* Weekly gender bubbles */}
-          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
-
-          <div className="border-t border-border/20 my-5" />
-
           {/* Spy Status Hero + collapsible Findings */}
           <SpyStatusCard
             analysis={suspicionAnalysis}
@@ -369,6 +349,11 @@ const ProfileDetail = () => {
             totalScans={profile.total_scans_executed}
             pushScansToday={profile.push_scans_today}
           />
+
+          <div className="border-t border-border/20 my-5" />
+
+          {/* Weekly gender bubbles */}
+          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
         </div>
       </div>
 
