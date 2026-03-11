@@ -328,7 +328,36 @@ const ProfileDetail = () => {
             </p>
           </div>
         )}
+        {/* Gender analysis running but all unknown */}
+        {!showGender && followings.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: "0.875rem", color: "#FF2D55" }}>♀</span>
+              <div className="flex-1 h-2 rounded-full" style={{ background: "hsl(var(--border))" }} />
+              <span style={{ fontSize: "0.875rem", color: "#007AFF" }}>♂</span>
+            </div>
+            <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
+              {t("gender.analysis_running", "Geschlechteranalyse läuft...")} · {followings.length} Accounts
+            </p>
+          </div>
+        )}
       </motion.div>
+
+      {/* ═══ Early Stage Banner ═══ */}
+      {realEventCount === 0 && !insightsLocked && (
+        <div className="mx-5 mb-4 flex items-start gap-3 p-4 rounded-2xl"
+          style={{ background: "hsl(var(--primary) / 0.06)", border: "1px solid hsl(var(--primary) / 0.15)" }}>
+          <SpyIcon size={24} />
+          <div>
+            <p className="text-foreground font-semibold" style={{ fontSize: "0.8125rem" }}>
+              {t("profile_detail.spy_just_started", "Dein Spy ist gerade gestartet")}
+            </p>
+            <p className="text-muted-foreground mt-1" style={{ fontSize: "0.75rem", lineHeight: 1.4 }}>
+              {t("profile_detail.spy_just_started_desc", "Die Analyse wird genauer mit jedem Scan. Erste Ergebnisse erscheinen innerhalb von 24 Stunden.")}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
       <div className="px-5 relative mb-2">
