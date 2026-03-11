@@ -376,6 +376,11 @@ const ProfileDetail = () => {
           </div>
         )}
         <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
+          {/* Weekly gender bubbles */}
+          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+
+          <div className="border-t border-border/20 my-5" />
+
           {/* Spy Status Hero + collapsible Findings */}
           <SpyStatusCard
             analysis={suspicionAnalysis}
@@ -386,11 +391,6 @@ const ProfileDetail = () => {
             followerCount={followerCount}
             followingCount={followingCount}
           />
-
-          <div className="border-t border-border/20 my-5" />
-
-          {/* Weekly gender bubbles */}
-          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
         </div>
       </div>
 

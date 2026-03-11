@@ -519,6 +519,8 @@
     "wachsam_desc": "Mehrere Signale erkannt",
     "alarmiert_desc": "Stark auffälliges Muster",
     "early_estimate": "Frühe Einschätzung · wenig Aktivität",
-    "no_clear_signals": "Noch keine klaren Auffälligkeiten — dein Spy sammelt erste Signale"
+    "no_clear_signals": "Noch keine klaren Auffälligkeiten — dein Spy sammelt erste Signale",
+    "tap_for_analysis": "Tippe für detaillierte Analyse",
+    "tap_to_close": "Analyse ausblenden"
   }
 }
