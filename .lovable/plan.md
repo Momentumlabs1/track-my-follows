@@ -1,19 +1,39 @@
 
 
-## Plan: Gender-Bar Redesign
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Änderungen in `src/pages/ProfileDetail.tsx` (Zeilen 297-340)
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-1. **Überschrift ändern** — "Geschlechterverteilung der gefolgten Accounts" statt nur "Geschlechterverteilung"
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-2. **Balken dicker machen** — von `h-2` (8px) auf `h-7` (28px), damit Text reinpasst
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-3. **Prozentzahlen IN den Balken** — Jede Hälfte bekommt ein Label direkt im farbigen Bereich:
-   - Links im pinken Bereich: `♀ Frau 100%`
-   - Rechts im blauen Bereich: `♂ Mann 0%`
-   - Weißer Text, klein aber lesbar (0.625rem), font-semibold
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-4. **Header-Zeile vereinfachen** — Nur noch die Überschrift, keine separaten Prozentzahlen mehr rechts daneben (die stehen ja jetzt im Balken)
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-5. **Gleiche Anpassung für den "analysis running" Block** (Zeilen 328-340)
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 

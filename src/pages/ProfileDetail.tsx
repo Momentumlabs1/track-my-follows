@@ -297,42 +297,46 @@ const ProfileDetail = () => {
         {/* Gender ratio inline */}
         {showGender && (
           <div className="mt-4">
-            <div className="flex justify-between items-end mb-1.5">
-              <span className="text-muted-foreground uppercase tracking-wider font-medium" style={{ fontSize: '0.6875rem' }}>
-                {t("gender.distribution_title", "Geschlechterverteilung")}
-              </span>
-              <div className="flex gap-3 font-bold" style={{ fontSize: '0.75rem' }}>
-                <span style={{ color: "#FF2D55" }}>♀ {femalePct}%</span>
-                <span style={{ color: "#007AFF" }}>♂ {malePct}%</span>
-              </div>
-            </div>
-            <div className="h-2 rounded-full overflow-hidden flex">
+            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
+              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
+            </span>
+            <div className="h-7 rounded-full overflow-hidden flex">
               <motion.div
                 style={{ background: "#FF2D55" }}
-                className="h-full"
+                className="h-full flex items-center justify-center"
                 initial={{ width: 0 }}
                 animate={{ width: `${femalePct}%` }}
                 transition={{ duration: 0.8 }}
-              />
+              >
+                {femalePct >= 15 && (
+                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
+                    ♀ Frau {femalePct}%
+                  </span>
+                )}
+              </motion.div>
               <motion.div
                 style={{ background: "#007AFF" }}
-                className="h-full"
+                className="h-full flex items-center justify-center"
                 initial={{ width: 0 }}
                 animate={{ width: `${malePct}%` }}
                 transition={{ duration: 0.8, delay: 0.1 }}
-              />
+              >
+                {malePct >= 15 && (
+                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
+                    ♂ Mann {malePct}%
+                  </span>
+                )}
+              </motion.div>
             </div>
           </div>
         )}
         {/* Gender analysis running but all unknown */}
         {!showGender && followings.length > 0 && (
           <div className="mt-4">
-            <div className="flex justify-between items-end mb-1.5">
-              <span className="text-muted-foreground uppercase tracking-wider font-medium" style={{ fontSize: '0.6875rem' }}>
-                {t("gender.distribution_title", "Geschlechterverteilung")}
-              </span>
-            </div>
-            <div className="h-2 rounded-full" style={{ background: "hsl(var(--border))" }} />
+            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
+              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
+            </span>
+            <div className="h-7 rounded-full" style={{ background: "hsl(var(--border))" }} />
             <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
               {t("gender.analysis_running", "Geschlechteranalyse läuft...")} · {followings.length} Accounts
             </p>
