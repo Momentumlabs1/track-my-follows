@@ -365,6 +365,9 @@ const ProfileDetail = () => {
             profileFollowings={followings}
             followerCount={followerCount}
             followingCount={followingCount}
+            lastScannedAt={profile.last_scanned_at}
+            totalScans={profile.total_scans_executed}
+            pushScansToday={profile.push_scans_today}
           />
         </div>
       </div>
