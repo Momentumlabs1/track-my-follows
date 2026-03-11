@@ -119,7 +119,7 @@ export function SpyStatusCard({
           style={{
             background: `linear-gradient(180deg, ${bgGlowColor}, hsl(var(--card)))`,
             border: `1px solid ${borderGlowColor}`,
-            boxShadow: `0 0 40px -12px hsl(${levelConfig.color} / 0.25), 0 2px 8px -2px hsl(var(--foreground) / 0.05)`,
+            boxShadow: `0 0 40px -12px hsl(var(--primary) / 0.25), 0 2px 8px -2px hsl(var(--foreground) / 0.05)`,
           }}
         >
           {/* Info icon */}
