@@ -32,26 +32,37 @@ const Login = () => {
   const handleSocialLogin = async (provider: "apple" | "google") => {
     setSocialLoading(provider);
     try {
+      const redirectUrl = getOAuthRedirectUrl();
+      const skipRedirect = shouldSkipBrowserRedirect();
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin + "/dashboard",
-          skipBrowserRedirect: true,
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: skipRedirect,
         },
       });
+
       if (error) {
         toast.error(error.message);
-        setSocialLoading(null);
         return;
       }
-      if (data?.url) {
+
+      if (skipRedirect && data?.url) {
+        if (!isValidOAuthUrl(data.url)) {
+          toast.error("Invalid OAuth redirect URL");
+          return;
+        }
         window.location.href = data.url;
+      } else if (!skipRedirect) {
+        // Lovable auth-bridge handles the redirect automatically
+        return;
       } else {
         toast.error(t("auth.invalid_credentials"));
-        setSocialLoading(null);
       }
     } catch (err) {
       toast.error(String(err));
+    } finally {
       setSocialLoading(null);
     }
   };
