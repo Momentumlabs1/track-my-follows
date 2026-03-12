@@ -1,54 +1,44 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: Feed-Item Design modernisieren
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Problem
+Die Feed-Zeilen sehen generisch und "programmiert" aus: kleiner grüner Pfeil + Text in der Mitte, Avatare an die Seiten gedrückt, viel leerer Raum.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Neues Design: Kompakte Card pro Event
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+Statt einer flachen Zeile wird jedes Event eine **kompakte Card** im `native-card` Style:
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+```text
+┌─────────────────────────────────────────┐
+│  [Avatar 44px]  →  [Avatar 44px]        │
+│  @havvaal_     folgt    @timwger        │
+└─────────────────────────────────────────┘
+```
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+**Konkret:**
+- **Card-Background**: `native-card` (subtile Border + Background) statt unsichtbarer feed-row
+- **Horizontal zentriert**: Beide Avatare + Pfeil als kompakte Gruppe in der Mitte, nicht an die Ränder gedrückt
+- **Avatare etwas kleiner** (48px statt 58px) für kompakteres Feeling
+- **Pfeil**: Dünnere Linie statt fetter Pfeil-Icon, in `muted-foreground` statt grün — dezenter
+- **"folgt" Label** unter dem Pfeil in `text-muted-foreground` statt knalligem Grün, klein und dezent
+- **Usernames** direkt unter den Avataren statt darüber, in `text-xs text-muted-foreground`
+- **Tracked-Profil**: Behält den pinken Gradient-Border (eckig), aber dezenter (1.5px)
+- **Spacing**: Kleiner Gap zwischen den Cards (`gap-2`), leichtes `mx-5` Padding
+- **Kein Separator-Line** zwischen Items, die Cards selbst schaffen die Abgrenzung
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+### Änderungen
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+#### `src/components/EventFeedItem.tsx`
+- Layout von `feed-row` auf `native-card` mit `p-4` umstellen
+- Avatare + Pfeil als `flex items-center justify-center gap-4` in der Mitte
+- Pfeil: schlichte `→` Linie in muted statt grüner ArrowRight
+- Usernames unter die Avatare verschieben
+- Avatar-Size auf 48px reduzieren
 
----
+#### `src/pages/FeedPage.tsx`
+- Events in `div` mit `flex flex-col gap-2 px-5` wrappen statt direkt aneinander
 
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+#### `src/index.css`
+- `.feed-row` Klasse kann entfernt werden (nicht mehr genutzt)
 
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
-
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
