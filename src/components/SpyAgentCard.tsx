@@ -81,7 +81,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         ref={iconRef}
         drag
         dragSnapToOrigin
-        dragElastic={0.15}
+        dragElastic={0.6}
         dragMomentum={false}
         animate={isDragging ? {} : idleAnimate}
         whileDrag={{ scale: 1.15, zIndex: 99999 }}
