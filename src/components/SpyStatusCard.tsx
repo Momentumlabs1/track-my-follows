@@ -204,7 +204,7 @@ export function SpyStatusCard({
                 <motion.circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke={levelColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: scoreOffset }} transition={{ duration: 1.4, ease: "easeOut" }} />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={105} glow />
+                <SpyIcon size={90} glow />
               </div>
             </div>
 
