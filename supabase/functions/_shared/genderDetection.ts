@@ -1,5 +1,6 @@
 // Shared gender detection for all Edge Functions
-// Ported from src/lib/genderDetection.ts — 1,677 names + NFKD normalization + nicknames + suffix heuristics
+// Ported from src/lib/genderDetection.ts — dual-name detection + NFKD normalization + nicknames + suffix heuristics
+// Last updated: 2026-03-12
 
 const FEMALE_NAMES = new Set([
   "aaliyah", "abeer", "abena", "abigail", "ada", "adaeze", "addison", "adela", "adele", "adjoa", "adriana", "adwoa", "afaf", "afia", "agathe",
@@ -60,6 +61,24 @@ const FEMALE_NAMES = new Set([
   "viviane", "vivien", "wafa", "waltraud", "wanda", "wardah", "wendy", "widad", "wiebke", "willow", "wilma", "xiao", "ximena", "yagmur", "yan",
   "yara", "yasemin", "yasmin", "yeliz", "yeon", "yildiz", "ylva", "yoko", "yulia", "yun", "yvonne", "zahra", "zainab", "zanele", "zehra",
   "zeliha", "zeynep", "zoe", "zoey", "zofia", "zorica", "zoya", "zuhal", "zumrut", "zuzanna",
+  // Additional Turkish/Arabic/Persian female names for DACH market
+  "aysegul", "bahar", "belma", "ceyda", "ceylan", "deniz", "didem", "elifsu", "emel", "feray",
+  "feryal", "figen", "gonul", "gulbahar", "gulizar", "gulseren", "gulsum", "hacer", "hafsa", "hanife",
+  "havva", "hediye", "hilal", "hülya", "inci", "jale", "kader", "kamile", "kadriye", "kezban",
+  "kubra", "latife", "leyla", "mehtap", "meral", "meryem", "munevver", "müge", "nazan", "nefise",
+  "neslihan", "nesrin", "nigar", "nilufer", "nuran", "nurcan", "nursel", "pelin", "perihan", "reyhan",
+  "ruqaya", "sabiha", "saliha", "saniye", "seher", "selda", "semra", "senay", "sevil", "sevtap",
+  "seyhan", "sibel", "sultan", "sureyya", "süreyya", "sahika", "sehnaz", "sekure", "tülay", "vildan",
+  "yasemin", "yildiz", "zehra", "zekiye", "zubeyde",
+  // Persian female names
+  "anahita", "azadeh", "darya", "elnaz", "fatemeh", "fereshteh", "ghazal", "golnaz", "laleh", "leila",
+  "mahsa", "maryam", "mastaneh", "mina", "nasrin", "neda", "niloofar", "parisa", "parinaz", "roya",
+  "sahar", "sepideh", "shadi", "shaghayegh", "shirin", "simin", "sogol", "taraneh", "yasaman", "zahra",
+  // Arabic female names
+  "abeer", "alia", "daliya", "dania", "farah", "firdaus", "ghufran", "hala", "hanan", "hayat",
+  "inas", "kawkab", "khawla", "lama", "lubna", "madiha", "maisa", "marwa", "maysa", "nabiha",
+  "nadiya", "nihad", "rabab", "rasha", "rawda", "rim", "ruba", "ruqayya", "sabah", "safa",
+  "samah", "sawsan", "siham", "sumaya", "taghreed", "warda", "widad", "yumna", "zainab", "zubayda",
 ]);
 
 const MALE_NAMES = new Set([
@@ -118,12 +137,75 @@ const MALE_NAMES = new Set([
   "wilhelm", "willi", "william", "willie", "wojciech", "wolfgang", "woo", "wyatt", "xaver", "yang", "yannik", "yaroslav", "yasin", "yasser", "yavuz",
   "yaw", "yazan", "yigit", "younis", "youssef", "yuri", "yusuf", "yves", "zachary", "zafer", "zain", "zaki", "zbigniew", "zhang", "ziad",
   "zlatko", "zoran",
+  // Additional Turkish/Arabic/Persian male names for DACH market
+  "abdulkadir", "abdurrahman", "adnan", "akif", "alper", "anil", "ata", "atakan", "atilla", "ayhan",
+  "aziz", "bahadir", "barbaros", "bayram", "bedri", "berat", "bilge", "cahit", "celal", "cengiz",
+  "cuneyt", "davut", "dogan", "ebubekir", "ekrem", "elvan", "enver", "erdal", "erdogan", "ergun",
+  "erhan", "erol", "ertugrul", "fahri", "fatih", "ferit", "fevzi", "fikri", "galip", "goksel",
+  "gürkan", "habib", "halit", "hamdi", "hasan", "haydar", "hayri", "huseyin", "ilyas", "iskender",
+  "ismet", "kenan", "koray", "kudret", "latif", "levent", "lutfi", "mahdi", "mahmoud", "mahmut",
+  "mazhar", "mecit", "muammer", "mücahit", "müslüm", "naci", "nazim", "nedim", "nejat", "nevzat",
+  "nihat", "numan", "nusret", "oğuz", "orçun", "osman", "polat", "raif", "rasim", "recai",
+  "ridvan", "rüstem", "sabri", "sadik", "saffet", "salih", "sami", "savaş", "selahattin", "selçuk",
+  "semih", "servet", "sinan", "şükrü", "tayfun", "temel", "timur", "tugay", "tuncay", "tuncer",
+  "turhan", "umut", "ünal", "veli", "volkan", "yalçin", "yasar", "yilmaz", "zafer", "zeki",
+  // Persian male names
+  "milad", "arash", "arman", "arsalan", "babak", "bahram", "behnam", "behzad", "bijan", "cyrus",
+  "dariush", "ehsan", "farhad", "farzad", "farzin", "hafez", "hamid", "hossein", "iman", "iraj",
+  "javad", "kambiz", "kamran", "kaveh", "kayvan", "kourosh", "majid", "maziar", "mehdi", "mehran",
+  "milad", "mojtaba", "morteza", "nader", "nima", "omid", "parham", "parviz", "payam", "pedram",
+  "pouya", "ramin", "reza", "rostam", "saeed", "saman", "sepehr", "shahram", "shahin", "siamak",
+  "sina", "soroush", "vahid", "yasin",
+  // Arabic male names
+  "abdelrahman", "adham", "ammar", "ashraf", "ayman", "basil", "basim", "fadi", "ghassan", "haitham",
+  "hazim", "husam", "jaber", "jalal", "jamal", "jamil", "jawad", "kamal", "karam", "mazen",
+  "moataz", "munir", "nael", "nasir", "nawaf", "nidal", "osama", "qais", "rabih", "rami",
+  "raed", "saad", "safwan", "salman", "shaker", "sufyan", "tariq", "waleed", "wasim", "yasir",
+  "ziad", "ziyad",
 ]);
 
 const AMBIGUOUS_NAMES = new Set([
-  "andrea", "deniz", "dominique", "gabriele", "jean", "michele",
-  "robin", "simone", "sultan", "wei", "young", "yuki",
+  "andrea", "dominique", "gabriele", "jean", "michele",
+  "robin", "simone", "wei", "young", "yuki",
 ]);
+
+// ALL_NAMES set for fast prefix matching
+const ALL_NAMES = new Set([...FEMALE_NAMES, ...MALE_NAMES, ...AMBIGUOUS_NAMES]);
+
+function extractGenderFromUsername(username: string): "male" | "female" | "unknown" {
+  if (!username) return "unknown";
+
+  const cleaned = username
+    .toLowerCase()
+    .replace(/[0-9]/g, "")
+    .trim();
+
+  if (!cleaned || cleaned.length < 4) return "unknown";
+
+  // Strategy 1: Split by delimiters, first match wins
+  const parts = cleaned.split(/[._\-]/);
+  if (parts.length > 1) {
+    for (const part of parts) {
+      if (part.length < 4) continue;
+      if (AMBIGUOUS_NAMES.has(part)) continue;
+      if (FEMALE_NAMES.has(part)) return "female";
+      if (MALE_NAMES.has(part)) return "male";
+    }
+  }
+
+  // Strategy 2: Prefix-matching (longest match first, min 4 chars)
+  const maxLen = Math.min(cleaned.length, 12);
+  for (let len = maxLen; len >= 4; len--) {
+    const prefix = cleaned.substring(0, len);
+    if (ALL_NAMES.has(prefix)) {
+      if (AMBIGUOUS_NAMES.has(prefix)) return "unknown";
+      if (FEMALE_NAMES.has(prefix)) return "female";
+      if (MALE_NAMES.has(prefix)) return "male";
+    }
+  }
+
+  return "unknown";
+}
 
 function resolveNickname(name: string): string | null {
   const nicknames: Record<string, string> = {
@@ -171,9 +253,21 @@ function checkSuffix(name: string): "male" | "female" | null {
   return null;
 }
 
-export function detectGender(fullName: string | null | undefined): string {
-  if (!fullName) return "unknown";
+export function detectGender(fullName: string | null | undefined, username?: string | null): string {
+  if (fullName && typeof fullName === "string") {
+    const result = detectGenderFromName(fullName);
+    if (result !== "unknown") return result;
+  }
 
+  // Fallback: try username
+  if (username && typeof username === "string") {
+    return extractGenderFromUsername(username);
+  }
+
+  return "unknown";
+}
+
+function detectGenderFromName(fullName: string): string {
   // NFKD normalization: converts stylized Unicode (𝐊𝐚𝐢 → Kai, 𝕰𝖚𝖌𝖊𝖓 → Eugen)
   const normalized = fullName.normalize("NFKD");
 

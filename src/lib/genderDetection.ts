@@ -1,6 +1,6 @@
-// Auto-generated gender detection with 1,677 names
-// Covers: DE, EN, TR, AR, Slavic, IT, ES/PT, FR, Scandinavian, Asian, African
-// Last updated: 2026-02-26
+// Auto-generated gender detection with 1,677+ names
+// Covers: DE, EN, TR, AR, Slavic, IT, ES/PT, FR, Scandinavian, Asian, African, Persian
+// Last updated: 2026-03-12
 
 const FEMALE_NAMES = new Set([
   "aaliyah", "abeer", "abena", "abigail", "ada", "adaeze", "addison", "adela", "adele", "adjoa", "adriana", "adwoa", "afaf", "afia", "agathe",
@@ -61,6 +61,24 @@ const FEMALE_NAMES = new Set([
   "viviane", "vivien", "wafa", "waltraud", "wanda", "wardah", "wendy", "widad", "wiebke", "willow", "wilma", "xiao", "ximena", "yagmur", "yan",
   "yara", "yasemin", "yasmin", "yeliz", "yeon", "yildiz", "ylva", "yoko", "yulia", "yun", "yvonne", "zahra", "zainab", "zanele", "zehra",
   "zeliha", "zeynep", "zoe", "zoey", "zofia", "zorica", "zoya", "zuhal", "zumrut", "zuzanna",
+  // Additional Turkish/Arabic/Persian female names for DACH market
+  "aysegul", "bahar", "belma", "ceyda", "ceylan", "deniz", "didem", "elifsu", "emel", "feray",
+  "feryal", "figen", "gonul", "gulbahar", "gulizar", "gulseren", "gulsum", "hacer", "hafsa", "hanife",
+  "havva", "hediye", "hilal", "hülya", "inci", "jale", "kader", "kamile", "kadriye", "kezban",
+  "kubra", "latife", "leyla", "mehtap", "meral", "meryem", "munevver", "müge", "nazan", "nefise",
+  "neslihan", "nesrin", "nigar", "nilufer", "nuran", "nurcan", "nursel", "pelin", "perihan", "reyhan",
+  "ruqaya", "sabiha", "saliha", "saniye", "seher", "selda", "semra", "senay", "sevil", "sevtap",
+  "seyhan", "sibel", "sultan", "sureyya", "süreyya", "sahika", "sehnaz", "sekure", "tülay", "vildan",
+  "yasemin", "yildiz", "zehra", "zekiye", "zubeyde",
+  // Persian female names
+  "anahita", "azadeh", "darya", "elnaz", "fatemeh", "fereshteh", "ghazal", "golnaz", "laleh", "leila",
+  "mahsa", "maryam", "mastaneh", "mina", "nasrin", "neda", "niloofar", "parisa", "parinaz", "roya",
+  "sahar", "sepideh", "shadi", "shaghayegh", "shirin", "simin", "sogol", "taraneh", "yasaman", "zahra",
+  // Arabic female names
+  "abeer", "alia", "daliya", "dania", "farah", "firdaus", "ghufran", "hala", "hanan", "hayat",
+  "inas", "kawkab", "khawla", "lama", "lubna", "madiha", "maisa", "marwa", "maysa", "nabiha",
+  "nadiya", "nihad", "rabab", "rasha", "rawda", "rim", "ruba", "ruqayya", "sabah", "safa",
+  "samah", "sawsan", "siham", "sumaya", "taghreed", "warda", "widad", "yumna", "zainab", "zubayda",
 ]);
 
 const MALE_NAMES = new Set([
@@ -119,37 +137,123 @@ const MALE_NAMES = new Set([
   "wilhelm", "willi", "william", "willie", "wojciech", "wolfgang", "woo", "wyatt", "xaver", "yang", "yannik", "yaroslav", "yasin", "yasser", "yavuz",
   "yaw", "yazan", "yigit", "younis", "youssef", "yuri", "yusuf", "yves", "zachary", "zafer", "zain", "zaki", "zbigniew", "zhang", "ziad",
   "zlatko", "zoran",
+  // Additional Turkish/Arabic/Persian male names for DACH market
+  "abdulkadir", "abdurrahman", "adnan", "akif", "alper", "anil", "ata", "atakan", "atilla", "ayhan",
+  "aziz", "bahadir", "barbaros", "bayram", "bedri", "berat", "bilge", "cahit", "celal", "cengiz",
+  "cuneyt", "davut", "dogan", "ebubekir", "ekrem", "elvan", "enver", "erdal", "erdogan", "ergun",
+  "erhan", "erol", "ertugrul", "fahri", "fatih", "ferit", "fevzi", "fikri", "galip", "goksel",
+  "gürkan", "habib", "halit", "hamdi", "hasan", "haydar", "hayri", "huseyin", "ilyas", "iskender",
+  "ismet", "kenan", "koray", "kudret", "latif", "levent", "lutfi", "mahdi", "mahmoud", "mahmut",
+  "mazhar", "mecit", "muammer", "mücahit", "müslüm", "naci", "nazim", "nedim", "nejat", "nevzat",
+  "nihat", "numan", "nusret", "oğuz", "orçun", "osman", "polat", "raif", "rasim", "recai",
+  "ridvan", "rüstem", "sabri", "sadik", "saffet", "salih", "sami", "savaş", "selahattin", "selçuk",
+  "semih", "servet", "sinan", "şükrü", "tayfun", "temel", "timur", "tugay", "tuncay", "tuncer",
+  "turhan", "umut", "ünal", "veli", "volkan", "yalçin", "yasar", "yilmaz", "zafer", "zeki",
+  // Persian male names
+  "milad", "arash", "arman", "arsalan", "babak", "bahram", "behnam", "behzad", "bijan", "cyrus",
+  "dariush", "ehsan", "farhad", "farzad", "farzin", "hafez", "hamid", "hossein", "iman", "iraj",
+  "javad", "kambiz", "kamran", "kaveh", "kayvan", "kourosh", "majid", "maziar", "mehdi", "mehran",
+  "milad", "mojtaba", "morteza", "nader", "nima", "omid", "parham", "parviz", "payam", "pedram",
+  "pouya", "ramin", "reza", "rostam", "saeed", "saman", "sepehr", "shahram", "shahin", "siamak",
+  "sina", "soroush", "vahid", "yasin",
+  // Arabic male names
+  "abdelrahman", "adham", "ammar", "ashraf", "ayman", "basil", "basim", "fadi", "ghassan", "haitham",
+  "hazim", "husam", "jaber", "jalal", "jamal", "jamil", "jawad", "kamal", "karam", "mazen",
+  "moataz", "munir", "nael", "nasir", "nawaf", "nidal", "osama", "qais", "rabih", "rami",
+  "raed", "saad", "safwan", "salman", "shaker", "sufyan", "tariq", "waleed", "wasim", "yasir",
+  "ziad", "ziyad",
 ]);
 
 // Names that are ambiguous across cultures (e.g. Andrea = male in DE, female in IT)
 // These go to heuristic/unknown
 const AMBIGUOUS_NAMES = new Set([
-  "andrea", "deniz", "dominique", "gabriele", "jean", "michele", 
-  "robin", "simone", "sultan", "wei", "young", "yuki",
+  "andrea", "dominique", "gabriele", "jean", "michele",
+  "robin", "simone", "wei", "young", "yuki",
 ]);
 
-/**
- * Detect gender from a full name string.
- * Returns "male", "female", or "unknown".
- * 
- * Strategy:
- * 1. Clean name (remove emojis, special chars, numbers)
- * 2. Extract first name
- * 3. Check against 1,677-name database (865F + 812M)
- * 4. Fallback: suffix heuristics
- * 5. Fallback: "unknown"
- */
-export function detectGender(fullName: string): "male" | "female" | "unknown" {
-  if (!fullName || typeof fullName !== "string") return "unknown";
+// ── ALL_NAMES set for fast prefix matching ──
+const ALL_NAMES = new Set([...FEMALE_NAMES, ...MALE_NAMES, ...AMBIGUOUS_NAMES]);
 
+/**
+ * Try to extract a known first name from an Instagram username.
+ * Strategy:
+ * 1. Split by `.`, `_`, `-` → test each part as a name
+ * 2. If no split match: prefix-match (longest known name at start, min 4 chars)
+ * First match wins (usernames typically have first name first).
+ */
+function extractGenderFromUsername(username: string): "male" | "female" | "unknown" {
+  if (!username) return "unknown";
+
+  const cleaned = username
+    .toLowerCase()
+    .replace(/[0-9]/g, "")
+    .trim();
+
+  if (!cleaned || cleaned.length < 4) return "unknown";
+
+  // Strategy 1: Split by delimiters and test each part
+  const parts = cleaned.split(/[._\-]/);
+  if (parts.length > 1) {
+    for (const part of parts) {
+      if (part.length < 4) continue;
+      if (AMBIGUOUS_NAMES.has(part)) continue;
+      if (FEMALE_NAMES.has(part)) return "female";
+      if (MALE_NAMES.has(part)) return "male";
+    }
+  }
+
+  // Strategy 2: Prefix-matching (longest match first, min 4 chars)
+  // Try to find the longest known name at the start of the username
+  const maxLen = Math.min(cleaned.length, 12);
+  for (let len = maxLen; len >= 4; len--) {
+    const prefix = cleaned.substring(0, len);
+    if (ALL_NAMES.has(prefix)) {
+      if (AMBIGUOUS_NAMES.has(prefix)) return "unknown";
+      if (FEMALE_NAMES.has(prefix)) return "female";
+      if (MALE_NAMES.has(prefix)) return "male";
+    }
+  }
+
+  return "unknown";
+}
+
+/**
+ * Detect gender from a full name string, with optional username fallback.
+ * Returns "male", "female", or "unknown".
+ *
+ * Strategy:
+ * 1. Clean display name (remove emojis, special chars)
+ * 2. Extract first name from display name
+ * 3. Check against name database
+ * 4. Fallback: suffix heuristics on display name
+ * 5. Fallback: extract name from Instagram username
+ * 6. Fallback: "unknown"
+ */
+export function detectGender(fullName: string | null | undefined, username?: string | null): "male" | "female" | "unknown" {
+  if (fullName && typeof fullName === "string") {
+    const result = detectGenderFromName(fullName);
+    if (result !== "unknown") return result;
+  }
+
+  // Fallback: try username
+  if (username && typeof username === "string") {
+    return extractGenderFromUsername(username);
+  }
+
+  return "unknown";
+}
+
+function detectGenderFromName(fullName: string): "male" | "female" | "unknown" {
   // Step 1: Clean the name
   const cleaned = fullName
+    .normalize("NFKD")
     .replace(/[\u{1F600}-\u{1F9FF}]/gu, "") // emojis
     .replace(/[\u{2600}-\u{26FF}]/gu, "")   // symbols
     .replace(/[\u{2700}-\u{27BF}]/gu, "")   // dingbats
     .replace(/[\u{FE00}-\u{FE0F}]/gu, "")   // variation selectors
-    .replace(/[\u{200D}]/gu, "")                // zero width joiner
-    .replace(/[^a-zA-ZäöüßàâéèêëïîôùûüçñáíóúğışşçæøåÄÖÜ\s-]/g, "")
+    .replace(/[\u{200D}]/gu, "")             // zero width joiner
+    .replace(/[\u0300-\u036f]/g, "")         // combining diacritical marks after NFKD
+    .replace(/[^a-zA-Z\s-]/g, "")
     .trim()
     .toLowerCase();
 
@@ -257,9 +361,9 @@ function checkSuffix(name: string): "male" | "female" | null {
  * More efficient than calling detectGender() in a loop
  * because the Set lookups are already O(1).
  */
-export function detectGenderBatch(names: string[]): Array<{ name: string; gender: "male" | "female" | "unknown" }> {
-  return names.map(name => ({
-    name,
-    gender: detectGender(name),
+export function detectGenderBatch(names: Array<{ name: string; username?: string }>): Array<{ name: string; gender: "male" | "female" | "unknown" }> {
+  return names.map(entry => ({
+    name: entry.name,
+    gender: detectGender(entry.name, entry.username),
   }));
 }
