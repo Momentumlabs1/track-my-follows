@@ -30,12 +30,27 @@ const Login = () => {
 
   const handleSocialLogin = async (provider: "apple" | "google") => {
     setSocialLoading(provider);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin + "/dashboard" },
-    });
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin + "/dashboard",
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) {
+        toast.error(error.message);
+        setSocialLoading(null);
+        return;
+      }
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(t("auth.invalid_credentials"));
+        setSocialLoading(null);
+      }
+    } catch (err) {
+      toast.error(String(err));
       setSocialLoading(null);
     }
   };

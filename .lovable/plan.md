@@ -1,47 +1,39 @@
 
-Ziel: Apple Login jetzt zuverlässig live bekommen – ohne weiteres Schema-Gedöns.
 
-Kurzdiagnose:
-- Kein DB-/Schema-Problem.  
-- Dein Setup ist fast fertig; Blocker ist sehr wahrscheinlich: **Settings nicht final gespeichert** und/oder **Redirect-URL-Domain-Mismatch** (Preview vs Published).
-- In den Supabase Auth-Logs gibt es bereits Apple-Login-Events (`/authorize` → `/callback`), also grundsätzlich funktioniert die Provider-Kette.
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-Umsetzungsplan:
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-1) Sofort-Finalisierung (ohne Code, 5 Minuten)
-- Supabase → Authentication → Providers → Apple:
-  - `Client IDs`: `app.spysecretapple.web`
-  - Secret Key drin lassen
-  - **unten rechts Save klicken** (entscheidend)
-- Apple Developer → Service ID `app.spysecretapple.web`:
-  - Sign in with Apple aktiv
-  - Domain: `bqqmfajowxzkdcvmrtyd.supabase.co`
-  - Return URL: `https://bqqmfajowxzkdcvmrtyd.supabase.co/auth/v1/callback`
-  - **Done → Continue → Save**
-- Supabase → Authentication → URL Configuration:
-  - Site URL: `https://track-my-follows.lovable.app`
-  - Redirect URLs hinzufügen:
-    - `https://track-my-follows.lovable.app/**`
-    - `https://id-preview--f7c24743-5f09-4c0a-a313-7f8913c78573.lovable.app/**`
-    - `https://f7c24743-5f09-4c0a-a313-7f8913c78573.lovableproject.com/**`
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-2) Code-Härtung (damit wir nicht wieder 2h daran hängen)
-- Datei: `src/pages/Login.tsx` (`handleSocialLogin`)
-- Verbesserung:
-  - Für problematische Domains `skipBrowserRedirect: true`
-  - `data.url` strikt validieren (nur erlaubte Hosts: dein Supabase-Host + Apple/Google OAuth Hosts)
-  - dann manuell `window.location.href = data.url`
-  - sauberes Loading/Error Handling, damit Button nicht hängenbleibt
-- Ergebnis: stabiler OAuth-Flow auch bei Domain-/Bridge-Kantenfällen.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-3) Abnahme (E2E)
-- Published + Preview jeweils testen:
-  - Apple Button → Apple Consent → zurück auf `/dashboard`
-- Auth-Logs prüfen:
-  - `/authorize` 302
-  - `/callback` 302
-  - Login Event mit `provider=apple`
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-Technische Details:
-- Keine Migration, kein RLS, kein Schema-Change erforderlich.
-- Problem liegt im OAuth Redirect-Flow, nicht in Supabase-Tabellen.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
+
