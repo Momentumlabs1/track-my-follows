@@ -49,44 +49,95 @@ async function syncUserSettings(userId: string) {
 }
 
 /**
- * Global OAuth code exchange: if the current URL contains ?code=…,
- * exchange it for a session before anything else happens.
- * This prevents race conditions where Splash/Onboarding redirect
- * before the session is established.
+ * Detect OAuth return tokens in URL — supports both PKCE (?code=) and
+ * implicit flow (#access_token=). Returns true if tokens were found and
+ * processed (successfully or not).
  */
 async function handleOAuthReturnIfNeeded(): Promise<boolean> {
+  // 1) Check query params for PKCE code or error
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
-  const error = params.get("error");
+  const queryError = params.get("error");
 
-  if (!code && !error) return false; // nothing to do
+  // 2) Check hash fragment for implicit tokens or error
+  const hash = window.location.hash.substring(1); // remove leading #
+  const hashParams = new URLSearchParams(hash);
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+  const hashError = hashParams.get("error");
 
-  if (error) {
-    console.error("[auth/global] OAuth error in URL:", error, params.get("error_description"));
-    // Clean URL and let the app continue (user will land on login/onboarding)
+  const hasOAuthParams = !!(code || queryError || accessToken || hashError);
+
+  if (!hasOAuthParams) return false;
+
+  console.info("[auth/global] OAuth return detected", {
+    hasPKCE: !!code,
+    hasImplicit: !!accessToken,
+    hasError: !!(queryError || hashError),
+  });
+
+  // Handle errors from either flow
+  if (queryError || hashError) {
+    const errorMsg = queryError || hashError;
+    const errorDesc = params.get("error_description") || hashParams.get("error_description");
+    console.error("[auth/global] OAuth error:", errorMsg, errorDesc);
     cleanOAuthParams();
     return false;
   }
 
-  // Exchange the code
-  console.info("[auth/global] Exchanging OAuth code from URL");
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-
-  if (exchangeError) {
-    console.error("[auth/global] Code exchange failed:", exchangeError.message);
+  // PKCE flow: exchange code for session
+  if (code) {
+    console.info("[auth/global] Exchanging PKCE code");
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error("[auth/global] PKCE exchange failed:", error.message);
+    }
+    cleanOAuthParams();
+    return !error;
   }
 
-  // Always clean the URL regardless of success/failure
+  // Implicit flow: setSession with the tokens from hash
+  if (accessToken && refreshToken) {
+    console.info("[auth/global] Setting session from implicit tokens");
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) {
+      console.error("[auth/global] setSession failed:", error.message);
+    }
+    cleanOAuthParams();
+    return !error;
+  }
+
+  // access_token without refresh_token — unusual but clean up
   cleanOAuthParams();
-  return !exchangeError;
+  return false;
 }
 
 function cleanOAuthParams() {
   const url = new URL(window.location.href);
+  // Clean query params
   url.searchParams.delete("code");
   url.searchParams.delete("error");
   url.searchParams.delete("error_description");
-  window.history.replaceState({}, "", url.pathname + url.hash);
+  // Clean hash — remove only OAuth-related keys, preserve non-OAuth hash
+  if (url.hash) {
+    const hashParams = new URLSearchParams(url.hash.substring(1));
+    const oauthKeys = ["access_token", "refresh_token", "expires_in", "expires_at", "token_type", "type", "provider_token", "provider_refresh_token", "error", "error_description", "error_code"];
+    let hadOAuthKey = false;
+    for (const key of oauthKeys) {
+      if (hashParams.has(key)) {
+        hashParams.delete(key);
+        hadOAuthKey = true;
+      }
+    }
+    if (hadOAuthKey) {
+      const remaining = hashParams.toString();
+      url.hash = remaining ? `#${remaining}` : "";
+    }
+  }
+  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -109,15 +160,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // 2) Init sequence: exchange OAuth code if present, then get session
+    // 2) Init sequence: exchange OAuth tokens if present, then get session
     const init = async () => {
-      // If there's a ?code= in the URL, exchange it first
+      // If there are OAuth params in the URL, handle them first
       await handleOAuthReturnIfNeeded();
 
-      // Now get the (possibly just-created) session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Now get the (possibly just-created) session — with retry for persistence timing
+      let finalSession: Session | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s) {
+          finalSession = s;
+          break;
+        }
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 300));
+        }
+      }
+
       if (mounted) {
-        setSession(session);
+        setSession(finalSession);
         setLoading(false);
       }
     };

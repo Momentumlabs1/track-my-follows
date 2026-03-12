@@ -36,7 +36,7 @@ function AppContent() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Navigate to="/splash" replace />} />
+        <Route path="/" element={<Splash />} />
         <Route path="/splash" element={<Splash />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
