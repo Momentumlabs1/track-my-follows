@@ -25,6 +25,7 @@ import LegalWiderruf from "./pages/legal/Widerruf";
 import VerifyEmail from "./pages/VerifyEmail";
 import SpyDetail from "./pages/SpyDetail";
 import FeedPage from "./pages/FeedPage";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
