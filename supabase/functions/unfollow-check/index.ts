@@ -74,7 +74,7 @@ async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): 
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
   let page = 0;
-  while (page < 50) {
+  while (page < 10) {
     let url = `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
