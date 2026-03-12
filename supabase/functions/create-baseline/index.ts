@@ -78,25 +78,31 @@ Deno.serve(async (req) => {
     const hikerApiKey = Deno.env.get("HIKER_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // ⚠️ Auth: Verify user owns the profile
+    // ⚠️ Auth: Accept service-role key (server-to-server) OR user token
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await userClient.auth.getUser(token);
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const isServiceRole = token === serviceRoleKey;
+    let userId: string | null = null;
+
+    if (!isServiceRole) {
+      // User token auth — verify ownership
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const { data: { user }, error: userError } = await userClient.auth.getUser(token);
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = user.id;
     }
-    const userId = user.id;
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
@@ -107,13 +113,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load profile with ownership check
-    const { data: profile, error: profileError } = await supabase
+    // Load profile (with ownership check for user tokens, without for service-role)
+    const query = supabase
       .from("tracked_profiles")
       .select("*")
-      .eq("id", profileId)
-      .eq("user_id", userId)
-      .single();
+      .eq("id", profileId);
+    if (!isServiceRole && userId) {
+      query.eq("user_id", userId);
+    }
+    const { data: profile, error: profileError } = await query.single();
 
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "Profile not found or access denied" }), {
