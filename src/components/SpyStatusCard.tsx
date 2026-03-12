@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Info, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Info, ChevronDown, Search, Eye, Loader2 } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpyFindings } from "@/components/SpyFindings";
+import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { haptic } from "@/lib/native";
 import type { SuspicionBreakdown } from "@/lib/suspicionAnalysis";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
@@ -19,6 +25,8 @@ interface SpyStatusCardProps {
   lastScannedAt?: string | null;
   totalScans?: number | null;
   pushScansToday?: number | null;
+  profileId?: string;
+  unfollowScansToday?: number | null;
 }
 
 type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
@@ -44,17 +52,6 @@ function getSpyLevel(score: number): SpyLevel {
   return "alarmiert";
 }
 
-function timeAgoShort(dateStr: string | null): string {
-  if (!dateStr) return "–";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "gerade";
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
-
 export function SpyStatusCard({
   analysis,
   realEventCount,
@@ -66,15 +63,24 @@ export function SpyStatusCard({
   lastScannedAt,
   totalScans,
   pushScansToday,
+  profileId,
+  unfollowScansToday,
 }: SpyStatusCardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [infoOpen, setInfoOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [pushScanning, setPushScanning] = useState(false);
+  const [unfollowScanning, setUnfollowScanning] = useState(false);
 
   const score = analysis?.overallScore ?? 0;
   const level = getSpyLevel(score);
   const levelConfig = LEVELS.find((l) => l.key === level)!;
   const levelColor = `hsl(${levelConfig.color})`;
+
+  const pushRemaining = pushScansToday ?? 4;
+  const unfollowRemaining = unfollowScansToday ?? 1;
 
   const labelMap: Record<SpyLevel, string> = {
     gelassen: t("spy_status.gelassen", "Gelassen"),
@@ -99,9 +105,61 @@ export function SpyStatusCard({
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
 
-  // Card uses brighter primary pink
   const bgGlowColor = `hsl(var(--primary) / 0.22)`;
   const borderGlowColor = `hsl(var(--primary) / 0.35)`;
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
+    queryClient.invalidateQueries({ queryKey: ["follow_events"] });
+    queryClient.invalidateQueries({ queryKey: ["follower_events"] });
+    queryClient.invalidateQueries({ queryKey: ["profile_followings"] });
+  };
+
+  const handlePushScan = async () => {
+    if (!profileId || pushRemaining <= 0) {
+      toast.error(t("spy_detail.no_scans_left", "Keine Push-Scans mehr übrig heute ⏰"));
+      return;
+    }
+    haptic.light();
+    setPushScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("trigger-scan", {
+        body: { profileId, scanType: "push" },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); setPushScanning(false); return; }
+      const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
+      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      invalidateAll();
+    } catch {
+      toast.error("Scan fehlgeschlagen");
+    } finally {
+      setPushScanning(false);
+    }
+  };
+
+  const handleUnfollowScan = async () => {
+    if (!profileId || unfollowRemaining <= 0) {
+      toast.error(t("spy_detail.no_unfollow_left", "Kein Unfollow-Scan mehr übrig heute ⏰"));
+      return;
+    }
+    haptic.light();
+    setUnfollowScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("unfollow-check", {
+        body: { profileId },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); setUnfollowScanning(false); return; }
+      const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
+      toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`);
+      invalidateAll();
+    } catch {
+      toast.error("Unfollow-Check fehlgeschlagen");
+    } finally {
+      setUnfollowScanning(false);
+    }
+  };
 
   return (
     <>
@@ -135,58 +193,31 @@ export function SpyStatusCard({
           <div className="flex flex-col items-center px-6 pt-8 pb-6">
             {/* Mood Ring with Spy */}
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
-              {/* Ambient glow behind ring */}
               <div
                 className="absolute inset-0 rounded-full blur-2xl"
                 style={{
                   background: `radial-gradient(circle, hsl(${levelConfig.color} / 0.3), transparent 70%)`,
                 }}
               />
-
               <svg width={ringSize} height={ringSize} className="rotate-[-90deg] relative z-10">
-                <circle
-                  cx={ringSize / 2}
-                  cy={ringSize / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={`hsl(${levelConfig.color} / 0.1)`}
-                  strokeWidth={strokeWidth}
-                />
-                <motion.circle
-                  cx={ringSize / 2}
-                  cy={ringSize / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={levelColor}
-                  strokeWidth={strokeWidth}
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: scoreOffset }}
-                  transition={{ duration: 1.4, ease: "easeOut" }}
-                />
+                <circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke={`hsl(${levelConfig.color} / 0.1)`} strokeWidth={strokeWidth} />
+                <motion.circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke={levelColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: scoreOffset }} transition={{ duration: 1.4, ease: "easeOut" }} />
               </svg>
-
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <SpyIcon size={105} glow />
               </div>
             </div>
 
-            {/* Level + Score inline */}
+            {/* Level + Score */}
             <div className="mt-4 flex items-center gap-2">
-              <span className="font-black text-lg tracking-tight" style={{ color: levelColor }}>
-                {labelMap[level]}
-              </span>
+              <span className="font-black text-lg tracking-tight" style={{ color: levelColor }}>{labelMap[level]}</span>
               <span className="text-lg">{levelConfig.emoji}</span>
               <span className="text-muted-foreground text-xs">·</span>
               <span className="font-extrabold text-base tabular-nums" style={{ color: levelColor }}>{score}</span>
               <span className="text-muted-foreground text-xs">/100</span>
             </div>
 
-            {/* Description */}
-            <p className="text-muted-foreground text-sm mt-2">
-              {descMap[level]}
-            </p>
+            <p className="text-muted-foreground text-sm mt-2">{descMap[level]}</p>
 
             {/* CTA */}
             <motion.div
@@ -197,10 +228,7 @@ export function SpyStatusCard({
               {expanded
                 ? t("spy_status.tap_to_close", "Analyse ausblenden")
                 : t("spy_status.tap_for_analysis", "Analyse anzeigen")}
-              <motion.div
-                animate={{ rotate: expanded ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
+              <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
                 <ChevronDown style={{ width: 14, height: 14 }} />
               </motion.div>
             </motion.div>
@@ -208,7 +236,7 @@ export function SpyStatusCard({
         </button>
       </div>
 
-      {/* Collapsible SpyFindings */}
+      {/* Collapsible content */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -218,6 +246,82 @@ export function SpyStatusCard({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
+            {/* Info Banner */}
+            <div className="rounded-2xl p-4 mb-4 flex items-start gap-3" style={{ background: "hsl(var(--secondary) / 0.3)", border: "1px solid hsl(var(--border) / 0.3)" }}>
+              <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  {t("spy_status.info_hourly", "Dein Spy scannt automatisch jede Stunde. Du kannst zusätzlich manuelle Scans auslösen.")}
+                </p>
+                <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+                  {t("spy_status.info_unfollow_baseline", "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan.")}
+                </p>
+              </div>
+            </div>
+
+            {/* Scan Action Buttons */}
+            {profileId && (
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {/* Push Scan */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handlePushScan(); }}
+                  disabled={pushRemaining <= 0 || pushScanning}
+                  className={`rounded-2xl border p-4 text-start transition-all active:scale-[0.97] ${
+                    pushRemaining > 0
+                      ? "border-primary/20 bg-gradient-to-br from-primary/10 to-card hover:from-primary/15"
+                      : "border-muted bg-muted/30 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {pushScanning ? (
+                      <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4 text-primary" />
+                    )}
+                    <span className="text-[12px] font-bold text-foreground">Push Scan</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
+                    {pushRemaining > 0
+                      ? t("spy_detail.push_desc", "Sofort scannen wer neu gefolgt wird")
+                      : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
+                  </p>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-1">
+                    {pushRemaining} von 4 übrig
+                  </p>
+                  <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
+                </button>
+
+                {/* Unfollow Scan */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleUnfollowScan(); }}
+                  disabled={unfollowRemaining <= 0 || unfollowScanning}
+                  className={`rounded-2xl border p-4 text-start transition-all active:scale-[0.97] ${
+                    unfollowRemaining > 0
+                      ? "border-primary/20 bg-gradient-to-br from-primary/10 to-card hover:from-primary/15"
+                      : "border-muted bg-muted/30 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {unfollowScanning ? (
+                      <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-primary" />
+                    )}
+                    <span className="text-[12px] font-bold text-foreground">Unfollow Scan</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
+                    {unfollowRemaining > 0
+                      ? t("spy_detail.unfollow_desc", "Prüfe ob jemand entfolgt wurde")
+                      : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
+                  </p>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-1">
+                    {unfollowRemaining} von 1 übrig
+                  </p>
+                  <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
+                </button>
+              </div>
+            )}
+
             <SpyFindings
               followEvents={followEvents}
               followerEvents={followerEvents}
@@ -237,11 +341,8 @@ export function SpyStatusCard({
               <SpyIcon size={24} />
               {t("spy_status.info_title", "Spy-Status Erklärung")}
             </SheetTitle>
-            <SheetDescription>
-              {descMap[level]}
-            </SheetDescription>
+            <SheetDescription>{descMap[level]}</SheetDescription>
           </SheetHeader>
-
           <div className="space-y-3 pb-6">
             {LEVELS.map((l) => (
               <div
@@ -254,16 +355,11 @@ export function SpyStatusCard({
               >
                 <span style={{ fontSize: "1.25rem" }}>{l.emoji}</span>
                 <div>
-                  <p className="font-semibold text-sm" style={{ color: `hsl(${l.color})` }}>
-                    {labelMap[l.key]}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {descMap[l.key]}
-                  </p>
+                  <p className="font-semibold text-sm" style={{ color: `hsl(${l.color})` }}>{labelMap[l.key]}</p>
+                  <p className="text-muted-foreground text-xs">{descMap[l.key]}</p>
                 </div>
               </div>
             ))}
-
             {realEventCount > 0 && realEventCount < 5 && (
               <p className="text-muted-foreground text-xs pt-2" style={{ opacity: 0.6 }}>
                 ⏳ {t("spy_status.early_estimate", "Frühe Einschätzung · wenig Aktivität")}
