@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
         unfollowsFound++;
         const e = ex as Record<string, unknown>;
         unfollowUpdateIds.push(e.id as string);
-        const unfollowGender = detectGender(e.following_display_name as string | null);
+        const unfollowGender = detectGender(e.following_display_name as string | null, e.following_username as string | null);
         unfollowEvents.push({
           tracked_profile_id: profile.id,
           event_type: "unfollow",
