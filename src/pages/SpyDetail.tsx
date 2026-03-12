@@ -40,7 +40,7 @@ export default function SpyDetail() {
   const profileAny = spyProfile as Record<string, unknown>;
   const spyName = (profileAny.spy_name as string) || "Spion 🕵️";
   const pushRemaining = (profileAny.push_scans_today as number) ?? 4;
-  const unfollowRemaining = (profileAny.unfollow_scans_today as number) ?? 1;
+  const unfollowRemaining = Math.min((profileAny.unfollow_scans_today as number) ?? 1, 1);
   const spyAssignedAt = spyProfile.spy_assigned_at;
 
   const handleSaveName = async () => {
