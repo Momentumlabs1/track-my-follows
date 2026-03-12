@@ -37,3 +37,18 @@
 - `src/i18n/locales/de.json`
 - `src/i18n/locales/en.json`
 
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
