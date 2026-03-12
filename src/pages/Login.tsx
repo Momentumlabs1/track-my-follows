@@ -213,7 +213,7 @@ const Login = () => {
                 <input type="password" placeholder={t("auth.password_placeholder")} value={password} onChange={e => setPassword(e.target.value)} required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
-              {/* AGB / Datenschutz Checkbox */}
+              {/* AGB / Datenschutz + Mindestalter Checkbox */}
               <label className="flex items-start gap-2.5 text-[12px] text-muted-foreground cursor-pointer">
                 <Checkbox
                   checked={termsAccepted}
@@ -221,11 +221,11 @@ const Login = () => {
                   className="mt-0.5"
                 />
                 <span>
-                  Ich akzeptiere die{" "}
+                  {t("auth.terms_age_text")}{" "}
                   <Link to="/legal/agb" className="text-primary underline" target="_blank">AGB</Link>{" "}
-                  und habe die{" "}
-                  <Link to="/legal/datenschutz" className="text-primary underline" target="_blank">Datenschutzerklärung</Link>{" "}
-                  gelesen.
+                  {t("auth.terms_and")}{" "}
+                  <Link to="/legal/datenschutz" className="text-primary underline" target="_blank">{t("auth.terms_privacy")}</Link>{" "}
+                  {t("auth.terms_read")}.
                 </span>
               </label>
 

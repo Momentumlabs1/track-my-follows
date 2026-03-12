@@ -153,13 +153,13 @@ Deno.serve(async (req) => {
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
 
-    let unfollowRemaining = profile.unfollow_scans_today ?? 1;
+    let unfollowRemaining = profile.unfollow_scans_today ?? 2;
 
     if (resetAt < todayMidnight) {
-      unfollowRemaining = 1;
+      unfollowRemaining = 2;
       await supabase.from("tracked_profiles").update({
         push_scans_today: 4,
-        unfollow_scans_today: 1,
+        unfollow_scans_today: 2,
         scans_reset_at: new Date().toISOString(),
       }).eq("id", profile.id);
     }
