@@ -249,7 +249,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                       )}
                     </div>
                     <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "0.75rem" }}>
-                      {isInitialData ? t("profile.initial_scan_label", "Beim Start erkannt") : timeAgo(item.detectedAt)}
+                      {timeAgo(item.detectedAt)}
                     </span>
                   </a>
                 ))}
