@@ -93,7 +93,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     female.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
     male.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
 
-    return { femaleFollows: female, maleFollows: male, isInitialData: !hasRealFollows && initialFollows.length > 0 };
+    return { femaleFollows: female, maleFollows: male };
   }, [followEvents, followingMap]);
 
   const femaleCount = femaleFollows.length;
