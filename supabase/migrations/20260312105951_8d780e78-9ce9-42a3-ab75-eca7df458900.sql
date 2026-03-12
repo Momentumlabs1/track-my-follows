@@ -1,0 +1,1 @@
+ALTER TABLE public.tracked_profiles ALTER COLUMN unfollow_scans_today SET DEFAULT 2;
