@@ -356,6 +356,7 @@ const ProfileDetail = () => {
 
           {/* Weekly gender bubbles */}
           <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+          <div className="h-4" />
         </div>
       </div>
 
