@@ -182,6 +182,7 @@ Deno.serve(async (req) => {
       let nextMaxId: string | null = null;
       let page = 0;
 
+      let apiLimitHit = false;
       do {
         const url = nextMaxId
           ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}&max_id=${nextMaxId}`
@@ -189,6 +190,18 @@ Deno.serve(async (req) => {
 
         const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
         if (res.status === 404) { await res.text(); break; }
+        if (res.status === 402) {
+          console.warn(`[create-baseline] ${username}: HikerAPI 402 at page ${page}, partial save with ${allFollowings.length} users`);
+          apiLimitHit = true;
+          await res.text();
+          break;
+        }
+        if (res.status === 429) {
+          console.warn(`[create-baseline] ${username}: HikerAPI 429 rate limit at page ${page}, partial save`);
+          apiLimitHit = true;
+          await res.text();
+          break;
+        }
         if (!res.ok) throw new Error(`Following page ${page} failed: ${res.status}`);
 
         const parsed = parseChunkResponse(await res.json());
@@ -199,7 +212,8 @@ Deno.serve(async (req) => {
         nextMaxId = parsed.nextMaxId;
         page++;
         if (nextMaxId) await sleep(500);
-      } while (nextMaxId && page < 200);
+      } while (nextMaxId && page < 5);
+      if (apiLimitHit) isFullBaseline = false;
     }
 
     console.log(`[create-baseline] ${username}: ${allFollowings.length} followings loaded`);

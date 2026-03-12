@@ -25,6 +25,7 @@ import LegalWiderruf from "./pages/legal/Widerruf";
 import VerifyEmail from "./pages/VerifyEmail";
 import SpyDetail from "./pages/SpyDetail";
 import FeedPage from "./pages/FeedPage";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function AppContent() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/legal/impressum" element={<LegalImpressum />} />
         <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
         <Route path="/legal/agb" element={<LegalAGB />} />
