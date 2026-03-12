@@ -24,7 +24,6 @@ async function syncUserSettings(userId: string) {
   const browserLang = navigator.language.split('-')[0];
   const supportedLangs = ['en', 'de', 'ar'];
 
-  // Try to load existing settings
   const { data: existing } = await supabase
     .from("user_settings")
     .select("language, timezone")
@@ -32,16 +31,13 @@ async function syncUserSettings(userId: string) {
     .single();
 
   if (existing) {
-    // Restore saved language
     if (existing.language && supportedLangs.includes(existing.language)) {
       i18n.changeLanguage(existing.language);
     }
-    // Update timezone silently
     if (existing.timezone !== timezone) {
       await supabase.from("user_settings").update({ timezone }).eq("user_id", userId);
     }
   } else {
-    // First login: detect language and save
     const language = supportedLangs.includes(browserLang) ? browserLang : 'en';
     i18n.changeLanguage(language);
     await supabase.from("user_settings").upsert({
@@ -52,29 +48,86 @@ async function syncUserSettings(userId: string) {
   }
 }
 
+/**
+ * Global OAuth code exchange: if the current URL contains ?code=…,
+ * exchange it for a session before anything else happens.
+ * This prevents race conditions where Splash/Onboarding redirect
+ * before the session is established.
+ */
+async function handleOAuthReturnIfNeeded(): Promise<boolean> {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const error = params.get("error");
+
+  if (!code && !error) return false; // nothing to do
+
+  if (error) {
+    console.error("[auth/global] OAuth error in URL:", error, params.get("error_description"));
+    // Clean URL and let the app continue (user will land on login/onboarding)
+    cleanOAuthParams();
+    return false;
+  }
+
+  // Exchange the code
+  console.info("[auth/global] Exchanging OAuth code from URL");
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (exchangeError) {
+    console.error("[auth/global] Code exchange failed:", exchangeError.message);
+  }
+
+  // Always clean the URL regardless of success/failure
+  cleanOAuthParams();
+  return !exchangeError;
+}
+
+function cleanOAuthParams() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("code");
+  url.searchParams.delete("error");
+  url.searchParams.delete("error_description");
+  window.history.replaceState({}, "", url.pathname + url.hash);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // 1) Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!mounted) return;
         setSession(session);
-        setLoading(false);
+        // Don't setLoading(false) here — we do it after the init sequence below
 
         if (session?.user) {
-          // Defer to avoid deadlocks with Supabase auth
           setTimeout(() => syncUserSettings(session.user.id), 0);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // 2) Init sequence: exchange OAuth code if present, then get session
+    const init = async () => {
+      // If there's a ?code= in the URL, exchange it first
+      await handleOAuthReturnIfNeeded();
 
-    return () => subscription.unsubscribe();
+      // Now get the (possibly just-created) session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (mounted) {
+        setSession(session);
+        setLoading(false);
+      }
+    };
+
+    init();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
