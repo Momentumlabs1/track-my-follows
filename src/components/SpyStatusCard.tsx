@@ -99,8 +99,8 @@ export function SpyStatusCard({
   };
 
   // Ring config
-  const ringSize = 160;
-  const strokeWidth = 5;
+  const ringSize = 140;
+  const strokeWidth = 4.5;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
