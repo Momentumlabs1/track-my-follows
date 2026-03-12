@@ -168,7 +168,7 @@ export function SpyStatusCard({
               </svg>
 
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={82} glow />
+                <SpyIcon size={105} glow />
               </div>
             </div>
 
