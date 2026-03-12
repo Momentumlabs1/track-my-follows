@@ -1,39 +1,53 @@
 
+Ziel: OAuth (Google + Apple) stabil machen, damit nie wieder auf `localhost` zurückgeleitet wird und Login auf Live/Preview/Native zuverlässig endet.
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+Do I know what the issue is? Ja.  
+Beleg:
+- Dein Screenshot zeigt `ERR_CONNECTION_REFUSED` auf `localhost`.
+- Auth-Logs zeigen erfolgreiche `/authorize` + `/callback` + `login` Events (Google und Apple).  
+=> Provider-Credentials sind grundsätzlich ok; der Bruch passiert beim finalen Redirect-Ziel.
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Umsetzung (Code):
+1) Zentrale OAuth-Redirect-Strategie einführen (`src/lib/oauth.ts`)
+- Umgebung erkennen: `native` (despia), `localhost`, `preview`, `published`.
+- Redirect-Base deterministisch setzen:
+  - Native/localhost => immer `https://track-my-follows.lovable.app`
+  - Web (Preview/Published) => `window.location.origin`
+- Immer auf festen Callback-Pfad: `/auth/callback`
+- Helper für sichere URL-Validierung (nur Supabase-Auth-Host erlauben), damit kein Open-Redirect möglich ist.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+2) Neue öffentliche Callback-Seite bauen (`src/pages/AuthCallback.tsx`)
+- `code` aus Query lesen und `exchangeCodeForSession(code)` ausführen.
+- OAuth-Fehler (`error`, `error_description`) sauber anzeigen.
+- Bei Erfolg: `navigate("/dashboard", { replace: true })`
+- Bei Fehler: `navigate("/login", { replace: true })`
+- Optional: wenn in Popup geöffnet, `postMessage` an Opener + close.
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+3) Router ergänzen (`src/App.tsx`)
+- Neue Public Route: `/auth/callback`.
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+4) Login-Flow härten (`src/pages/Login.tsx`)
+- `handleSocialLogin` auf neuen Helper umstellen.
+- `redirectTo` immer aus zentralem Resolver.
+- `skipBrowserRedirect: true` beibehalten.
+- Bei Rückgabe von `data.url`: zuerst validieren, dann redirecten.
+- Stabileres Loading/Error-Handling über `finally`, damit Buttons nie hängen.
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+5) Native-Fallback klar machen
+- Wenn Runtime `localhost` ist (Native-WebView), OAuth wird bewusst auf Published-Domain beendet (statt localhost), damit kein `ERR_CONNECTION_REFUSED` mehr entsteht.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+Supabase/Provider-Finalcheck (ohne DB-Schema-Änderung):
+- Keine Migration, kein RLS, kein Schema-Fix nötig.
+- Supabase URL Configuration:
+  - Site URL: `https://track-my-follows.lovable.app`
+  - Redirects inkl.:
+    - `https://track-my-follows.lovable.app/auth/callback`
+    - `https://id-preview--f7c24743-5f09-4c0a-a313-7f8913c78573.lovable.app/auth/callback`
+    - `https://f7c24743-5f09-4c0a-a313-7f8913c78573.lovableproject.com/auth/callback`
+- Google/Apple behalten Supabase Callback (`https://bqqmfajowxzkdcvmrtyd.supabase.co/auth/v1/callback`).
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
-
+Abnahme (E2E):
+1) Live: Google + Apple von `/login` -> Consent -> `/auth/callback` -> `/dashboard`.
+2) Preview: gleicher Ablauf.
+3) Native: kein localhost-Fehler mehr.
+4) Logs prüfen: erfolgreiche login-events; finaler Browser-URL-Flow endet nicht auf localhost.
