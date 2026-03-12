@@ -113,13 +113,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load profile with ownership check
-    const { data: profile, error: profileError } = await supabase
+    // Load profile (with ownership check for user tokens, without for service-role)
+    const query = supabase
       .from("tracked_profiles")
       .select("*")
-      .eq("id", profileId)
-      .eq("user_id", userId)
-      .single();
+      .eq("id", profileId);
+    if (!isServiceRole && userId) {
+      query.eq("user_id", userId);
+    }
+    const { data: profile, error: profileError } = await query.single();
 
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "Profile not found or access denied" }), {
