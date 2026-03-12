@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     let retagged = 0;
 
     for (const row of rows) {
-      const newGender = detectGender(row.following_display_name);
+      const newGender = detectGender(row.following_display_name, row.following_username);
       if (newGender === "unknown") continue;
 
       // Update the row

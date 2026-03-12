@@ -212,7 +212,7 @@ async function syncNewFollowers(
       follower_count: f.follower_count || null,
       event_type: "gained",
       detected_at: ts,
-      gender_tag: detectGender(f.full_name),
+      gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
       is_initial: false,
     });

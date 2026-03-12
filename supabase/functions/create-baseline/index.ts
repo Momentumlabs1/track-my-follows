@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
     );
 
     for (const user of allFollowings) {
-      const genderTag = detectGender(user.full_name);
+      const genderTag = detectGender(user.full_name, user.username);
       const category = categorizeFollow(user.follower_count, user.is_private);
 
       if (genderTag === "female") femaleCount++;
