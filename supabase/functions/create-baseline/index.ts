@@ -1,4 +1,4 @@
-// create-baseline v3 — shared gender detection
+// create-baseline v4 — robust v1 pagination + dedup + shared gender detection
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 
@@ -26,7 +26,7 @@ function categorizeFollow(followerCount: number | null | undefined, isPrivate: b
   return "normal";
 }
 
-// ── API response parsing (copied from smart-scan) ──
+// ── API response parsing ──
 function toRecordArray(raw: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(raw)) return [];
   return raw.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null);
@@ -69,6 +69,17 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
+// ── Batch upsert helper (chunks of 500) ──
+async function batchInsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[]) {
+  if (rows.length === 0) return;
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const { error } = await supabase.from(table).insert(chunk);
+    if (error) console.error(`[create-baseline] Batch insert error on ${table}:`, error.message);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -90,7 +101,6 @@ Deno.serve(async (req) => {
     let userId: string | null = null;
 
     if (!isServiceRole) {
-      // User token auth — verify ownership
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
@@ -113,14 +123,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load profile (with ownership check for user tokens, without for service-role)
-    const query = supabase
-      .from("tracked_profiles")
-      .select("*")
-      .eq("id", profileId);
-    if (!isServiceRole && userId) {
-      query.eq("user_id", userId);
-    }
+    // Load profile
+    const query = supabase.from("tracked_profiles").select("*").eq("id", profileId);
+    if (!isServiceRole && userId) query.eq("user_id", userId);
     const { data: profile, error: profileError } = await query.single();
 
     if (profileError || !profile) {
@@ -129,18 +134,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Already has baseline? Skip.
     if (profile.baseline_complete) {
       return new Response(JSON.stringify({
-        success: true,
-        skipped: true,
-        message: "Baseline already exists",
+        success: true, skipped: true, message: "Baseline already exists",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const username = profile.username as string;
 
-    // ── Get profile info (for following count + user ID) ──
+    // ── Get profile info ──
     const userInfoRes = await fetch(
       `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
       { headers: { "x-access-key": hikerApiKey } },
@@ -159,53 +161,59 @@ Deno.serve(async (req) => {
       await supabase.from("tracked_profiles").update({ is_private: true }).eq("id", profileId);
       console.log(`[create-baseline] ${username}: private, skipping baseline`);
       return new Response(JSON.stringify({
-        success: true,
-        skipped: true,
-        message: "Profile is private",
+        success: true, skipped: true, message: "Profile is private",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ══════════════════════════════════════════
-    // LOAD FOLLOWING LIST
-    // Up to 10K: ALL pages (full baseline)
-    // Over 10K: Page 1 only (sample)
+    // LOAD FOLLOWING LIST — v1 endpoint (stable, like unfollow-check)
+    // With deduplication + cursor protection
     // ══════════════════════════════════════════
 
+    const seenIds = new Set<string>();
     const allFollowings: FollowingUser[] = [];
     let isFullBaseline = true;
+    let rawLoaded = 0;
 
     if (followingCount > 10000) {
+      // Over 10K: sample page 1 only
       console.log(`[create-baseline] ${username}: ${followingCount} followings > 10K, sampling page 1 only`);
-      const url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}`;
+      const url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}`;
       const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
       if (!res.ok) throw new Error(`Following fetch failed: ${res.status}`);
       const parsed = parseChunkResponse(await res.json());
       for (const raw of parsed.users) {
+        rawLoaded++;
         const u = mapFollowingUser(raw);
-        if (u) allFollowings.push(u);
+        if (u && !seenIds.has(u.pk)) {
+          seenIds.add(u.pk);
+          allFollowings.push(u);
+        }
       }
       isFullBaseline = false;
     } else {
-      console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings...`);
+      // Up to 10K: paginate ALL pages using v1 endpoint
+      console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings via v1...`);
       let nextMaxId: string | null = null;
+      let prevMaxId: string | null = null;
       let page = 0;
+      const maxPages = 60; // 60 pages × ~200/page = 12K max
 
       let apiLimitHit = false;
       do {
-        const url = nextMaxId
-          ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}&max_id=${nextMaxId}`
-          : `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}`;
+        let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}`;
+        if (nextMaxId) url += `&max_id=${nextMaxId}`;
 
         const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
         if (res.status === 404) { await res.text(); break; }
         if (res.status === 402) {
-          console.warn(`[create-baseline] ${username}: HikerAPI 402 at page ${page}, partial save with ${allFollowings.length} users`);
+          console.warn(`[create-baseline] ${username}: HikerAPI 402 at page ${page}, partial save`);
           apiLimitHit = true;
           await res.text();
           break;
         }
         if (res.status === 429) {
-          console.warn(`[create-baseline] ${username}: HikerAPI 429 rate limit at page ${page}, partial save`);
+          console.warn(`[create-baseline] ${username}: HikerAPI 429 at page ${page}, partial save`);
           apiLimitHit = true;
           await res.text();
           break;
@@ -213,28 +221,42 @@ Deno.serve(async (req) => {
         if (!res.ok) throw new Error(`Following page ${page} failed: ${res.status}`);
 
         const parsed = parseChunkResponse(await res.json());
+        let pageNewCount = 0;
         for (const raw of parsed.users) {
+          rawLoaded++;
           const u = mapFollowingUser(raw);
-          if (u) allFollowings.push(u);
+          if (u && !seenIds.has(u.pk)) {
+            seenIds.add(u.pk);
+            allFollowings.push(u);
+            pageNewCount++;
+          }
         }
+
+        console.log(`[create-baseline] ${username}: page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
+
+        // Cursor protection: abort if cursor unchanged or page empty
+        if (parsed.users.length === 0) break;
+        if (parsed.nextMaxId && parsed.nextMaxId === prevMaxId) {
+          console.warn(`[create-baseline] ${username}: cursor stuck at page ${page}, aborting`);
+          break;
+        }
+
+        prevMaxId = nextMaxId;
         nextMaxId = parsed.nextMaxId;
         page++;
-        if (nextMaxId) await sleep(500);
-      } while (nextMaxId && page < 5);
+        if (nextMaxId) await sleep(400);
+      } while (nextMaxId && page < maxPages);
+
       if (apiLimitHit) isFullBaseline = false;
     }
 
-    console.log(`[create-baseline] ${username}: ${allFollowings.length} followings loaded`);
+    console.log(`[create-baseline] ${username}: ${rawLoaded} raw loaded, ${allFollowings.length} unique after dedup`);
 
     // ══════════════════════════════════════════
-    // SAVE TO DB + COUNT GENDER
+    // SAVE TO DB — batch approach
     // ══════════════════════════════════════════
 
-    let femaleCount = 0;
-    let maleCount = 0;
-    let unknownCount = 0;
-
-    // Get existing following IDs from DB (from trigger-scan page 1)
+    // Get existing following IDs from DB
     const { data: existingFollowings } = await supabase
       .from("profile_followings")
       .select("following_user_id")
@@ -246,26 +268,18 @@ Deno.serve(async (req) => {
       (existingFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string)
     );
 
+    // Prepare batches
+    const newRows: Record<string, unknown>[] = [];
+    const updateUsers: { pk: string; genderTag: string; category: string }[] = [];
+
     for (const user of allFollowings) {
       const genderTag = detectGender(user.full_name, user.username);
       const category = categorizeFollow(user.follower_count, user.is_private);
 
-      if (genderTag === "female") femaleCount++;
-      else if (genderTag === "male") maleCount++;
-      else unknownCount++;
-
       if (existingIds.has(user.pk)) {
-        // Already in DB (from trigger-scan) → only update gender_tag + category
-        const { error: updateErr } = await supabase
-          .from("profile_followings")
-          .update({ gender_tag: genderTag, category })
-          .eq("tracked_profile_id", profileId)
-          .eq("following_user_id", user.pk)
-          .eq("direction", "following");
-        if (updateErr) console.warn(`[create-baseline] Update failed for ${user.username}:`, updateErr.message);
+        updateUsers.push({ pk: user.pk, genderTag, category });
       } else {
-        // New → Insert
-        const { error: insertErr } = await supabase.from("profile_followings").insert({
+        newRows.push({
           tracked_profile_id: profileId,
           following_username: user.username,
           following_user_id: user.pk,
@@ -277,12 +291,29 @@ Deno.serve(async (req) => {
           gender_tag: genderTag,
           category,
         });
-        if (insertErr) console.warn(`[create-baseline] Insert failed for ${user.username}:`, insertErr.message);
       }
     }
 
+    // Batch insert new rows
+    await batchInsert(supabase, "profile_followings", newRows);
+
+    // Update existing rows (gender_tag + category) — batch by gender/category combo
+    let updatedCount = 0;
+    for (const u of updateUsers) {
+      const { error: updateErr } = await supabase
+        .from("profile_followings")
+        .update({ gender_tag: u.genderTag, category: u.category })
+        .eq("tracked_profile_id", profileId)
+        .eq("following_user_id", u.pk)
+        .eq("direction", "following");
+      if (updateErr) console.warn(`[create-baseline] Update failed for ${u.pk}:`, updateErr.message);
+      else updatedCount++;
+    }
+
+    console.log(`[create-baseline] ${username}: DB ops: ${newRows.length} inserted, ${updatedCount} updated, ${existingIds.size} existed before`);
+
     // ══════════════════════════════════════════
-    // RE-COUNT GENDER FROM DB (not in-memory)
+    // RE-COUNT GENDER FROM DB
     // ══════════════════════════════════════════
 
     const { data: dbCounts } = await supabase
@@ -300,23 +331,19 @@ Deno.serve(async (req) => {
     }
     const dbTotal = dbFemale + dbMale + dbUnknown;
 
-    console.log(`[create-baseline] ${username}: DB counts: F${dbFemale}/M${dbMale}/U${dbUnknown} (total ${dbTotal}), in-memory: F${femaleCount}/M${maleCount}/U${unknownCount}`);
+    console.log(`[create-baseline] ${username}: DB gender: F${dbFemale}/M${dbMale}/U${dbUnknown} (total ${dbTotal})`);
 
     // ══════════════════════════════════════════
-    // CALCULATE CONFIDENCE
+    // CONFIDENCE
     // ══════════════════════════════════════════
 
     let confidenceLevel: string;
-    if (followingCount <= 5000) {
-      confidenceLevel = "high";
-    } else if (followingCount <= 10000) {
-      confidenceLevel = "medium";
-    } else {
-      confidenceLevel = "low";
-    }
+    if (followingCount <= 5000) confidenceLevel = "high";
+    else if (followingCount <= 10000) confidenceLevel = "medium";
+    else confidenceLevel = "low";
 
     // ══════════════════════════════════════════
-    // UPDATE PROFILE (use DB counts, not memory)
+    // UPDATE PROFILE
     // ══════════════════════════════════════════
 
     await supabase.from("tracked_profiles").update({
@@ -330,11 +357,14 @@ Deno.serve(async (req) => {
       gender_sample_size: dbTotal,
     }).eq("id", profileId);
 
-    console.log(`[create-baseline] ${username}: Done! ${allFollowings.length} API, ${dbTotal} in DB, gender: F${dbFemale}/M${dbMale}/U${dbUnknown}, confidence: ${confidenceLevel}`);
+    console.log(`[create-baseline] ${username}: DONE! unique=${allFollowings.length}, dbTotal=${dbTotal}, gender=F${dbFemale}/M${dbMale}/U${dbUnknown}, confidence=${confidenceLevel}, full=${isFullBaseline}`);
 
     return new Response(JSON.stringify({
       success: true,
-      followings_scanned: allFollowings.length,
+      followings_loaded_raw: rawLoaded,
+      followings_unique: allFollowings.length,
+      followings_inserted: newRows.length,
+      followings_updated: updatedCount,
       followings_in_db: dbTotal,
       total_followings: followingCount,
       is_full_baseline: isFullBaseline,
