@@ -9,8 +9,23 @@ const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const waitForSession = async (attempts = 12, delayMs = 250) => {
+      for (let i = 0; i < attempts; i += 1) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          return session;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
+      return null;
+    };
+
     const handleCallback = async () => {
-      // Check for OAuth error params
       const oauthError = searchParams.get("error");
       const errorDescription = searchParams.get("error_description");
 
@@ -21,7 +36,6 @@ const AuthCallback = () => {
         return;
       }
 
-      // Check for code in URL (PKCE flow)
       const code = searchParams.get("code");
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -31,24 +45,15 @@ const AuthCallback = () => {
           setTimeout(() => navigate("/login", { replace: true }), 3000);
           return;
         }
+      }
+
+      const session = await waitForSession();
+      if (session) {
         navigate("/dashboard", { replace: true });
         return;
       }
 
-      // Check hash fragment (implicit flow fallback)
-      const hash = window.location.hash;
-      if (hash && hash.includes("access_token")) {
-        // Supabase client auto-detects hash tokens via onAuthStateChange
-        // Just wait briefly for session to be set
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          navigate("/dashboard", { replace: true });
-          return;
-        }
-      }
-
-      // No code, no hash, no error → redirect to login
-      console.warn("[auth/callback] No auth params found, redirecting to login");
+      console.warn("[auth/callback] No session found after OAuth callback");
       navigate("/login", { replace: true });
     };
 
