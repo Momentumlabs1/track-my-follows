@@ -3,15 +3,25 @@ import { isNativeApp } from "./native";
 const PUBLISHED_DOMAIN = "https://track-my-follows.lovable.app";
 const CALLBACK_PATH = "/auth/callback";
 
+function isLovableDomain(): boolean {
+  const hostname = window.location.hostname;
+  return hostname.includes("lovable.app") || hostname.includes("lovableproject.com");
+}
+
 /**
  * Determines the correct OAuth redirect URL based on the current environment.
- * - Native app / localhost → always redirect to published domain
- * - Lovable preview / published → use current origin
+ * - Lovable domains → redirect to /dashboard (auth-bridge handles session)
+ * - Custom domains / native / localhost → redirect to /auth/callback on published domain
  */
 export function getOAuthRedirectUrl(): string {
   const origin = window.location.origin;
 
-  // Native WebView or localhost → force published domain
+  // Lovable domains: auth-bridge handles the session exchange, redirect directly to dashboard
+  if (isLovableDomain()) {
+    return origin + "/dashboard";
+  }
+
+  // Native WebView or localhost → force published domain callback
   if (
     isNativeApp() ||
     origin.includes("localhost") ||
@@ -20,32 +30,26 @@ export function getOAuthRedirectUrl(): string {
     return PUBLISHED_DOMAIN + CALLBACK_PATH;
   }
 
-  // Custom domain (not lovable.app / lovableproject.com) → force published domain
-  if (
-    !origin.includes("lovable.app") &&
-    !origin.includes("lovableproject.com")
-  ) {
-    return PUBLISHED_DOMAIN + CALLBACK_PATH;
-  }
-
-  // Preview or published lovable domain → use current origin
+  // Custom domain → use callback on current origin
   return origin + CALLBACK_PATH;
 }
 
 /**
  * Whether to skip browser redirect (let us handle it manually).
- * Required for custom domains and native apps to avoid auth-bridge issues.
+ * On Lovable domains, the auth-bridge handles everything → don't skip.
+ * On custom domains / native → skip and handle manually.
  */
 export function shouldSkipBrowserRedirect(): boolean {
+  if (isLovableDomain()) {
+    return false; // Let auth-bridge handle it
+  }
+
   const hostname = window.location.hostname;
   return (
     isNativeApp() ||
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
-    (
-      !hostname.includes("lovable.app") &&
-      !hostname.includes("lovableproject.com")
-    )
+    true // All non-Lovable domains need manual handling
   );
 }
 
