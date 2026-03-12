@@ -99,8 +99,8 @@ export function SpyStatusCard({
   };
 
   // Ring config
-  const ringSize = 160;
-  const strokeWidth = 5;
+  const ringSize = 140;
+  const strokeWidth = 4.5;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
@@ -190,7 +190,7 @@ export function SpyStatusCard({
             <Info className="text-muted-foreground" style={{ width: 14, height: 14 }} />
           </button>
 
-          <div className="flex flex-col items-center px-6 pt-8 pb-6">
+          <div className="flex flex-col items-center px-5 pt-6 pb-5">
             {/* Mood Ring with Spy */}
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
               <div
@@ -204,7 +204,7 @@ export function SpyStatusCard({
                 <motion.circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke={levelColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: scoreOffset }} transition={{ duration: 1.4, ease: "easeOut" }} />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={105} glow />
+                <SpyIcon size={90} glow />
               </div>
             </div>
 
