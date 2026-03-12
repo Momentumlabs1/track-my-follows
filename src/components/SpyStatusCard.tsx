@@ -92,9 +92,9 @@ export function SpyStatusCard({
     alarmiert: t("spy_status.alarmiert_desc", "Stark auffälliges Verhalten"),
   };
 
-  // Ring config - compact
-  const ringSize = 130;
-  const strokeWidth = 4;
+  // Ring config
+  const ringSize = 160;
+  const strokeWidth = 5;
   const radius = (ringSize - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const scoreOffset = circumference - (score / 100) * circumference;
@@ -132,7 +132,7 @@ export function SpyStatusCard({
             <Info className="text-muted-foreground" style={{ width: 14, height: 14 }} />
           </button>
 
-          <div className="flex flex-col items-center px-5 pt-6 pb-5">
+          <div className="flex flex-col items-center px-6 pt-8 pb-6">
             {/* Mood Ring with Spy */}
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
               {/* Ambient glow behind ring */}
@@ -168,29 +168,29 @@ export function SpyStatusCard({
               </svg>
 
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <SpyIcon size={82} glow />
+                <SpyIcon size={105} glow />
               </div>
             </div>
 
             {/* Level + Score inline */}
-            <div className="mt-3 flex items-center gap-1.5">
-              <span className="font-black text-base tracking-tight" style={{ color: levelColor }}>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="font-black text-lg tracking-tight" style={{ color: levelColor }}>
                 {labelMap[level]}
               </span>
-              <span className="text-base">{levelConfig.emoji}</span>
+              <span className="text-lg">{levelConfig.emoji}</span>
               <span className="text-muted-foreground text-xs">·</span>
-              <span className="font-extrabold text-sm tabular-nums" style={{ color: levelColor }}>{score}</span>
-              <span className="text-muted-foreground" style={{ fontSize: "0.625rem" }}>/100</span>
+              <span className="font-extrabold text-base tabular-nums" style={{ color: levelColor }}>{score}</span>
+              <span className="text-muted-foreground text-xs">/100</span>
             </div>
 
             {/* Description */}
-            <p className="text-muted-foreground text-xs mt-1">
+            <p className="text-muted-foreground text-sm mt-2">
               {descMap[level]}
             </p>
 
             {/* CTA */}
             <motion.div
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-5 py-2 text-xs font-bold shadow-lg"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-bold shadow-lg"
               style={{ boxShadow: "0 4px 14px -3px hsl(var(--primary) / 0.4)" }}
               whileTap={{ scale: 0.95 }}
             >
