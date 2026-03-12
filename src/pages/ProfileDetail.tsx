@@ -127,7 +127,7 @@ const ProfileDetail = () => {
     return analyzeSuspicion(followEvents, followings, followerCount, followingCount, t);
   }, [followEvents, followings, followerCount, followingCount, t]);
 
-  // Gender from profileFollowings (all current)
+  // Gender from profileFollowings (all current) — with fallback to tracked_profiles counts
   let femaleCount = 0;
   let maleCount = 0;
   let unknownGenderCount = 0;
@@ -136,6 +136,16 @@ const ProfileDetail = () => {
     else if (f.gender_tag === 'male') maleCount++;
     else unknownGenderCount++;
   }
+
+  // Fallback: if profile_followings has far fewer rows than expected, use tracked_profiles gender counts
+  const profileFemale = safeNum(profile?.gender_female_count) ?? 0;
+  const profileMale = safeNum(profile?.gender_male_count) ?? 0;
+  if ((profileFemale + profileMale) > (femaleCount + maleCount) && followings.length < followingCount * 0.5) {
+    femaleCount = profileFemale;
+    maleCount = profileMale;
+    unknownGenderCount = safeNum(profile?.gender_unknown_count) ?? 0;
+  }
+
   const genderTotal = femaleCount + maleCount;
   const showGender = genderTotal > 0;
   const femalePct = genderTotal > 0 ? Math.round((femaleCount / genderTotal) * 100) : 0;

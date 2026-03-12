@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { SpyIcon } from "@/components/SpyIcon";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 
 const STEP_KEYS = [
   { title: "step_1", desc: "step_1_desc" },
@@ -81,11 +82,7 @@ const AnalyzingProfile = () => {
       {/* Avatar with gradient ring */}
       <div className="mb-4">
         <div className="h-24 w-24 rounded-full p-[3px] bg-gradient-to-br from-primary to-accent">
-          <img
-            src={`https://ui-avatars.com/api/?name=${username}&background=random&size=200`}
-            alt={username}
-            className="h-full w-full rounded-full object-cover bg-card"
-          />
+          <InstagramAvatar src={null} alt={username || ""} fallbackInitials={username || "?"} size={90} className="border-2 border-background" />
         </div>
       </div>
 
@@ -99,7 +96,7 @@ const AnalyzingProfile = () => {
       <div className="w-full max-w-xs mt-6 mb-6">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
-            className="h-full gradient-bg rounded-full"
+            className="h-full gradient-pink rounded-full"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           />
