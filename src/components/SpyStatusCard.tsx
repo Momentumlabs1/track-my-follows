@@ -190,7 +190,7 @@ export function SpyStatusCard({
             <Info className="text-muted-foreground" style={{ width: 14, height: 14 }} />
           </button>
 
-          <div className="flex flex-col items-center px-6 pt-8 pb-6">
+          <div className="flex flex-col items-center px-5 pt-6 pb-5">
             {/* Mood Ring with Spy */}
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
               <div
