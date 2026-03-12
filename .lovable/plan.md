@@ -1,55 +1,54 @@
 
-Zuerst die direkte Antwort auf dein „warum nur 48“ (für aktuelles Profil `timwger`, ID `6dcdb516-2439-4c30-b141-c1f267de341a`):
 
-- `tracked_profiles.following_count` = **262** (Instagram Gesamtzahl)
-- `profile_followings` in DB = **48**
-- Gender daraus = **17 Frauen / 17 Männer / 14 Unbekannt**
-- Das ist exakt der Grund für 50/50: **17 vs 17 aus nur 48 Datensätzen**, nicht aus 262.
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-Warum technisch nur 48 drin sind:
-1. `trigger-scan` schreibt beim Start nur **Seite 1** (bei dir 48 Accounts) in `profile_followings` (by design).
-2. `create-baseline` sollte danach alle Seiten nachziehen, tut es aber nicht korrekt:
-   - Log zeigt: `240 API, 48 in DB`
-   - Gleichzeitig: in-memory `F85/M85/U70` = genau `5 x (17/17/14)` → starkes Indiz, dass dieselben 48 mehrfach gelesen wurden.
-3. Zusätzlich ist in `create-baseline` ein hartes Limit `page < 5` eingebaut. Selbst bei korrekter Pagination wäre das für 262 mit 48er Seiten nicht vollständig.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-## Umsetzungsplan (Fix, damit wirklich alle 262 analysiert werden)
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-1) `create-baseline` Pagination robust machen
-- Für **Full Baseline** auf denselben stabilen v1-Paging-Ansatz wechseln (wie in `unfollow-check`).
-- Cursor-Schutz einbauen:
-  - Abbruch, wenn `nextMaxId` sich nicht ändert
-  - Abbruch bei leeren Seiten
-- Nicht mehr blind `page < 5` als Vollständigkeitskriterium verwenden.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-2) Dedupe vor DB-Sync
-- Während des Ladens `seenIds` (following_user_id) führen.
-- Nur unique Accounts weiterverarbeiten.
-- Logging erweitern: `rawLoaded`, `uniqueLoaded`, `updated`, `inserted`.
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-3) `baseline_complete` korrekt setzen
-- `baseline_complete = true` nur wenn:
-  - kein API-Limit/Ratelimit,
-  - keine Cursor-Anomalie,
-  - und alle erwartbaren Seiten durchlaufen wurden.
-- Sonst `baseline_complete = false`, damit Recovery in `smart-scan` sauber nachzieht.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-4) Daten-Recovery für Tim
-- `baseline_complete=false` setzen (für aktuelle Profil-ID 6dcd...).
-- `create-baseline` neu triggern.
-- Danach Soll-Zustand:
-  - `profile_followings` nahe **262** (oder exakt 262, wenn API vollständig liefert)
-  - Gender-Verteilung auf dieser Gesamtbasis (nicht 48).
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-5) Verifikation (hart, messbar)
-- SQL-Check nach Lauf:
-  - Gesamt rows in `profile_followings` für Profil
-  - female/male/unknown counts
-  - Vergleich mit `tracked_profiles.gender_*` und `gender_sample_size`
-- UI-Check:
-  - Gender-Bar muss dieselben DB-Zahlen zeigen.
-  - „Neue Accounts“-Kacheln bleiben 0/0, solange keine echten neuen Events da sind.
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
-## Erwartetes Ergebnis nach Fix
-- Nicht mehr „17/17 aus 48“, sondern Gender auf Basis aller erfassten Followings.
-- Wenn API wirklich alle 262 liefert: vollständige, logisch nachvollziehbare Verteilung.
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen

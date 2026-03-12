@@ -1,0 +1,1 @@
+UPDATE tracked_profiles SET baseline_complete = false, gender_female_count = 0, gender_male_count = 0, gender_unknown_count = 0, gender_sample_size = 0 WHERE id = '6dcdb516-2439-4c30-b141-c1f267de341a'
