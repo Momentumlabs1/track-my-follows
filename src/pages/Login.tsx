@@ -247,9 +247,14 @@ const Login = () => {
               </button>
             </form>
 
-            <p className="text-center text-[12px] text-muted-foreground/70 mt-3">
-              {t("auth.free_note")}
-            </p>
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-[12px] text-muted-foreground/70">
+                {t("auth.free_note")}
+              </p>
+              <Link to="/reset-password" className="text-[12px] text-primary hover:underline whitespace-nowrap">
+                {t("auth.forgot_password")}
+              </Link>
+            </div>
 
             {/* Legal footer links */}
             <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-muted-foreground/50">
