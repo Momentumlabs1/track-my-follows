@@ -256,15 +256,16 @@ Deno.serve(async (req) => {
 
       if (existingIds.has(user.pk)) {
         // Already in DB (from trigger-scan) → only update gender_tag + category
-        await supabase
+        const { error: updateErr } = await supabase
           .from("profile_followings")
           .update({ gender_tag: genderTag, category })
           .eq("tracked_profile_id", profileId)
           .eq("following_user_id", user.pk)
           .eq("direction", "following");
+        if (updateErr) console.warn(`[create-baseline] Update failed for ${user.username}:`, updateErr.message);
       } else {
         // New → Insert
-        await supabase.from("profile_followings").insert({
+        const { error: insertErr } = await supabase.from("profile_followings").insert({
           tracked_profile_id: profileId,
           following_username: user.username,
           following_user_id: user.pk,
@@ -276,6 +277,7 @@ Deno.serve(async (req) => {
           gender_tag: genderTag,
           category,
         });
+        if (insertErr) console.warn(`[create-baseline] Insert failed for ${user.username}:`, insertErr.message);
       }
     }
 
