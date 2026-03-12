@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
         unfollowsFound++;
         const e = ex as Record<string, unknown>;
         unfollowUpdateIds.push(e.id as string);
-        const unfollowGender = detectGender(e.following_display_name as string | null);
+        const unfollowGender = detectGender(e.following_display_name as string | null, e.following_username as string | null);
         unfollowEvents.push({
           tracked_profile_id: profile.id,
           event_type: "unfollow",
@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
       if (!existingFollowingIds.has(f.pk)) {
         newFollowsFound++;
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
-        const newGenderTag = detectGender(f.full_name);
+        const newGenderTag = detectGender(f.full_name, f.username);
         const newCategory = categorizeFollow(f.follower_count, f.is_private);
         newFollowingRows.push({
           tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
           profile_pic_url: (f.follower_avatar_url as string) || null,
           event_type: "lost",
           detected_at: new Date().toISOString(),
-          gender_tag: detectGender(f.follower_display_name as string | null),
+          gender_tag: detectGender(f.follower_display_name as string | null, f.follower_username as string | null),
         });
       }
     }
@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
           is_verified: f.is_verified || false,
           follower_count: f.follower_count || null,
           event_type: "gained", detected_at: ts,
-          gender_tag: detectGender(f.full_name),
+          gender_tag: detectGender(f.full_name, f.username),
           category: categorizeFollow(f.follower_count, f.is_private),
         });
       }

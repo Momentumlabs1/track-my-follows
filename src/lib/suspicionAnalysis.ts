@@ -28,7 +28,7 @@ export interface SuspicionFactor {
 }
 
 export function analyzeSuspicion(
-  followEvents: Array<{ event_type: string; target_username: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null; gender_tag?: string | null }>,
+  followEvents: Array<{ event_type: string; target_username: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null; gender_tag?: string | null; direction?: string }>,
   profileFollowings: Array<{ following_username: string; following_display_name?: string | null; gender_tag?: string | null }>,
   followerCount: number,
   followingCount: number,
@@ -65,7 +65,7 @@ export function analyzeSuspicion(
     } else if (ev.gender_tag === "female" || ev.gender_tag === "male") {
       gender = ev.gender_tag;
     } else {
-      gender = detectGender(ev.target_display_name);
+      gender = detectGender(ev.target_display_name, ev.target_username);
     }
     if (gender === "female") femaleCount++;
     else if (gender === "male") maleCount++;

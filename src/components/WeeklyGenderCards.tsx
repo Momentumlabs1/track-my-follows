@@ -88,7 +88,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
       let gender: string;
       if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
       else if ((ev as any).gender_tag === "female" || (ev as any).gender_tag === "male") gender = (ev as any).gender_tag;
-      else gender = detectGender(ev.target_display_name);
+      else gender = detectGender(ev.target_display_name, ev.target_username);
 
       const entry: GenderedFollow = {
         username: ev.target_username,

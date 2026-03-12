@@ -22,10 +22,9 @@ Deno.serve(async (req) => {
     // Load all unknown-tagged followings that have a display name
     let query = supabase
       .from("profile_followings")
-      .select("id, tracked_profile_id, following_display_name, gender_tag")
+      .select("id, tracked_profile_id, following_display_name, following_username, gender_tag")
       .eq("gender_tag", "unknown")
       .eq("is_current", true)
-      .not("following_display_name", "is", null)
       .limit(5000);
 
     if (profileId) {
@@ -47,7 +46,7 @@ Deno.serve(async (req) => {
     let retagged = 0;
 
     for (const row of rows) {
-      const newGender = detectGender(row.following_display_name);
+      const newGender = detectGender(row.following_display_name, row.following_username);
       if (newGender === "unknown") continue;
 
       // Update the row
