@@ -96,7 +96,7 @@ const AnalyzingProfile = () => {
       <div className="w-full max-w-xs mt-6 mb-6">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
-            className="h-full gradient-bg rounded-full"
+            className="h-full gradient-pink rounded-full"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           />
