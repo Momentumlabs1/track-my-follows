@@ -58,32 +58,21 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     return map;
   }, [profileFollowings]);
 
-  const { femaleFollows, maleFollows, isInitialData } = useMemo(() => {
+  const { femaleFollows, maleFollows } = useMemo(() => {
     const female: GenderedFollow[] = [];
     const male: GenderedFollow[] = [];
     const now = Date.now();
 
-    // Try real events first
+    // Only real (non-initial) events from the last 7 days
     const realFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
-        !(e as any).is_initial &&
-        (e as any).direction === "following" &&
+        !e.is_initial &&
+        e.direction === "following" &&
         now - new Date(e.detected_at).getTime() < SEVEN_DAYS
     );
 
-    // Fallback to initial events
-    const initialFollows = followEvents.filter(
-      (e) =>
-        (e.event_type === "follow" || e.event_type === "new_following") &&
-        (e as any).is_initial === true &&
-        (e as any).direction === "following"
-    );
-
-    const hasRealFollows = realFollows.length > 0;
-    const sourceFollows = hasRealFollows ? realFollows : initialFollows;
-
-    for (const ev of sourceFollows) {
+    for (const ev of realFollows) {
       const fromMap = followingMap.get(ev.target_username);
       let gender: string;
       if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
@@ -104,7 +93,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     female.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
     male.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
 
-    return { femaleFollows: female, maleFollows: male, isInitialData: !hasRealFollows && initialFollows.length > 0 };
+    return { femaleFollows: female, maleFollows: male };
   }, [followEvents, followingMap]);
 
   const femaleCount = femaleFollows.length;
@@ -216,12 +205,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
           </button>
         </div>
 
-        {/* Initial data hint */}
-        {isInitialData && (femaleCount > 0 || maleCount > 0) && (
-          <p className="text-muted-foreground text-center" style={{ fontSize: "0.625rem", opacity: 0.5 }}>
-            📊 {t("weekly.based_on_initial", "Basierend auf dem ersten Scan · wird mit weiteren Scans genauer")}
-          </p>
-        )}
       </div>
 
       {/* Bottom Sheet */}
@@ -266,7 +249,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                       )}
                     </div>
                     <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "0.75rem" }}>
-                      {isInitialData ? t("profile.initial_scan_label", "Beim Start erkannt") : timeAgo(item.detectedAt)}
+                      {timeAgo(item.detectedAt)}
                     </span>
                   </a>
                 ))}
