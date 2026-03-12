@@ -65,7 +65,7 @@ export function analyzeSuspicion(
     } else if (ev.gender_tag === "female" || ev.gender_tag === "male") {
       gender = ev.gender_tag;
     } else {
-      gender = detectGender(ev.target_display_name);
+      gender = detectGender(ev.target_display_name, ev.target_username);
     }
     if (gender === "female") femaleCount++;
     else if (gender === "male") maleCount++;
