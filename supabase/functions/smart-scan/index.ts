@@ -531,6 +531,29 @@ Deno.serve(async (req) => {
           const res = await performBasicScan(supabaseClient, profile, hikerApiKey);
           results.push({ username: profile.username as string, scan_type: "basic", ...res });
         }
+
+        // ── Baseline Recovery: If initial scan done but baseline incomplete, trigger it server-side ──
+        if (profile.initial_scan_done === true && profile.baseline_complete === false && !profile.is_private) {
+          console.log(`[BASELINE-RECOVERY] ${profile.username}: baseline_complete=false, triggering create-baseline...`);
+          // Fire-and-forget server-side (don't await)
+          fetch(`${supabaseUrl}/functions/v1/create-baseline`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({ profileId: profile.id }),
+          }).then(async (res) => {
+            if (res.ok) {
+              console.log(`[BASELINE-RECOVERY] ${profile.username}: create-baseline triggered successfully`);
+            } else {
+              const text = await res.text();
+              console.error(`[BASELINE-RECOVERY] ${profile.username}: create-baseline failed: ${res.status} ${text}`);
+            }
+          }).catch((err) => {
+            console.error(`[BASELINE-RECOVERY] ${profile.username}: fetch error:`, err);
+          });
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[smart-scan] Error for ${profile.username}:`, msg);
