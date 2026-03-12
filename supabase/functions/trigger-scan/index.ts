@@ -111,7 +111,7 @@ async function syncNewFollows(
     const ts = isInitialScan
       ? new Date(nowMs - i * 1000).toISOString()
       : new Date(nowMs - i * 1000).toISOString();
-    const genderTag = detectGender(f.full_name);
+    const genderTag = detectGender(f.full_name, f.username);
     const category = categorizeFollow(f.follower_count, f.is_private);
     await supabase.from("profile_followings").insert({
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
@@ -124,7 +124,7 @@ async function syncNewFollows(
       tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
       target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
       detected_at: ts, direction: "following", notification_sent: false,
-      gender_tag: detectGender(f.full_name),
+      gender_tag: genderTag,
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
