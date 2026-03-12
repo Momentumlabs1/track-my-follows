@@ -1,39 +1,61 @@
 
+Ziel: OAuth (Apple/Google) so stabil machen, dass nach Consent immer eine Session entsteht und nie mehr der Fallback auf `/onboarding` passiert.
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+Do I know what the issue is? Ja. Sehr wahrscheinlich ist es ein Flow-Mismatch + Redirect-Race:
+- Client ist auf Standard-Flow (implicit möglich), aber die App behandelt primär `?code=...` (PKCE).
+- Wenn Supabase auf Root (`/`) mit Hash-Tokens zurückkommt, kann der aktuelle Root-Redirect (`/` -> `/splash`) den Hash zu früh verlieren.
+- Danach ist `session=null`, Splash leitet zu Onboarding.
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Umsetzungsplan
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+1) Auth-Bootstrap in `AuthContext` robust machen (Single Source of Truth)
+- `handleOAuthReturnIfNeeded()` erweitern auf beide Rückgabeformen:
+  - PKCE: `?code=...` -> `exchangeCodeForSession`
+  - Implicit: `#access_token=...&refresh_token=...` -> `setSession`
+  - Fehlerfälle aus Query/Hash sauber behandeln (`error`, `error_description`)
+- `loading=true` behalten, bis OAuth-Verarbeitung + `getSession()` abgeschlossen sind.
+- Kurzen Retry auf `getSession()` (z. B. 3–5 Versuche mit kleinem Delay), um Timing-Rennen beim Session-Persistieren abzufangen.
+- Auth-Parameter danach aus URL entfernen (Query + OAuth-Hash-Keys).
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+2) Root-Route so ändern, dass keine Tokens verloren gehen
+- In `App.tsx` Route `"/"` nicht mehr sofort mit `<Navigate to="/splash" />` umbiegen.
+- Stattdessen `"/"` direkt auf `<Splash />` zeigen (und `"/splash"` für Kompatibilität behalten).
+- Dadurch bleibt ein möglicher OAuth-Hash bis zum Auth-Bootstrap erhalten.
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+3) Callback-Seite schlank lassen
+- `AuthCallback.tsx` bleibt „warte auf `loading=false`, dann dashboard/login“.
+- Keine zweite, konkurrierende Exchange-Logik dort einführen.
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+4) OAuth-Start konsistent halten
+- `Login.tsx` weiterhin mit `redirectTo: <origin>/auth/callback` + manueller Redirect-Übergabe.
+- Optional: präzise Debug-Logs im OAuth-Start und im Auth-Bootstrap ergänzen (provider, redirectTo, erkannter Rückgabe-Typ), damit wir bei Restproblemen exakt sehen, wo es bricht.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+5) Supabase Redirect-URLs härten (Dashboard)
+- Zusätzlich zu den bestehenden Einträgen auch `https://track-my-follows.lovable.app/**` aufnehmen.
+- Preview-Wildcards beibehalten.
+- Ziel: kein stiller Fallback auf Site URL wegen Redirect-Mismatch.
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+Technische Details (kompakt)
 
+```text
+Login -> signInWithOAuth
+      -> Provider Consent
+      -> Supabase /callback
+      -> App return (either ?code=... OR #access_token=...)
+      -> AuthContext bootstrap handles both variants
+      -> session persisted
+      -> Splash/AuthCallback redirects to /dashboard
+```
+
+Dateien für Implementierung
+- `src/contexts/AuthContext.tsx` (Hauptfix)
+- `src/App.tsx` (Root-Route-Änderung)
+- `src/pages/AuthCallback.tsx` (nur konsistente Wait/Redirect-Logik prüfen)
+- optional `src/lib/oauth.ts` (nur falls Redirect-Ziel vereinheitlicht werden muss)
+
+Abnahme (E2E, Pflicht)
+1. Published URL: Apple Login + Signup -> immer `/dashboard`.
+2. Published URL: Google Login + Signup -> immer `/dashboard`.
+3. Preview URL: beide Provider, beide Flows -> gleiches Ergebnis.
+4. Negativtest (Consent abbrechen): verständliche Fehlermeldung, kein „stilles“ Onboarding.
+5. Nach erfolgreichem OAuth: Session vorhanden, Reload bleibt eingeloggt.
