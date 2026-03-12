@@ -28,7 +28,7 @@ export interface SuspicionFactor {
 }
 
 export function analyzeSuspicion(
-  followEvents: Array<{ event_type: string; target_username: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null; gender_tag?: string | null }>,
+  followEvents: Array<{ event_type: string; target_username: string; target_display_name?: string | null; detected_at: string; is_initial?: boolean | null; gender_tag?: string | null; direction?: string }>,
   profileFollowings: Array<{ following_username: string; following_display_name?: string | null; gender_tag?: string | null }>,
   followerCount: number,
   followingCount: number,
