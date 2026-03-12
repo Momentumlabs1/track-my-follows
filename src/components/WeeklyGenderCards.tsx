@@ -58,32 +58,21 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     return map;
   }, [profileFollowings]);
 
-  const { femaleFollows, maleFollows, isInitialData } = useMemo(() => {
+  const { femaleFollows, maleFollows } = useMemo(() => {
     const female: GenderedFollow[] = [];
     const male: GenderedFollow[] = [];
     const now = Date.now();
 
-    // Try real events first
+    // Only real (non-initial) events from the last 7 days
     const realFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
-        !(e as any).is_initial &&
-        (e as any).direction === "following" &&
+        !e.is_initial &&
+        e.direction === "following" &&
         now - new Date(e.detected_at).getTime() < SEVEN_DAYS
     );
 
-    // Fallback to initial events
-    const initialFollows = followEvents.filter(
-      (e) =>
-        (e.event_type === "follow" || e.event_type === "new_following") &&
-        (e as any).is_initial === true &&
-        (e as any).direction === "following"
-    );
-
-    const hasRealFollows = realFollows.length > 0;
-    const sourceFollows = hasRealFollows ? realFollows : initialFollows;
-
-    for (const ev of sourceFollows) {
+    for (const ev of realFollows) {
       const fromMap = followingMap.get(ev.target_username);
       let gender: string;
       if (fromMap && (fromMap.gender === "female" || fromMap.gender === "male")) gender = fromMap.gender;
