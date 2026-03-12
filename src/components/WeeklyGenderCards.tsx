@@ -205,12 +205,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
           </button>
         </div>
 
-        {/* Initial data hint */}
-        {isInitialData && (femaleCount > 0 || maleCount > 0) && (
-          <p className="text-muted-foreground text-center" style={{ fontSize: "0.625rem", opacity: 0.5 }}>
-            📊 {t("weekly.based_on_initial", "Basierend auf dem ersten Scan · wird mit weiteren Scans genauer")}
-          </p>
-        )}
       </div>
 
       {/* Bottom Sheet */}
