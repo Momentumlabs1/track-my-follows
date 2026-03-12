@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
       if (!existingFollowingIds.has(f.pk)) {
         newFollowsFound++;
         const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
-        const newGenderTag = detectGender(f.full_name);
+        const newGenderTag = detectGender(f.full_name, f.username);
         const newCategory = categorizeFollow(f.follower_count, f.is_private);
         newFollowingRows.push({
           tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
