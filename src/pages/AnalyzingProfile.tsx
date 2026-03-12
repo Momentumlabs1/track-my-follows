@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { SpyIcon } from "@/components/SpyIcon";
+import { InstagramAvatar } from "@/components/InstagramAvatar";
 
 const STEP_KEYS = [
   { title: "step_1", desc: "step_1_desc" },
