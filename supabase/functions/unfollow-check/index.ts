@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
           profile_pic_url: (f.follower_avatar_url as string) || null,
           event_type: "lost",
           detected_at: new Date().toISOString(),
-          gender_tag: detectGender(f.follower_display_name as string | null),
+          gender_tag: detectGender(f.follower_display_name as string | null, f.follower_username as string | null),
         });
       }
     }
