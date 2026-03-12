@@ -190,7 +190,7 @@ export function SpyStatusCard({
 
             {/* CTA */}
             <motion.div
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-5 py-2 text-xs font-bold shadow-lg"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-bold shadow-lg"
               style={{ boxShadow: "0 4px 14px -3px hsl(var(--primary) / 0.4)" }}
               whileTap={{ scale: 0.95 }}
             >
