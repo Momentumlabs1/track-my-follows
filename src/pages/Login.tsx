@@ -6,6 +6,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { getOAuthRedirectUrl, shouldSkipBrowserRedirect, isValidOAuthUrl } from "@/lib/oauth";
 import logoWide from "@/assets/logo-wide.png";
 
 const SIGNUP_COOLDOWN_SECONDS = 0;
