@@ -173,18 +173,18 @@ export function SpyStatusCard({
             </div>
 
             {/* Level + Score inline */}
-            <div className="mt-3 flex items-center gap-1.5">
-              <span className="font-black text-base tracking-tight" style={{ color: levelColor }}>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="font-black text-lg tracking-tight" style={{ color: levelColor }}>
                 {labelMap[level]}
               </span>
-              <span className="text-base">{levelConfig.emoji}</span>
+              <span className="text-lg">{levelConfig.emoji}</span>
               <span className="text-muted-foreground text-xs">·</span>
-              <span className="font-extrabold text-sm tabular-nums" style={{ color: levelColor }}>{score}</span>
-              <span className="text-muted-foreground" style={{ fontSize: "0.625rem" }}>/100</span>
+              <span className="font-extrabold text-base tabular-nums" style={{ color: levelColor }}>{score}</span>
+              <span className="text-muted-foreground text-xs">/100</span>
             </div>
 
             {/* Description */}
-            <p className="text-muted-foreground text-xs mt-1">
+            <p className="text-muted-foreground text-sm mt-2">
               {descMap[level]}
             </p>
 
