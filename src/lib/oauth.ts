@@ -21,10 +21,12 @@ export function getOAuthRedirectUrl(): string {
 }
 
 /**
- * Always bypass auth-bridge and handle redirect manually for consistency.
+ * Only skip browser redirect for native apps (Capacitor/WebView).
+ * On all web domains (lovable.app, lovableproject.com, preview), let the
+ * browser handle the redirect natively so tokens arrive in the URL.
  */
 export function shouldSkipBrowserRedirect(): boolean {
-  return true;
+  return isNativeApp();
 }
 
 const ALLOWED_OAUTH_HOSTS = [
@@ -51,4 +53,3 @@ export function isValidOAuthUrl(url: string): boolean {
     return false;
   }
 }
-

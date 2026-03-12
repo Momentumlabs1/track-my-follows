@@ -33,12 +33,15 @@ const Login = () => {
     setSocialLoading(provider);
     try {
       const redirectUrl = getOAuthRedirectUrl();
+      const skipRedirect = shouldSkipBrowserRedirect();
+
+      console.info("[auth/login] OAuth start", { provider, redirectUrl, skipRedirect });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: shouldSkipBrowserRedirect(),
+          skipBrowserRedirect: skipRedirect,
         },
       });
 
@@ -52,12 +55,16 @@ const Login = () => {
         return;
       }
 
-      if (!isValidOAuthUrl(data.url)) {
-        toast.error("Invalid OAuth redirect URL");
-        return;
+      // When skipBrowserRedirect is false, the SDK handles the redirect automatically.
+      // When true (native only), we redirect manually after validation.
+      if (skipRedirect) {
+        if (!isValidOAuthUrl(data.url)) {
+          toast.error("Invalid OAuth redirect URL");
+          return;
+        }
+        window.location.assign(data.url);
       }
-
-      window.location.assign(data.url);
+      // If skipRedirect is false, the SDK already navigated away — nothing to do.
     } catch (err) {
       toast.error(String(err));
     } finally {
@@ -78,7 +85,6 @@ const Login = () => {
 
     console.info("[auth] login attempt", { email: normalizedEmail.slice(0, 3) + "***" });
 
-    // Try login first
     const { error: loginError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
@@ -92,7 +98,6 @@ const Login = () => {
 
     console.info("[auth] login failed", { code: loginError.message });
 
-    // If "email not confirmed" → resend fresh code, then redirect
     if (loginError.message?.toLowerCase().includes("email not confirmed")) {
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
@@ -107,7 +112,6 @@ const Login = () => {
       return;
     }
 
-    // If invalid credentials → try signup
     if (
       loginError.message?.toLowerCase().includes("invalid") ||
       loginError.message?.toLowerCase().includes("invalid login credentials")
@@ -136,7 +140,6 @@ const Login = () => {
           signupError.message?.toLowerCase().includes("already registered") ||
           signupError.message?.toLowerCase().includes("already been registered")
         ) {
-          // Account exists but password is wrong → don't blindly redirect
           toast.error(t("auth.account_exists_check_password"));
         } else {
           toast.error(signupError.message);
@@ -152,7 +155,6 @@ const Login = () => {
       return;
     }
 
-    // Rate limit or other login error
     if (loginError.message?.toLowerCase().includes("rate limit")) {
       toast.error(t("auth.rate_limited"));
     } else {
