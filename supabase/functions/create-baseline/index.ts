@@ -280,6 +280,27 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════
+    // RE-COUNT GENDER FROM DB (not in-memory)
+    // ══════════════════════════════════════════
+
+    const { data: dbCounts } = await supabase
+      .from("profile_followings")
+      .select("gender_tag")
+      .eq("tracked_profile_id", profileId)
+      .eq("direction", "following")
+      .eq("is_current", true);
+
+    let dbFemale = 0, dbMale = 0, dbUnknown = 0;
+    for (const row of (dbCounts || [])) {
+      if (row.gender_tag === "female") dbFemale++;
+      else if (row.gender_tag === "male") dbMale++;
+      else dbUnknown++;
+    }
+    const dbTotal = dbFemale + dbMale + dbUnknown;
+
+    console.log(`[create-baseline] ${username}: DB counts: F${dbFemale}/M${dbMale}/U${dbUnknown} (total ${dbTotal}), in-memory: F${femaleCount}/M${maleCount}/U${unknownCount}`);
+
+    // ══════════════════════════════════════════
     // CALCULATE CONFIDENCE
     // ══════════════════════════════════════════
 
@@ -293,21 +314,21 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════
-    // UPDATE PROFILE
+    // UPDATE PROFILE (use DB counts, not memory)
     // ══════════════════════════════════════════
 
     await supabase.from("tracked_profiles").update({
       baseline_complete: isFullBaseline,
       last_following_count: followingCount,
       last_follower_count: userInfo.follower_count || 0,
-      gender_female_count: femaleCount,
-      gender_male_count: maleCount,
-      gender_unknown_count: unknownCount,
+      gender_female_count: dbFemale,
+      gender_male_count: dbMale,
+      gender_unknown_count: dbUnknown,
       gender_confidence: confidenceLevel,
-      gender_sample_size: allFollowings.length,
+      gender_sample_size: dbTotal,
     }).eq("id", profileId);
 
-    console.log(`[create-baseline] ${username}: Done! ${allFollowings.length} scanned, gender: F${femaleCount}/M${maleCount}/U${unknownCount}, confidence: ${confidenceLevel}`);
+    console.log(`[create-baseline] ${username}: Done! ${allFollowings.length} API, ${dbTotal} in DB, gender: F${dbFemale}/M${dbMale}/U${dbUnknown}, confidence: ${confidenceLevel}`);
 
     return new Response(JSON.stringify({
       success: true,
