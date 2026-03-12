@@ -335,10 +335,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       followings_scanned: allFollowings.length,
+      followings_in_db: dbTotal,
       total_followings: followingCount,
       is_full_baseline: isFullBaseline,
       confidence: confidenceLevel,
-      gender: { female: femaleCount, male: maleCount, unknown: unknownCount },
+      gender: { female: dbFemale, male: dbMale, unknown: dbUnknown },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err) {
