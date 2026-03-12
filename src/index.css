@@ -145,13 +145,7 @@
   }
   .native-cell:last-child { border-bottom: none; }
 
-  /* ─── Feed rows (Instagram notification style) ─── */
-  .feed-row {
-    @apply flex items-center gap-4;
-    padding: 1rem 1.25rem;
-    border-bottom: 0.5px solid hsl(var(--hairline));
-  }
-  .feed-row:last-child { border-bottom: none; }
+  /* ─── Feed rows removed – using native-card instead ─── */
 
   /* ─── Avatar ring ─── */
   .avatar-ring {

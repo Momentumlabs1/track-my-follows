@@ -247,7 +247,9 @@ const FeedPage = () => {
             {groupedEvents.map((group, gi) => (
               <div key={group.date}>
                 <div className="px-5"><DaySeparator date={group.date} /></div>
-                {group.events.map((event, ei) => <EventFeedItem key={event.id} event={event} index={gi * 10 + ei} />)}
+                <div className="flex flex-col gap-2 px-5">
+                  {group.events.map((event, ei) => <EventFeedItem key={event.id} event={event} index={gi * 10 + ei} />)}
+                </div>
               </div>
             ))}
             {allEvents.length > visibleCount && (
