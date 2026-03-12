@@ -1,39 +1,25 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Plan: SpyStatusCard grösser, befüllter, cleaner
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Änderungen in `src/components/SpyStatusCard.tsx`
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+**1. Spy-Icon und Ring deutlich vergrössern**
+- `ringSize`: 130 → **160px**
+- `SpyIcon`: 82 → **105px**
+- `strokeWidth`: 4 → **5**
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**2. Texte grösser und besser angeordnet**
+- Level-Label: `text-base` → **`text-lg`** (font-black)
+- Score: `text-sm` → **`text-base`**, `/100` etwas grösser
+- Emoji: `text-base` → **`text-lg`**
+- Description: `text-xs` → **`text-sm`**, etwas mehr margin-top
+- CTA-Button: `text-xs px-5 py-2` → **`text-sm px-6 py-2.5`**
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+**3. Mehr Padding in der Karte**
+- Inner container: `px-5 pt-6 pb-5` → **`px-6 pt-8 pb-6`**
+- Mehr Abstand zwischen Ring und Text: `mt-3` → **`mt-4`**
+- Mehr Abstand zwischen Description und CTA: `mt-4` → **`mt-5`**
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
-
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+Das Ergebnis: Die Karte wirkt "voller" und der Spy dominiert als zentrales Element, mit grösseren Texten die den Raum besser ausfüllen.
 
