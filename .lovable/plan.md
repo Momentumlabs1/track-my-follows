@@ -39,6 +39,21 @@
 
 ---
 
+## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+
+### Problem
+Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+
+### Implementiert
+1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
+   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
+   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
+   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
+2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
+3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+
+---
+
 ## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
 
 ### Was implementiert wurde:
