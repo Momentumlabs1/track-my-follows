@@ -155,7 +155,7 @@ export function SpyStatusCard({
       toast.success(t("spy_detail.unfollow_complete", { count: total }));
       invalidateAll();
     } catch {
-      toast.error("Unfollow-Check fehlgeschlagen");
+      toast.error(t("spy_detail.unfollow_failed"));
     } finally {
       setUnfollowScanning(false);
     }
