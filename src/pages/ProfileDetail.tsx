@@ -506,7 +506,7 @@ const ProfileDetail = () => {
         )}
       </motion.div>
 
-      <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} onMove={(profileId) => moveSpy.mutate(profileId)} />
+      <MoveSpySheet open={moveSpyOpen} onOpenChange={setMoveSpyOpen} profiles={profiles} currentSpyId={profiles.find((p) => p.has_spy)?.id || null} viewingProfileId={profileId} onMove={(profileId) => moveSpy.mutate(profileId)} />
     </div>
   );
 };
