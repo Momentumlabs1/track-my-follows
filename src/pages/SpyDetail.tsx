@@ -168,7 +168,7 @@ export default function SpyDetail() {
         </div>
 
         <p className="text-[12px] text-muted-foreground mt-1">
-          {t("spy_detail.spy_since", "Spion seit")}: {spyAssignedAt ? new Date(spyAssignedAt).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+          {t("spy_detail.spy_since", "Spion seit")}: {spyAssignedAt ? new Date(spyAssignedAt).toLocaleDateString(i18n.language, { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </p>
       </motion.div>
 
