@@ -191,7 +191,7 @@ const Dashboard = () => {
                       className="text-primary-foreground font-bold mt-2 text-center"
                       style={{ fontSize: "0.75rem" }}
                     >
-                      🕵️ Spion verbunden mit @{connectedUsername}
+                      🕵️ {t("dashboard.spy_connected", "Spion verbunden mit")} @{connectedUsername}
                     </motion.p>
                   </motion.div>
                 )}
