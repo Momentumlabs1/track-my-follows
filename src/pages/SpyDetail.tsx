@@ -51,7 +51,7 @@ export default function SpyDetail() {
     await supabase.from("tracked_profiles").update({ spy_name: nameValue.trim().slice(0, 20) } as Record<string, unknown>).eq("id", spyProfile.id);
     queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
     setEditingName(false);
-    toast.success("Name gespeichert ✅");
+    toast.success(t("spy_detail.name_saved"));
   };
 
   const invalidateAll = () => {
