@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { haptic } from "@/lib/native";
 
 export default function SpyDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { spyProfile } = useSpyProfile();
