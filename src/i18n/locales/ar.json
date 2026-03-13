@@ -155,6 +155,8 @@
     "based_on": "بناءً على {{count}} أسماء معروفة",
     "not_detected": "({{count}} غير معروف)",
     "safe": "آمن جداً",
+    "unauffaellig": "غير ملفت",
+    "leicht_auffaellig": "ملفت قليلاً",
     "suspicious": "مريب",
     "verySuspicious": "مريب جداً",
     "genderRatio": "نسبة الجنس",
@@ -167,7 +169,8 @@
     "followingFollowerRatioDesc": "النسبة: {{ratio}}x",
     "nightActivity": "نشاط ليلي",
     "nightActivityDesc": "متابعة أشخاص بين 11 مساءً و5 صباحاً",
-    "trend_4_weeks": "اتجاه 4 أسابيع"
+    "trend_4_weeks": "اتجاه 4 أسابيع",
+    "spy_report": "تقرير الجاسوس"
   },
   "events": {
     "new_follower": "متابع جديد",
