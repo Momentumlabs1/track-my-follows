@@ -33,7 +33,13 @@
     "no_profiles": "لا توجد حسابات متتبعة بعد",
     "add_first": "أضف أول حساب للبدء بالتتبع",
     "hello": "مرحباً",
-    "hot_alert": "أحدث تنبيه"
+    "hot_alert": "أحدث تنبيه",
+    "tracking_active": "التتبع نشط لـ @{{username}} 🕵️",
+    "welcome_back": "مرحباً بعودتك",
+    "spy_assigned_to": "الجاسوس معيّن على",
+    "spy_connected": "الجاسوس متصل بـ",
+    "spy_inactive": "الجاسوس غير نشط",
+    "locked": "مقفل"
   },
   "add_profile": {
     "title": "من تريد تتبعه؟",
