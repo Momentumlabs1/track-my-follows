@@ -110,9 +110,9 @@ export default function Onboarding() {
                     { icon: "🔒", label: "100% Anonym" },
                     { icon: "⚡", label: "Echtzeit" },
                     { icon: "📱", label: "Kein Login nötig" },
-                  ].map((pill) => (
+                   ].map((pill, idx) => (
                     <span
-                      key={pill.label}
+                      key={idx}
                       className="px-4 py-2.5 rounded-2xl bg-white/[0.08] border border-white/[0.1] text-[13px] text-foreground font-semibold flex items-center gap-1.5 shadow-sm"
                     >
                       <span className="text-base">{pill.icon}</span>
