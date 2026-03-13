@@ -78,7 +78,7 @@ export default function SpyDetail() {
         return;
       }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      toast.success(t("spy_detail.scan_complete", { count: newCount }));
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`);
     } catch {
