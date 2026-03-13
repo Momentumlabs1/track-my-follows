@@ -17,6 +17,10 @@
     "this_week": "This week",
     "older": "Older"
   },
+  "not_found": {
+    "title": "Page not found",
+    "back_home": "Return to Home"
+  },
   "dashboard": {
     "just_now": "Just now",
     "minutes_ago": "{{count}}m ago",
@@ -29,7 +33,13 @@
     "no_profiles": "No profiles tracked yet",
     "add_first": "Tap + to start tracking someone",
     "hello": "Hello",
-    "hot_alert": "Latest alert"
+    "hot_alert": "Latest alert",
+    "tracking_active": "Tracking active for @{{username}} 🕵️",
+    "welcome_back": "Welcome back",
+    "spy_assigned_to": "Spy assigned to",
+    "spy_connected": "Spy connected to",
+    "spy_inactive": "Spy not active",
+    "locked": "LOCKED"
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
@@ -332,7 +342,11 @@
     "next": "Next",
     "get_started": "Get Started",
     "login": "Log In",
-    "already_have_account": "Already have an account?"
+    "already_have_account": "Already have an account?",
+    "notification_example": "@saif now follows @jessica_x 👀",
+    "pill_anonymous": "100% Anonymous",
+    "pill_realtime": "Real-time",
+    "pill_no_login": "No login needed"
   },
   "errors": {
     "no_connection": "No internet connection",
@@ -457,6 +471,38 @@
   },
   "paywall": {
     "unlock_spy_agent": "🔒 Unlock Spy Agent"
+  },
+  "spy_detail": {
+    "your_spy": "Your Spy",
+    "spy_profile": "Spy Profile",
+    "spy_since": "Spy since",
+    "next_auto_scan": "Next auto scan",
+    "spy_report": "Spy Report",
+    "total_missions": "Total missions",
+    "follows_detected": "New follows detected",
+    "unfollows_detected": "Unfollows detected",
+    "active_days": "Active since",
+    "avg_changes": "Avg. changes/day",
+    "last_activity": "Last activity",
+    "push_desc": "Instantly scan for new follows",
+    "unfollow_desc": "Check if someone unfollowed",
+    "tomorrow": "Available again tomorrow ⏰",
+    "no_scans_left": "No push scans remaining today ⏰",
+    "no_unfollow_left": "No unfollow scans remaining today ⏰",
+    "name_saved": "Name saved ✅",
+    "scan_complete": "Scan complete! {{count}} new changes 🔍",
+    "scan_failed": "Scan failed",
+    "unfollow_complete": "Unfollow check done! {{count}} changes found 👁",
+    "unfollow_failed": "Unfollow check failed",
+    "remaining": "{{current}} of {{max}} remaining",
+    "feature_hourly": "Hourly Scans",
+    "feature_hourly_desc": "Automatically detect new follows & followers every hour",
+    "feature_unfollow": "Unfollow Detection",
+    "feature_unfollow_desc": "Know instantly when someone unfollows",
+    "feature_gender": "Gender Analysis",
+    "feature_gender_desc": "Find out who your target really follows",
+    "current_mission": "Current Mission",
+    "capabilities": "What can your spy do?"
   },
   "gender_analysis_running": "Gender analysis running in background...",
   "private_frozen": "This profile is now private – tracking frozen",

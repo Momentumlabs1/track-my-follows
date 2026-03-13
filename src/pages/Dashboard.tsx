@@ -74,7 +74,7 @@ const Dashboard = () => {
     setShowSpyConnected(true);
     moveSpy.mutate(profileId, {
       onSuccess: () => {
-        if (targetProfile) toast.success(`Tracking aktiv für @${targetProfile.username} 🕵️`);
+        if (targetProfile) toast.success(t("dashboard.tracking_active", { username: targetProfile.username }));
         try { navigator.vibrate?.(50); } catch {}
         setTimeout(() => setJustAssigned(false), 600);
         setTimeout(() => setDroppedOnProfileId(null), 800);
@@ -119,7 +119,7 @@ const Dashboard = () => {
         <div className="px-6 pb-2">
           <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
             className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Willkommen zurück
+            {t("dashboard.welcome_back", "Willkommen zurück")}
           </motion.h1>
           <p className="text-primary-foreground/80 font-mono font-bold mt-1" style={{ fontSize: "0.875rem", letterSpacing: "0.05em" }}>
             Spy-{spyNumber}
@@ -191,7 +191,7 @@ const Dashboard = () => {
                       className="text-primary-foreground font-bold mt-2 text-center"
                       style={{ fontSize: "0.75rem" }}
                     >
-                      🕵️ Spion verbunden mit @{connectedUsername}
+                      🕵️ {t("dashboard.spy_connected", "Spion verbunden mit")} @{connectedUsername}
                     </motion.p>
                   </motion.div>
                 )}
@@ -212,7 +212,7 @@ const Dashboard = () => {
                   {/* Label */}
                   {spyProfile && (
                     <p className="text-white/80 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
-                      Spion angesetzt auf
+                      {t("dashboard.spy_assigned_to", "Spion angesetzt auf")}
                     </p>
                   )}
 
@@ -295,7 +295,7 @@ const Dashboard = () => {
                 {/* Empty profile side */}
                 <div className="flex flex-col" style={{ width: "65%" }}>
                   <p className="text-white/30 font-bold uppercase tracking-widest px-3 pt-0.5 pb-0" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", lineHeight: 1.2 }}>
-                    Spion nicht aktiv
+                    {t("dashboard.spy_inactive", "Spion nicht aktiv")}
                   </p>
                   <div className="mt-1 flex-1 rounded-[1.25rem] px-3 py-2.5 bg-white/[0.04] flex flex-col justify-center items-center gap-2">
                     <Lock className="h-5 w-5 text-primary-foreground/40" />
@@ -310,7 +310,7 @@ const Dashboard = () => {
                 {/* Greyed spy side */}
                 <div className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white/[0.04]" style={{ width: "35%", filter: "grayscale(1)", opacity: 0.4 }}>
                   <SpyIcon size={40} />
-                  <p className="text-primary-foreground/40 font-bold mt-1" style={{ fontSize: "0.5rem" }}>GESPERRT</p>
+                  <p className="text-primary-foreground/40 font-bold mt-1" style={{ fontSize: "0.5rem" }}>{t("dashboard.locked", "GESPERRT")}</p>
                 </div>
               </div>
             </button>

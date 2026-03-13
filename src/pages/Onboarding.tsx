@@ -106,13 +106,13 @@ export default function Onboarding() {
                   transition={{ delay: 0.35, duration: 0.5 }}
                   className="flex flex-wrap justify-center gap-2.5 mt-8"
                 >
-                  {[
-                    { icon: "🔒", label: "100% Anonym" },
-                    { icon: "⚡", label: "Echtzeit" },
-                    { icon: "📱", label: "Kein Login nötig" },
-                  ].map((pill) => (
+                 {[
+                    { icon: "🔒", label: t("onboarding.pill_anonymous", "100% Anonym") },
+                    { icon: "⚡", label: t("onboarding.pill_realtime", "Echtzeit") },
+                    { icon: "📱", label: t("onboarding.pill_no_login", "Kein Login nötig") },
+                   ].map((pill, idx) => (
                     <span
-                      key={pill.label}
+                      key={idx}
                       className="px-4 py-2.5 rounded-2xl bg-white/[0.08] border border-white/[0.1] text-[13px] text-foreground font-semibold flex items-center gap-1.5 shadow-sm"
                     >
                       <span className="text-base">{pill.icon}</span>
@@ -136,7 +136,7 @@ export default function Onboarding() {
                     </div>
                     <div className="text-start flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-foreground">Spy-Secret</p>
-                      <p className="text-[12px] text-foreground/60">@saif folgt jetzt @jessica_x 👀</p>
+                      <p className="text-[12px] text-foreground/60">{t("onboarding.notification_example")}</p>
                     </div>
                     <span className="text-[11px] text-foreground/30 shrink-0 self-start">2m</span>
                   </div>

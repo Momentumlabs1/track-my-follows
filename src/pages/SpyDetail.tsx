@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { haptic } from "@/lib/native";
 
 export default function SpyDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { spyProfile } = useSpyProfile();
@@ -51,7 +51,7 @@ export default function SpyDetail() {
     await supabase.from("tracked_profiles").update({ spy_name: nameValue.trim().slice(0, 20) } as Record<string, unknown>).eq("id", spyProfile.id);
     queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
     setEditingName(false);
-    toast.success("Name gespeichert ✅");
+    toast.success(t("spy_detail.name_saved"));
   };
 
   const invalidateAll = () => {
@@ -78,11 +78,11 @@ export default function SpyDetail() {
         return;
       }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      toast.success(t("spy_detail.scan_complete", { count: newCount }));
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`);
     } catch {
-      toast.error("Scan fehlgeschlagen");
+      toast.error(t("spy_detail.scan_failed"));
       setPushScanning(false);
     }
   };
@@ -105,11 +105,11 @@ export default function SpyDetail() {
         return;
       }
       const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
-      toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`);
+      toast.success(t("spy_detail.unfollow_complete", { count: total }));
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`, { state: { activeTab: "unfollowed" } });
     } catch {
-      toast.error("Unfollow-Check fehlgeschlagen");
+      toast.error(t("spy_detail.unfollow_failed"));
       setUnfollowScanning(false);
     }
   };
@@ -168,7 +168,7 @@ export default function SpyDetail() {
         </div>
 
         <p className="text-[12px] text-muted-foreground mt-1">
-          {t("spy_detail.spy_since", "Spion seit")}: {spyAssignedAt ? new Date(spyAssignedAt).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+          {t("spy_detail.spy_since", "Spion seit")}: {spyAssignedAt ? new Date(spyAssignedAt).toLocaleDateString(i18n.language, { day: "numeric", month: "short", year: "numeric" }) : "—"}
         </p>
       </motion.div>
 
@@ -250,9 +250,9 @@ export default function SpyDetail() {
               ? t("spy_detail.push_desc", "Sofort scannen wer neu gefolgt wird")
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
-          <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-            {pushRemaining} von 4 übrig
-          </p>
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
+                    {t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                  </p>
           <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
         </button>
 
@@ -279,9 +279,9 @@ export default function SpyDetail() {
               ? t("spy_detail.unfollow_desc", "Prüfe ob jemand entfolgt wurde")
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
-          <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-            {unfollowRemaining} von 1 übrig
-          </p>
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
+                    {t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
+                  </p>
           <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
         </button>
       </div>

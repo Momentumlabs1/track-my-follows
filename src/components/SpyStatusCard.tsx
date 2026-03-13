@@ -129,10 +129,10 @@ export function SpyStatusCard({
       if (error) throw error;
       if (data?.error) { toast.error(data.error); setPushScanning(false); return; }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      toast.success(t("spy_detail.scan_complete", { count: newCount }));
       invalidateAll();
     } catch {
-      toast.error("Scan fehlgeschlagen");
+      toast.error(t("spy_detail.scan_failed"));
     } finally {
       setPushScanning(false);
     }
@@ -152,10 +152,10 @@ export function SpyStatusCard({
       if (error) throw error;
       if (data?.error) { toast.error(data.error); setUnfollowScanning(false); return; }
       const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
-      toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`);
+      toast.success(t("spy_detail.unfollow_complete", { count: total }));
       invalidateAll();
     } catch {
-      toast.error("Unfollow-Check fehlgeschlagen");
+      toast.error(t("spy_detail.unfollow_failed"));
     } finally {
       setUnfollowScanning(false);
     }
@@ -286,7 +286,7 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {pushRemaining} von 4 übrig
+                    {t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
                   <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
                 </button>
@@ -315,7 +315,7 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {unfollowRemaining} von 1 übrig
+                    {t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
                   </p>
                   <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
                 </button>

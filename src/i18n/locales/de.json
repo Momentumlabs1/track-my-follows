@@ -17,6 +17,10 @@
     "this_week": "Diese Woche",
     "older": "Älter"
   },
+  "not_found": {
+    "title": "Seite nicht gefunden",
+    "back_home": "Zurück zur Startseite"
+  },
   "dashboard": {
     "just_now": "Gerade eben",
     "minutes_ago": "Vor {{count}} Min.",
@@ -29,7 +33,13 @@
     "no_profiles": "Noch keine Profile getrackt",
     "add_first": "Tippe + um jemanden zu tracken",
     "hello": "Hallo",
-    "hot_alert": "Neuester Alert"
+    "hot_alert": "Neuester Alert",
+    "tracking_active": "Tracking aktiv für @{{username}} 🕵️",
+    "welcome_back": "Willkommen zurück",
+    "spy_assigned_to": "Spion angesetzt auf",
+    "spy_connected": "Spion verbunden mit",
+    "spy_inactive": "Spion nicht aktiv",
+    "locked": "GESPERRT"
   },
   "add_profile": {
     "title": "Wen willst du\ntracken?",
@@ -332,7 +342,11 @@
     "next": "Weiter",
     "get_started": "Los geht's",
     "login": "Einloggen",
-    "already_have_account": "Schon ein Konto?"
+    "already_have_account": "Schon ein Konto?",
+    "notification_example": "@saif folgt jetzt @jessica_x 👀",
+    "pill_anonymous": "100% Anonym",
+    "pill_realtime": "Echtzeit",
+    "pill_no_login": "Kein Login nötig"
   },
   "errors": {
     "no_connection": "Keine Internetverbindung",
@@ -474,7 +488,21 @@
     "unfollow_desc": "Prüfe ob jemand entfolgt wurde",
     "tomorrow": "Morgen wieder verfügbar ⏰",
     "no_scans_left": "Keine Push-Scans mehr übrig heute ⏰",
-    "no_unfollow_left": "Kein Unfollow-Scan mehr übrig heute ⏰"
+    "no_unfollow_left": "Kein Unfollow-Scan mehr übrig heute ⏰",
+    "name_saved": "Name gespeichert ✅",
+    "scan_complete": "Scan abgeschlossen! {{count}} neue Änderungen 🔍",
+    "scan_failed": "Scan fehlgeschlagen",
+    "unfollow_complete": "Unfollow-Check fertig! {{count}} Änderungen gefunden 👁",
+    "unfollow_failed": "Unfollow-Check fehlgeschlagen",
+    "remaining": "{{current}} von {{max}} übrig",
+    "feature_hourly": "Stündliche Scans",
+    "feature_hourly_desc": "Automatisch jede Stunde neue Follows & Follower erkennen",
+    "feature_unfollow": "Unfollow-Erkennung",
+    "feature_unfollow_desc": "Sofort wissen, wenn jemand entfolgt wird",
+    "feature_gender": "Geschlechteranalyse",
+    "feature_gender_desc": "Erfahre, wem dein Ziel wirklich folgt",
+    "current_mission": "Aktueller Einsatz",
+    "capabilities": "Was kann dein Spion?"
   },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
   "private_frozen": "Dieses Profil ist jetzt privat – Tracking eingefroren",
