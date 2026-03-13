@@ -212,7 +212,7 @@ const Dashboard = () => {
                   {/* Label */}
                   {spyProfile && (
                     <p className="text-white/80 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
-                      Spion angesetzt auf
+                      {t("dashboard.spy_assigned_to", "Spion angesetzt auf")}
                     </p>
                   )}
 
