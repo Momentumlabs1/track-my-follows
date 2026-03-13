@@ -342,7 +342,11 @@
     "next": "Next",
     "get_started": "Get Started",
     "login": "Log In",
-    "already_have_account": "Already have an account?"
+    "already_have_account": "Already have an account?",
+    "notification_example": "@saif now follows @jessica_x 👀",
+    "pill_anonymous": "100% Anonymous",
+    "pill_realtime": "Real-time",
+    "pill_no_login": "No login needed"
   },
   "errors": {
     "no_connection": "No internet connection",
