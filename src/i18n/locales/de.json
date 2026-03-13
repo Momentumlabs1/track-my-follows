@@ -332,7 +332,11 @@
     "next": "Weiter",
     "get_started": "Los geht's",
     "login": "Einloggen",
-    "already_have_account": "Schon ein Konto?"
+    "already_have_account": "Schon ein Konto?",
+    "notification_example": "@saif folgt jetzt @jessica_x 👀",
+    "pill_anonymous": "100% Anonym",
+    "pill_realtime": "Echtzeit",
+    "pill_no_login": "Kein Login nötig"
   },
   "errors": {
     "no_connection": "Keine Internetverbindung",
