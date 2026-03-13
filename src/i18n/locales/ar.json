@@ -381,14 +381,6 @@
     "new_follows": "متابعات جديدة",
     "new_followers": "متابعون جدد"
   },
-    "button": "فحص إلغاء المتابعات",
-    "checking": "جاري الفحص...",
-    "pro_only": "Pro: كشف إلغاء المتابعة",
-    "limit_reached": "لم تتبقى فحوصات اليوم",
-    "unfollows_detected": "إلغاء متابعات تم اكتشافها",
-    "no_unfollows": "لم يتم اكتشاف إلغاء متابعات",
-    "resets_midnight": "يتم التجديد عند منتصف الليل"
-  },
   "scan_status": { "auto_hourly": "كل ساعة", "once_daily": "1×/يوم" },
   "nav": { "dashboard": "الرئيسية", "add": "إضافة", "settings": "الإعدادات", "feed": "الخلاصة", "spy": "جاسوس" },
   "landing": {
