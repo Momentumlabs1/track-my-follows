@@ -1,47 +1,54 @@
 
 
-## Problem: Falsche Entfolgungen durch unvollständige Baseline
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Root Cause
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-Die `create-baseline` hat 250 von 263 Following-Accounts in `profile_followings` geladen (wahrscheinlich nur Seite 1 bei der initialen Erstellung). Als dann der `unfollow-check` lief, hat er die **komplette** Following-Liste von Instagram geholt (263 Accounts) und mit der DB verglichen. Die 13 fehlenden Accounts aus der Baseline waren in der DB als `is_current=true` markiert, aber **nicht** in der API-Response enthalten — das System hat sie fälschlicherweise als "entfolgt" markiert.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-**Beweis:** Alle 13 "Entfolgungen" haben exakt den gleichen `detected_at` Timestamp (`2026-03-12 19:00:32.531631`), alle `first_seen_at` der betroffenen `profile_followings` zeigen `2026-03-12 16:15:54` — das ist der Baseline-Zeitpunkt. Die Accounts waren nie wirklich in der DB-Baseline, sondern wurden beim `trigger-scan` (der nur Seite 1 scannt) gefunden und eingetragen. Beim `unfollow-check` waren sie dann plötzlich "weg", weil die Paginierung anders lief.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-**Kern-Bug:** Der `unfollow-check` verwendet `v1/user/following/chunk` mit max 10 Seiten — das reicht für 263 Accounts locker. ABER: Die API gibt Accounts in **unterschiedlicher Reihenfolge** zurück zwischen verschiedenen Endpoints/Zeitpunkten. Accounts die beim Baseline oder `trigger-scan` auf Seite 1 erschienen, können beim `unfollow-check` auf einer anderen Seite sein und umgekehrt.
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### Lösung
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-#### 1. Daten-Reparatur (SQL Migration)
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-Für `timwger` (Profil `c1fb4627-84bc-49f0-aac1-8b8846c64e7f`):
-- Die 13 falschen `unfollow` Events aus `follow_events` löschen
-- Die 13 `profile_followings` Einträge wieder auf `is_current=true` setzen
-- `pending_unfollow_hint` auf 0 setzen
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
-#### 2. Unfollow-Check Logik verbessern (`supabase/functions/unfollow-check/index.ts`)
+---
 
-**Problem:** Der Vergleich prüft nur "DB-Entry vorhanden aber nicht in API = entfolgt". Das ist falsch wenn die Baseline unvollständig war.
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
 
-**Fix:** Vor dem Vergleich nur Einträge berücksichtigen, die **mindestens zweimal** gesehen wurden (d.h. `first_seen_at != last_seen_at`) ODER die nach dem `unfollow-check` eingefügt wurden. Einträge die nur einmal gesehen wurden (Baseline-only) sollten erst **bestätigt** werden:
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
 
-- Beim `unfollow-check`: Accounts die in der API sind, aber `is_current=false` haben → wieder auf `is_current=true` setzen (Re-Confirmation)
-- Accounts die im API sind und `is_current=true` haben → `last_seen_at` aktualisieren
-- Nur Accounts als "entfolgt" markieren, die `is_current=true` UND `last_seen_at` nach dem Baseline-Zeitpunkt haben (also mindestens einmal bestätigt wurden)
-
-**Alternativ (einfacher & sicherer):** Beim `unfollow-check` die `last_seen_at` aller gefundenen Accounts aktualisieren. Nur Accounts als entfolgt werten, deren `last_seen_at > first_seen_at` (= mindestens einmal bestätigt).
-
-#### 3. UI-Fix: Entfolgt-Tab nur aktuell gültige zeigen
-
-In `ProfileDetail.tsx`: Die `unfollowedByThem` Liste zusätzlich gegen `profile_followings.is_current` prüfen. Wenn ein Account wieder gefolgt wird (= `is_current=true`), soll er nicht mehr in der Entfolgt-Liste erscheinen.
-
-Da wir aktuell keinen Join zwischen `follow_events` und `profile_followings` machen, ist die sauberste Lösung: Events die als `unfollow` markiert sind, aber deren `target_username` noch in der aktuellen Following-Liste ist, ausfiltern.
-
-### Dateien
-
-| Datei | Änderung |
-|---|---|
-| SQL Migration | Falsche Daten für timwger bereinigen |
-| `supabase/functions/unfollow-check/index.ts` | `last_seen_at` Update + Bestätigungs-Logik |
-| `src/pages/ProfileDetail.tsx` | Entfolgt-Filter gegen aktuelle Followings |
-
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen

@@ -1,4 +1,4 @@
-// unfollow-check v3 — shared gender detection
+// unfollow-check v4 — confirmation-based unfollow detection
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 
@@ -69,7 +69,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Full pagination fetch – reduced sleep from 800ms to 300ms ──
+// ── Full pagination fetch ──
 async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
@@ -85,7 +85,7 @@ async function fetchAll(endpoint: string, userId: string, hikerApiKey: string): 
     nextMaxId = parsed.nextMaxId;
     page++;
     if (!nextMaxId || parsed.users.length === 0) break;
-    await sleep(300); // reduced from 800ms
+    await sleep(300);
   }
   return allUsers;
 }
@@ -98,6 +98,17 @@ async function batchInsert(supabase: ReturnType<typeof createClient>, table: str
     const chunk = rows.slice(i, i + CHUNK);
     const { error } = await supabase.from(table).insert(chunk);
     if (error) console.error(`[unfollow-check] Batch insert error on ${table}:`, error.message);
+  }
+}
+
+// ── Batch update last_seen_at for confirmed accounts ──
+async function batchUpdateLastSeen(supabase: ReturnType<typeof createClient>, table: string, ids: string[]) {
+  if (ids.length === 0) return;
+  const CHUNK = 500;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunk = ids.slice(i, i + CHUNK);
+    const { error } = await supabase.from(table).update({ last_seen_at: new Date().toISOString() }).in("id", chunk);
+    if (error) console.error(`[unfollow-check] last_seen_at update error on ${table}:`, error.message);
   }
 }
 
@@ -135,7 +146,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "profileId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Load profile first for budget check ──
+    // ── Load profile ──
     const { data: profile } = await supabase
       .from("tracked_profiles")
       .select("*")
@@ -148,7 +159,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Budget check using column-based system ──
+    // ── Budget check ──
     const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
@@ -218,22 +229,43 @@ Deno.serve(async (req) => {
     const spanMs = Math.max(now - lastTs, 60_000);
 
     // ══════════════════════════════════════════════
-    // PART 1: FOLLOWING – detect unfollows + new follows (batched)
+    // PART 1: FOLLOWING – detect unfollows + new follows
     // ══════════════════════════════════════════════
     const currentFollowingApiIds = new Set(allFollowings.map((u) => u.pk));
     const dbFollowingMap = new Map((dbFollowings || []).map((f: Record<string, unknown>) => [f.following_user_id as string, f]));
     const existingFollowingIds = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
 
-    // Detect unfollows (in DB but not in API)
+    // ── Confirm existing accounts: update last_seen_at for all found in API ──
+    const confirmFollowingIds: string[] = [];
+    for (const [userId, ex] of dbFollowingMap) {
+      if (currentFollowingApiIds.has(userId)) {
+        confirmFollowingIds.push((ex as Record<string, unknown>).id as string);
+      }
+    }
+
+    // ── Detect unfollows: ONLY for confirmed entries (last_seen_at > first_seen_at) ──
     let unfollowsFound = 0;
     const unfollowUpdateIds: string[] = [];
     const unfollowEvents: Record<string, unknown>[] = [];
     const genderDecrements: string[] = [];
+    let skippedUnconfirmed = 0;
 
     for (const [userId, ex] of dbFollowingMap) {
       if (!currentFollowingApiIds.has(userId)) {
-        unfollowsFound++;
         const e = ex as Record<string, unknown>;
+        const firstSeen = new Date(e.first_seen_at as string).getTime();
+        const lastSeen = new Date(e.last_seen_at as string).getTime();
+        
+        // Only flag as unfollow if the account was confirmed at least once
+        // (last_seen_at > first_seen_at means it was seen in a subsequent scan)
+        if (lastSeen <= firstSeen) {
+          skippedUnconfirmed++;
+          // Don't flag as unfollow — this account was only seen once (baseline only)
+          // Just mark as not current silently (will be re-added if seen again)
+          continue;
+        }
+
+        unfollowsFound++;
         unfollowUpdateIds.push(e.id as string);
         const unfollowGender = detectGender(e.following_display_name as string | null, e.following_username as string | null);
         unfollowEvents.push({
@@ -249,6 +281,10 @@ Deno.serve(async (req) => {
         });
         genderDecrements.push(unfollowGender);
       }
+    }
+
+    if (skippedUnconfirmed > 0) {
+      console.log(`[unfollow-check] Skipped ${skippedUnconfirmed} unconfirmed followings (baseline-only, never confirmed)`);
     }
 
     // Detect new follows
@@ -280,19 +316,36 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════
-    // PART 2: FOLLOWERS – detect lost + new (batched)
+    // PART 2: FOLLOWERS – detect lost + new
     // ══════════════════════════════════════════════
     const currentFollowerApiIds = new Set(allFollowers.map((u) => u.pk));
+    const dbFollowerMap = new Map((dbFollowers || []).map((f: Record<string, unknown>) => [f.follower_user_id as string, f]));
     const existingFollowerIds = new Set((dbFollowers || []).map((f: Record<string, unknown>) => f.follower_user_id as string));
+
+    // Confirm existing followers
+    const confirmFollowerIds: string[] = [];
+    for (const [userId, ex] of dbFollowerMap) {
+      if (currentFollowerApiIds.has(userId)) {
+        confirmFollowerIds.push((ex as Record<string, unknown>).id as string);
+      }
+    }
 
     let lostFollowers = 0;
     const lostFollowerUpdateIds: string[] = [];
     const lostFollowerEvents: Record<string, unknown>[] = [];
+    let skippedUnconfirmedFollowers = 0;
 
-    for (const dbF of (dbFollowers || [])) {
-      const f = dbF as Record<string, unknown>;
-      const fUserId = f.follower_user_id as string;
+    for (const [fUserId, dbF] of dbFollowerMap) {
       if (!currentFollowerApiIds.has(fUserId)) {
+        const f = dbF as Record<string, unknown>;
+        const firstSeen = new Date(f.first_seen_at as string).getTime();
+        const lastSeen = new Date(f.last_seen_at as string).getTime();
+
+        if (lastSeen <= firstSeen) {
+          skippedUnconfirmedFollowers++;
+          continue;
+        }
+
         lostFollowers++;
         lostFollowerUpdateIds.push(f.id as string);
         lostFollowerEvents.push({
@@ -306,6 +359,10 @@ Deno.serve(async (req) => {
           gender_tag: detectGender(f.follower_display_name as string | null, f.follower_username as string | null),
         });
       }
+    }
+
+    if (skippedUnconfirmedFollowers > 0) {
+      console.log(`[unfollow-check] Skipped ${skippedUnconfirmedFollowers} unconfirmed followers (baseline-only)`);
     }
 
     let newFollowersFound = 0;
@@ -341,11 +398,11 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════
-    // BATCH DB OPERATIONS – all at once
+    // BATCH DB OPERATIONS
     // ══════════════════════════════════════════════
     console.log(`[unfollow-check] Batching DB ops: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${lostFollowers} lost, ${newFollowersFound} new followers`);
 
-    // Mark unfollowed followings as not current (batch update by IDs)
+    // Mark unfollowed followings as not current
     if (unfollowUpdateIds.length > 0) {
       await supabase.from("profile_followings").update({ is_current: false }).in("id", unfollowUpdateIds);
     }
@@ -355,6 +412,12 @@ Deno.serve(async (req) => {
       await supabase.from("profile_followers").update({ is_current: false }).in("id", lostFollowerUpdateIds);
     }
 
+    // Update last_seen_at for confirmed accounts (proves they still exist)
+    await Promise.all([
+      batchUpdateLastSeen(supabase, "profile_followings", confirmFollowingIds),
+      batchUpdateLastSeen(supabase, "profile_followers", confirmFollowerIds),
+    ]);
+
     // Batch inserts in parallel
     await Promise.all([
       batchInsert(supabase, "follow_events", [...unfollowEvents, ...newFollowEvents]),
@@ -363,7 +426,7 @@ Deno.serve(async (req) => {
       batchInsert(supabase, "profile_followers", newFollowerRows),
     ]);
 
-    // Gender count decrements (must be sequential RPCs)
+    // Gender count decrements
     for (const g of genderDecrements) {
       await supabase.rpc("decrement_gender_count", { p_profile_id: profile.id, p_gender: g });
     }
@@ -386,7 +449,7 @@ Deno.serve(async (req) => {
     });
 
     const remaining = unfollowRemaining - 1;
-    console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${lostFollowers} lost followers, ${newFollowsFound} new follows, ${newFollowersFound} new followers, ${remaining} checks remaining`);
+    console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${lostFollowers} lost followers, ${newFollowsFound} new follows, ${newFollowersFound} new followers, ${remaining} checks remaining (skipped ${skippedUnconfirmed} unconfirmed followings, ${skippedUnconfirmedFollowers} unconfirmed followers)`);
 
     return new Response(JSON.stringify({
       success: true,
