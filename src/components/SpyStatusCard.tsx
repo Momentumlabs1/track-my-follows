@@ -129,7 +129,7 @@ export function SpyStatusCard({
       if (error) throw error;
       if (data?.error) { toast.error(data.error); setPushScanning(false); return; }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`);
+      toast.success(t("spy_detail.scan_complete", { count: newCount }));
       invalidateAll();
     } catch {
       toast.error("Scan fehlgeschlagen");
