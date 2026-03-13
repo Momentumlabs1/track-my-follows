@@ -131,6 +131,8 @@
     "currently_watching": "Wird gerade überwacht",
     "tap_to_assign": "Tippen um Spy zuzuweisen",
     "assign_spy_here": "Spy hierhin",
+    "slide_to_assign": "Swipen oder tippen um Spy zuzuweisen",
+    "move_here": "Spy hierhin verschieben",
     "spy_required": "Spy benötigt",
     "spy_required_description": "Lege deinen Spy auf dieses Profil um Follower-Tracking, Unfollow-Erkennung und Insights zu aktivieren.",
     "basic_monitoring": "Basis-Überwachung",

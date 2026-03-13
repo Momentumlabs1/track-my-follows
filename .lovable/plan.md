@@ -1,28 +1,69 @@
 
 
-## Plan: MoveSpySheet mit Swipe-Geste, Highlight & größerem Spy-Icon
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-### Änderungen an `src/components/MoveSpySheet.tsx`
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-**1. Swipe-Geste auf Profil-Einträgen**
-- Framer Motion `motion.div` mit `drag="x"` auf jedem Profil-Eintrag (nicht dem aktuellen Spy-Profil).
-- Wenn der User nach rechts swiped (`dragEnd` mit `offset.x > 80`), wird `onMove(profileId)` ausgelöst — gleicher Effekt wie Tap.
-- Visueller Feedback: Beim Swipen wird der Hintergrund grün/primary getönt und ein Spy-Icon erscheint am rechten Rand.
-- `dragConstraints={{ left: 0, right: 0 }}` + `dragElastic={{ left: 0, right: 0.3 }}` damit man nur nach rechts swipen kann.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-**2. Profil-Highlight (aktuell angesehenes Profil)**
-- Neue Prop `viewingProfileId` an `MoveSpySheet` übergeben (das Profil auf dessen Detail-Seite man gerade ist).
-- Dieses Profil bekommt einen auffälligen Rahmen (`border-2 border-primary ring-2 ring-primary/20`) und ein Label wie "Hierhin verschieben" statt "Tap to assign".
-- So sieht man sofort, welches Profil man gerade anschaut und wohin der Spy soll.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-**3. Spy-Icon größer**
-- Header-SpyIcon: `size={36}` → `size={48}`
-- SpyIcon beim aktuellen Spy-Profil: `size={22}` → `size={28}`
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### Änderungen an `src/pages/ProfileDetail.tsx`
-- `viewingProfileId={profileId}` als neue Prop an `MoveSpySheet` übergeben.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-### Änderungen an `src/i18n/locales/de.json`, `en.json`, `ar.json`
-- Neuer Key `spy.slide_to_assign`: "Slide zum Zuweisen" / "Slide to assign" / "اسحب للتعيين"
-- Neuer Key `spy.move_here`: "Spion hierhin verschieben" / "Move spy here" / "انقل الجاسوس إلى هنا"
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
+
+---
+
+## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+
+### Problem
+Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+
+### Implementiert
+1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
+   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
+   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
+   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
+2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
+3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen

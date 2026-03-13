@@ -131,6 +131,8 @@
     "currently_watching": "Currently watching",
     "tap_to_assign": "Tap to assign spy",
     "assign_spy_here": "Assign spy here",
+    "slide_to_assign": "Swipe or tap to assign spy",
+    "move_here": "Move spy here",
     "spy_required": "Spy required",
     "spy_required_description": "Assign your spy to this profile to enable follower tracking, unfollow detection and detailed insights.",
     "basic_monitoring": "Basic monitoring",
