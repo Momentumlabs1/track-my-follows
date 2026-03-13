@@ -106,10 +106,10 @@ export default function Onboarding() {
                   transition={{ delay: 0.35, duration: 0.5 }}
                   className="flex flex-wrap justify-center gap-2.5 mt-8"
                 >
-                  {[
-                    { icon: "🔒", label: "100% Anonym" },
-                    { icon: "⚡", label: "Echtzeit" },
-                    { icon: "📱", label: "Kein Login nötig" },
+                 {[
+                    { icon: "🔒", label: t("onboarding.pill_anonymous", "100% Anonym") },
+                    { icon: "⚡", label: t("onboarding.pill_realtime", "Echtzeit") },
+                    { icon: "📱", label: t("onboarding.pill_no_login", "Kein Login nötig") },
                    ].map((pill, idx) => (
                     <span
                       key={idx}

@@ -310,7 +310,7 @@ const Dashboard = () => {
                 {/* Greyed spy side */}
                 <div className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white/[0.04]" style={{ width: "35%", filter: "grayscale(1)", opacity: 0.4 }}>
                   <SpyIcon size={40} />
-                  <p className="text-primary-foreground/40 font-bold mt-1" style={{ fontSize: "0.5rem" }}>GESPERRT</p>
+                  <p className="text-primary-foreground/40 font-bold mt-1" style={{ fontSize: "0.5rem" }}>{t("dashboard.locked", "GESPERRT")}</p>
                 </div>
               </div>
             </button>

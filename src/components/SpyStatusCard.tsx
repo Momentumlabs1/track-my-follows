@@ -315,7 +315,7 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {unfollowRemaining} von 1 übrig
+                    {t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
                   </p>
                   <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
                 </button>

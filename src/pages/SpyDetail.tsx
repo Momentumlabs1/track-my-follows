@@ -279,9 +279,9 @@ export default function SpyDetail() {
               ? t("spy_detail.unfollow_desc", "Prüfe ob jemand entfolgt wurde")
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
-          <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-            {unfollowRemaining} von 1 übrig
-          </p>
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
+                    {t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
+                  </p>
           <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
         </button>
       </div>
