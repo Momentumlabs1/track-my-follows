@@ -197,14 +197,9 @@ const ProfileDetail = () => {
   const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
   const insightsLocked = !canUseStats || (!hasSpy && isPro);
 
-  const displayFollowEvents = newFollowEvents.length > 0 ? newFollowEvents : initialFollowEvents;
-  const displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList;
-  const onlyInitialFollows = newFollowEvents.length === 0 && initialFollowEvents.length > 0;
-  const onlyInitialFollowers = newFollowerEventsList.length === 0 && initialFollowerEventsList.length > 0;
-
   const tabs = [
-    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: displayFollowEvents.length, ...getTabLock("new_follows") },
-    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: displayFollowerEvents.length, ...getTabLock("new_followers") },
+    { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, ...getTabLock("new_follows") },
+    { id: "new_followers" as TabId, label: t("profile.new_followers", "Neue Follower"), count: newFollowerEventsList.length, ...getTabLock("new_followers") },
     { id: "unfollowed" as TabId, label: t("profile.unfollowed_tab", "Entfolgt"), count: unfollowedByThem.length + lostFollowerEvents.length, ...getTabLock("unfollowed") },
   ];
 
