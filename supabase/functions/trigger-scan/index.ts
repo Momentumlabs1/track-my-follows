@@ -317,7 +317,7 @@ Deno.serve(async (req) => {
         previous_following_count: profile.following_count || 0,
         avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
         display_name: userInfo.full_name || null,
-        follower_count: actualFollowingCount,
+        follower_count: actualFollowerCount,
         following_count: actualFollowingCount,
         last_scanned_at: new Date().toISOString(),
         initial_scan_done: true,
