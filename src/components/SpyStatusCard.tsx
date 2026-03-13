@@ -132,7 +132,7 @@ export function SpyStatusCard({
       toast.success(t("spy_detail.scan_complete", { count: newCount }));
       invalidateAll();
     } catch {
-      toast.error("Scan fehlgeschlagen");
+      toast.error(t("spy_detail.scan_failed"));
     } finally {
       setPushScanning(false);
     }
