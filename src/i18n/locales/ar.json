@@ -2,7 +2,25 @@
   "app_name": "TrackIQ",
   "splash": { "subtitle": "اعرف من يتابعون" },
   "tabs": { "whats_new": "ما الجديد؟", "profiles": "الحسابات" },
-  "feed": { "today": "اليوم", "yesterday": "أمس" },
+  "feed": {
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "whats_new": "ما يدور الآن",
+    "subtitle": "خلاصتك الشخصية",
+    "tap_for_details": "اضغط للتفاصيل →",
+    "all": "الكل",
+    "follows": "متابعات",
+    "unfollows": "إلغاء متابعات",
+    "load_more": "تحميل المزيد",
+    "empty_title": "لا نشاط بعد",
+    "empty_subtitle": "جاسوسك يترصد... المتابعات الجديدة وإلغاء المتابعات ستظهر هنا.",
+    "this_week": "هذا الأسبوع",
+    "older": "أقدم"
+  },
+  "not_found": {
+    "title": "الصفحة غير موجودة",
+    "back_home": "العودة للرئيسية"
+  },
   "dashboard": {
     "just_now": "الآن",
     "minutes_ago": "منذ {{count}} د",
