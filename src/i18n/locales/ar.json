@@ -363,7 +363,24 @@
     "error": "حدث خطأ ما",
     "retry": "حاول مرة أخرى"
   },
-  "unfollow_check": {
+    "unfollow_check": {
+    "button": "فحص إلغاء المتابعات",
+    "checking": "جاري الفحص...",
+    "pro_only": "Pro: كشف إلغاء المتابعة",
+    "limit_reached": "لم تتبقى فحوصات اليوم",
+    "unfollows_detected": "إلغاء متابعات تم اكتشافها",
+    "no_unfollows": "لم يتم اكتشاف إلغاء متابعات",
+    "resets_midnight": "يتم التجديد عند منتصف الليل",
+    "phase_following": "🔍 جاري فحص قائمة المتابَعين...",
+    "phase_followers": "🔍 جاري فحص قائمة المتابِعين...",
+    "phase_evaluating": "📊 جاري تقييم النتائج...",
+    "timeout": "استغرق الفحص وقتاً طويلاً. يرجى المحاولة مرة أخرى.",
+    "has_unfollowed": "ألغى المتابعة",
+    "lost_followers": "فقد متابعين",
+    "new_activity_found": "نشاط جديد",
+    "new_follows": "متابعات جديدة",
+    "new_followers": "متابعون جدد"
+  },
     "button": "فحص إلغاء المتابعات",
     "checking": "جاري الفحص...",
     "pro_only": "Pro: كشف إلغاء المتابعة",
