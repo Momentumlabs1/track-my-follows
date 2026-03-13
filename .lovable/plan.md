@@ -1,69 +1,95 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
-
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
-
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
-
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
-
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
-
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
-
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
-
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
-
----
-
-## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+## Plan: Alle hardcoded Strings internationalisieren
 
 ### Problem
-Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+Viele Stellen in der App haben hardcodierte deutsche Strings statt `t()` Translation-Keys. Betroffen sind Toasts, Labels, Datumsformate und ganze Seiten.
 
-### Implementiert
-1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
-   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
-   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
-   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
-2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
-3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+### Betroffene Stellen
 
----
+**1. `src/pages/SpyDetail.tsx`** — 8 hardcoded Strings:
+- `toast.success("Name gespeichert ✅")` → `t("spy_detail.name_saved")`
+- `` toast.success(`Scan abgeschlossen! ${newCount} neue Änderungen 🔍`) `` → `t("spy_detail.scan_complete", { count: newCount })`
+- `toast.error("Scan fehlgeschlagen")` → `t("spy_detail.scan_failed")`
+- `` toast.success(`Unfollow-Check fertig! ${total} Änderungen gefunden 👁`) `` → `t("spy_detail.unfollow_complete", { count: total })`
+- `toast.error("Unfollow-Check fehlgeschlagen")` → `t("spy_detail.unfollow_failed")`
+- `{pushRemaining} von 4 übrig` → `t("spy_detail.remaining", { current: pushRemaining, max: 4 })`
+- `{unfollowRemaining} von 1 übrig` → `t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })`
+- `toLocaleDateString("de-DE")` → dynamisch basierend auf `i18n.language`
 
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+**2. `src/components/SpyStatusCard.tsx`** — gleiche Strings:
+- Toasts: `"Scan abgeschlossen!"`, `"Scan fehlgeschlagen"`, `"Unfollow-Check fertig!"`, `"Unfollow-Check fehlgeschlagen"`
+- Labels: `von 4 übrig`, `von 1 übrig`
 
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+**3. `src/pages/NotFound.tsx`** — komplett hardcoded:
+- `"Oops! Page not found"` → `t("not_found.title")`
+- `"Return to Home"` → `t("not_found.back_home")`
 
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
+**4. `src/pages/Onboarding.tsx`** — 1 hardcoded notification text:
+- `"@saif folgt jetzt @jessica_x 👀"` → `t("onboarding.notification_example")`
+
+**5. `src/pages/Dashboard.tsx`** — 1 Toast:
+- `` toast.success(`Tracking aktiv für @${...} 🕵️`) `` → `t("dashboard.tracking_active", { username })`
+
+**6. Legal Pages** (`Impressum.tsx`, `Datenschutz.tsx`, `AGB.tsx`, `Widerruf.tsx`):
+- Diese bleiben deutsch — sie sind rechtlich bindend und muessen in der Originalsprache bleiben. Kein Handlungsbedarf.
+
+### Translation Keys hinzufuegen
+
+In **de.json**, **en.json**, **ar.json**:
+
+```
+"spy_detail": {
+  // existing keys ...
+  "name_saved": "Name gespeichert ✅" / "Name saved ✅" / "تم حفظ الاسم ✅",
+  "scan_complete": "Scan abgeschlossen! {{count}} neue Änderungen 🔍" / "Scan complete! {{count}} new changes 🔍" / "اكتمل الفحص! {{count}} تغييرات جديدة 🔍",
+  "scan_failed": "Scan fehlgeschlagen" / "Scan failed" / "فشل الفحص",
+  "unfollow_complete": "Unfollow-Check fertig! {{count}} Änderungen gefunden 👁" / "Unfollow check done! {{count}} changes found 👁" / "اكتمل فحص إلغاء المتابعة! {{count}} تغييرات 👁",
+  "unfollow_failed": "Unfollow-Check fehlgeschlagen" / "Unfollow check failed" / "فشل فحص إلغاء المتابعة",
+  "remaining": "{{current}} von {{max}} übrig" / "{{current}} of {{max}} remaining" / "{{current}} من {{max}} متبقي",
+  "push_scan": "Push Scan" (bleibt englisch in allen Sprachen),
+  "unfollow_scan": "Unfollow Scan" (bleibt englisch in allen Sprachen),
+  "current_mission": ... (bereits vorhanden),
+  "capabilities": ... (bereits vorhanden)
+}
+
+"not_found": {
+  "title": "Seite nicht gefunden" / "Page not found" / "الصفحة غير موجودة",
+  "back_home": "Zurück zur Startseite" / "Return to Home" / "العودة للرئيسية"
+}
+
+"dashboard": {
+  "tracking_active": "Tracking aktiv für @{{username}} 🕵️" / "Tracking active for @{{username}} 🕵️" / "التتبع نشط لـ @{{username}} 🕵️"
+}
+
+"onboarding": {
+  "notification_example": "@saif folgt jetzt @jessica_x 👀" / "@saif now follows @jessica_x 👀" / "@saif يتابع الآن @jessica_x 👀"
+}
+```
+
+Zusaetzlich fehlende Keys in **ar.json** nachtragen (alles was in de/en existiert aber in ar fehlt):
+- `nav.feed`, `nav.spy`
+- `feed.*` (meiste Keys fehlen)
+- `welcome.*`
+- `spy_detail.*`
+- `spy_findings.*`
+- `spy_status.*`
+- `weekly.*`
+- `suspicion.unauffaellig`, `suspicion.leicht_auffaellig`, `suspicion.spy_report`
+- `unfollow_check.phase_*`, `unfollow_check.timeout`, `unfollow_check.has_unfollowed`, etc.
+- `private_frozen*`, `private_cannot_track`
+- `auth.code_expired`, `auth.code_invalid`, `auth.only_latest_code_valid`, `auth.account_exists_check_password`, `auth.forgot_password*`, `auth.new_password*`, `auth.update_password`, `auth.password_updated`, `auth.passwords_dont_match`, `auth.password_too_short`, `auth.back_to_login`, `auth.terms_*`
+
+### Dateien
+
+| Datei | Aenderung |
+|---|---|
+| `src/pages/SpyDetail.tsx` | Hardcoded Strings → `t()` |
+| `src/components/SpyStatusCard.tsx` | Hardcoded Strings → `t()` |
+| `src/pages/NotFound.tsx` | `useTranslation` + `t()` |
+| `src/pages/Onboarding.tsx` | Notification-Text → `t()` |
+| `src/pages/Dashboard.tsx` | Toast → `t()` |
+| `src/i18n/locales/de.json` | Neue Keys |
+| `src/i18n/locales/en.json` | Neue Keys |
+| `src/i18n/locales/ar.json` | Alle fehlenden Keys nachtragen |
+
