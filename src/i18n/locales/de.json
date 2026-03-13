@@ -17,6 +17,10 @@
     "this_week": "Diese Woche",
     "older": "Älter"
   },
+  "not_found": {
+    "title": "Seite nicht gefunden",
+    "back_home": "Zurück zur Startseite"
+  },
   "dashboard": {
     "just_now": "Gerade eben",
     "minutes_ago": "Vor {{count}} Min.",
