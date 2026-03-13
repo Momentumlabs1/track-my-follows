@@ -29,7 +29,13 @@
     "no_profiles": "No profiles tracked yet",
     "add_first": "Tap + to start tracking someone",
     "hello": "Hello",
-    "hot_alert": "Latest alert"
+    "hot_alert": "Latest alert",
+    "tracking_active": "Tracking active for @{{username}} 🕵️",
+    "welcome_back": "Welcome back",
+    "spy_assigned_to": "Spy assigned to",
+    "spy_connected": "Spy connected to",
+    "spy_inactive": "Spy not active",
+    "locked": "LOCKED"
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
