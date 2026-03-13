@@ -287,32 +287,47 @@ Deno.serve(async (req) => {
       console.log(`[unfollow-check] Skipped ${skippedUnconfirmed} unconfirmed followings (baseline-only, never confirmed)`);
     }
 
+    // ── DELTA-GATE for new follows ──
+    const actualFollowingCount = userInfo.following_count ?? allFollowings.length;
+    const lastFollowingCount = profile.last_following_count as number | null;
+    const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
+      ? Math.max(actualFollowingCount - lastFollowingCount, 0)
+      : 200;
+
     // Detect new follows
     let newFollowsFound = 0;
     const newFollowingRows: Record<string, unknown>[] = [];
     const newFollowEvents: Record<string, unknown>[] = [];
+    let followBackfillCount = 0;
 
-    for (const f of allFollowings) {
-      if (!existingFollowingIds.has(f.pk)) {
-        newFollowsFound++;
-        const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
-        const newGenderTag = detectGender(f.full_name, f.username);
-        const newCategory = categorizeFollow(f.follower_count, f.is_private);
-        newFollowingRows.push({
-          tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
-          following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
-          first_seen_at: ts, direction: "following",
-          gender_tag: newGenderTag, category: newCategory,
-        });
-        newFollowEvents.push({
-          tracked_profile_id: profile.id, event_type: "follow", target_username: f.username,
-          target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
-          detected_at: ts, direction: "following", notification_sent: false,
-          gender_tag: newGenderTag, category: newCategory,
-          target_follower_count: f.follower_count || null,
-          target_is_private: f.is_private || false,
-        });
-      }
+    const newFollowCandidates = allFollowings.filter(f => !existingFollowingIds.has(f.pk));
+    for (let i = 0; i < newFollowCandidates.length; i++) {
+      const f = newFollowCandidates[i];
+      const isBackfill = i >= maxNewFollows;
+      const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
+      const newGenderTag = detectGender(f.full_name, f.username);
+      const newCategory = categorizeFollow(f.follower_count, f.is_private);
+      newFollowingRows.push({
+        tracked_profile_id: profile.id, following_username: f.username, following_user_id: f.pk,
+        following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
+        first_seen_at: ts, direction: "following",
+        gender_tag: newGenderTag, category: newCategory,
+      });
+      newFollowEvents.push({
+        tracked_profile_id: profile.id, event_type: "follow", target_username: f.username,
+        target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
+        detected_at: ts, direction: "following", notification_sent: false,
+        gender_tag: newGenderTag, category: newCategory,
+        target_follower_count: f.follower_count || null,
+        target_is_private: f.is_private || false,
+        is_initial: isBackfill, // backfill entries marked as initial
+      });
+      if (!isBackfill) newFollowsFound++;
+      else followBackfillCount++;
+    }
+
+    if (followBackfillCount > 0) {
+      console.log(`[DELTA-GATE] followings: ${newFollowCandidates.length} new, ${newFollowsFound} real, ${followBackfillCount} backfilled`);
     }
 
     // ══════════════════════════════════════════════
