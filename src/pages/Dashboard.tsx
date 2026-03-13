@@ -295,7 +295,7 @@ const Dashboard = () => {
                 {/* Empty profile side */}
                 <div className="flex flex-col" style={{ width: "65%" }}>
                   <p className="text-white/30 font-bold uppercase tracking-widest px-3 pt-0.5 pb-0" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", lineHeight: 1.2 }}>
-                    Spion nicht aktiv
+                    {t("dashboard.spy_inactive", "Spion nicht aktiv")}
                   </p>
                   <div className="mt-1 flex-1 rounded-[1.25rem] px-3 py-2.5 bg-white/[0.04] flex flex-col justify-center items-center gap-2">
                     <Lock className="h-5 w-5 text-primary-foreground/40" />
