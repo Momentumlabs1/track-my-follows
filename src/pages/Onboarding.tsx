@@ -136,7 +136,7 @@ export default function Onboarding() {
                     </div>
                     <div className="text-start flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-foreground">Spy-Secret</p>
-                      <p className="text-[12px] text-foreground/60">@saif folgt jetzt @jessica_x 👀</p>
+                      <p className="text-[12px] text-foreground/60">{t("onboarding.notification_example")}</p>
                     </div>
                     <span className="text-[11px] text-foreground/30 shrink-0 self-start">2m</span>
                   </div>
