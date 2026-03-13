@@ -373,7 +373,7 @@
     "resets_midnight": "يتم التجديد عند منتصف الليل"
   },
   "scan_status": { "auto_hourly": "كل ساعة", "once_daily": "1×/يوم" },
-  "nav": { "dashboard": "الرئيسية", "add": "إضافة", "settings": "الإعدادات" },
+  "nav": { "dashboard": "الرئيسية", "add": "إضافة", "settings": "الإعدادات", "feed": "الخلاصة", "spy": "جاسوس" },
   "landing": {
     "beta_badge": "مهمة بيتا سرية 🕵️",
     "hero_line1": "الثقة جيدة.",
