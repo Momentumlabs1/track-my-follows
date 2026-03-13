@@ -109,7 +109,7 @@ export default function SpyDetail() {
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`, { state: { activeTab: "unfollowed" } });
     } catch {
-      toast.error("Unfollow-Check fehlgeschlagen");
+      toast.error(t("spy_detail.unfollow_failed"));
       setUnfollowScanning(false);
     }
   };
