@@ -111,10 +111,18 @@ const ProfileDetail = () => {
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
     [followerEvents]);
 
+  // Filter unfollows: exclude accounts that are still in the current following list
+  const currentFollowingUsernames = useMemo(() =>
+    new Set(followings.map(f => f.following_username)),
+    [followings]);
+
   const unfollowedByThem = useMemo(() =>
-    followEvents.filter((e) => (e.event_type === "unfollow" || e.event_type === "unfollowed") && (e as Record<string, unknown>).direction === "following")
-      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
-    [followEvents]);
+    followEvents.filter((e) =>
+      (e.event_type === "unfollow" || e.event_type === "unfollowed") &&
+      (e as Record<string, unknown>).direction === "following" &&
+      !currentFollowingUsernames.has(e.target_username)
+    ).sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
+    [followEvents, currentFollowingUsernames]);
 
   const lostFollowerEvents = useMemo(() =>
     followerEvents.filter((e) => e.event_type === "lost")
