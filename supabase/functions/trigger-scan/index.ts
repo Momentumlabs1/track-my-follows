@@ -1,4 +1,4 @@
-// trigger-scan v3 — shared gender detection
+// trigger-scan v4 — delta-gate for accurate event counts
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 
@@ -69,7 +69,6 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
 }
 
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  // GQL endpoint returns chronological order for following; v1 for followers
   const baseUrl = endpoint === "following"
     ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`
     : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`;
@@ -88,6 +87,7 @@ async function syncNewFollows(
   currentUsers: FollowingUser[],
   lastScannedAt: string | null,
   isInitialScan: boolean,
+  maxAllowed: number, // delta-gate
 ) {
   const { data: existing } = await supabase
     .from("profile_followings")
@@ -100,19 +100,16 @@ async function syncNewFollows(
   const newEntries = currentUsers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  const now = new Date().toISOString();
-  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
-  const spanMs = Math.max(Date.now() - lastTs, 60_000);
-
   const nowMs = Date.now();
+  let realEventCount = 0;
+
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
-    // Sequential descending timestamps to preserve Instagram's API order (index 0 = most recent)
-    const ts = isInitialScan
-      ? new Date(nowMs - i * 1000).toISOString()
-      : new Date(nowMs - i * 1000).toISOString();
+    const ts = new Date(nowMs - i * 1000).toISOString();
     const genderTag = detectGender(f.full_name, f.username);
     const category = categorizeFollow(f.follower_count, f.is_private);
+    const isBackfill = !isInitialScan && i >= maxAllowed;
+
     await supabase.from("profile_followings").insert({
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
       following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
@@ -128,10 +125,17 @@ async function syncNewFollows(
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
-      is_initial: isInitialScan,
+      is_initial: isInitialScan || isBackfill, // backfill = treated as initial
     });
+
+    if (!isInitialScan && !isBackfill) realEventCount++;
   }
-  return newEntries.length;
+
+  if (!isInitialScan && newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE] followings: ${newEntries.length} new found, capped to ${realEventCount} real events`);
+  }
+
+  return isInitialScan ? newEntries.length : realEventCount;
 }
 
 async function syncNewFollowers(
@@ -140,6 +144,7 @@ async function syncNewFollowers(
   currentFollowers: FollowingUser[],
   lastScannedAt: string | null,
   isInitialScan: boolean,
+  maxAllowed: number, // delta-gate
 ) {
   const { data: existing } = await supabase
     .from("profile_followers")
@@ -151,16 +156,14 @@ async function syncNewFollowers(
   const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  const now = new Date().toISOString();
-  const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : Date.now() - 60 * 60 * 1000;
-  const spanMs = Math.max(Date.now() - lastTs, 60_000);
-
   const nowMs = Date.now();
+  let realEventCount = 0;
+
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
-    const ts = isInitialScan
-      ? new Date(nowMs - i * 1000).toISOString()
-      : new Date(nowMs - i * 1000).toISOString();
+    const ts = new Date(nowMs - i * 1000).toISOString();
+    const isBackfill = !isInitialScan && i >= maxAllowed;
+
     await supabase.from("profile_followers").insert({
       tracked_profile_id: profileId,
       follower_user_id: f.pk,
@@ -184,10 +187,17 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: isInitialScan,
+      is_initial: isInitialScan || isBackfill,
     });
+
+    if (!isInitialScan && !isBackfill) realEventCount++;
   }
-  return newEntries.length;
+
+  if (!isInitialScan && newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${realEventCount} real events`);
+  }
+
+  return isInitialScan ? newEntries.length : realEventCount;
 }
 
 Deno.serve(async (req) => {
@@ -218,7 +228,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
-    const scanType = body.scanType; // "push" for manual push scan
+    const scanType = body.scanType;
 
     let query = supabase.from("tracked_profiles").select("*").eq("user_id", user.id).eq("is_active", true);
     if (profileId) query = query.eq("id", profileId);
@@ -242,7 +252,6 @@ Deno.serve(async (req) => {
 
       let pushRemaining = profile.push_scans_today ?? 4;
 
-      // Reset budget if last reset was before today
       if (resetAt < todayMidnight) {
         pushRemaining = 4;
         await supabase.from("tracked_profiles").update({
@@ -256,7 +265,6 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "Keine Push-Scans mehr übrig heute", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // Decrement budget
       await supabase.from("tracked_profiles").update({
         push_scans_today: pushRemaining - 1,
         total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
@@ -275,6 +283,8 @@ Deno.serve(async (req) => {
       }
       const userInfo = await userInfoRes.json();
       const igUserId = String(userInfo.pk || userInfo.id);
+      const actualFollowingCount = userInfo.following_count ?? 0;
+      const actualFollowerCount = userInfo.follower_count ?? 0;
 
       // ── Private account check ──
       const isPrivate = userInfo.is_private === true;
@@ -283,8 +293,8 @@ Deno.serve(async (req) => {
           is_private: true,
           avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
           display_name: userInfo.full_name || null,
-          follower_count: userInfo.follower_count || 0,
-          following_count: userInfo.following_count || 0,
+          follower_count: actualFollowerCount,
+          following_count: actualFollowingCount,
           last_scanned_at: new Date().toISOString(),
         }).eq("id", profile.id);
 
@@ -297,7 +307,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // If was private but now public again
       if (profile.is_private) {
         await supabase.from("tracked_profiles").update({ is_private: false }).eq("id", profile.id);
         console.log(`[trigger-scan] ${profile.username}: back to public!`);
@@ -308,30 +317,46 @@ Deno.serve(async (req) => {
         previous_following_count: profile.following_count || 0,
         avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
         display_name: userInfo.full_name || null,
-        follower_count: userInfo.follower_count || 0,
-        following_count: userInfo.following_count || 0,
+        follower_count: actualFollowingCount,
+        following_count: actualFollowingCount,
         last_scanned_at: new Date().toISOString(),
         initial_scan_done: true,
       }).eq("id", profile.id);
 
       const isInitialScan = !profile.initial_scan_done;
 
+      // ── DELTA-GATE: compute max allowed ──
+      const lastFollowingCount = profile.last_following_count as number | null;
+      const lastFollowerCount = profile.last_follower_count as number | null;
+      const maxNewFollows = !isInitialScan && lastFollowingCount !== null && lastFollowingCount !== undefined
+        ? Math.max(actualFollowingCount - lastFollowingCount, 0)
+        : 200;
+      const maxNewFollowers = !isInitialScan && lastFollowerCount !== null && lastFollowerCount !== undefined
+        ? Math.max(actualFollowerCount - lastFollowerCount, 0)
+        : 200;
+
+      if (!isInitialScan) {
+        console.log(`[DELTA-GATE] ${profile.username}: following ${lastFollowingCount}→${actualFollowingCount} (max ${maxNewFollows}), followers ${lastFollowerCount}→${actualFollowerCount} (max ${maxNewFollowers})`);
+      }
+
       // Call 1: Following page 1
       await sleep(500);
       const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan);
+      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
 
       // Call 2: Follower page 1
       await sleep(1000);
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
-      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan);
+      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
 
-      // Update total detected counts
-      if (newFollowCount + newFollowerCount > 0 && !isInitialScan) {
-        await supabase.from("tracked_profiles").update({
+      // Update counts + last_following/follower_count
+      await supabase.from("tracked_profiles").update({
+        last_following_count: actualFollowingCount,
+        last_follower_count: actualFollowerCount,
+        ...(newFollowCount + newFollowerCount > 0 && !isInitialScan ? {
           total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowCount + newFollowerCount,
-        }).eq("id", profile.id);
-      }
+        } : {}),
+      }).eq("id", profile.id);
 
       console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
       results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });

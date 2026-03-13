@@ -1,79 +1,69 @@
 
-Ziel: Die Logik wieder exakt auf dein gewünschtes Verhalten bringen:
-1) Bubbles unten = nur „wem gefolgt“ (Männer/Frauen) der letzten 7 Tage.
-2) „Neue Follower“/„Folgt neu“ = nur echte neue Events aus dem Scanfenster, keine Backfill-/Altbestände als „neu“.
 
-Kurzbefund aus den Daten (damit klar ist, warum 80 vs 1 passiert):
-- `saif_nassiri` wurde am **2026-03-10** hinzugefügt.
-- `follow_events` (neu gefolgt, non-initial): **1**
-- `follower_events` (new followers, non-initial): **87**
-- Ursache: Follower-Erkennung markiert bei Scanfenster-/Reihenfolge-Verschiebung alte, bisher nicht gesehene Accounts als „gained“.
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-Umsetzungsplan
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-1) Event-Erkennung in Edge Functions härten (Hauptfix)
-- Dateien:
-  - `supabase/functions/smart-scan/index.ts`
-  - `supabase/functions/trigger-scan/index.ts`
-  - `supabase/functions/unfollow-check/index.ts`
-- Änderung:
-  - Für „new_followers“ und „new_follows“ Events wird ein **Delta-Gate** eingeführt:
-    - maximal so viele „new“-Events schreiben wie der echte Count-Zuwachs laut Profilzähler erlaubt.
-    - Beispiel: `actualFollowerCount - lastFollowerCount = 1` ⇒ maximal 1 neues Follower-Event.
-  - Unbekannte Accounts darüber hinaus werden nur in Baseline-Tabellen (`profile_followers`/`profile_followings`) nachgezogen, **ohne** sie als „neu“ zu zählen.
-  - Bestehende Treffer bekommen `last_seen_at` Updates (stabilere Bestätigung).
-- Ergebnis:
-  - Keine künstlichen 80+ „neuen“ Follower mehr durch Reihenfolge-/Page-Drift.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-2) UI-Filter + klare Trennung der Bedeutung
-- Dateien:
-  - `src/pages/ProfileDetail.tsx`
-  - `src/components/SpyFindings.tsx`
-- Änderung:
-  - `newFollowerEventsList` zeigt nur valide neue Events (keine Backfill/initialen Altfunde).
-  - Followback-Rate in `SpyFindings` zählt nur echte neue gained-Events (nicht Initial/Backfill), damit Kennzahlen nicht verfälscht werden.
-- Ergebnis:
-  - Tab-Zahlen und Insights passen zur Realität statt zu „nachträglich gefundenen“ Altkonten.
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-3) Texte korrigieren (Missverständnis beseitigen)
-- Dateien:
-  - `src/i18n/locales/de.json`
-  - `src/i18n/locales/en.json`
-  - `src/i18n/locales/ar.json`
-- Änderung:
-  - Weekly-Bubbles explizit formulieren als: **„Neu gefolgte Accounts (7 Tage)“**.
-  - Zusatzhinweis bei Weekly/Tab:
-    - Bubbles = nur „folgt neu“ (following-Richtung)
-    - „Neue Follower“ separat.
-  - Unfollow-Hinweistext korrigieren (nicht fälschlich „vollautomatisch jede Stunde geprüft“ für den Reveal-Check).
-- Ergebnis:
-  - Kein semantisches Durcheinander mehr zwischen „neu gefolgt“ und „neue Follower“.
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-4) Daten-Reparatur für bereits verfälschte Events (jetzt bereinigen)
-- Datei:
-  - neue Migration in `supabase/migrations/...sql`
-- Änderung:
-  - Bestehende offensichtlich verfälschte „gained“-Events für die betroffenen Profile (saif/tim/lisa) werden in Backfill/Initial umklassifiziert (oder aus „neu“-Sicht neutralisiert), damit die aktuellen Listen sofort sauber sind.
-  - Wichtig: Historie bleibt technisch nachvollziehbar, aber nicht mehr als „neu passiert“ dargestellt.
-- Ergebnis:
-  - Sofort plausible Werte nach Deploy, nicht erst „ab nächstem Scan“.
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-Technische Details (präzise)
-- Delta-Gate Logik:
-  - `allowedNewFollowers = max(actualFollowerCount - previousKnownFollowerCount, 0)`
-  - `allowedNewFollows = max(actualFollowingCount - previousKnownFollowingCount, 0)`
-  - Nur die ersten `allowed...` Kandidaten aus dem aktuellen Scanfenster werden als echte Events gespeichert.
-- Backfill-Handling:
-  - Kandidaten über Limit werden als Baseline-Nachzug behandelt (kein echtes „new“ Event).
-- Betroffene Stellen:
-  - `syncNewFollowers(...)` und `syncNewFollows(...)` in Trigger/Smart Scan
-  - New-Follower-Insert-Teil in `unfollow-check` (parallel scan branch)
-- Weekly-Bubbles:
-  - Bleiben absichtlich auf `follow_events` (direction=`following`, `is_initial=false`, letzte 7 Tage), also genau deine gewünschte Semantik.
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-Akzeptanzkriterien nach Umsetzung
-1) Bei `saif_nassiri` erscheinen keine unrealistischen Sprünge mehr im „Neue Follower“-Tab.
-2) Weekly-Bubbles zeigen weiterhin nur „wem gefolgt wurde“ (M/F, 7 Tage).
-3) „Neue Follower“ und „Folgt neu“ sind klar getrennt und textlich eindeutig.
-4) Bestehende falsche Alt-Events verfälschen die UI nicht mehr.
-5) Nach 1–2 Scanzyklen bleiben Counts stabil/plausibel statt explosionsartig.
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
+
+---
+
+## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+
+### Problem
+Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+
+### Implementiert
+1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
+   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
+   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
+   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
+2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
+3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
