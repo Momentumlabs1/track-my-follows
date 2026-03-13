@@ -1,4 +1,4 @@
-// smart-scan v3 — shared gender detection
+// smart-scan v4 — delta-gate for accurate event counts
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 
@@ -110,12 +110,13 @@ async function fetchAllPages(endpoint: string, userId: string, hikerApiKey: stri
   return allUsers;
 }
 
-// ── Sync new follows (page 1 diff) ──
+// ── Sync new follows (page 1 diff) with DELTA-GATE ──
 async function syncNewFollows(
   supabaseClient: ReturnType<typeof createClient>,
   profileId: string,
   currentUsers: FollowingUser[],
   lastScannedAt: string | null,
+  maxAllowed: number, // delta-gate: max events to create as real (rest = baseline backfill)
 ) {
   const { data: existing } = await supabaseClient
     .from("profile_followings")
@@ -134,11 +135,14 @@ async function syncNewFollows(
   const spanMs = Math.max(now - lastTs, 60_000);
   const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
 
+  let realEventCount = 0;
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
     const ts = randomTs[i].toISOString();
     const genderTag = detectGender(f.full_name, f.username);
     const category = categorizeFollow(f.follower_count, f.is_private);
+    const isBackfill = i >= maxAllowed; // delta-gate: beyond allowed count = backfill
+
     await supabaseClient.from("profile_followings").insert({
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
       following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
@@ -146,31 +150,57 @@ async function syncNewFollows(
       gender_tag: genderTag,
       category: category,
     });
-    await supabaseClient.from("follow_events").insert({
-      tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
-      target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
-      detected_at: ts, direction: "following", notification_sent: false,
-      gender_tag: genderTag,
-      category: categorizeFollow(f.follower_count, f.is_private),
-      target_follower_count: f.follower_count || null,
-      target_is_private: f.is_private || false,
-      is_initial: false,
-    });
-    // Gender-Count live updaten
-    await supabaseClient.rpc("increment_gender_count", {
-      p_profile_id: profileId,
-      p_gender: genderTag,
-    });
+
+    if (!isBackfill) {
+      await supabaseClient.from("follow_events").insert({
+        tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
+        target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
+        detected_at: ts, direction: "following", notification_sent: false,
+        gender_tag: genderTag,
+        category: categorizeFollow(f.follower_count, f.is_private),
+        target_follower_count: f.follower_count || null,
+        target_is_private: f.is_private || false,
+        is_initial: false,
+      });
+      // Gender-Count live updaten
+      await supabaseClient.rpc("increment_gender_count", {
+        p_profile_id: profileId,
+        p_gender: genderTag,
+      });
+      realEventCount++;
+    } else {
+      // Backfill: still create event but mark as initial (won't show in weekly/insights)
+      await supabaseClient.from("follow_events").insert({
+        tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
+        target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
+        detected_at: ts, direction: "following", notification_sent: false,
+        gender_tag: genderTag,
+        category: categorizeFollow(f.follower_count, f.is_private),
+        target_follower_count: f.follower_count || null,
+        target_is_private: f.is_private || false,
+        is_initial: true, // marked as backfill
+      });
+      await supabaseClient.rpc("increment_gender_count", {
+        p_profile_id: profileId,
+        p_gender: genderTag,
+      });
+    }
   }
-  return newEntries.length;
+
+  if (newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE] followings: ${newEntries.length} new found, capped to ${realEventCount} real events (${newEntries.length - realEventCount} backfilled)`);
+  }
+
+  return realEventCount;
 }
 
-// ── Sync new followers (page 1 diff) ──
+// ── Sync new followers (page 1 diff) with DELTA-GATE ──
 async function syncNewFollowers(
   supabaseClient: ReturnType<typeof createClient>,
   profileId: string,
   currentFollowers: FollowingUser[],
   lastScannedAt: string | null,
+  maxAllowed: number, // delta-gate
 ) {
   const { data: existing } = await supabaseClient
     .from("profile_followers")
@@ -188,9 +218,12 @@ async function syncNewFollowers(
   const spanMs = Math.max(now - lastTs, 60_000);
   const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
 
+  let realEventCount = 0;
   for (let i = 0; i < newEntries.length; i++) {
     const f = newEntries[i];
     const ts = randomTs[i].toISOString();
+    const isBackfill = i >= maxAllowed;
+
     await supabaseClient.from("profile_followers").insert({
       tracked_profile_id: profileId,
       follower_user_id: f.pk,
@@ -202,6 +235,7 @@ async function syncNewFollowers(
       follower_is_private: f.is_private || false,
       first_seen_at: ts,
     });
+
     await supabaseClient.from("follower_events").insert({
       profile_id: profileId,
       instagram_user_id: f.pk,
@@ -214,10 +248,17 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: false,
+      is_initial: isBackfill, // backfill entries marked as initial
     });
+
+    if (!isBackfill) realEventCount++;
   }
-  return newEntries.length;
+
+  if (newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${realEventCount} real events (${newEntries.length - realEventCount} backfilled)`);
+  }
+
+  return realEventCount;
 }
 
 // ── FOLLOWING FULL-SCAN ──
@@ -343,21 +384,32 @@ async function performSpyScan(
     console.log(`[SPY-SCAN] ${username}: back to public!`);
   }
 
+  // ── DELTA-GATE: compute max allowed new events based on actual count changes ──
+  const lastFollowingCount = profile.last_following_count as number | null;
+  const lastFollowerCount = profile.last_follower_count as number | null;
+  
+  const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
+    ? Math.max(actualFollowingCount - lastFollowingCount, 0)
+    : 200; // first scan: allow all from page 1
+  const maxNewFollowers = lastFollowerCount !== null && lastFollowerCount !== undefined
+    ? Math.max(actualFollowerCount - lastFollowerCount, 0)
+    : 200; // first scan: allow all from page 1
+
+  console.log(`[DELTA-GATE] ${username}: following ${lastFollowingCount}→${actualFollowingCount} (max ${maxNewFollows}), followers ${lastFollowerCount}→${actualFollowerCount} (max ${maxNewFollowers})`);
+
   // ── CALL 1: Following page 1 ──
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null);
+  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
   // ── SMART UNFOLLOW DETECTION (sammelt Hints, KEIN Full-Scan!) ──
   let unfollowsDetected = 0;
-  const lastFollowingCount = profile.last_following_count as number | null;
   if (profile.baseline_complete && lastFollowingCount !== null && lastFollowingCount !== undefined) {
     const expectedCount = lastFollowingCount + newFollowCount;
     const missingCount = expectedCount - actualFollowingCount;
     if (missingCount > 0) {
       console.log(`[SPY HINT] ${username}: +${missingCount} unfollows detected (hint, no full-scan)`);
       unfollowsDetected = missingCount;
-      // Hint in DB sammeln (wird beim manuellen unfollow-check auf 0 zurückgesetzt)
       const currentHint = (profile.pending_unfollow_hint as number) || 0;
       await supabaseClient.from("tracked_profiles").update({
         pending_unfollow_hint: currentHint + missingCount,
@@ -368,16 +420,14 @@ async function performSpyScan(
   // ── CALL 2: Follower page 1 ──
   await sleep(1000);
   const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
-  const newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers, profile.last_scanned_at as string | null);
+  const newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers, profile.last_scanned_at as string | null, maxNewFollowers);
 
   // ── SMART FOLLOWER LOSS DETECTION (Hint only, no full-scan) ──
-  const lastFollowerCount = profile.last_follower_count as number | null;
   if (lastFollowerCount !== null && lastFollowerCount !== undefined) {
     const expectedFollowerCount = lastFollowerCount + newFollowerCount;
     const lostCount = expectedFollowerCount - actualFollowerCount;
     if (lostCount > 0) {
       console.log(`[SPY FOLLOWER-HINT] ${username}: ~${lostCount} followers lost (hint only)`);
-      // Follower loss will be revealed in the next manual unfollow-check
     }
   }
 
@@ -439,13 +489,21 @@ async function performBasicScan(
     console.log(`[BASIC-SCAN] ${username}: back to public!`);
   }
 
+  // ── DELTA-GATE for basic scan ──
+  const lastFollowingCount = profile.last_following_count as number | null;
+  const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
+    ? Math.max(actualFollowingCount - lastFollowingCount, 0)
+    : 200;
+
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null);
+  const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
     previous_following_count: profile.following_count || 0,
+    last_following_count: actualFollowingCount,
+    last_follower_count: actualFollowerCount,
     avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
     display_name: userInfo.full_name || null,
     follower_count: actualFollowerCount,
@@ -535,7 +593,6 @@ Deno.serve(async (req) => {
         // ── Baseline Recovery: If initial scan done but baseline incomplete, trigger it server-side ──
         if (profile.initial_scan_done === true && profile.baseline_complete === false && !profile.is_private) {
           console.log(`[BASELINE-RECOVERY] ${profile.username}: baseline_complete=false, triggering create-baseline...`);
-          // Fire-and-forget server-side (don't await)
           fetch(`${supabaseUrl}/functions/v1/create-baseline`, {
             method: "POST",
             headers: {
