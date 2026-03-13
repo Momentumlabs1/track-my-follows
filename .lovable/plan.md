@@ -1,69 +1,53 @@
 
+Ziel: „New followers“ darf nur echte neue Events zählen. Initial-/Backfill-Daten dürfen nicht mehr als „neu“ wirken.
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+Was aktuell falsch läuft (bestätigt):
+- In `ProfileDetail.tsx` wird für die Tabs ein Fallback genutzt:
+  - `displayFollowerEvents = newFollowerEventsList.length > 0 ? newFollowerEventsList : initialFollowerEventsList`
+  - Tab-Badge nutzt `displayFollowerEvents.length`
+- Ergebnis bei `saif_nassiri`: `new_followers=0`, `initial_followers=136` → Badge zeigt trotzdem 136.
+- Deshalb sieht es so aus, als wären 136 neue Follower gekommen, obwohl es nur „beim Start erkannt“ ist.
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Zusätzlicher technischer Bug (separat, aber wichtig):
+- In `supabase/functions/trigger-scan/index.ts` wird `follower_count` falsch mit `actualFollowingCount` gesetzt (Vertipper). Das kann Stats verfälschen.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Umsetzungsplan
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+1) Tab-Logik in `ProfileDetail.tsx` strikt trennen
+- `new_follows` Badge = nur `newFollowEvents.length`
+- `new_followers` Badge = nur `newFollowerEventsList.length`
+- Kein Badge-Fallback mehr auf Initial-Events.
+- Primärliste in beiden Tabs zeigt nur echte neue Events (`is_initial=false`).
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+2) Initial-/Backfill-Events klar als separaten Bereich darstellen
+- Unterhalb der Primärliste eigener Abschnitt:
+  - „Beim ersten Scan vorhanden (nicht als neu gezählt)“
+- Dieser Abschnitt zeigt `initialFollowEvents` / `initialFollowerEventsList`.
+- Initial-Einträge ohne New-Dot (`isRead: true`) und mit Label `initial_scan_label`.
+- Damit bleiben die Daten sichtbar, aber semantisch sauber getrennt.
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+3) Texte schärfen (i18n: `de/en/ar`)
+- Schlüssel für Abschnittstitel ergänzen/ändern:
+  - „Beim ersten Scan vorhanden (nicht als neu gezählt)“
+- Optional Empty-State präziser:
+  - „Noch keine neuen Follower erkannt“ bleibt, aber ohne Vermischung mit Initialdaten.
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+4) Trigger-Scan Count-Bug korrigieren
+- Datei: `supabase/functions/trigger-scan/index.ts`
+- Fix:
+  - `follower_count: actualFollowerCount` (statt `actualFollowingCount`)
+- Verhindert falsche Header-Counts/Delta-Anzeigen nach Scans.
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+Betroffene Dateien
+- `src/pages/ProfileDetail.tsx`
 - `src/i18n/locales/de.json`
 - `src/i18n/locales/en.json`
+- `src/i18n/locales/ar.json`
+- `supabase/functions/trigger-scan/index.ts`
 
----
-
-## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
-
-### Problem
-Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
-
-### Implementiert
-1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
-   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
-   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
-   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
-2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
-3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
-
----
-
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
-
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
-
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
+Akzeptanzkriterien
+- Bei `saif_nassiri` zeigt Tab „New followers“ Badge **0** (nicht 136).
+- Die 136 Einträge erscheinen nur im separaten „Beim ersten Scan vorhanden“-Abschnitt.
+- Wenn ein echter neuer Follower reinkommt, steigt Badge von 0 auf 1.
+- Weekly-Bubbles unten bleiben unverändert korrekt (nur „neu gefolgt“ letzte 7 Tage).
+- Follower-/Following-Header-Counts bleiben nach `trigger-scan` konsistent.
