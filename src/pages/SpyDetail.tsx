@@ -82,7 +82,7 @@ export default function SpyDetail() {
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`);
     } catch {
-      toast.error("Scan fehlgeschlagen");
+      toast.error(t("spy_detail.scan_failed"));
       setPushScanning(false);
     }
   };
