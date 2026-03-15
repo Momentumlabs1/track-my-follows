@@ -69,9 +69,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
 }
 
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const baseUrl = endpoint === "following"
-    ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`
-    : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}&count=200`;
+  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}`;
   const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
@@ -90,8 +88,8 @@ async function fetchAllFollowerPages(userId: string, hikerApiKey: string): Promi
 
   do {
     const url = nextMaxId
-      ? `https://api.hikerapi.com/v1/user/followers/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
-      : `https://api.hikerapi.com/v1/user/followers/chunk?user_id=${userId}&count=200`;
+      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&max_id=${nextMaxId}`
+      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
     if (res.status === 402) { await res.text(); console.warn(`[fetchAllFollowerPages] 402 on page ${page}, stopping`); break; }
