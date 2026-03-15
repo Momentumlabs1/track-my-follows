@@ -202,6 +202,12 @@ async function syncNewFollowers(
   lastScannedAt: string | null,
   maxAllowed: number, // delta-gate
 ) {
+  // If no count increase: do absolutely nothing
+  if (maxAllowed <= 0) {
+    console.log(`[DELTA-GATE] followers: maxAllowed=${maxAllowed}, skipping entirely`);
+    return 0;
+  }
+
   const { data: existing } = await supabaseClient
     .from("profile_followers")
     .select("follower_user_id")
@@ -213,16 +219,17 @@ async function syncNewFollowers(
 
   if (newEntries.length === 0) return 0;
 
+  // Only process the first maxAllowed entries as real events, ignore the rest completely
+  const toProcess = newEntries.slice(0, maxAllowed);
+
   const now = Date.now();
   const lastTs = lastScannedAt ? new Date(lastScannedAt).getTime() : now - 60 * 60 * 1000;
   const spanMs = Math.max(now - lastTs, 60_000);
-  const randomTs = newEntries.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
+  const randomTs = toProcess.map(() => new Date(lastTs + Math.random() * spanMs)).sort((a, b) => a.getTime() - b.getTime());
 
-  let realEventCount = 0;
-  for (let i = 0; i < newEntries.length; i++) {
-    const f = newEntries[i];
+  for (let i = 0; i < toProcess.length; i++) {
+    const f = toProcess[i];
     const ts = randomTs[i].toISOString();
-    const isBackfill = i >= maxAllowed;
 
     await supabaseClient.from("profile_followers").insert({
       tracked_profile_id: profileId,
@@ -248,17 +255,12 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: isBackfill, // backfill entries marked as initial
+      is_initial: false, // always real events, no backfill
     });
-
-    if (!isBackfill) realEventCount++;
   }
 
-  if (newEntries.length > maxAllowed) {
-    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${realEventCount} real events (${newEntries.length - realEventCount} backfilled)`);
-  }
-
-  return realEventCount;
+  console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, processed ${toProcess.length} real events, ignored ${newEntries.length - toProcess.length}`);
+  return toProcess.length;
 }
 
 // ── FOLLOWING FULL-SCAN ──
