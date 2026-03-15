@@ -95,8 +95,8 @@ async function fetchAllPages(endpoint: string, userId: string, hikerApiKey: stri
           ? `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}&max_id=${nextMaxId}`
           : `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`)
       : (nextMaxId
-          ? `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}&max_id=${nextMaxId}`
-          : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}`);
+          ? `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
+          : `https://api.hikerapi.com/v1/user/${endpoint}/chunk?user_id=${userId}&count=200`);
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
     if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} full-scan page ${page} failed: ${res.status} ${text}`); }
