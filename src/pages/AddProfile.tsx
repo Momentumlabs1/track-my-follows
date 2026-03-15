@@ -131,10 +131,12 @@ const AddProfile = () => {
 
           <button
             type="submit"
-            disabled={!username.trim() || addProfile.isPending}
+            disabled={!username.trim() || addProfile.isPending || checking}
             className="mt-8 w-full pill-btn-primary py-4 justify-center text-[15px] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
           >
-            {addProfile.isPending ? (
+            {checking ? (
+              <><Loader2 className="h-5 w-5 animate-spin" /> {t("add_profile.checking")}</>
+            ) : addProfile.isPending ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> {t("add_profile.adding")}</>
             ) : (
               <><Search className="h-5 w-5" /> {t("add_profile.start_search")}</>

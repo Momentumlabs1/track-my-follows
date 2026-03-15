@@ -49,6 +49,7 @@
     "secure_text": "لا نصل أبداً إلى حسابك. يجب أن يكون الحساب عاماً.",
     "start_search": "ابدأ البحث",
     "adding": "جاري الإضافة...",
+    "checking": "جاري التحقق...",
     "plan_counter": "{{current}}/{{max}}"
   },
   "analyzing": {
