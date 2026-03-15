@@ -269,7 +269,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right) – subtle lighter black in dark mode */}
-                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-pink-500/[0.12] bg-primary/[0.10]" style={{ width: "35%" }}>
+                <div className="flex flex-col items-center justify-center rounded-[1.25rem]" style={{ width: "35%", background: "rgba(255,255,255,0.12)" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}
