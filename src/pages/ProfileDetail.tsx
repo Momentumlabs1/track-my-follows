@@ -467,7 +467,8 @@ const ProfileDetail = () => {
             )}
             {initialFollowerEventsList.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
+                <p className="section-header px-1 mb-1">{t("existing_at_first_scan_followers", t("existing_at_first_scan"))}</p>
+                <p className="text-muted-foreground px-1 mb-2" style={{ fontSize: '0.6875rem' }}>{t("initial_scan_hint")}</p>
                 <EventList events={initialFollowerEventsList.map(e => ({ ...mapFollowerEvent(e), isRead: true }))} shouldBlur={false} showPaywall={showPaywall} timeAgo={() => t("initial_scan_label")} emptyIcon="👥" emptyText="" emptySubText="" />
               </div>
             )}

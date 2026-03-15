@@ -513,8 +513,10 @@
   "private_frozen_short": "Tracking frozen 🔒",
   "preliminary_data": "Preliminary",
   "recently_detected": "Recently detected",
-  "existing_at_first_scan": "Present at first scan",
-  "initial_scan_label": "Existing",
+  "existing_at_first_scan": "Most recent follows (before tracking)",
+  "existing_at_first_scan_followers": "Most recent followers (before tracking)",
+  "initial_scan_label": "Before tracking",
+  "initial_scan_hint": "Chronological – newest first",
   "insights_7d": {
     "title": "LAST 7 DAYS",
     "since_days": "ACTIVE FOR {{days}} DAYS",
