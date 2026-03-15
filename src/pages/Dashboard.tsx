@@ -237,7 +237,7 @@ const Dashboard = () => {
                               size={56}
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
+                              <p className="font-extrabold text-white truncate" style={{ fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
                                 @{spyProfile.username}
                               </p>
                               {spyProfile.follower_count != null && (
