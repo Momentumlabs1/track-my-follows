@@ -217,7 +217,7 @@ const Dashboard = () => {
                   )}
 
                   {/* Profile box – fills remaining space, flush bottom */}
-                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 dark:bg-pink-500/[0.08] bg-pink-50 flex flex-col justify-center">
+                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 flex flex-col justify-center" style={{ background: "rgba(255,255,255,0.18)" }}>
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
