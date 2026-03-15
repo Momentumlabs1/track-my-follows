@@ -466,9 +466,17 @@ async function performSpyScan(
     }
   }
 
-  // ── CALL 2: Follower page 1 ──
+  // ── CALL 2: Followers — paginate for baseline, page 1 for delta ──
   await sleep(1000);
-  const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
+  const { count: followerBaselineCount } = await supabaseClient
+    .from("profile_followers")
+    .select("*", { count: "exact", head: true })
+    .eq("tracked_profile_id", profileId);
+  const needsFollowerBaseline = followerBaselineCount === 0;
+  const followerUsers = needsFollowerBaseline
+    ? await fetchAllPages("followers", igUserId, hikerApiKey)
+    : await fetchPage1("followers", igUserId, hikerApiKey);
+  console.log(`[SPY-SCAN] ${username}: fetched ${followerUsers.length} followers (baseline=${needsFollowerBaseline})`);
   const newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers, profile.last_scanned_at as string | null, maxNewFollowers);
 
   // ── SMART FOLLOWER LOSS DETECTION (Hint only, no full-scan) ──

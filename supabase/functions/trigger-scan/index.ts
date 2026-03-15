@@ -81,6 +81,37 @@ async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string)
   return users;
 }
 
+async function fetchAllFollowerPages(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
+  const allUsers: FollowingUser[] = [];
+  const seenIds = new Set<string>();
+  let nextMaxId: string | null = null;
+  let page = 0;
+  let lastMaxId: string | null = null;
+
+  do {
+    const url = nextMaxId
+      ? `https://api.hikerapi.com/v1/user/followers/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
+      : `https://api.hikerapi.com/v1/user/followers/chunk?user_id=${userId}&count=200`;
+    const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
+    if (res.status === 404) { await res.text(); break; }
+    if (res.status === 402) { await res.text(); console.warn(`[fetchAllFollowerPages] 402 on page ${page}, stopping`); break; }
+    if (!res.ok) { const text = await res.text(); throw new Error(`followers full page ${page} failed: ${res.status} ${text}`); }
+    const parsed = parseChunkResponse(await res.json());
+    for (const raw of parsed.users) {
+      const u = mapFollowingUser(raw);
+      if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); }
+    }
+    if (parsed.nextMaxId === lastMaxId) { console.warn(`[fetchAllFollowerPages] cursor stuck at page ${page}`); break; }
+    lastMaxId = nextMaxId;
+    nextMaxId = parsed.nextMaxId;
+    page++;
+    if (nextMaxId) await sleep(400);
+  } while (nextMaxId && page < 60);
+
+  console.log(`[fetchAllFollowerPages] ${allUsers.length} total followers fetched in ${page + 1} pages`);
+  return allUsers;
+}
+
 async function syncNewFollows(
   supabase: ReturnType<typeof createClient>,
   profileId: string,
@@ -390,9 +421,17 @@ Deno.serve(async (req) => {
       const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
       const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
 
-      // Call 2: Follower page 1
+      // Call 2: Followers — check if baseline needed, paginate if so
       await sleep(1000);
-      const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
+      const { count: followerBaselineCount } = await supabase
+        .from("profile_followers")
+        .select("*", { count: "exact", head: true })
+        .eq("tracked_profile_id", profile.id);
+      const needsFollowerBaseline = followerBaselineCount === 0;
+      const followerUsers = needsFollowerBaseline
+        ? await fetchAllFollowerPages(igUserId, hikerApiKey)
+        : await fetchPage1("followers", igUserId, hikerApiKey);
+      console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers (baseline=${needsFollowerBaseline})`);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
 
       // Update counts + last_following/follower_count
