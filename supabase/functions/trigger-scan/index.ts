@@ -146,6 +146,12 @@ async function syncNewFollowers(
   isInitialScan: boolean,
   maxAllowed: number, // delta-gate
 ) {
+  // Initial scan: NEVER baseline followers
+  if (isInitialScan) return 0;
+
+  // No count increase: do nothing
+  if (maxAllowed <= 0) return 0;
+
   const { data: existing } = await supabase
     .from("profile_followers")
     .select("follower_user_id")
@@ -156,13 +162,13 @@ async function syncNewFollowers(
   const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
+  // Only process up to maxAllowed as real events, no backfill
+  const toProcess = newEntries.slice(0, maxAllowed);
   const nowMs = Date.now();
-  let realEventCount = 0;
 
-  for (let i = 0; i < newEntries.length; i++) {
-    const f = newEntries[i];
+  for (let i = 0; i < toProcess.length; i++) {
+    const f = toProcess[i];
     const ts = new Date(nowMs - i * 1000).toISOString();
-    const isBackfill = !isInitialScan && i >= maxAllowed;
 
     await supabase.from("profile_followers").insert({
       tracked_profile_id: profileId,
@@ -187,17 +193,15 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: isInitialScan || isBackfill,
+      is_initial: false, // only real events, never backfill
     });
-
-    if (!isInitialScan && !isBackfill) realEventCount++;
   }
 
-  if (!isInitialScan && newEntries.length > maxAllowed) {
-    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${realEventCount} real events`);
+  if (newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${toProcess.length} real events (rest ignored)`);
   }
 
-  return isInitialScan ? newEntries.length : realEventCount;
+  return toProcess.length;
 }
 
 Deno.serve(async (req) => {
