@@ -390,9 +390,17 @@ Deno.serve(async (req) => {
       const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
       const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
 
-      // Call 2: Follower page 1
+      // Call 2: Followers — check if baseline needed, paginate if so
       await sleep(1000);
-      const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
+      const { count: followerBaselineCount } = await supabase
+        .from("profile_followers")
+        .select("*", { count: "exact", head: true })
+        .eq("tracked_profile_id", profile.id);
+      const needsFollowerBaseline = followerBaselineCount === 0;
+      const followerUsers = needsFollowerBaseline
+        ? await fetchAllFollowerPages(igUserId, hikerApiKey)
+        : await fetchPage1("followers", igUserId, hikerApiKey);
+      console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers (baseline=${needsFollowerBaseline})`);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
 
       // Update counts + last_following/follower_count
