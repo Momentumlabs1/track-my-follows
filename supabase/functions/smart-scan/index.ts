@@ -194,7 +194,7 @@ async function syncNewFollows(
   return realEventCount;
 }
 
-// ── Sync new followers (page 1 diff) with DELTA-GATE ──
+// ── Sync new followers (page 1 diff) with BASELINE + DELTA-GATE ──
 async function syncNewFollowers(
   supabaseClient: ReturnType<typeof createClient>,
   profileId: string,
@@ -202,9 +202,54 @@ async function syncNewFollowers(
   lastScannedAt: string | null,
   maxAllowed: number, // delta-gate
 ) {
-  // If no count increase: do absolutely nothing
+  // ── BASELINE CHECK: if profile_followers is empty, save ALL as initial ──
+  const { count: baselineCount } = await supabaseClient
+    .from("profile_followers")
+    .select("*", { count: "exact", head: true })
+    .eq("tracked_profile_id", profileId);
+
+  if (baselineCount === 0) {
+    console.log(`[FOLLOWER-BASELINE][smart-scan] No existing followers for ${profileId}, saving ${currentFollowers.length} as initial baseline`);
+    const nowMs = Date.now();
+
+    for (let i = 0; i < currentFollowers.length; i++) {
+      const f = currentFollowers[i];
+      const ts = new Date(nowMs - i * 1000).toISOString();
+
+      await supabaseClient.from("profile_followers").insert({
+        tracked_profile_id: profileId,
+        follower_user_id: f.pk,
+        follower_username: f.username,
+        follower_avatar_url: f.profile_pic_url || null,
+        follower_display_name: f.full_name || null,
+        follower_follower_count: f.follower_count || null,
+        follower_is_verified: f.is_verified || false,
+        follower_is_private: f.is_private || false,
+        first_seen_at: ts,
+      });
+
+      await supabaseClient.from("follower_events").insert({
+        profile_id: profileId,
+        instagram_user_id: f.pk,
+        username: f.username,
+        full_name: f.full_name || null,
+        profile_pic_url: f.profile_pic_url || null,
+        is_verified: f.is_verified || false,
+        follower_count: f.follower_count || null,
+        event_type: "gained",
+        detected_at: ts,
+        gender_tag: detectGender(f.full_name, f.username),
+        category: categorizeFollow(f.follower_count, f.is_private),
+        is_initial: true, // baseline data
+      });
+    }
+
+    return currentFollowers.length;
+  }
+
+  // ── DELTA-GATE: only process if follower count actually increased ──
   if (maxAllowed <= 0) {
-    console.log(`[DELTA-GATE] followers: maxAllowed=${maxAllowed}, skipping entirely`);
+    console.log(`[DELTA-GATE][smart-scan] followers: maxAllowed=${maxAllowed}, skipping entirely`);
     return 0;
   }
 
@@ -219,7 +264,6 @@ async function syncNewFollowers(
 
   if (newEntries.length === 0) return 0;
 
-  // Only process the first maxAllowed entries as real events, ignore the rest completely
   const toProcess = newEntries.slice(0, maxAllowed);
 
   const now = Date.now();
@@ -255,11 +299,14 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: false, // always real events, no backfill
+      is_initial: false, // real event
     });
   }
 
-  console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, processed ${toProcess.length} real events, ignored ${newEntries.length - toProcess.length}`);
+  if (newEntries.length > maxAllowed) {
+    console.log(`[DELTA-GATE][smart-scan] followers: ${newEntries.length} new found, processed ${toProcess.length} real events, ignored ${newEntries.length - toProcess.length}`);
+  }
+
   return toProcess.length;
 }
 
