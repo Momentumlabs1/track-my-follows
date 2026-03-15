@@ -46,7 +46,12 @@ const AnalyzingProfile = () => {
         });
         if (res.error) throw res.error;
 
-        setCurrentStep(3); setProgress(60);
+        // Check if profile turned out to be private
+        if (res.data?.is_private || res.data?.error === "profile_private") {
+          toast.error(t("errors.profile_private"));
+          navigate("/dashboard", { replace: true });
+          return;
+        }
         setCurrentStep(4); setProgress(85);
         await new Promise(r => setTimeout(r, 400));
         setCurrentStep(5); setProgress(100);
