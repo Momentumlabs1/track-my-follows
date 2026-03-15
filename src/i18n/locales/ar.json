@@ -546,8 +546,10 @@
   "private_frozen_short": "التتبع مجمد 🔒",
   "preliminary_data": "مبدئي",
   "recently_detected": "تم اكتشافه مؤخراً",
-  "existing_at_first_scan": "موجود عند المسح الأول",
-  "initial_scan_label": "موجود",
+  "existing_at_first_scan": "آخر المتابعات (قبل التتبع)",
+  "existing_at_first_scan_followers": "أحدث المتابعين (قبل التتبع)",
+  "initial_scan_label": "قبل التتبع",
+  "initial_scan_hint": "ترتيب زمني – الأحدث أولاً",
   "insights_7d": {
     "title": "آخر ٧ أيام",
     "since_days": "نشط منذ {{days}} أيام",
