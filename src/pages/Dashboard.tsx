@@ -137,7 +137,7 @@ const Dashboard = () => {
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
           {isPro ? (
-            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 30% 12%), hsl(340 40% 18%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
+            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 50% 18%), hsl(340 55% 24%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
               {/* Scan-line effect on full dark bg */}
               <div
                 className="absolute inset-0 rounded-[1.75rem] pointer-events-none opacity-[0.06]"
@@ -211,13 +211,13 @@ const Dashboard = () => {
                 >
                   {/* Label */}
                   {spyProfile && (
-                    <p className="text-white/80 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
+                    <p className="text-pink-200 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
                       {t("dashboard.spy_assigned_to", "Spion angesetzt auf")}
                     </p>
                   )}
 
                   {/* Profile box – fills remaining space, flush bottom */}
-                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 dark:bg-white/[0.04] bg-[rgba(255,240,245,0.95)] flex flex-col justify-center">
+                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 dark:bg-pink-500/[0.08] bg-pink-50 flex flex-col justify-center">
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
@@ -269,7 +269,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right) – subtle lighter black in dark mode */}
-                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-white/[0.06] bg-transparent" style={{ width: "35%" }}>
+                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-pink-500/[0.12] bg-primary/[0.10]" style={{ width: "35%" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}
