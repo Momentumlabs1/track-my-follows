@@ -5,11 +5,13 @@ import { useAddTrackedProfile, useTrackedProfiles } from "@/hooks/useTrackedProf
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { haptic } from "@/lib/native";
+import { supabase } from "@/integrations/supabase/client";
 
 const AddProfile = () => {
   const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
   const navigate = useNavigate();
   const addProfile = useAddTrackedProfile();
   const { data: profiles = [] } = useTrackedProfiles();
@@ -17,7 +19,7 @@ const AddProfile = () => {
 
   const currentCount = profiles.length;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
     setError(null);
@@ -28,6 +30,35 @@ const AddProfile = () => {
       return;
     }
 
+    // Step 1: Pre-check username via check-username edge function
+    setChecking(true);
+    try {
+      const { data: checkData, error: checkError } = await supabase.functions.invoke("check-username", {
+        body: { username: username.trim().toLowerCase() },
+      });
+
+      if (checkError) throw checkError;
+
+      if (!checkData?.exists) {
+        haptic.error();
+        setError(t("errors.profile_not_found"));
+        setChecking(false);
+        return;
+      }
+
+      if (checkData.is_private) {
+        haptic.error();
+        setError(t("errors.profile_private"));
+        setChecking(false);
+        return;
+      }
+    } catch (err) {
+      console.error("[check-username] Error:", err);
+      // On check failure, continue with normal flow (don't block)
+    }
+    setChecking(false);
+
+    // Step 2: Profile is public and exists — add to DB
     haptic.light();
     addProfile.mutate(username, {
       onSuccess: (data) => {
@@ -100,10 +131,12 @@ const AddProfile = () => {
 
           <button
             type="submit"
-            disabled={!username.trim() || addProfile.isPending}
+            disabled={!username.trim() || addProfile.isPending || checking}
             className="mt-8 w-full pill-btn-primary py-4 justify-center text-[15px] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
           >
-            {addProfile.isPending ? (
+            {checking ? (
+              <><Loader2 className="h-5 w-5 animate-spin" /> {t("add_profile.checking")}</>
+            ) : addProfile.isPending ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> {t("add_profile.adding")}</>
             ) : (
               <><Search className="h-5 w-5" /> {t("add_profile.start_search")}</>

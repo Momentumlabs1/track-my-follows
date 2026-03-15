@@ -1,64 +1,69 @@
 
 
-# Plan: Private-Profil-Erkennung VOR dem Hinzufügen
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-## Problem
-Aktuell wird das Profil zuerst zur DB hinzugefügt, dann der Scan gestartet, und erst dann kommt die Meldung "privat". Der Nutzer durchläuft die komplette Analyzing-Animation umsonst.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-## Lösung
-Einen leichtgewichtigen Privacy-Check direkt in `AddProfile.tsx` einbauen — **bevor** das Profil in die DB eingefügt wird.
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-## Änderungen
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-### 1. `AddProfile.tsx` — Username-Validierung vor Insert
-Im `handleSubmit` vor `addProfile.mutate()`:
-1. HikerAPI `userInfo` abrufen via einer neuen Edge Function `check-username`
-2. Falls `is_private === true` → Fehlermeldung direkt anzeigen, kein DB-Insert
-3. Falls Profil nicht existiert (404) → "Profil nicht gefunden" anzeigen
-4. Falls öffentlich → weiter wie bisher mit `addProfile.mutate()`
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-### 2. Neue Edge Function `check-username/index.ts`
-Leichtgewichtige Funktion die nur `userInfo` von HikerAPI abruft:
-- Input: `{ username: string }`
-- Prüft via `https://api.hikerapi.com/v1/user/by/username?username=...`
-- Gibt zurück: `{ exists: boolean, is_private: boolean, pk: string, avatar_url, full_name, follower_count, following_count }`
-- Benötigt Auth (Bearer Token)
-- Keine DB-Schreiboperationen
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-### 3. `AddProfile.tsx` — Angepasster Flow
-```
-handleSubmit:
-  1. setLoading(true)
-  2. fetch check-username → { exists, is_private, ... }
-  3. if (!exists) → setError("Profil nicht gefunden")
-  4. if (is_private) → setError("Dieses Profil ist privat...")
-  5. if (ok) → addProfile.mutate(username) → navigate to analyzing
-```
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
-### 4. `AnalyzingProfile.tsx` — Private-Error auch dort abfangen
-Falls `trigger-scan` trotzdem `profile_private` zurückgibt (Race-Condition), den Fehler erkennen und dem Nutzer anzeigen statt zur Profilseite zu navigieren.
+### Betroffene Dateien
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
+- `src/i18n/locales/de.json`
+- `src/i18n/locales/en.json`
 
-Prüfen ob `res.data?.results?.[0]?.error === "profile_private"` und dann:
-- Toast mit Fehlermeldung
-- Navigate zurück zum Dashboard
-- Profil ggf. löschen oder als privat markiert lassen
+---
 
-### 5. Lokalisierung
-Neue Keys in `de.json`, `en.json`, `ar.json`:
-- `errors.profile_private`: "Dieses Profil ist privat und kann nicht getrackt werden 🔒"
-- `errors.profile_not_found`: "Dieses Instagram-Profil existiert nicht"
-- `add_profile.checking`: "Prüfe Profil..."
+## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
 
-### 6. `supabase/config.toml`
-```toml
-[functions.check-username]
-verify_jwt = false
-```
+### Problem
+Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
 
-## Dateien
-- `supabase/functions/check-username/index.ts` (neu)
-- `supabase/config.toml` (neuer Eintrag)
-- `src/pages/AddProfile.tsx` (Pre-Check einbauen)
-- `src/pages/AnalyzingProfile.tsx` (Private-Fallback)
-- `src/i18n/locales/de.json`, `en.json`, `ar.json` (neue Keys)
+### Implementiert
+1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
+   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
+   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
+   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
+2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
+3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
 
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen

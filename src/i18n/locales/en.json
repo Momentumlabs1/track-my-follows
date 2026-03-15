@@ -49,6 +49,7 @@
     "secure_text": "We never access your account. The profile must be public.",
     "start_search": "Start The Search",
     "adding": "Adding...",
+    "checking": "Checking profile...",
     "plan_counter": "{{current}}/{{max}}"
   },
   "analyzing": {

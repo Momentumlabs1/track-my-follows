@@ -49,6 +49,7 @@
     "secure_text": "Wir greifen nie auf dein Konto zu. Das Profil muss öffentlich sein.",
     "start_search": "Suche starten",
     "adding": "Wird gesucht...",
+    "checking": "Prüfe Profil...",
     "plan_counter": "{{current}}/{{max}}"
   },
   "analyzing": {
