@@ -256,10 +256,10 @@ const Dashboard = () => {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                         >
-                          <p className="font-bold text-foreground" style={{ fontSize: "0.875rem" }}>
+                           <p className="font-bold text-white" style={{ fontSize: "0.875rem" }}>
                             {t("spy.assign_your_spy")}
                           </p>
-                          <p className="text-muted-foreground mt-1" style={{ fontSize: "0.75rem" }}>
+                          <p className="text-white/70 mt-1" style={{ fontSize: "0.75rem" }}>
                             {t("spy.spy_description")}
                           </p>
                         </motion.div>
