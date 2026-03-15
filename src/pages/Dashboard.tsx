@@ -137,7 +137,7 @@ const Dashboard = () => {
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
           {isPro ? (
-            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 50% 18%), hsl(340 55% 24%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
+            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 65% 45%), hsl(340 70% 55%))", boxShadow: "0 8px 30px -6px rgba(200,50,100,0.35)", overflow: "visible" }}>
               {/* Scan-line effect on full dark bg */}
               <div
                 className="absolute inset-0 rounded-[1.75rem] pointer-events-none opacity-[0.06]"
@@ -211,13 +211,13 @@ const Dashboard = () => {
                 >
                   {/* Label */}
                   {spyProfile && (
-                    <p className="text-pink-200 font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em" }}>
+                    <p className="text-white font-extrabold uppercase tracking-widest px-3 pt-1.5 pb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.14em", textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
                       {t("dashboard.spy_assigned_to", "Spion angesetzt auf")}
                     </p>
                   )}
 
                   {/* Profile box – fills remaining space, flush bottom */}
-                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 dark:bg-pink-500/[0.08] bg-pink-50 flex flex-col justify-center">
+                  <div className="flex-1 rounded-[1.25rem] px-3 py-2 flex flex-col justify-center" style={{ background: "rgba(255,255,255,0.18)" }}>
                     <AnimatePresence mode="wait">
                       {spyProfile ? (
                         <motion.button
@@ -237,11 +237,11 @@ const Dashboard = () => {
                               size={56}
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="font-extrabold text-foreground truncate" style={{ fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
+                              <p className="font-extrabold text-white truncate" style={{ fontSize: "1.15rem", letterSpacing: "-0.02em" }}>
                                 @{spyProfile.username}
                               </p>
                               {spyProfile.follower_count != null && (
-                                <p className="text-muted-foreground/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                                <p className="text-white/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
                                   {formatCount(spyProfile.follower_count)} Follower
                                 </p>
                               )}
@@ -256,10 +256,10 @@ const Dashboard = () => {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                         >
-                          <p className="font-bold text-foreground" style={{ fontSize: "0.875rem" }}>
+                           <p className="font-bold text-white" style={{ fontSize: "0.875rem" }}>
                             {t("spy.assign_your_spy")}
                           </p>
-                          <p className="text-muted-foreground mt-1" style={{ fontSize: "0.75rem" }}>
+                          <p className="text-white/70 mt-1" style={{ fontSize: "0.75rem" }}>
                             {t("spy.spy_description")}
                           </p>
                         </motion.div>
@@ -269,7 +269,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Spy side (right) – subtle lighter black in dark mode */}
-                <div className="flex flex-col items-center justify-center rounded-[1.25rem] dark:bg-pink-500/[0.12] bg-primary/[0.10]" style={{ width: "35%" }}>
+                <div className="flex flex-col items-center justify-center rounded-[1.25rem]" style={{ width: "35%", background: "rgba(255,255,255,0.12)" }}>
                   <SpyWidget
                     spyProfile={spyProfile}
                     onDragMoveSpy={handleMoveSpy}
