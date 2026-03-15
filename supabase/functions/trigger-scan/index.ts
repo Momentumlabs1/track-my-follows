@@ -146,10 +146,52 @@ async function syncNewFollowers(
   isInitialScan: boolean,
   maxAllowed: number, // delta-gate
 ) {
-  // Initial scan: NEVER baseline followers
-  if (isInitialScan) return 0;
+  // Check if profile_followers is empty (no baseline yet)
+  const { count: baselineCount } = await supabase
+    .from("profile_followers")
+    .select("*", { count: "exact", head: true })
+    .eq("tracked_profile_id", profileId);
 
-  // No count increase: do nothing
+  if (baselineCount === 0) {
+    // No comparison basis → save ALL as initial baseline
+    console.log(`[FOLLOWER-BASELINE] No existing followers for ${profileId}, saving ${currentFollowers.length} as initial baseline`);
+    const nowMs = Date.now();
+
+    for (let i = 0; i < currentFollowers.length; i++) {
+      const f = currentFollowers[i];
+      const ts = new Date(nowMs - i * 1000).toISOString();
+
+      await supabase.from("profile_followers").insert({
+        tracked_profile_id: profileId,
+        follower_user_id: f.pk,
+        follower_username: f.username,
+        follower_avatar_url: f.profile_pic_url || null,
+        follower_display_name: f.full_name || null,
+        follower_follower_count: f.follower_count || null,
+        follower_is_verified: f.is_verified || false,
+        follower_is_private: f.is_private || false,
+        first_seen_at: ts,
+      });
+      await supabase.from("follower_events").insert({
+        profile_id: profileId,
+        instagram_user_id: f.pk,
+        username: f.username,
+        full_name: f.full_name || null,
+        profile_pic_url: f.profile_pic_url || null,
+        is_verified: f.is_verified || false,
+        follower_count: f.follower_count || null,
+        event_type: "gained",
+        detected_at: ts,
+        gender_tag: detectGender(f.full_name, f.username),
+        category: categorizeFollow(f.follower_count, f.is_private),
+        is_initial: true, // baseline data
+      });
+    }
+
+    return currentFollowers.length;
+  }
+
+  // Delta-gate: only process if follower count actually increased
   if (maxAllowed <= 0) return 0;
 
   const { data: existing } = await supabase
@@ -162,7 +204,7 @@ async function syncNewFollowers(
   const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  // Only process up to maxAllowed as real events, no backfill
+  // Only process up to maxAllowed as real events
   const toProcess = newEntries.slice(0, maxAllowed);
   const nowMs = Date.now();
 
@@ -193,7 +235,7 @@ async function syncNewFollowers(
       detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: false, // only real events, never backfill
+      is_initial: false, // real event
     });
   }
 
