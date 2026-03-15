@@ -1,69 +1,33 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Spy-Karte: Pink Redesign
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+Die Spy-Bubble (rechte Seite mit dem Spy-Icon) und die Profil-Bubble (links) sollen farblich ueberarbeitet werden, damit die Karte femininer und einheitlicher wirkt.
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+### Aenderungen in `src/pages/Dashboard.tsx`
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+**Aeusserer Container (Zeile 140)**
+- Bleibt als Grundrahmen, aber der Gradient wird waermer/pinker: `hsl(340 50% 20%)` statt `hsl(340 30% 12%)`
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+**Profil-Bubble links (Zeile 220)**
+- Dark Mode: von `bg-white/[0.04]` zu einem sanften Pink-Tint `bg-pink-500/[0.08]` oder `bg-primary/[0.08]`
+- Light Mode: von `rgba(255,240,245,0.95)` zu einem kraeftigeren Pink `bg-pink-50` oder `bg-primary/[0.12]`
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+**Spy-Bubble rechts (Zeile 272)**
+- Dark Mode: von `bg-white/[0.06]` zu `bg-pink-500/[0.12]` — pinker Tint statt grau
+- Light Mode: von `bg-transparent` zu `bg-primary/[0.10]` — leicht pinker Hintergrund
+- Abgerundeter Rahmen bleibt gleich
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**"SPY ASSIGNED TO" Label (Zeile 214)**
+- Textfarbe von `text-white/80` zu `text-pink-200` oder `text-primary-foreground/80` fuer mehr Pink-Kohaerenz
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+### Ergebnis
 
----
+Beide Bubbles innerhalb der Spy-Karte bekommen einen einheitlichen Pink-Tint statt der aktuellen schwarz/grauen Flaechen. Im Light Mode sind sie hell-pink, im Dark Mode semi-transparent pink. Die Karte wirkt dadurch weiblicher und hebt sich farblich besser vom Rest ab.
 
-## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+### Betroffene Datei
 
-### Problem
-Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+| Datei | Aenderung |
+|---|---|
+| `src/pages/Dashboard.tsx` | Zeilen 140, 220, 272: Background-Farben der Spy-Card Bubbles auf Pink-Toene umstellen (Dark + Light Mode) |
 
-### Implementiert
-1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
-   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
-   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
-   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
-2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
-3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
-
----
-
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
-
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
-
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
