@@ -435,9 +435,15 @@ const ProfileDetail = () => {
       <motion.div className="px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={activeTab}>
         {activeTab === "new_follows" && (
           <div className="space-y-4">
-            <EventList events={newFollowEvents.map(mapFollowEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
-              emptyIcon="✨" emptyText={t("profile_detail.no_new_events")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-              sectionTitle={newFollowEvents.length > 0 && initialFollowEvents.length > 0 ? t("recently_detected") : undefined} />
+            {newFollowEvents.length > 0 && (
+              <EventList events={newFollowEvents.map(mapFollowEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
+                emptyIcon="✨" emptyText="" emptySubText=""
+                sectionTitle={initialFollowEvents.length > 0 ? t("recently_detected") : undefined} />
+            )}
+            {newFollowEvents.length === 0 && initialFollowEvents.length === 0 && (
+              <EventList events={[]} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
+                emptyIcon="✨" emptyText={t("profile_detail.no_new_events")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")} />
+            )}
             {initialFollowEvents.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
@@ -449,9 +455,15 @@ const ProfileDetail = () => {
 
         {activeTab === "new_followers" && (
           <div className="space-y-4">
-            <EventList events={newFollowerEventsList.map(mapFollowerEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
-              emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")}
-              sectionTitle={newFollowerEventsList.length > 0 && initialFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
+            {newFollowerEventsList.length > 0 && (
+              <EventList events={newFollowerEventsList.map(mapFollowerEvent)} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
+                emptyIcon="👥" emptyText="" emptySubText=""
+                sectionTitle={initialFollowerEventsList.length > 0 ? t("recently_detected") : undefined} />
+            )}
+            {newFollowerEventsList.length === 0 && initialFollowerEventsList.length === 0 && (
+              <EventList events={[]} shouldBlur={false} showPaywall={showPaywall} timeAgo={timeAgo}
+                emptyIcon="👥" emptyText={t("profile_detail.no_new_followers", "Noch keine neuen Follower erkannt")} emptySubText={profile.last_scanned_at ? t("profile_detail.will_update") : t("profile_detail.start_scan")} />
+            )}
             {initialFollowerEventsList.length > 0 && (
               <div>
                 <p className="section-header px-1 mb-2">{t("existing_at_first_scan")}</p>
