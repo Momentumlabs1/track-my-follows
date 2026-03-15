@@ -137,7 +137,7 @@ const Dashboard = () => {
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
           {isPro ? (
-            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 50% 18%), hsl(340 55% 24%))", boxShadow: "0 6px 24px -6px rgba(0,0,0,0.2)", overflow: "visible" }}>
+            <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 65% 45%), hsl(340 70% 55%))", boxShadow: "0 8px 30px -6px rgba(200,50,100,0.35)", overflow: "visible" }}>
               {/* Scan-line effect on full dark bg */}
               <div
                 className="absolute inset-0 rounded-[1.75rem] pointer-events-none opacity-[0.06]"
