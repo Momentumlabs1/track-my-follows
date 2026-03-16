@@ -400,19 +400,9 @@ Deno.serve(async (req) => {
 
       const isInitialScan = !profile.initial_scan_done;
 
-      // ── DELTA-GATE: compute max allowed ──
-      const lastFollowingCount = profile.last_following_count as number | null;
-      const lastFollowerCount = profile.last_follower_count as number | null;
-      const maxNewFollows = !isInitialScan && lastFollowingCount !== null && lastFollowingCount !== undefined
-        ? Math.max(actualFollowingCount - lastFollowingCount, 0)
-        : 200;
-      const maxNewFollowers = !isInitialScan && lastFollowerCount !== null && lastFollowerCount !== undefined
-        ? Math.max(actualFollowerCount - lastFollowerCount, 0)
-        : 200;
-
-      if (!isInitialScan) {
-        console.log(`[DELTA-GATE] ${profile.username}: following ${lastFollowingCount}→${actualFollowingCount} (max ${maxNewFollows}), followers ${lastFollowerCount}→${actualFollowerCount} (max ${maxNewFollowers})`);
-      }
+      // ── No delta-gate: trust the DB diff in syncNewFollows/syncNewFollowers ──
+      const maxNewFollows = 200;
+      const maxNewFollowers = 200;
 
       // Call 1: Following page 1
       await sleep(500);
