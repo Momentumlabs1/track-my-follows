@@ -1,69 +1,90 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+# Plan: Blurred Pro-Layout fuer Free User statt Locked Cards
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+## Was sich aendert
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Statt der aktuellen `LockedFeatureCard`-Bloecke (Zeilen 339-361 in ProfileDetail.tsx) sehen Free User **exakt dasselbe Layout wie Pro User** (SpyStatusCard + WeeklyGenderCards + SpyFindings), aber:
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+1. **Alles geblurrt** (`blur-md`) und nicht klickbar (`pointer-events-none`)
+2. **Shimmer-Overlay** ueber dem geblurrten Content (subtiler animierter Gradient)
+3. **Zentrierter Brand-Button** (pink gradient, SpyIcon + Text wie "Spy freischalten") der ueber dem Blur liegt
+4. Tap auf den Button oeffnet die **PaywallSheet**
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+## Aenderungen
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### `src/pages/ProfileDetail.tsx` (einzige Datei)
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+Zeilen 338-394 ersetzen. Statt der `!isPro`/`isPro`-Verzweigung gibt es nur noch **einen** Block fuer beide:
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+```tsx
+{/* ═══ ANALYSIS SECTIONS ═══ */}
+<div className="px-5 mb-2">
+  <div className="relative">
+    {/* Overlay for free users OR pro without spy */}
+    {(!isPro || !hasSpy) && (
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl gap-3">
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 shimmer-overlay" />
+        </div>
+        <button
+          onClick={() => !isPro ? showPaywall("analysis") : setMoveSpyOpen(true)}
+          className="relative z-20 flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg"
+          style={{
+            background: "linear-gradient(135deg, #FF2D55, #FF6B8A)",
+            boxShadow: "0 4px 20px rgba(255,45,85,0.4)",
+          }}
+        >
+          <SpyIcon size={16} />
+          {!isPro
+            ? t("locked_feature.unlock_with_pro", "Mit Pro freischalten")
+            : t("spy.assign_spy_here")}
+        </button>
+        <p className="relative z-20 text-muted-foreground text-xs text-center px-8">
+          {!isPro
+            ? t("locked_feature.spy_teaser", "Verdachts-Score, Geschlechter-Analyse & mehr")
+            : t("spy.spy_required_description")}
+        </p>
+      </div>
+    )}
+    <div className={(!isPro || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
+      <SpyStatusCard ... />
+      <div className="border-t border-border/20 my-5" />
+      <WeeklyGenderCards ... />
+      <div className="h-4" />
+    </div>
+  </div>
+</div>
+```
 
----
+### `src/index.css` — Shimmer Animation hinzufuegen
 
-## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+```css
+.shimmer-overlay {
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    hsl(var(--primary) / 0.06) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
 
-### Problem
-Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+```
 
-### Implementiert
-1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
-   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
-   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
-   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
-2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
-3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+### Was entfernt wird
 
----
+- Die gesamte `!isPro`-Branch mit den drei `LockedFeatureCard`-Aufrufen (Zeilen 339-361)
+- Der separate `isPro && !hasSpy`-Banner-Block (Zeilen 398-408) wird ueberfluesig, da der Overlay das schon abdeckt
+- Import von `LockedFeatureCard` kann entfernt werden (falls sonst nirgends verwendet)
 
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+### Ergebnis
 
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+Free User sehen die gleiche UI wie Pro, nur geblurrt mit Shimmer und einem pinken "Mit Pro freischalten"-Button. Pro User ohne Spy sehen denselben Blur mit "Spy hierhin verschieben"-Button. Pro User mit Spy sehen alles normal.
 
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
