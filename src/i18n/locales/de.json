@@ -39,7 +39,9 @@
     "spy_assigned_to": "Spion angesetzt auf",
     "spy_connected": "Spion verbunden mit",
     "spy_inactive": "Spion nicht aktiv",
-    "locked": "GESPERRT"
+    "locked": "GESPERRT",
+    "greeting_subtitle_pro": "Dein Spion ist aktiv — hier ist dein Überblick.",
+    "greeting_subtitle_free": "Schalte deinen Spion frei für volle Kontrolle."
   },
   "add_profile": {
     "title": "Wen willst du\ntracken?",
