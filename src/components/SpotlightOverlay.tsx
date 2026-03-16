@@ -15,7 +15,7 @@ interface SpotlightOverlayProps {
 
 function DotIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex justify-center gap-1.5 mt-4">
+    <div className="flex justify-center gap-2 mt-4">
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
@@ -93,11 +93,11 @@ export function SpotlightOverlay({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        style={{ position: "fixed", inset: 0, zIndex: 9998 }}
+        style={{ position: "fixed", inset: 0, zIndex: 9998, pointerEvents: "none" }}
       >
         {/* SVG mask overlay */}
         <svg
-          style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 9998 }}
+          style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 9998, pointerEvents: "none" }}
         >
           <defs>
             <mask id="spotlight-mask">
@@ -133,6 +133,7 @@ export function SpotlightOverlay({
             zIndex: 9999,
             maxWidth: 300,
             width: "calc(100% - 32px)",
+            pointerEvents: "auto",
           }}
         >
           <div
@@ -140,7 +141,7 @@ export function SpotlightOverlay({
               background: "#1C1C1E",
               borderRadius: 16,
               padding: 20,
-              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
             }}
           >
             <p style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
