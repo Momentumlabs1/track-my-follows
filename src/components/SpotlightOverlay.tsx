@@ -133,6 +133,7 @@ export function SpotlightOverlay({
             zIndex: 9999,
             maxWidth: 300,
             width: "calc(100% - 32px)",
+            pointerEvents: "auto",
           }}
         >
           <div
