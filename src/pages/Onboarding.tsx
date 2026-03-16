@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Shield, Zap, Bell } from "lucide-react";
-import spyLogoGif from "@/assets/spy-logo-animated.gif";
 import logoWide from "@/assets/logo-wide.png";
 
 export default function Onboarding() {
