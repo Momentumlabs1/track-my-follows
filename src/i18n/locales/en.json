@@ -39,7 +39,9 @@
     "spy_assigned_to": "Spy assigned to",
     "spy_connected": "Spy connected to",
     "spy_inactive": "Spy not active",
-    "locked": "LOCKED"
+    "locked": "LOCKED",
+    "greeting_subtitle_pro": "Your spy is active — here's your overview.",
+    "greeting_subtitle_free": "Unlock your spy for full control."
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
