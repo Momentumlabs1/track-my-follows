@@ -478,7 +478,8 @@
     "cta": "Let's go! 🚀"
   },
   "paywall": {
-    "unlock_spy_agent": "🔒 Unlock Spy Agent"
+    "unlock_spy_agent": "🔒 Unlock Spy Agent",
+    "unlock_spy": "Unlock Spy"
   },
   "spy_detail": {
     "your_spy": "Your Spy",
