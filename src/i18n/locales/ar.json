@@ -573,6 +573,16 @@
     "gender_distribution": "توزيع الجنس للمتابعات الجديدة: {{percent}}% إناث"
   },
   "paywall": {
-    "unlock_spy_agent": "🔒 فتح عميل التجسس"
+    "unlock_spy_agent": "🔒 فتح عميل التجسس",
+    "unlock_spy": "فتح الجاسوس"
+  },
+  "feed": {
+    "your_feed": "خلاصتك"
+  },
+  "settings": {
+    "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc."
+  },
+  "spy_findings": {
+    "after_next_scan": "سيظهر بعد الفحص التالي"
   }
 }
