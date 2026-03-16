@@ -11,7 +11,7 @@ import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyFindings } from "@/components/SpyFindings";
-import { LockedFeatureCard } from "@/components/LockedFeatureCard";
+
 import { WeeklyGenderCards } from "@/components/WeeklyGenderCards";
 import { SpyStatusCard } from "@/components/SpyStatusCard";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
