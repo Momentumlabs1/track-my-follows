@@ -196,7 +196,7 @@ const ProfileDetail = () => {
   };
 
   const realEventCount = followEvents.filter(e => !(e as any).is_initial && (e.event_type === "follow" || e.event_type === "new_following" || e.event_type === "unfollow" || e.event_type === "unfollowed")).length;
-  const insightsLocked = !canUseStats || (!hasSpy && isPro);
+  // insightsLocked removed — free users now see individual LockedFeatureCards
 
   const tabs = [
     { id: "new_follows" as TabId, label: t("profile.follows_new", "Folgt neu"), count: newFollowEvents.length, ...getTabLock("new_follows") },
