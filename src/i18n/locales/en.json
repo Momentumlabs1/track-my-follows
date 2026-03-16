@@ -15,7 +15,8 @@
     "empty_title": "No activity yet",
     "empty_subtitle": "Your spy is on the lookout... New follows and unfollows will appear here.",
     "this_week": "This week",
-    "older": "Older"
+    "older": "Older",
+    "your_feed": "Your Feed"
   },
   "not_found": {
     "title": "Page not found",
@@ -255,7 +256,8 @@
     "legal": "Legal",
     "impressum": "Imprint",
     "privacy": "Privacy Policy",
-    "pro_required_push": "Push notifications require Pro"
+    "pro_required_push": "Push notifications require Pro",
+    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
   },
   "paywall": {
     "title": "Go Pro",
@@ -587,10 +589,4 @@
     "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
     "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
   },
-  "feed": {
-    "your_feed": "Your Feed"
-  },
-  "settings": {
-    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
-  }
 }

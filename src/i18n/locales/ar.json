@@ -15,7 +15,8 @@
     "empty_title": "لا نشاط بعد",
     "empty_subtitle": "جاسوسك يترصد... المتابعات الجديدة وإلغاء المتابعات ستظهر هنا.",
     "this_week": "هذا الأسبوع",
-    "older": "أقدم"
+    "older": "أقدم",
+    "your_feed": "خلاصتك"
   },
   "not_found": {
     "title": "الصفحة غير موجودة",
@@ -248,7 +249,8 @@
     "legal": "قانوني",
     "impressum": "البيان القانوني",
     "privacy": "سياسة الخصوصية",
-    "pro_required_push": "الإشعارات تتطلب Pro"
+    "pro_required_push": "الإشعارات تتطلب Pro",
+    "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc."
   },
   "paywall": {
     "title": "اشترك في Pro",
@@ -575,12 +577,6 @@
   "paywall": {
     "unlock_spy_agent": "🔒 فتح عميل التجسس",
     "unlock_spy": "فتح الجاسوس"
-  },
-  "feed": {
-    "your_feed": "خلاصتك"
-  },
-  "settings": {
-    "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc."
   },
   "spy_findings": {
     "after_next_scan": "سيظهر بعد الفحص التالي"
