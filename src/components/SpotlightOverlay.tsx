@@ -97,7 +97,7 @@ export function SpotlightOverlay({
       >
         {/* SVG mask overlay */}
         <svg
-          style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 9998 }}
+          style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 9998, pointerEvents: "none" }}
         >
           <defs>
             <mask id="spotlight-mask">
