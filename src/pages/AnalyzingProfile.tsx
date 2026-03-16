@@ -96,7 +96,7 @@ const AnalyzingProfile = () => {
       {/* Avatar with gradient ring */}
       <div className="mb-4">
         <div className="h-24 w-24 rounded-full p-[3px] bg-gradient-to-br from-primary to-accent">
-          <InstagramAvatar src={null} alt={username || ""} fallbackInitials={username || "?"} size={90} className="border-2 border-background" />
+          <InstagramAvatar src={avatarUrl} alt={username || ""} fallbackInitials={username || "?"} size={90} className="border-2 border-background" />
         </div>
       </div>
 
