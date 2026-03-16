@@ -285,7 +285,7 @@ const ProfileDetail = () => {
 
         {/* Gender ratio inline */}
         {showGender && (
-          <div className="mt-4">
+          <div id="gender-bar" className="mt-4">
             <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
               {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
             </span>
