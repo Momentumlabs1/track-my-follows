@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -13,15 +14,23 @@ import {
 export function WelcomeDialog() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
 
   const welcomeKey = user ? `welcome_shown_${user.id}` : null;
+  const forceShow = (location.state as { showWelcome?: boolean } | null)?.showWelcome === true;
 
   useEffect(() => {
     if (!welcomeKey || localStorage.getItem(welcomeKey)) return;
+
+    if (forceShow) {
+      setOpen(true);
+      return;
+    }
+
     const timer = setTimeout(() => setOpen(true), 600);
     return () => clearTimeout(timer);
-  }, [welcomeKey]);
+  }, [welcomeKey, forceShow]);
 
   const handleClose = () => {
     if (welcomeKey) localStorage.setItem(welcomeKey, "1");
