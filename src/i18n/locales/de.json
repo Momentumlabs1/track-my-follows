@@ -478,7 +478,8 @@
     "cta": "Los geht's! 🚀"
   },
   "paywall": {
-    "unlock_spy_agent": "🔒 Spy Agent freischalten"
+    "unlock_spy_agent": "🔒 Spy Agent freischalten",
+    "unlock_spy": "Spy freischalten"
   },
   "spy_detail": {
     "your_spy": "Dein Spion",
