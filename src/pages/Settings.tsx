@@ -251,7 +251,7 @@ const Settings = () => {
               </div>
               {/* Instagram/Meta Disclaimer */}
               <p className="text-[10px] text-muted-foreground/60 mt-4 leading-relaxed">
-                Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt.
+                {t("settings.disclaimer", "Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt.")}
               </p>
             </div>
 
