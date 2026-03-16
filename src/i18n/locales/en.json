@@ -550,7 +550,8 @@
     "followback_low": "Few follow back – one-sided interest",
     "followback_mid": "Some follow back",
     "followback_high": "Many follow back – mutual interest",
-    "not_enough_data": "Not enough data yet"
+    "not_enough_data": "Not enough data yet",
+    "after_next_scan": "Will be visible after the next scan"
   },
   "gender": {
     "female_short": "female",
