@@ -10,27 +10,12 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [phase] = useState<"splash" | "landing">("landing");
-
-  // Preload GIF
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setGifLoaded(true);
-    img.src = spyLogoGif;
-  }, []);
 
   useEffect(() => {
     if (!loading && user) navigate("/dashboard", { replace: true });
   }, [user, loading, navigate]);
 
-  // Splash → landing after 2.5s
-  useEffect(() => {
-    if (!gifLoaded) return;
-    const timer = setTimeout(() => setPhase("landing"), 2500);
-    return () => clearTimeout(timer);
-  }, [gifLoaded]);
-
-  if (loading || !gifLoaded) return <div className="min-h-[100dvh] bg-background" />;
+  if (loading) return <div className="min-h-[100dvh] bg-background" />;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col relative overflow-hidden select-none">
