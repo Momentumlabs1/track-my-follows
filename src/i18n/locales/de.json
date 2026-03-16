@@ -501,6 +501,24 @@
     "step5_desc": "Du bist bereit, Agent! Dein erster Scan läuft.",
     "step5_cta": "Mission starten 🚀"
   },
+  "tutorial": {
+    "welcome_title": "Dein geheimer Agent wurde aktiviert",
+    "welcome_desc": "Finde heraus wem dein Crush heimlich folgt – komplett anonym.",
+    "welcome_cta": "Erste Mission starten →",
+    "step2_title": "Starte deine erste Mission",
+    "step2_text": "Tippe hier um ein Instagram-Profil zu tracken – komplett anonym.",
+    "step5_title": "Geschlechterverteilung",
+    "step5_text": "Zeigt ob die Person eher Frauen oder Männern folgt. Basierend auf allen Followings – eine Schätzung.",
+    "step6_title": "Aktivitäten",
+    "step6_text": "Sieh wem die Person zuletzt gefolgt ist und wer ihr neu folgt. Updates bei jedem Scan.",
+    "step7_title": "Detaillierte Analysen",
+    "step7_text": "Mit Pro: Verdachts-Score, Ghost-Follows, Unfollow-Tracking und stündliche Scans.",
+    "step8_title": "Dein Spy-Agent",
+    "step8_text": "Mit Pro kannst du den Agenten auf ein Profil setzen für stündliche Scans und Unfollow-Erkennung.",
+    "complete_title": "Du bist bereit, Agent!",
+    "complete_desc": "Dein erster Scan läuft bereits. Schau später wieder rein für neue Ergebnisse.",
+    "complete_cta": "Mission starten 🚀"
+  },
   "paywall": {
     "unlock_spy_agent": "🔒 Spy Agent freischalten",
     "unlock_spy": "Spy freischalten"

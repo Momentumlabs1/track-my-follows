@@ -402,7 +402,7 @@ const ProfileDetail = () => {
       )}
 
       {/* ═══ TABS ═══ */}
-      <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
+      <div id="tabs-section" ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
         <div className="flex gap-2 w-max">
           {tabs.map((tab) => (
             <button
