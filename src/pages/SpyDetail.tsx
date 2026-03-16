@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { haptic } from "@/lib/native";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function SpyDetail() {
   const { t, i18n } = useTranslation();
