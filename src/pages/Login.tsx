@@ -53,7 +53,6 @@ const Login = () => {
         provider,
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: skipRedirect,
         },
       });
 
