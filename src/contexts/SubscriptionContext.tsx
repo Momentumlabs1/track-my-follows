@@ -30,6 +30,7 @@ const defaultState: SubscriptionState = {
   status: "active",
   billingPeriod: null,
   maxProfiles: 1,
+  isProMax: false,
   canUseUnfollows: false,
   canUsePush: false,
   canUseStats: false,
