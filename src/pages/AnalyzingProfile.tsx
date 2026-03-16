@@ -25,6 +25,7 @@ const AnalyzingProfile = () => {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const scanStarted = useRef(false);
 
   useEffect(() => {
@@ -53,6 +54,14 @@ const AnalyzingProfile = () => {
           return;
         }
         setCurrentStep(4); setProgress(85);
+
+        // Fetch avatar after scan completes
+        const { data: profileData } = await supabase
+          .from("tracked_profiles")
+          .select("avatar_url")
+          .eq("id", profileId)
+          .single();
+        if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
         await new Promise(r => setTimeout(r, 400));
         setCurrentStep(5); setProgress(100);
 
@@ -87,7 +96,7 @@ const AnalyzingProfile = () => {
       {/* Avatar with gradient ring */}
       <div className="mb-4">
         <div className="h-24 w-24 rounded-full p-[3px] bg-gradient-to-br from-primary to-accent">
-          <InstagramAvatar src={null} alt={username || ""} fallbackInitials={username || "?"} size={90} className="border-2 border-background" />
+          <InstagramAvatar src={avatarUrl} alt={username || ""} fallbackInitials={username || "?"} size={90} className="border-2 border-background" />
         </div>
       </div>
 
