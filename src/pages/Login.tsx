@@ -6,7 +6,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { getOAuthRedirectUrl, shouldSkipBrowserRedirect, isValidOAuthUrl } from "@/lib/oauth";
+import { getOAuthRedirectUrl, shouldSkipBrowserRedirect, isValidOAuthUrl, isInIframe } from "@/lib/oauth";
 import logoWide from "@/assets/logo-wide.png";
 
 const SIGNUP_COOLDOWN_SECONDS = 60;
@@ -73,7 +73,13 @@ const Login = () => {
           toast.error("Invalid OAuth redirect URL");
           return;
         }
-        window.location.assign(data.url);
+        if (isInIframe()) {
+          // Preview iframe: open in new tab (iframe can't navigate to Google/Apple)
+          window.open(data.url, "_blank");
+        } else {
+          // Despia WebView: navigate directly (window.open doesn't work in WebViews)
+          window.location.assign(data.url);
+        }
       }
     } catch (err) {
       toast.error(String(err));

@@ -9,11 +9,19 @@ const isLocalhost = () => {
   return hostname === "localhost" || hostname === "127.0.0.1";
 };
 
+export const isInIframe = (): boolean => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+};
+
 /**
  * Use one deterministic callback target so Supabase never falls back to Site URL.
  */
 export function getOAuthRedirectUrl(): string {
-  if (isNativeApp() || isLocalhost()) {
+  if (isNativeApp() || isLocalhost() || isInIframe()) {
     return PUBLISHED_DOMAIN + CALLBACK_PATH;
   }
 
@@ -21,12 +29,11 @@ export function getOAuthRedirectUrl(): string {
 }
 
 /**
- * Only skip browser redirect for native apps (Capacitor/WebView).
- * On all web domains (lovable.app, lovableproject.com, preview), let the
- * browser handle the redirect natively so tokens arrive in the URL.
+ * Skip browser redirect for native apps (Despia WebView) AND iframes (Lovable preview).
+ * Both contexts need manual URL handling.
  */
 export function shouldSkipBrowserRedirect(): boolean {
-  return isNativeApp();
+  return isNativeApp() || isInIframe();
 }
 
 const ALLOWED_OAUTH_HOSTS = [
