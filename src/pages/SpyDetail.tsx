@@ -253,9 +253,9 @@ export default function SpyDetail() {
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
                   <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-                    {t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                    {isProMax ? "∞ unlimited" : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
-          <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
+          {!isProMax && <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />}
         </button>
 
         {/* Unfollow Scan */}
