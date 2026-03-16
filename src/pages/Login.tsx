@@ -9,17 +9,30 @@ import { useTranslation } from "react-i18next";
 import { getOAuthRedirectUrl, shouldSkipBrowserRedirect, isValidOAuthUrl } from "@/lib/oauth";
 import logoWide from "@/assets/logo-wide.png";
 
-const SIGNUP_COOLDOWN_SECONDS = 0;
+const SIGNUP_COOLDOWN_SECONDS = 60;
+const COOLDOWN_KEY = "signup_cooldown_until";
 
 const normalizeEmail = (e: string) => e.trim().toLowerCase();
 
+function getCooldownRemaining(): number {
+  const until = localStorage.getItem(COOLDOWN_KEY);
+  if (!until) return 0;
+  const remaining = Math.ceil((parseInt(until, 10) - Date.now()) / 1000);
+  return remaining > 0 ? remaining : 0;
+}
+
+function setCooldownUntil() {
+  localStorage.setItem(COOLDOWN_KEY, String(Date.now() + SIGNUP_COOLDOWN_SECONDS * 1000));
+}
+
 const Login = () => {
   const { t } = useTranslation();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
-  const [signupCooldown, setSignupCooldown] = useState(0);
+  const [signupCooldown, setSignupCooldown] = useState(getCooldownRemaining);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
 
@@ -55,8 +68,6 @@ const Login = () => {
         return;
       }
 
-      // When skipBrowserRedirect is false, the SDK handles the redirect automatically.
-      // When true (native only), we redirect manually after validation.
       if (skipRedirect) {
         if (!isValidOAuthUrl(data.url)) {
           toast.error("Invalid OAuth redirect URL");
@@ -64,7 +75,6 @@ const Login = () => {
         }
         window.location.assign(data.url);
       }
-      // If skipRedirect is false, the SDK already navigated away — nothing to do.
     } catch (err) {
       toast.error(String(err));
     } finally {
@@ -72,9 +82,10 @@ const Login = () => {
     }
   };
 
+  // Cooldown ticker
   useEffect(() => {
     if (signupCooldown <= 0) return;
-    const timer = setTimeout(() => setSignupCooldown((current) => current - 1), 1000);
+    const timer = setTimeout(() => setSignupCooldown(getCooldownRemaining()), 1000);
     return () => clearTimeout(timer);
   }, [signupCooldown]);
 
@@ -83,85 +94,93 @@ const Login = () => {
     const normalizedEmail = normalizeEmail(email);
     setLoading(true);
 
-    console.info("[auth] login attempt", { email: normalizedEmail.slice(0, 3) + "***" });
+    if (mode === "login") {
+      // ─── LOGIN ONLY ───
+      console.info("[auth] login attempt", { email: normalizedEmail.slice(0, 3) + "***" });
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
-
-    if (!loginError) {
-      toast.success(t("auth.login_success"));
-      navigate("/dashboard");
-      return;
-    }
-
-    console.info("[auth] login failed", { code: loginError.message });
-
-    if (loginError.message?.toLowerCase().includes("email not confirmed")) {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email: normalizedEmail,
-      });
-      if (resendError) {
-        console.info("[auth] resend on unconfirmed failed", { code: resendError.message });
-      }
-      toast.info(t("auth.email_not_confirmed_action"));
-      navigateToVerify(normalizedEmail);
-      setLoading(false);
-      return;
-    }
-
-    if (
-      loginError.message?.toLowerCase().includes("invalid") ||
-      loginError.message?.toLowerCase().includes("invalid login credentials")
-    ) {
-      if (signupCooldown > 0) {
-        toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
-        setLoading(false);
-        return;
-      }
-
-      const { error: signupError } = await supabase.auth.signUp({
+      const { error: loginError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
 
-      if (signupError) {
-        console.info("[auth] signup failed", { code: signupError.message });
-
-        if (
-          signupError.message?.toLowerCase().includes("rate limit") ||
-          signupError.message?.toLowerCase().includes("over_email_send_rate_limit")
-        ) {
-          setSignupCooldown(SIGNUP_COOLDOWN_SECONDS);
-          toast.error(t("auth.signup_cooldown_active", { seconds: SIGNUP_COOLDOWN_SECONDS }));
-        } else if (
-          signupError.message?.toLowerCase().includes("already registered") ||
-          signupError.message?.toLowerCase().includes("already been registered")
-        ) {
-          toast.error(t("auth.account_exists_check_password"));
-        } else {
-          toast.error(signupError.message);
-        }
+      if (!loginError) {
+        toast.success(t("auth.login_success"));
+        navigate("/dashboard");
         setLoading(false);
         return;
       }
 
-      console.info("[auth] signup success, redirecting to verify");
-      toast.success(t("auth.signup_success"));
-      navigateToVerify(normalizedEmail);
+      console.info("[auth] login failed", { code: loginError.message });
+
+      if (loginError.message?.toLowerCase().includes("email not confirmed")) {
+        const { error: resendError } = await supabase.auth.resend({
+          type: "signup",
+          email: normalizedEmail,
+        });
+        if (resendError) {
+          console.info("[auth] resend on unconfirmed failed", { code: resendError.message });
+        }
+        toast.info(t("auth.email_not_confirmed_action"));
+        navigateToVerify(normalizedEmail);
+        setLoading(false);
+        return;
+      }
+
+      if (loginError.message?.toLowerCase().includes("rate limit")) {
+        toast.error(t("auth.rate_limited"));
+      } else {
+        toast.error(t("auth.invalid_credentials"));
+      }
       setLoading(false);
       return;
     }
 
-    if (loginError.message?.toLowerCase().includes("rate limit")) {
-      toast.error(t("auth.rate_limited"));
-    } else {
-      toast.error(t("auth.invalid_credentials"));
+    // ─── REGISTER ONLY ───
+    console.info("[auth] register attempt", { email: normalizedEmail.slice(0, 3) + "***" });
+
+    if (signupCooldown > 0) {
+      toast.error(t("auth.signup_cooldown_active", { seconds: signupCooldown }));
+      setLoading(false);
+      return;
     }
+
+    const { error: signupError } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+    });
+
+    if (signupError) {
+      console.info("[auth] signup failed", { code: signupError.message });
+
+      if (
+        signupError.message?.toLowerCase().includes("rate limit") ||
+        signupError.message?.toLowerCase().includes("over_email_send_rate_limit")
+      ) {
+        setCooldownUntil();
+        setSignupCooldown(SIGNUP_COOLDOWN_SECONDS);
+        toast.error(t("auth.rate_limit_explanation"));
+      } else if (
+        signupError.message?.toLowerCase().includes("already registered") ||
+        signupError.message?.toLowerCase().includes("already been registered")
+      ) {
+        toast.error(t("auth.account_exists_check_password"));
+      } else {
+        toast.error(signupError.message);
+      }
+      setLoading(false);
+      return;
+    }
+
+    console.info("[auth] signup success, redirecting to verify");
+    toast.success(t("auth.signup_success"));
+    navigateToVerify(normalizedEmail);
     setLoading(false);
   };
+
+  const isRegister = mode === "register";
+  const submitDisabled =
+    loading ||
+    (isRegister && (signupCooldown > 0 || !termsAccepted));
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
@@ -228,6 +247,32 @@ const Login = () => {
               <div className="flex-1 h-px bg-border/50" />
             </div>
 
+            {/* Mode toggle */}
+            <div className="flex rounded-xl bg-muted/50 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                  mode === "login"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t("auth.tab_login", "Anmelden")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                  mode === "register"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t("auth.tab_register", "Registrieren")}
+              </button>
+            </div>
+
             {/* Email form */}
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="relative">
@@ -240,33 +285,45 @@ const Login = () => {
                 <input type="password" placeholder={t("auth.password_placeholder")} value={password} onChange={e => setPassword(e.target.value)} required
                   className="w-full rounded-2xl bg-background/80 border border-border/50 ps-11 pe-4 py-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all" />
               </div>
-              {/* AGB / Datenschutz + Mindestalter Checkbox */}
-              <label className="flex items-start gap-2.5 text-[12px] text-muted-foreground cursor-pointer">
-                <Checkbox
-                  checked={termsAccepted}
-                  onCheckedChange={(v) => setTermsAccepted(v === true)}
-                  className="mt-0.5"
-                />
-                <span>
-                  {t("auth.terms_age_text")}{" "}
-                  <Link to="/legal/agb" className="text-primary underline" target="_blank">AGB</Link>{" "}
-                  {t("auth.terms_and")}{" "}
-                  <Link to="/legal/datenschutz" className="text-primary underline" target="_blank">{t("auth.terms_privacy")}</Link>{" "}
-                  {t("auth.terms_read")}.
-                </span>
-              </label>
+
+              {/* Terms checkbox — only for register */}
+              {isRegister && (
+                <label className="flex items-start gap-2.5 text-[12px] text-muted-foreground cursor-pointer">
+                  <Checkbox
+                    checked={termsAccepted}
+                    onCheckedChange={(v) => setTermsAccepted(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    {t("auth.terms_age_text")}{" "}
+                    <Link to="/legal/agb" className="text-primary underline" target="_blank">AGB</Link>{" "}
+                    {t("auth.terms_and")}{" "}
+                    <Link to="/legal/datenschutz" className="text-primary underline" target="_blank">{t("auth.terms_privacy")}</Link>{" "}
+                    {t("auth.terms_read")}.
+                  </span>
+                </label>
+              )}
+
+              {/* Cooldown warning inline */}
+              {isRegister && signupCooldown > 0 && (
+                <p className="text-xs text-destructive text-center">
+                  {t("auth.rate_limit_explanation")} ({signupCooldown}s)
+                </p>
+              )}
 
               <button
                 type="submit"
-                disabled={loading || signupCooldown > 0 || !termsAccepted}
+                disabled={submitDisabled}
                 className="w-full pill-btn-primary py-3.5 justify-center text-sm disabled:opacity-60"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {signupCooldown > 0
-                      ? t("auth.signup_waiting", { seconds: signupCooldown })
+                    {isRegister
+                      ? (signupCooldown > 0
+                          ? t("auth.signup_waiting", { seconds: signupCooldown })
+                          : t("auth.signup_button"))
                       : t("auth.continue_button")}
                     <ArrowRight className="h-4 w-4" />
                   </>
