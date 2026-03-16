@@ -335,43 +335,63 @@ const ProfileDetail = () => {
 
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
-      <div className="px-5 relative mb-2">
-        {insightsLocked && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-            {!isPro ? (
-              <button onClick={() => showPaywall("stats")} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                <Lock className="h-4 w-4" /> {t("profile_detail.pro_required")}
-              </button>
-            ) : (
-              <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                <SpyIcon size={14} /> {t("spy.spy_required")}
-              </button>
+      <div className="px-5 mb-2">
+        {!isPro ? (
+          /* ── Free user: individual locked cards ── */
+          <div className="space-y-3">
+            <LockedFeatureCard
+              title={t("spy_status.section_title", "Spy-Analyse")}
+              subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
+              onTap={() => showPaywall("stats")}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <LockedFeatureCard
+                title={t("gender.weekly_title", "Neue ♀ & ♂")}
+                subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
+                onTap={() => showPaywall("gender_bubbles")}
+                className="min-h-[100px]"
+              />
+              <LockedFeatureCard
+                title={t("spy_findings.title", "Spy-Analyse")}
+                subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
+                onTap={() => showPaywall("findings")}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+        ) : (
+          /* ── Pro user: full content (may still need spy) ── */
+          <div className="relative">
+            {!hasSpy && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
+                <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
+                  <SpyIcon size={14} /> {t("spy.spy_required")}
+                </button>
+              </div>
             )}
+            <div className={`${!hasSpy ? "blur-md pointer-events-none" : ""}`}>
+              <SpyStatusCard
+                analysis={suspicionAnalysis}
+                realEventCount={realEventCount}
+                followEvents={followEvents}
+                followerEvents={followerEvents}
+                profileFollowings={followings}
+                followerCount={followerCount}
+                followingCount={followingCount}
+                lastScannedAt={profile.last_scanned_at}
+                totalScans={profile.total_scans_executed}
+                pushScansToday={profile.push_scans_today}
+                profileId={profile.id}
+                unfollowScansToday={profile.unfollow_scans_today}
+              />
+
+              <div className="border-t border-border/20 my-5" />
+
+              <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+              <div className="h-4" />
+            </div>
           </div>
         )}
-        <div className={`${insightsLocked ? "blur-md pointer-events-none" : ""}`}>
-          {/* Spy Status Hero + collapsible Findings */}
-          <SpyStatusCard
-            analysis={suspicionAnalysis}
-            realEventCount={realEventCount}
-            followEvents={followEvents}
-            followerEvents={followerEvents}
-            profileFollowings={followings}
-            followerCount={followerCount}
-            followingCount={followingCount}
-            lastScannedAt={profile.last_scanned_at}
-            totalScans={profile.total_scans_executed}
-            pushScansToday={profile.push_scans_today}
-            profileId={profile.id}
-            unfollowScansToday={profile.unfollow_scans_today}
-          />
-
-          <div className="border-t border-border/20 my-5" />
-
-          {/* Weekly gender bubbles */}
-          <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
-          <div className="h-4" />
-        </div>
       </div>
 
       {/* ─── Banners ─── */}
