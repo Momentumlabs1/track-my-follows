@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Info, ChevronDown, Search, Eye, Loader2 } from "lucide-react";
