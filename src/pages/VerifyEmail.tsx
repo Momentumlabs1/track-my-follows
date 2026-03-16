@@ -77,7 +77,7 @@ const VerifyEmail = () => {
     }
 
     toast.success(t("auth.verified_success"));
-    navigate("/dashboard", { replace: true });
+    navigate("/dashboard", { replace: true, state: { showWelcome: true } });
   }, [code, loading, email, navigate, t]);
 
   // Auto-submit when 6 digits entered
