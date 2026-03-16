@@ -7,6 +7,7 @@ interface SubscriptionState {
   status: "active" | "in_trial" | "canceled" | "past_due" | "expired";
   billingPeriod: "weekly" | "monthly" | "yearly" | null;
   maxProfiles: number;
+  isProMax: boolean;
   canUseUnfollows: boolean;
   canUsePush: boolean;
   canUseStats: boolean;
