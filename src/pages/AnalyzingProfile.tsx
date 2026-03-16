@@ -25,6 +25,7 @@ const AnalyzingProfile = () => {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const scanStarted = useRef(false);
 
   useEffect(() => {
