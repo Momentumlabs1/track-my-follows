@@ -46,9 +46,8 @@ const Login = () => {
     setSocialLoading(provider);
     try {
       const redirectUrl = getOAuthRedirectUrl();
-      const skipRedirect = shouldSkipBrowserRedirect();
 
-      console.info("[auth/login] OAuth start", { provider, redirectUrl, skipRedirect });
+      console.info("[auth/login] OAuth start", { provider, redirectUrl });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
