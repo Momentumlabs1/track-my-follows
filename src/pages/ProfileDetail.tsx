@@ -285,7 +285,7 @@ const ProfileDetail = () => {
 
         {/* Gender ratio inline */}
         {showGender && (
-          <div className="mt-4">
+          <div id="gender-bar" className="mt-4">
             <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
               {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
             </span>
@@ -335,7 +335,7 @@ const ProfileDetail = () => {
 
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
-      <div className="px-5 mb-2">
+      <div id="locked-analysis" className="px-5 mb-2">
         <div className="relative">
           {/* Overlay for free users OR pro without spy */}
           {(!isPro || !hasSpy) && (
@@ -402,7 +402,7 @@ const ProfileDetail = () => {
       )}
 
       {/* ═══ TABS ═══ */}
-      <div ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
+      <div id="tabs-section" ref={tabsRef} className="px-5 mb-4 overflow-x-auto">
         <div className="flex gap-2 w-max">
           {tabs.map((tab) => (
             <button

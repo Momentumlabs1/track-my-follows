@@ -5,6 +5,7 @@ import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { SpyIcon } from "@/components/SpyIcon";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { AppTutorial } from "@/components/AppTutorial";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useMoveSpy } from "@/hooks/useSpyProfile";
@@ -88,6 +89,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
+      <AppTutorial />
 
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
@@ -132,7 +134,7 @@ const Dashboard = () => {
         </div>
 
         {/* ─── Spy Agent Zone ─── */}
-        <div className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
+        <div id="spy-agent-zone" className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
           <span className="text-primary-foreground/40 font-bold uppercase tracking-widest block mb-2 px-1" style={{ fontSize: "0.5625rem", letterSpacing: "0.12em" }}>
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
@@ -376,6 +378,7 @@ const Dashboard = () => {
           ))}
 
           <button
+            id="add-profile-btn"
             onClick={() => navigate("/add-profile")}
             className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 min-h-[44px] text-muted-foreground bg-card border border-border"
             style={{ fontSize: "0.875rem" }}
@@ -391,6 +394,7 @@ const Dashboard = () => {
             <p className="font-semibold text-foreground" style={{ fontSize: "0.9375rem" }}>{t("dashboard.no_profiles")}</p>
             <p className="text-muted-foreground mt-1 mb-6" style={{ fontSize: "0.8125rem" }}>{t("dashboard.add_first")}</p>
             <button
+              id="add-profile-btn"
               onClick={() => navigate("/add-profile")}
               className="bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-xl min-h-[44px]"
               style={{ fontSize: "0.9375rem" }}
