@@ -583,6 +583,14 @@
     "early_estimate": "Early estimate · limited activity",
     "no_clear_signals": "No clear anomalies yet — your Spy is gathering first signals",
     "tap_for_analysis": "Show analysis",
-    "tap_to_close": "Hide analysis"
+    "tap_to_close": "Hide analysis",
+    "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
+    "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
+  },
+  "feed": {
+    "your_feed": "Your Feed"
+  },
+  "settings": {
+    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
   }
 }
