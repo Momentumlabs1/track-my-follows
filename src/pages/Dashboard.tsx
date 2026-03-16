@@ -401,22 +401,6 @@ const Dashboard = () => {
             >
               <Plus className="h-4 w-4 inline me-2" />
               {t("nav.add")}
-          </button>
-        </div>
-      )}
-
-      {!profilesLoading && profiles.length === 0 && (
-        <div className="text-center py-20 px-5">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-            <p className="font-semibold text-foreground" style={{ fontSize: "0.9375rem" }}>{t("dashboard.no_profiles")}</p>
-            <p className="text-muted-foreground mt-1 mb-6" style={{ fontSize: "0.8125rem" }}>{t("dashboard.add_first")}</p>
-            <button
-              onClick={() => navigate("/add-profile")}
-              className="bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-xl min-h-[44px]"
-              style={{ fontSize: "0.9375rem" }}
-            >
-              <Plus className="h-4 w-4 inline me-2" />
-              {t("nav.add")}
             </button>
           </motion.div>
         </div>
