@@ -80,7 +80,8 @@ export function SpyStatusCard({
   const levelConfig = LEVELS.find((l) => l.key === level)!;
   const levelColor = `hsl(${levelConfig.color})`;
 
-  const pushRemaining = pushScansToday ?? 4;
+  const { isProMax } = useSubscription();
+  const pushRemaining = isProMax ? 999 : (pushScansToday ?? 4);
   const unfollowRemaining = unfollowScansToday ?? 1;
 
   const labelMap: Record<SpyLevel, string> = {
