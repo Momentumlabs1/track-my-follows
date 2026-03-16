@@ -298,8 +298,9 @@ Deno.serve(async (req) => {
     }
 
     // ── Subscription check ──
-    const { data: sub } = await supabase.from("subscriptions").select("plan_type, status").eq("user_id", user.id).maybeSingle();
+    const { data: sub } = await supabase.from("subscriptions").select("plan_type, status, max_tracked_profiles").eq("user_id", user.id).maybeSingle();
     const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status || "");
+    const isProMax = isPro && (sub?.max_tracked_profiles ?? 0) >= 9999;
 
     const body = await req.json().catch(() => ({}));
     const profileId = body.profileId;
