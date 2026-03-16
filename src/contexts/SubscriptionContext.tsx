@@ -83,11 +83,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         
         const isPro = isActiveOrTrial || isWithinPaidPeriod;
 
+        const proMax = isPro && (data.max_tracked_profiles ?? 0) >= 9999;
+
         setState({
           plan: isPro ? "pro" : "free",
           status: (data.status as SubscriptionState["status"]) || "active",
           billingPeriod: (data.billing_period as SubscriptionState["billingPeriod"]) || null,
           maxProfiles: data.max_tracked_profiles || 1,
+          isProMax: proMax,
           canUseUnfollows: isPro,
           canUsePush: isPro,
           canUseStats: isPro,
