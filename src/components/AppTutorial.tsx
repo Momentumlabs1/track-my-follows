@@ -49,14 +49,15 @@ export function AppTutorial() {
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
   const forceShow = (location.state as { showWelcome?: boolean } | null)?.showWelcome === true;
 
-  // Trigger: wait 2s then show intro bubble
+  // ONLY trigger on fresh registration via showWelcome flag — never auto-trigger
   useEffect(() => {
-    if (!tutorialKey || localStorage.getItem(tutorialKey)) return;
-    if (!forceShow) {
-      // Also check sessionStorage fallback
-      const ssKey = user ? `show_welcome_${user.id}` : null;
-      if (!ssKey || !sessionStorage.getItem(ssKey)) return;
-    }
+    if (!tutorialKey) return;
+    if (localStorage.getItem(tutorialKey)) return;
+    
+    // Must have explicit showWelcome from registration flow
+    const hasFlag = forceShow || (user && sessionStorage.getItem(`show_welcome_${user.id}`));
+    if (!hasFlag) return;
+    
     const timer = setTimeout(() => setPhase("intro"), 2000);
     return () => clearTimeout(timer);
   }, [tutorialKey, forceShow, user]);
