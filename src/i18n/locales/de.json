@@ -39,7 +39,9 @@
     "spy_assigned_to": "Spion angesetzt auf",
     "spy_connected": "Spion verbunden mit",
     "spy_inactive": "Spion nicht aktiv",
-    "locked": "GESPERRT"
+    "locked": "GESPERRT",
+    "greeting_subtitle_pro": "Dein Spion ist aktiv — hier ist dein Überblick.",
+    "greeting_subtitle_free": "Schalte deinen Spion frei für volle Kontrolle."
   },
   "add_profile": {
     "title": "Wen willst du\ntracken?",
@@ -154,7 +156,10 @@
     "unfollows_detected": "Entfolgungen erkannt",
     "tap_to_reveal_hint": "Öffne das Profil um zu sehen wer entfolgt wurde",
     "reveal_now": "Jetzt aufdecken",
-    "unfollow_hint_explanation": "Unser Spy hat bemerkt dass die Zahlen nicht aufgehen. Nutze den Unfollow-Check um zu sehen wer entfolgt wurde."
+    "unfollow_hint_explanation": "Unser Spy hat bemerkt dass die Zahlen nicht aufgehen. Nutze den Unfollow-Check um zu sehen wer entfolgt wurde.",
+    "agent_zone": "🕵️ Dein Spion",
+    "your_accounts": "Deine Accounts",
+    "daily_scan_subtitle": "Täglicher Basis-Scan"
   },
   "suspicion": {
     "score_label": "Verdachts-Score",
@@ -473,7 +478,8 @@
     "cta": "Los geht's! 🚀"
   },
   "paywall": {
-    "unlock_spy_agent": "🔒 Spy Agent freischalten"
+    "unlock_spy_agent": "🔒 Spy Agent freischalten",
+    "unlock_spy": "Spy freischalten"
   },
   "spy_detail": {
     "your_spy": "Dein Spion",
@@ -544,7 +550,8 @@
     "followback_low": "Wenige folgen zurück – einseitiges Interesse",
     "followback_mid": "Manche folgen zurück",
     "followback_high": "Viele folgen zurück – gegenseitiges Interesse",
-    "not_enough_data": "Noch nicht genug Daten"
+    "not_enough_data": "Noch nicht genug Daten",
+    "after_next_scan": "Wird nach dem nächsten Scan sichtbar"
   },
   "gender": {
     "female_short": "weiblich",
@@ -576,6 +583,14 @@
     "early_estimate": "Frühe Einschätzung · wenig Aktivität",
     "no_clear_signals": "Noch keine klaren Auffälligkeiten — dein Spy sammelt erste Signale",
     "tap_for_analysis": "Analyse anzeigen",
-    "tap_to_close": "Analyse ausblenden"
+    "tap_to_close": "Analyse ausblenden",
+    "info_hourly": "Dein Spy scannt automatisch jede Stunde. Du kannst zusätzlich manuelle Scans auslösen.",
+    "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan."
+  },
+  "feed": {
+    "your_feed": "Dein Feed"
+  },
+  "settings": {
+    "disclaimer": "Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt."
   }
 }

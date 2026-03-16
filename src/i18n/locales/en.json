@@ -39,7 +39,9 @@
     "spy_assigned_to": "Spy assigned to",
     "spy_connected": "Spy connected to",
     "spy_inactive": "Spy not active",
-    "locked": "LOCKED"
+    "locked": "LOCKED",
+    "greeting_subtitle_pro": "Your spy is active — here's your overview.",
+    "greeting_subtitle_free": "Unlock your spy for full control."
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
@@ -154,7 +156,10 @@
     "unfollows_detected": "unfollows detected",
     "tap_to_reveal_hint": "Open the profile to see who unfollowed",
     "reveal_now": "Reveal now",
-    "unfollow_hint_explanation": "Our spy noticed the numbers don't add up. Use the unfollow check to see who unfollowed."
+    "unfollow_hint_explanation": "Our spy noticed the numbers don't add up. Use the unfollow check to see who unfollowed.",
+    "agent_zone": "🕵️ Your Spy",
+    "your_accounts": "Your Accounts",
+    "daily_scan_subtitle": "Daily basic scan"
   },
   "suspicion": {
     "score_label": "Suspicion Score",
@@ -473,7 +478,8 @@
     "cta": "Let's go! 🚀"
   },
   "paywall": {
-    "unlock_spy_agent": "🔒 Unlock Spy Agent"
+    "unlock_spy_agent": "🔒 Unlock Spy Agent",
+    "unlock_spy": "Unlock Spy"
   },
   "spy_detail": {
     "your_spy": "Your Spy",
@@ -544,7 +550,8 @@
     "followback_low": "Few follow back – one-sided interest",
     "followback_mid": "Some follow back",
     "followback_high": "Many follow back – mutual interest",
-    "not_enough_data": "Not enough data yet"
+    "not_enough_data": "Not enough data yet",
+    "after_next_scan": "Will be visible after the next scan"
   },
   "gender": {
     "female_short": "female",
@@ -576,6 +583,14 @@
     "early_estimate": "Early estimate · limited activity",
     "no_clear_signals": "No clear anomalies yet — your Spy is gathering first signals",
     "tap_for_analysis": "Show analysis",
-    "tap_to_close": "Hide analysis"
+    "tap_to_close": "Hide analysis",
+    "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
+    "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
+  },
+  "feed": {
+    "your_feed": "Your Feed"
+  },
+  "settings": {
+    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
   }
 }

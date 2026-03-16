@@ -242,7 +242,7 @@ const Dashboard = () => {
                               </p>
                               {spyProfile.follower_count != null && (
                                 <p className="text-white/70 mt-0.5" style={{ fontSize: "0.75rem" }}>
-                                  {formatCount(spyProfile.follower_count)} Follower
+                                  {formatCount(spyProfile.follower_count)} {t("dashboard.followers")}
                                 </p>
                               )}
                             </div>
