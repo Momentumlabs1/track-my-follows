@@ -15,7 +15,8 @@
     "empty_title": "No activity yet",
     "empty_subtitle": "Your spy is on the lookout... New follows and unfollows will appear here.",
     "this_week": "This week",
-    "older": "Older"
+    "older": "Older",
+    "your_feed": "Your Feed"
   },
   "not_found": {
     "title": "Page not found",
