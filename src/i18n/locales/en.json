@@ -589,10 +589,4 @@
     "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
     "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
   },
-  "feed": {
-    "your_feed": "Your Feed"
-  },
-  "settings": {
-    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
-  }
 }
