@@ -149,7 +149,10 @@
     "unfollows_detected": "إلغاء متابعات مكتشفة",
     "tap_to_reveal_hint": "افتح الملف الشخصي لمعرفة من ألغى المتابعة",
     "reveal_now": "اكشف الآن",
-    "unfollow_hint_explanation": "لاحظ جاسوسنا أن الأرقام لا تتطابق. استخدم فحص إلغاء المتابعة لمعرفة من ألغى المتابعة."
+    "unfollow_hint_explanation": "لاحظ جاسوسنا أن الأرقام لا تتطابق. استخدم فحص إلغاء المتابعة لمعرفة من ألغى المتابعة.",
+    "agent_zone": "🕵️ جاسوسك",
+    "your_accounts": "حساباتك",
+    "daily_scan_subtitle": "فحص يومي أساسي"
   },
   "suspicion": {
     "score_label": "مؤشر الشك",
