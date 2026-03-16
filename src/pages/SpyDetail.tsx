@@ -63,7 +63,7 @@ export default function SpyDetail() {
   };
 
   const handlePushScan = async () => {
-    if (pushRemaining <= 0) {
+    if (!isProMax && pushRemaining <= 0) {
       toast.error(t("spy_detail.no_scans_left", "Keine Push-Scans mehr übrig heute ⏰"));
       return;
     }
