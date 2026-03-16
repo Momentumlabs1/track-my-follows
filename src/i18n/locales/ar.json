@@ -39,7 +39,9 @@
     "spy_assigned_to": "الجاسوس معيّن على",
     "spy_connected": "الجاسوس متصل بـ",
     "spy_inactive": "الجاسوس غير نشط",
-    "locked": "مقفل"
+    "locked": "مقفل",
+    "greeting_subtitle_pro": "جاسوسك نشط — إليك نظرة عامة.",
+    "greeting_subtitle_free": "فعّل جاسوسك للتحكم الكامل."
   },
   "add_profile": {
     "title": "من تريد تتبعه؟",
