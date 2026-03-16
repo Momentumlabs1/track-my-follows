@@ -2,26 +2,17 @@ import { isNativeApp } from "./native";
 
 const PUBLISHED_DOMAIN = "https://track-my-follows.lovable.app";
 const CALLBACK_PATH = "/auth/callback";
-const SUPABASE_AUTH_HOST = "bqqmfajowxzkdcvmrtyd.supabase.co";
 
 const isLocalhost = () => {
   const hostname = window.location.hostname;
   return hostname === "localhost" || hostname === "127.0.0.1";
 };
 
-export const isInIframe = (): boolean => {
-  try {
-    return window.self !== window.top;
-  } catch {
-    return true;
-  }
-};
-
 /**
  * Use one deterministic callback target so Supabase never falls back to Site URL.
  */
 export function getOAuthRedirectUrl(): string {
-  if (isNativeApp() || isLocalhost() || isInIframe()) {
+  if (isNativeApp() || isLocalhost()) {
     return PUBLISHED_DOMAIN + CALLBACK_PATH;
   }
 
@@ -29,34 +20,8 @@ export function getOAuthRedirectUrl(): string {
 }
 
 /**
- * Skip browser redirect for native apps (Despia WebView) AND iframes (Lovable preview).
- * Both contexts need manual URL handling.
+ * Skip browser redirect only for native apps (Despia WebView).
  */
 export function shouldSkipBrowserRedirect(): boolean {
-  return isNativeApp() || isInIframe();
-}
-
-const ALLOWED_OAUTH_HOSTS = [
-  SUPABASE_AUTH_HOST,
-  "accounts.google.com",
-  "appleid.apple.com",
-];
-
-/**
- * Validate OAuth URL before redirecting the browser.
- */
-export function isValidOAuthUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-
-    if (parsed.protocol !== "https:") {
-      return false;
-    }
-
-    return ALLOWED_OAUTH_HOSTS.some(
-      (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`)
-    );
-  } catch {
-    return false;
-  }
+  return isNativeApp();
 }
