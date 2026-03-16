@@ -335,7 +335,7 @@ const ProfileDetail = () => {
 
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
-      <div className="px-5 mb-2">
+      <div id="locked-analysis" className="px-5 mb-2">
         <div className="relative">
           {/* Overlay for free users OR pro without spy */}
           {(!isPro || !hasSpy) && (
