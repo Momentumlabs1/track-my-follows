@@ -15,7 +15,7 @@ interface SpotlightOverlayProps {
 
 function DotIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex justify-center gap-1.5 mt-4">
+    <div className="flex justify-center gap-2 mt-4">
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
