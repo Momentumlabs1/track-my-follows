@@ -156,7 +156,10 @@
     "unfollows_detected": "unfollows detected",
     "tap_to_reveal_hint": "Open the profile to see who unfollowed",
     "reveal_now": "Reveal now",
-    "unfollow_hint_explanation": "Our spy noticed the numbers don't add up. Use the unfollow check to see who unfollowed."
+    "unfollow_hint_explanation": "Our spy noticed the numbers don't add up. Use the unfollow check to see who unfollowed.",
+    "agent_zone": "🕵️ Your Spy",
+    "your_accounts": "Your Accounts",
+    "daily_scan_subtitle": "Daily basic scan"
   },
   "suspicion": {
     "score_label": "Suspicion Score",
