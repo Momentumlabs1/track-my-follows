@@ -11,8 +11,7 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [gifLoaded, setGifLoaded] = useState(false);
-  const [phase, setPhase] = useState<"splash" | "landing">("splash");
+  const [phase] = useState<"splash" | "landing">("landing");
 
   // Preload GIF
   useEffect(() => {
