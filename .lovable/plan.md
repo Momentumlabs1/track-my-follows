@@ -1,70 +1,69 @@
 
 
-# WelcomeDialog → 5-Step Tutorial Funnel
+## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
 
-## Ansatz
-Gleiche Datei (`src/components/WelcomeDialog.tsx`), gleicher Trigger, gleicher localStorage-Key. Nur der INHALT wird durch einen 5-Step Swipe-Funnel ersetzt. Fullscreen-Dialog, Dot-Indikator, Framer Motion Slide-Uebergaenge.
+### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
 
-## Aenderungen
+**Probleme aktuell:**
+- Pink-Gradient macht Text schwer lesbar
+- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
+- Kein Avatar, keine visuelle Zuordnung zum Profil
 
-### 1. `src/components/WelcomeDialog.tsx` – Kompletter Inhalt ersetzen
+**Neues Design:**
+- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
+- **Event-Typ als farbiges Badge** oben links:
+  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
+- **Avatar des betroffenen Users** links anzeigen
+- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
+- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
+- **Timestamp** als dezenter Text rechts oben
+- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
 
-- `step` State (0-4) hinzufuegen
-- Dialog auf Fullscreen aendern (`max-w-full h-full` statt `max-w-[340px]`)
-- Kein X-Button, kein Dismiss durch Overlay-Klick (nur ueber Buttons navigierbar)
-- 5 Steps als `AnimatePresence` mit Slide-Transition (`x: 100 → 0 → -100`)
-- Dot-Indikator unten (5 Dots, aktiver Dot = primary, Rest = muted)
-- "Weiter"/"Zurueck" Buttons, letzter Step hat "Mission starten" → `handleClose()`
+### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
 
-**Step 1 – Willkommen, Agent!**
-- SpyIcon Animation (scale spring)
-- Titel: "Dein geheimer Agent wurde aktiviert"
-- Text: "Finde heraus wem dein Crush heimlich folgt – komplett anonym."
-- Button: "Erste Mission starten →"
+**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
+**Neu:**
+- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
+- **Gradient-Border** statt simple border: Primary-to-Accent
+- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
+- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
 
-**Step 2 – Profil tracken**
-- Mockup: Stilisierter Input mit @-Icon + "Username eingeben"
-- Text: "Gib einen Instagram-Usernamen ein – wir scannen das Profil anonym. Niemand erfaehrt davon."
-
-**Step 3 – Was dein Agent findet**
-- 3 Feature-Cards (#1C1C1E bg):
-  - 👀 Neue Follows
-  - 👥 Neue Follower
-  - ♀♂ Geschlechterverteilung
-
-**Step 4 – Pro Features**
-- 4 Feature-Cards:
-  - 🔄 Unfollow-Tracker
-  - 🕵️ Spy-Agent (stuendliche Scans)
-  - 🚩 Verdachts-Score (0-100)
-  - 👻 Ghost-Follows
-
-**Step 5 – Los geht's!**
-- SpyIcon + Confetti-artige Animation
-- "Du bist bereit, Agent! Dein erster Scan laeuft."
-- Button: "Mission starten 🚀" → `handleClose()`
-
-**Design-Specs:**
-- Hintergrund: `bg-background` (kein Glassmorphism)
-- Cards: `bg-[#1C1C1E]` mit Border
-- Emojis: `text-2xl` (24px)
-- Titel: `text-xl font-extrabold text-foreground`
-- Body: `text-[15px] text-[#8E8E93]`
-- Framer Motion: `slideVariants` mit `x` direction based on navigation
-
-### 2. `src/i18n/locales/de.json` + `en.json` + `ar.json`
-- `welcome.step1_title`, `welcome.step1_desc`, `welcome.step1_cta`
-- `welcome.step2_title`, `welcome.step2_desc`
-- `welcome.step3_title`, `welcome.step3_card_*`
-- `welcome.step4_title`, `welcome.step4_card_*`
-- `welcome.step5_title`, `welcome.step5_desc`, `welcome.step5_cta`
-
-### 3. `src/components/ui/dialog.tsx`
-- Kein Aenderung noetig – der X-Button wird via CSS (`[&>button]:hidden`) im WelcomeDialog versteckt
+### 3. Translations
+- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
 
 ### Betroffene Dateien
-- `src/components/WelcomeDialog.tsx` (Komplett-Rewrite des Inhalts)
+- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
+- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
 - `src/i18n/locales/de.json`
 - `src/i18n/locales/en.json`
-- `src/i18n/locales/ar.json`
 
+---
+
+## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+
+### Problem
+Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+
+### Implementiert
+1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
+   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
+   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
+   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
+2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
+3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+
+---
+
+## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+
+### Was implementiert wurde:
+1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
+2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
+3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
+4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
+5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
+6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
+7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+
+### Noch zu tun:
+- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
