@@ -156,7 +156,10 @@
     "unfollows_detected": "Entfolgungen erkannt",
     "tap_to_reveal_hint": "Öffne das Profil um zu sehen wer entfolgt wurde",
     "reveal_now": "Jetzt aufdecken",
-    "unfollow_hint_explanation": "Unser Spy hat bemerkt dass die Zahlen nicht aufgehen. Nutze den Unfollow-Check um zu sehen wer entfolgt wurde."
+    "unfollow_hint_explanation": "Unser Spy hat bemerkt dass die Zahlen nicht aufgehen. Nutze den Unfollow-Check um zu sehen wer entfolgt wurde.",
+    "agent_zone": "🕵️ Dein Spion",
+    "your_accounts": "Deine Accounts",
+    "daily_scan_subtitle": "Täglicher Basis-Scan"
   },
   "suspicion": {
     "score_label": "Verdachts-Score",
