@@ -11,7 +11,7 @@ import { useFollowerEvents } from "@/hooks/useFollowerEvents";
 import { useProfileFollowings } from "@/hooks/useProfileFollowings";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { SpyFindings } from "@/components/SpyFindings";
-import { LockedFeatureCard } from "@/components/LockedFeatureCard";
+
 import { WeeklyGenderCards } from "@/components/WeeklyGenderCards";
 import { SpyStatusCard } from "@/components/SpyStatusCard";
 import { analyzeSuspicion } from "@/lib/suspicionAnalysis";
@@ -336,76 +336,56 @@ const ProfileDetail = () => {
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
       <div className="px-5 mb-2">
-        {!isPro ? (
-          /* ── Free user: individual locked cards ── */
-          <div className="space-y-3">
-            <LockedFeatureCard
-              title={t("spy_status.section_title", "Spy-Analyse")}
-              subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
-              onTap={() => showPaywall("stats")}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <LockedFeatureCard
-                title={t("gender.weekly_title", "Neue ♀ & ♂")}
-                subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
-                onTap={() => showPaywall("gender_bubbles")}
-                className="min-h-[100px]"
-              />
-              <LockedFeatureCard
-                title={t("spy_findings.title", "Spy-Analyse")}
-                subtitle={t("locked_feature.available_with_pro", "Verfügbar mit Pro")}
-                onTap={() => showPaywall("findings")}
-                className="min-h-[100px]"
-              />
-            </div>
-          </div>
-        ) : (
-          /* ── Pro user: full content (may still need spy) ── */
-          <div className="relative">
-            {!hasSpy && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
-                <button onClick={() => setMoveSpyOpen(true)} className="bg-primary text-primary-foreground font-semibold px-5 py-3 rounded-xl flex items-center gap-1.5 z-10" style={{ fontSize: '0.875rem' }}>
-                  <SpyIcon size={14} /> {t("spy.spy_required")}
-                </button>
+        <div className="relative">
+          {/* Overlay for free users OR pro without spy */}
+          {(!isPro || !hasSpy) && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl gap-3">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 shimmer-overlay" />
               </div>
-            )}
-            <div className={`${!hasSpy ? "blur-md pointer-events-none" : ""}`}>
-              <SpyStatusCard
-                analysis={suspicionAnalysis}
-                realEventCount={realEventCount}
-                followEvents={followEvents}
-                followerEvents={followerEvents}
-                profileFollowings={followings}
-                followerCount={followerCount}
-                followingCount={followingCount}
-                lastScannedAt={profile.last_scanned_at}
-                totalScans={profile.total_scans_executed}
-                pushScansToday={profile.push_scans_today}
-                profileId={profile.id}
-                unfollowScansToday={profile.unfollow_scans_today}
-              />
-
-              <div className="border-t border-border/20 my-5" />
-
-              <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
-              <div className="h-4" />
+              <button
+                onClick={() => !isPro ? showPaywall("analysis") : setMoveSpyOpen(true)}
+                className="relative z-20 flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-primary-foreground text-sm shadow-lg min-h-[44px]"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-rose)))",
+                  boxShadow: "0 4px 20px hsl(var(--primary) / 0.4)",
+                }}
+              >
+                <SpyIcon size={16} />
+                {!isPro
+                  ? t("locked_feature.unlock_with_pro", "Mit Pro freischalten")
+                  : t("spy.assign_spy_here")}
+              </button>
+              <p className="relative z-20 text-muted-foreground text-xs text-center px-8">
+                {!isPro
+                  ? t("locked_feature.spy_teaser", "Verdachts-Score, Geschlechter-Analyse & mehr")
+                  : t("spy.spy_required_description")}
+              </p>
             </div>
+          )}
+          <div className={(!isPro || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
+            <SpyStatusCard
+              analysis={suspicionAnalysis}
+              realEventCount={realEventCount}
+              followEvents={followEvents}
+              followerEvents={followerEvents}
+              profileFollowings={followings}
+              followerCount={followerCount}
+              followingCount={followingCount}
+              lastScannedAt={profile.last_scanned_at}
+              totalScans={profile.total_scans_executed}
+              pushScansToday={profile.push_scans_today}
+              profileId={profile.id}
+              unfollowScansToday={profile.unfollow_scans_today}
+            />
+
+            <div className="border-t border-border/20 my-5" />
+
+            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+            <div className="h-4" />
           </div>
-        )}
-      </div>
-
-      {/* ─── Banners ─── */}
-      {isPro && !hasSpy && (
-        <div className="px-5 mb-4">
-          <button onClick={() => setMoveSpyOpen(true)} className="w-full native-card p-4 flex items-center gap-3">
-            <SpyIcon size={36} />
-            <div className="flex-1 text-start">
-              <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("spy.assign_spy_here")}</p>
-              <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t("spy.spy_required_description")}</p>
-            </div>
-          </button>
         </div>
-      )}
+      </div>
 
       {profile.is_private && (
         <div className="px-5 mb-4">
