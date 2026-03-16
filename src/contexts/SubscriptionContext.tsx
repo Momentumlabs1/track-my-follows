@@ -7,6 +7,7 @@ interface SubscriptionState {
   status: "active" | "in_trial" | "canceled" | "past_due" | "expired";
   billingPeriod: "weekly" | "monthly" | "yearly" | null;
   maxProfiles: number;
+  isProMax: boolean;
   canUseUnfollows: boolean;
   canUsePush: boolean;
   canUseStats: boolean;
@@ -29,6 +30,7 @@ const defaultState: SubscriptionState = {
   status: "active",
   billingPeriod: null,
   maxProfiles: 1,
+  isProMax: false,
   canUseUnfollows: false,
   canUsePush: false,
   canUseStats: false,
@@ -81,11 +83,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         
         const isPro = isActiveOrTrial || isWithinPaidPeriod;
 
+        const proMax = isPro && (data.max_tracked_profiles ?? 0) >= 9999;
+
         setState({
           plan: isPro ? "pro" : "free",
           status: (data.status as SubscriptionState["status"]) || "active",
           billingPeriod: (data.billing_period as SubscriptionState["billingPeriod"]) || null,
           maxProfiles: data.max_tracked_profiles || 1,
+          isProMax: proMax,
           canUseUnfollows: isPro,
           canUsePush: isPro,
           canUseStats: isPro,

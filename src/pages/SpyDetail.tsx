@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { haptic } from "@/lib/native";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function SpyDetail() {
   const { t, i18n } = useTranslation();
@@ -39,7 +40,8 @@ export default function SpyDetail() {
 
   const profileAny = spyProfile as Record<string, unknown>;
   const spyName = (profileAny.spy_name as string) || "Spion 🕵️";
-  const pushRemaining = (profileAny.push_scans_today as number) ?? 4;
+  const { isProMax } = useSubscription();
+  const pushRemaining = isProMax ? 999 : ((profileAny.push_scans_today as number) ?? 4);
   const unfollowRemaining = Math.min((profileAny.unfollow_scans_today as number) ?? 1, 1);
   const spyAssignedAt = spyProfile.spy_assigned_at;
 
@@ -61,7 +63,7 @@ export default function SpyDetail() {
   };
 
   const handlePushScan = async () => {
-    if (pushRemaining <= 0) {
+    if (!isProMax && pushRemaining <= 0) {
       toast.error(t("spy_detail.no_scans_left", "Keine Push-Scans mehr übrig heute ⏰"));
       return;
     }
@@ -251,9 +253,9 @@ export default function SpyDetail() {
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
                   <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-                    {t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                    {isProMax ? "∞ unlimited" : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
-          <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />
+          {!isProMax && <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />}
         </button>
 
         {/* Unfollow Scan */}
