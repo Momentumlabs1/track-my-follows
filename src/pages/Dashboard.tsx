@@ -134,7 +134,7 @@ const Dashboard = () => {
         </div>
 
         {/* ─── Spy Agent Zone ─── */}
-        <div className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
+        <div id="spy-agent-zone" className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
           <span className="text-primary-foreground/40 font-bold uppercase tracking-widest block mb-2 px-1" style={{ fontSize: "0.5625rem", letterSpacing: "0.12em" }}>
             {t("spy.agent_zone", "🕵️ Dein Spion")}
           </span>
