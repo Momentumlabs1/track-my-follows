@@ -63,9 +63,6 @@ const Login = () => {
         return;
       }
 
-      if (skipRedirect && data?.url) {
-        window.location.assign(data.url);
-      }
     } catch (err) {
       toast.error(String(err));
     } finally {

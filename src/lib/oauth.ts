@@ -23,5 +23,5 @@ export function getOAuthRedirectUrl(): string {
  * Skip browser redirect only for native apps (Despia WebView).
  */
 export function shouldSkipBrowserRedirect(): boolean {
-  return isNativeApp();
+  return false;
 }
