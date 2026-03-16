@@ -141,7 +141,7 @@ export function SpotlightOverlay({
               background: "#1C1C1E",
               borderRadius: 16,
               padding: 20,
-              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
             }}
           >
             <p style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
