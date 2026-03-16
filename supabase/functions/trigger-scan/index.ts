@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Budget check for manual push scans ──
-    if (isPro && scanType === "push" && profileId) {
+    if (isPro && !isProMax && scanType === "push" && profileId) {
       const profile = profiles[0];
       const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
       const todayMidnight = new Date();
