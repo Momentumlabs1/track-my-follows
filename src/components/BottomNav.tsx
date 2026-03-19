@@ -35,7 +35,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-50 bg-background pb-[env(safe-area-inset-bottom)]" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
-      <div className="flex items-center justify-around" style={{ height: '60px' }}>
+      <div className="flex items-center justify-around pt-2" style={{ height: '72px' }}>
         {navItems.map((item) => (
           <Link
             key={item.to}
@@ -46,7 +46,7 @@ export function BottomNav() {
             <span className={item.isActive ? "text-primary" : "text-muted-foreground"}>
               {item.icon(item.isActive)}
             </span>
-            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>
+            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.75rem' }}>
               {item.label}
             </span>
           </Link>
