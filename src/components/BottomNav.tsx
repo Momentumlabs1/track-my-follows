@@ -28,7 +28,7 @@ export function BottomNav() {
     {
       to: "/settings",
       label: t("nav.settings"),
-      icon: (active: boolean) => <Settings className="h-7 w-7" strokeWidth={active ? 2 : 1.5} />,
+      icon: (active: boolean) => <Settings className="h-8 w-8" strokeWidth={active ? 2 : 1.5} />,
       isActive: location.pathname === "/settings",
     },
   ];
