@@ -47,29 +47,35 @@ const Login = () => {
     setSocialLoading(provider);
     try {
       if (isNativeApp()) {
-        // Native path: get URL without navigating, then open via Despia's oauth:// protocol
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider,
-          options: {
-            skipBrowserRedirect: true,
-            redirectTo: "https://track-my-follows.lovable.app/native-callback",
+        // NATIVE FLOW per Despia docs:
+        // 1. Get OAuth URL from auth-start edge function
+        // 2. Open in ASWebAuthenticationSession via despia('oauth://?url=...')
+        // 3. After OAuth, NativeCallback.tsx redirects to deeplink
+        // 4. Deeplink closes browser, WebView navigates to /auth?tokens
+        // 5. AuthContext picks up tokens and sets session
+        const { data, error } = await supabase.functions.invoke("auth-start", {
+          body: {
+            provider,
+            deeplink_scheme: NATIVE_DEEPLINK_SCHEME,
           },
         });
 
-        if (error) {
-          toast.error(error.message);
+        if (error || !data?.url) {
+          console.error("[auth] Failed to get OAuth URL:", error);
+          toast.error("OAuth start failed");
           return;
         }
 
-        if (data?.url) {
-          await openOAuth(data.url);
-        }
+        // Open in ASWebAuthenticationSession (iOS) / Chrome Custom Tab (Android)
+        const despia = (await import("despia-native")).default;
+        despia(`oauth://?url=${encodeURIComponent(data.url)}`);
       } else {
-        // Web path: standard redirect within browser
+        // WEB FLOW: Standard Supabase OAuth redirect (no edge function needed)
         const { error } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
             redirectTo: window.location.origin + "/auth/callback",
+            scopes: "openid email profile",
           },
         });
 
