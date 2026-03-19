@@ -661,7 +661,8 @@
     "tap_for_analysis": "Show analysis",
     "tap_to_close": "Hide analysis",
     "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
-    "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
+    "info_unfollow_baseline": "Unfollow scans only work after the first complete scan.",
+    "info_title": "Spy Status Explained"
   },
   "locked_feature": {
     "available_with_pro": "Available with Pro",

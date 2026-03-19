@@ -664,6 +664,7 @@
     "tap_for_analysis": "Analyse anzeigen",
     "tap_to_close": "Analyse ausblenden",
     "info_hourly": "Dein Spy scannt automatisch jede Stunde. Du kannst zusätzlich manuelle Scans auslösen.",
-    "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan."
+    "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan.",
+    "info_title": "Spy-Status Erklärung"
   }
 }

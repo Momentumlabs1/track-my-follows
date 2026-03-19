@@ -653,6 +653,8 @@
     "gender_distribution": "توزيع الجنس للمتابعات الجديدة: {{percent}}% إناث"
   },
   "locked_feature": {
-    "available_with_pro": "متاح مع Pro"
+    "available_with_pro": "متاح مع Pro",
+    "unlock_with_pro": "فتح مع Pro",
+    "spy_teaser": "مؤشر الشك، تحليل الجنس والمزيد"
   }
 }
