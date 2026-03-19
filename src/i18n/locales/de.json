@@ -223,7 +223,8 @@
     "female_bar": "♀ Frau",
     "male_bar": "♂ Mann",
     "followed_distribution": "Geschlechterverteilung der gefolgten Accounts",
-    "analysis_running": "Geschlechteranalyse läuft..."
+    "analysis_running": "Geschlechteranalyse läuft...",
+    "accounts_count": "{{count}} Accounts"
   },
   "insights": {
     "title": "Insights",
@@ -556,7 +557,9 @@
     "done_cta": "Alles klar! 🕵️"
   },
   "locked_feature": {
-    "available_with_pro": "Verfügbar mit Pro"
+    "available_with_pro": "Verfügbar mit Pro",
+    "unlock_with_pro": "Mit Pro freischalten",
+    "spy_teaser": "Verdachts-Score, Geschlechter-Analyse & mehr"
   },
   "spy_detail": {
     "your_spy": "Dein Spion",
@@ -588,7 +591,10 @@
     "feature_gender": "Geschlechteranalyse",
     "feature_gender_desc": "Erfahre, wem dein Ziel wirklich folgt",
     "current_mission": "Aktueller Einsatz",
-    "capabilities": "Was kann dein Spion?"
+    "capabilities": "Was kann dein Spion?",
+    "push_scan_title": "Push Scan",
+    "unfollow_scan_title": "Unfollow Scan",
+    "unlimited": "∞ unbegrenzt"
   },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
   "private_frozen": "Dieses Profil ist jetzt privat – Tracking eingefroren",
@@ -658,6 +664,7 @@
     "tap_for_analysis": "Analyse anzeigen",
     "tap_to_close": "Analyse ausblenden",
     "info_hourly": "Dein Spy scannt automatisch jede Stunde. Du kannst zusätzlich manuelle Scans auslösen.",
-    "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan."
+    "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan.",
+    "info_title": "Spy-Status Erklärung"
   }
 }

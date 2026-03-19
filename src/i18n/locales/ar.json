@@ -221,7 +221,8 @@
     "female_bar": "♀ نساء",
     "male_bar": "♂ رجال",
     "followed_distribution": "توزيع الجنس للحسابات المتابعة",
-    "analysis_running": "تحليل الجنس قيد التنفيذ..."
+    "analysis_running": "تحليل الجنس قيد التنفيذ...",
+    "accounts_count": "{{count}} حساب"
   },
   "insights": {
     "title": "إحصائيات",
@@ -585,7 +586,10 @@
     "feature_gender": "تحليل الجنس",
     "feature_gender_desc": "اكتشف من يتابع هدفك حقاً",
     "current_mission": "المهمة الحالية",
-    "capabilities": "ماذا يستطيع جاسوسك؟"
+    "capabilities": "ماذا يستطيع جاسوسك؟",
+    "push_scan_title": "فحص فوري",
+    "unfollow_scan_title": "فحص إلغاء المتابعة",
+    "unlimited": "∞ غير محدود"
   },
   "spy_findings": {
     "after_next_scan": "سيظهر بعد الفحص التالي"
@@ -649,6 +653,8 @@
     "gender_distribution": "توزيع الجنس للمتابعات الجديدة: {{percent}}% إناث"
   },
   "locked_feature": {
-    "available_with_pro": "متاح مع Pro"
+    "available_with_pro": "متاح مع Pro",
+    "unlock_with_pro": "فتح مع Pro",
+    "spy_teaser": "مؤشر الشك، تحليل الجنس والمزيد"
   }
 }

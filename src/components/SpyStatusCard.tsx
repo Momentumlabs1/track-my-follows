@@ -280,7 +280,7 @@ export function SpyStatusCard({
                     ) : (
                       <Search className="h-4 w-4 text-primary" />
                     )}
-                    <span className="text-[12px] font-bold text-foreground">Push Scan</span>
+                    <span className="text-[12px] font-bold text-foreground">{t("spy_detail.push_scan_title", "Push Scan")}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
                     {pushRemaining > 0
@@ -288,7 +288,7 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {isProMax ? "∞ unlimited" : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                    {isProMax ? t("spy_detail.unlimited", "∞ unlimited") : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
                   {!isProMax && <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />}
                 </button>
@@ -309,7 +309,7 @@ export function SpyStatusCard({
                     ) : (
                       <Eye className="h-4 w-4 text-primary" />
                     )}
-                    <span className="text-[12px] font-bold text-foreground">Unfollow Scan</span>
+                    <span className="text-[12px] font-bold text-foreground">{t("spy_detail.unfollow_scan_title", "Unfollow Scan")}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
                     {unfollowRemaining > 0

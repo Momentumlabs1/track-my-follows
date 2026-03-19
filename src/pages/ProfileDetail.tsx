@@ -361,7 +361,7 @@ const ProfileDetail = () => {
                 </span>
                 <div className="h-7 rounded-full" style={{ background: "hsl(var(--border))" }} />
                 <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
-                  {t("gender.analysis_running", "Geschlechteranalyse läuft...")} · {followings.length} Accounts
+                  {t("gender.analysis_running")} · {t("gender.accounts_count", { count: followings.length })}
                 </p>
               </div>
             )}

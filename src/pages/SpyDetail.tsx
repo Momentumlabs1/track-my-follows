@@ -245,7 +245,7 @@ export default function SpyDetail() {
             ) : (
               <Search className="h-5 w-5 text-primary" />
             )}
-            <span className="text-[13px] font-bold text-foreground">Push Scan</span>
+            <span className="text-[13px] font-bold text-foreground">{t("spy_detail.push_scan_title", "Push Scan")}</span>
           </div>
           <p className="text-[10px] text-muted-foreground mb-3">
             {pushRemaining > 0
@@ -253,7 +253,7 @@ export default function SpyDetail() {
               : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
           </p>
                   <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-                    {isProMax ? "∞ unlimited" : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                    {isProMax ? t("spy_detail.unlimited", "∞ unlimited") : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
           {!isProMax && <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />}
         </button>
@@ -274,7 +274,7 @@ export default function SpyDetail() {
             ) : (
               <Eye className="h-5 w-5 text-primary" />
             )}
-            <span className="text-[13px] font-bold text-foreground">Unfollow Scan</span>
+            <span className="text-[13px] font-bold text-foreground">{t("spy_detail.unfollow_scan_title", "Unfollow Scan")}</span>
           </div>
           <p className="text-[10px] text-muted-foreground mb-3">
             {unfollowRemaining > 0
