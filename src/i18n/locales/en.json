@@ -588,7 +588,10 @@
     "feature_gender": "Gender Analysis",
     "feature_gender_desc": "Find out who your target really follows",
     "current_mission": "Current Mission",
-    "capabilities": "What can your spy do?"
+    "capabilities": "What can your spy do?",
+    "push_scan_title": "Push Scan",
+    "unfollow_scan_title": "Unfollow Scan",
+    "unlimited": "∞ unlimited"
   },
   "gender_analysis_running": "Gender analysis running in background...",
   "private_frozen": "This profile is now private – tracking frozen",
