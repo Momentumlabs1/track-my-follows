@@ -113,7 +113,7 @@ const Dashboard = () => {
           )}
           {profiles.length > 0 && (
             <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>
-              {profiles.length} {profiles.length === 1 ? "Account" : "Accounts"}
+              {profiles.length} {profiles.length === 1 ? t("dashboard.account_singular", "Account") : t("dashboard.account_plural", "Accounts")}
             </span>
           )}
         </div>
