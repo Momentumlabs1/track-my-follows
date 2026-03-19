@@ -69,57 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // 2) Init: let Supabase SDK handle OAuth params via getSession, then finalize
     const init = async () => {
-      const isOAuthReturn = hasOAuthParams();
-      console.info("[auth/init] starting", { isOAuthReturn, url: window.location.href });
-
-      if (isOAuthReturn) {
-        // For PKCE, exchange the returned code immediately to avoid long polling
-        // windows in native/webview contexts.
-        const oauthCode = getOAuthCode();
-        if (oauthCode) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(oauthCode);
-          if (exchangeError) {
-            console.warn("[auth/init] code exchange failed", { message: exchangeError.message });
-          }
-        }
-
-        let resolved = false;
-
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (initialSession) {
-          if (mounted) setSession(initialSession);
-          resolved = true;
-        }
-
-        if (!resolved) {
-          for (let attempt = 0; attempt < 4; attempt++) {
-            await new Promise(r => setTimeout(r, 250));
-            const { data: { session: s } } = await supabase.auth.getSession();
-            console.info(`[auth/init] OAuth retry ${attempt + 1}/4`, { hasSession: !!s });
-            if (s) {
-              if (mounted) setSession(s);
-              resolved = true;
-              break;
-            }
-          }
-        }
-
-        cleanOAuthParams();
-
-        if (!resolved) {
-          console.warn("[auth/init] OAuth return but no session after retries");
-        }
-      } else {
-        // Normal app load — single getSession check
-        const { data: { session: s } } = await supabase.auth.getSession();
-        console.info("[auth/init] normal load", { hasSession: !!s });
-        if (mounted && s) {
-          setSession(s);
-        }
+      const { data: { session: s } } = await supabase.auth.getSession();
+      console.info("[auth/init]", { hasSession: !!s });
+      if (mounted && s) {
+        setSession(s);
       }
-
       if (mounted) {
         setLoading(false);
       }

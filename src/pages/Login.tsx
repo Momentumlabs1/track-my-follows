@@ -45,24 +45,15 @@ const Login = () => {
   const handleSocialLogin = async (provider: "apple" | "google") => {
     setSocialLoading(provider);
     try {
-      const redirectUrl = getOAuthRedirectUrl();
-      const skipBrowserRedirect = shouldSkipBrowserRedirect();
-      const queryParams = provider === "google" ? { prompt: "select_account" } : undefined;
-
-      console.info("[auth/login] OAuth start", { provider, redirectUrl, skipBrowserRedirect });
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect,
-          queryParams,
+          redirectTo: window.location.origin + "/auth/callback",
         },
       });
 
       if (error) {
         toast.error(error.message);
-        return;
       }
     } catch (err) {
       toast.error(String(err));
