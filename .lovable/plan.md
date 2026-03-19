@@ -1,31 +1,48 @@
 
 
-## UI-Polish: Spacing, Navigation und Gender-Sheet
+## Tutorial-Analyse: Warum es nach dem ersten Step abbricht
 
-### 1. BottomNav vergrößern und nach oben rücken
-**Datei: `src/components/BottomNav.tsx`**
-- Nav-Höhe von 60px auf 72px erhöhen
-- Icons von h-7/w-7 (28px) auf h-8/w-8 (32px)
-- SpyIcon size von 28 auf 32
-- Label-Schrift von 0.6875rem auf 0.75rem
-- Zusätzliches inneres Padding oben (pt-2) damit die Nav visuell "höher" sitzt
-- `pb-[env(safe-area-inset-bottom)]` bleibt, damit auf echten iPhones der Home-Indicator-Bereich korrekt berücksichtigt wird
+### Das Problem
+Das Tutorial hat 7 Steps definiert, aber **bricht nach Step 0 ("+"-Button) effektiv ab**, weil:
 
-### 2. Content-Bereich: Mehr Abstand unten
-**Dateien: `src/pages/Dashboard.tsx`, `src/pages/FeedPage.tsx`, `src/pages/Settings.tsx`**
-- Bottom-Padding der Hauptcontainer erhöhen auf `pb-[calc(env(safe-area-inset-bottom)+100px)]` (statt ca. 80px), damit Content nicht hinter der jetzt größeren Nav verschwindet
+1. **Step 0** (Spotlight auf `add-profile-btn`): Funktioniert — User sieht das Highlight und tippt drauf
+2. **Step 1** (Action: `wait_for_add_profile`): Rendert `null` — User sieht nichts, wartet auf Navigation zu `/add-profile`
+3. **Step 2** (Action: `wait_for_scan_complete`): Rendert `null` — wartet auf `/profile/*`, was einen echten Scan voraussetzt (dauert 30+ Sekunden)
+4. **Steps 3-5** (Gender-Bar, Tabs, Locked-Analysis): Auf der ProfileDetail-Seite — aber `AppTutorial` ist **nur in Dashboard.tsx gemountet**. Wenn der User zu `/profile/*` navigiert, wird `AppTutorial` **unmounted** und alle Steps gehen verloren.
+5. **Step 6** (Spy-Agent-Zone): Würde zurück zum Dashboard navigieren, wird aber nie erreicht
 
-### 3. Gender Bottom Sheet app-mäßiger gestalten
-**Datei: `src/components/WeeklyGenderCards.tsx`**
-- Feste Höhe statt `max-h-[70vh]`: Sheet auf `h-[60vh]` setzen, damit es immer gleich groß aufgeht
-- Drag-Handle oben hinzufügen (kleiner grauer Balken, 36x4px, zentriert, typisches iOS-Pattern)
-- Header-Bereich visuell stärker abgrenzen: dickerer Border, etwas mehr Padding
-- Scrollbare Liste: subtilen Scroll-Indicator via CSS (`scrollbar-width: thin` mit sichtbarem Styling)
-- Listeneinträge: etwas größere Avatare (44px statt 40px), mehr vertikales Padding (py-3.5 statt py-3)
-- Safe-Area-Bottom-Padding beibehalten
+### Kernproblem
+`<AppTutorial />` lebt nur in `Dashboard.tsx`. Sobald der User die Seite verlässt (was Step 0 ja explizit verlangt!), ist die Komponente weg. Der Tutorial-State ist weg. Game over.
 
-### Technische Details
-- Alle Spacing-Werte nutzen `env(safe-area-inset-*)` CSS-Funktionen, die auf echten iPhones den Home-Indicator-Bereich respektieren. Im Web-Preview ist dieser Wert 0, daher sieht man den Effekt erst auf dem echten Gerät.
-- Die Nav nutzt bereits `pb-[env(safe-area-inset-bottom)]` — das ist korrekt. Der Body hat bereits `padding-top: env(safe-area-inset-top)` in index.css.
-- Das Gender-Sheet bekommt eine feste Höhe damit es konsistent aufgeht, unabhängig von der Anzahl der Einträge.
+### Fix-Plan
+
+#### 1. AppTutorial global mounten
+**Datei: `src/App.tsx`**
+- `<AppTutorial />` aus Dashboard raus, in `AppContent` rein (neben `<BottomNav />`)
+- Damit lebt das Tutorial über alle Routen hinweg
+
+#### 2. Action-Steps mit visuellem Feedback versehen
+**Datei: `src/components/AppTutorial.tsx`**
+- Für `wait_for_add_profile` und `wait_for_scan_complete`: Statt `null` einen kleinen Spy-Agent-Bubble rendern ("Gib einen Benutzernamen ein..." / "Scan läuft... gleich geht's weiter!")
+- Damit weiß der User, dass das Tutorial noch aktiv ist
+
+#### 3. Element-Polling statt sofortigem Abbruch
+**Datei: `src/components/AppTutorial.tsx`**
+- Wenn `targetExists` false ist: Nicht sofort `null` returnen, sondern bis zu 5 Sekunden warten (Polling alle 500ms)
+- Elemente auf ProfileDetail laden async — das Tutorial muss darauf warten können
+
+#### 4. Abschluss-Step hinzufügen
+**Datei: `src/components/AppTutorial.tsx`**
+- Nach dem letzten Spotlight-Step: "Fertig!"-Bubble vom Spy-Agent mit Zusammenfassung und Konfetti/Animation
+- Aktuell endet es einfach still
+
+#### 5. Translation-Keys prüfen
+Alle Tutorial-Keys sind bereits in DE/EN/AR vorhanden — hier ist alles korrekt.
+
+### Zusammenfassung der Änderungen
+| Datei | Änderung |
+|---|---|
+| `src/App.tsx` | AppTutorial global mounten |
+| `src/pages/Dashboard.tsx` | AppTutorial-Import entfernen |
+| `src/components/AppTutorial.tsx` | Polling, Waiting-Bubbles, Abschluss-Step |
 
