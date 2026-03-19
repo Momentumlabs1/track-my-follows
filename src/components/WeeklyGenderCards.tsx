@@ -222,28 +222,35 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 rounded-t-3xl max-h-[70vh] flex flex-col"
-              style={{ background: "hsl(var(--card))" }}
+              className="absolute bottom-0 left-0 right-0 rounded-t-3xl flex flex-col"
+              style={{ background: "hsl(var(--card))", height: "60vh" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-5 pb-3 flex items-center justify-between border-b border-border flex-shrink-0">
-                <p className="font-bold text-foreground" style={{ fontSize: "1rem" }}>{sheetTitle}</p>
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="rounded-full bg-muted-foreground/30" style={{ width: 36, height: 4 }} />
+              </div>
+              {/* Header */}
+              <div className="px-5 pb-3 pt-1 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                <p className="font-bold text-foreground" style={{ fontSize: "1.0625rem" }}>{sheetTitle}</p>
                 <button onClick={() => setSheetGender(null)} className="p-2 -me-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
-              <div className="overflow-y-auto flex-1 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+              {/* Scrollable list */}
+              <div className="overflow-y-auto flex-1 pb-[calc(env(safe-area-inset-bottom)+16px)]" style={{ scrollbarWidth: 'thin' }}>
                 {sheetData.map((item) => (
                   <a
                     key={item.username}
                     href={`https://instagram.com/${item.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-5 py-3 border-b border-border"
+                    className="flex items-center gap-3.5 px-5 py-3.5"
+                    style={{ borderBottom: '0.5px solid hsl(var(--border) / 0.5)' }}
                   >
-                    <InstagramAvatar src={item.avatarUrl} alt={item.username} fallbackInitials={item.username} size={40} />
+                    <InstagramAvatar src={item.avatarUrl} alt={item.username} fallbackInitials={item.username} size={44} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate" style={{ fontSize: "0.875rem" }}>@{item.username}</p>
+                      <p className="font-semibold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>@{item.username}</p>
                       {item.displayName && (
                         <p className="text-muted-foreground truncate" style={{ fontSize: "0.8125rem" }}>{item.displayName}</p>
                       )}

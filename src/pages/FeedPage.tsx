@@ -107,7 +107,7 @@ const FeedPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+100px)]">
       {/* Header */}
       <div className="px-5 pt-[calc(env(safe-area-inset-top)+16px)] pb-4">
         <div className="flex items-center justify-between mb-4">

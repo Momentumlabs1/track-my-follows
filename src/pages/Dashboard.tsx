@@ -406,7 +406,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="pb-24" />
+      <div className="pb-[calc(env(safe-area-inset-bottom)+100px)]" />
     </div>
   );
 };

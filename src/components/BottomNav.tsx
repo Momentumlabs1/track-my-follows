@@ -16,26 +16,26 @@ export function BottomNav() {
     {
       to: "/feed",
       label: t("nav.feed", "Feed"),
-      icon: (active: boolean) => <Newspaper className="h-7 w-7" strokeWidth={active ? 2 : 1.5} />,
+      icon: (active: boolean) => <Newspaper className="h-8 w-8" strokeWidth={active ? 2 : 1.5} />,
       isActive: location.pathname === "/feed",
     },
     {
       to: "/dashboard",
       label: t("nav.spy", "Spy"),
-      icon: (active: boolean) => <SpyIcon size={28} className={active ? "" : "opacity-50"} />,
+      icon: (active: boolean) => <SpyIcon size={32} className={active ? "" : "opacity-50"} />,
       isActive: location.pathname === "/dashboard" || location.pathname.startsWith("/profile/") || location.pathname === "/add-profile",
     },
     {
       to: "/settings",
       label: t("nav.settings"),
-      icon: (active: boolean) => <Settings className="h-7 w-7" strokeWidth={active ? 2 : 1.5} />,
+      icon: (active: boolean) => <Settings className="h-8 w-8" strokeWidth={active ? 2 : 1.5} />,
       isActive: location.pathname === "/settings",
     },
   ];
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-50 bg-background pb-[env(safe-area-inset-bottom)]" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
-      <div className="flex items-center justify-around" style={{ height: '60px' }}>
+      <div className="flex items-center justify-around pt-2" style={{ height: '72px' }}>
         {navItems.map((item) => (
           <Link
             key={item.to}
@@ -46,7 +46,7 @@ export function BottomNav() {
             <span className={item.isActive ? "text-primary" : "text-muted-foreground"}>
               {item.icon(item.isActive)}
             </span>
-            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>
+            <span className={`font-medium ${item.isActive ? "text-primary" : "text-muted-foreground"}`} style={{ fontSize: '0.75rem' }}>
               {item.label}
             </span>
           </Link>
