@@ -161,7 +161,7 @@ export function PaywallSheet() {
 
               {/* Apple-required subscription disclosure */}
               <p className="text-center text-[11px] text-muted-foreground mt-4 px-2 leading-relaxed">
-                Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen.
+                {t("paywall.subscription_disclosure")}
               </p>
 
               <div className="flex items-center justify-center gap-4 mt-4">
