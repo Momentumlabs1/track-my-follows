@@ -522,7 +522,11 @@
     "comment_tabs": "تحديثات مع كل فحص!",
     "comment_pro": "لن يفلت منك شيء 🔍",
     "comment_spy": "جاسوسك الشخصي 🕵️",
-    "comment_done": "استمتع أيها العميل! 🚀"
+    "comment_done": "استمتع أيها العميل! 🚀",
+    "waiting_add": "أدخل اسم المستخدم... 🔎",
+    "waiting_scan": "الفحص جارٍ – انتظر قليلاً! ⏳",
+    "done_title": "اكتمل الشرح! 🎉",
+    "done_cta": "فهمت! 🕵️"
   },
   "spy_detail": {
     "your_spy": "جاسوسك",
