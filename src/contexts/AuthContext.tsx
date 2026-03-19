@@ -51,13 +51,18 @@ async function syncUserSettings(userId: string) {
 /**
  * Check if the current URL contains OAuth return parameters.
  */
+function getOAuthCode(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("code");
+}
+
 function hasOAuthParams(): boolean {
   const params = new URLSearchParams(window.location.search);
   const hash = window.location.hash.substring(1);
   const hashParams = new URLSearchParams(hash);
 
   return !!(
-    params.get("code") ||
+    getOAuthCode() ||
     params.get("error") ||
     hashParams.get("access_token") ||
     hashParams.get("error")
