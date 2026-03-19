@@ -1,145 +1,66 @@
 
 
-## Gesamtplan: 8 Punkte auf einmal
+## OAuth Fix -- basierend auf offizieller Despia "Easy OAuth" Doku
 
-### Status-Check: Was ist DONE vs OFFEN
+Ich habe die komplette Despia Easy OAuth Dokumentation gelesen. Hier ist was kaputt ist und was gefixed werden muss:
 
-| # | Thema | Status |
-|---|---|---|
-| 1 | Gender-Bar Gating (Pro) | ✅ DONE |
-| 2 | Übersetzungen EN/AR | ✅ DONE |
-| 3 | Tutorial komplett machen | ❌ OFFEN |
-| 4 | Instagram-Links extern öffnen | ❌ OFFEN |
-| 5 | Onboarding-Page Redesign | ❌ OFFEN |
-| 6 | Spy-Analyse überarbeiten | ❌ OFFEN |
-| 7 | Padding/Navigation/Safe-Area | ❌ OFFEN |
-| 8 | Gender-Sheet verbessern | ❌ OFFEN |
-| 9 | Feed überarbeiten | ❌ OFFEN |
+### Was ist kaputt?
 
----
+**3 Probleme, alle bestätigt durch die offizielle Despia Doku:**
 
-### 1. Tutorial komplett machen
-**Problem:** Tutorial hat nur 2 Popups (Intro + "Drück den + Button"), danach passiert nichts mehr weil die Action-Steps (`wait_for_add_profile`, `wait_for_scan_complete`) den Nutzer verlieren und die Spotlight-Steps (`gender-bar`, `tabs-section`, `locked-analysis`, `spy-agent-zone`) nie angezeigt werden weil die Element-IDs nicht gefunden werden oder der Nutzer nie zur richtigen Seite navigiert wird.
+1. **Deeplink-Scheme falsch** -- `src/lib/native.ts` Zeile 66 sagt `secretspy`, muss `spysecret` sein. Deshalb erkennt iOS den Deeplink nicht und das Browser-Sheet bleibt offen.
 
-**Fix:**
-- Tutorial-Flow robuster machen: nach dem Scan automatisch zum Profil navigieren
-- Sicherstellen dass alle `targetId`s (`gender-bar`, `tabs-section`, `locked-analysis`, `spy-agent-zone`) tatsächlich im DOM existieren
-- Längeres Polling (10s statt 5s) für async geladene Elemente
-- Step-Indicator hinzufügen (z.B. "3/7") damit der User weiß wo er ist
-- Tutorial-Bubble zentrierter und größer machen (nicht nur rechts unten in der Ecke)
+2. **`public/404.html` fehlt** -- Die Despia Doku listet diese Datei als PFLICHT. Ohne sie: Wenn Supabase nach OAuth zu `/native-callback#access_token=xxx` redirected, gibt der Static Host einen echten 404 zurück und der Hash mit den Tokens geht verloren. Das ist wahrscheinlich der Grund warum NativeCallback keine Tokens findet.
 
-**Dateien:** `src/components/AppTutorial.tsx`, `src/components/SpotlightOverlay.tsx`
+3. **`/auth`-Route verarbeitet keine Tokens** -- Nach dem Deeplink-Rücksprung navigiert Despia den WebView zu `/auth?access_token=xxx`. Aber `AuthCallback.tsx` macht nur "warten und redirecten" -- es ruft nie `setSession()` auf. Der `AuthContext` checkt zwar URL-Params beim Init, aber nur auf der Root-Route. Die `/auth`-Route muss selbst Tokens verarbeiten können.
+
+### Despia-Config (du musst manuell machen)
+
+- `appleid.apple.com` von **"Never Open in Browser"** nach **"Open Always in Browser"** verschieben (genau wie `accounts.google.com` schon korrekt ist)
 
 ---
 
-### 2. Instagram-Links extern öffnen
-**Problem:** Links öffnen aktuell mit `target="_blank"` und `href="https://instagram.com/..."` – im WebView (Despia) öffnet das den In-App-Browser statt die Instagram-App.
+### Code-Änderungen
 
-**Fix:** Instagram-Deep-Links nutzen: `instagram://user?username=xxx` mit Fallback auf `https://instagram.com/xxx`. Hilfsfunktion erstellen:
-```
-function openInstagram(username: string) {
-  const nativeUrl = `instagram://user?username=${username}`;
-  const webUrl = `https://instagram.com/${username}`;
-  // Try native first, fallback to web
-  window.location.href = nativeUrl;
-  setTimeout(() => window.open(webUrl, '_blank'), 500);
-}
-```
+**1. Scheme fixen -- `src/lib/native.ts`**
+- Zeile 66: `'secretspy'` zu `'spysecret'`
 
-**Dateien:** `src/lib/native.ts` (neue Funktion), `src/pages/ProfileDetail.tsx` (3 Stellen), `src/components/WeeklyGenderCards.tsx` (1 Stelle)
+**2. `public/404.html` erstellen (per Despia Doku)**
+- SPA-Fallback Script das den Pfad + Hash preserviert und zur Root weiterleitet
+- Format: `/?redirect=/native-callback&deeplink_scheme=spysecret` + Hash
 
----
+**3. `public/_redirects` erstellen**
+- `/* /index.html 200` -- damit Lovable/Netlify alle Routen an die SPA weiterleitet
 
-### 3. Onboarding-Page Redesign
-**Problem:** Aktuell eine lange scrollbare Seite mit Feature-Pills, Feature-Cards und Notification-Preview. User erkennt nicht, dass man scrollen muss.
+**4. `SpaRedirector` Komponente erstellen -- `src/components/SpaRedirector.tsx`**
+- Liest `?redirect=...` aus der URL und navigiert intern zur richtigen Route (mit Hash)
+- Wird in `App.tsx` eingebunden
 
-**Fix:** Single-Screen ohne Scroll:
-- Alles auf eine Bildschirmhöhe (`h-[100dvh]`) packen
-- Hero-Bereich kompakter: Logo + Headline + 3 Feature-Icons in einer Reihe
-- CTA-Button prominent am unteren Rand (fixed)
-- Kein Scrollen nötig — alles auf einen Blick sichtbar
-- Smooth Transition zum Login (framer-motion page transition)
+**5. `/auth`-Route token-fähig machen -- `src/pages/AuthCallback.tsx`**
+- Tokens aus URL-Hash und Query-Params lesen (`access_token`, `refresh_token`)
+- Bei vorhandenen Tokens: `supabase.auth.setSession()` aufrufen
+- Dann zum Dashboard navigieren
+- Fallback: wenn keine Tokens und kein User, zu `/login`
 
-**Dateien:** `src/pages/Onboarding.tsx`
+**6. `NativeCallback.tsx` robuster machen**
+- `window.location.replace()` statt `.href`
+- Fallback-Button "App öffnen" nach 3 Sekunden falls Deeplink nicht greift
+- Alle `secretspy://` Referenzen zu `spysecret://`
 
----
-
-### 4. Spy-Analyse (SpyFindings) überarbeiten
-**Problem:** Die Findings zeigen "Ghost-Follows", "Private Accounts %" und "Followback-Rate" – aber die Daten sind meist "—" (nicht genug Daten) und die Metriken sind verwirrend.
-
-**Fix:**
-- Klarere Labels und Beschreibungen für jede Metrik
-- "Ghost-Follows" → "Follow & Unfollow" mit besserer Erklärung
-- Wenn keine Daten: statt "—" einen motivierenden Hinweis ("Wird nach dem nächsten Scan sichtbar" — ist teilweise schon da, aber UI ist unklar)
-- Karten visuell aufwerten: Icons statt Emojis, bessere Farbcodierung
-- Progress-Bars für alle Metriken (nicht nur Followback-Rate)
-- Hardcoded "Ghost-Follows" Label übersetzen
-
-**Dateien:** `src/components/SpyFindings.tsx`, `src/i18n/locales/{de,en,ar}.json`
+**7. `App.tsx` updaten**
+- `SpaRedirector` Komponente einbinden
 
 ---
 
-### 5. Padding, Navigation & Safe-Area
-**Problem:** 
-- BottomNav sitzt zu nah am unteren Bildschirmrand
-- App-Content beginnt hinter dem iPhone Home-Indicator
-- Zu wenig Padding oben und unten generell
+### Dateien
 
-**Fix:**
-- **BottomNav:** Höhe von 72px auf 80px, extra `pb-2` innerhalb der Nav für Abstand zum Home-Indicator. Der `pb-[env(safe-area-inset-bottom)]` ist schon da, aber die Nav braucht mehr internen Abstand.
-- **Body/HTML:** `padding-bottom: env(safe-area-inset-bottom)` ist bereits im body via `safe-area-inset-top`. Prüfen ob `viewport-fit=cover` im `<meta>` tag gesetzt ist.
-- **Content-Padding:** Alle Hauptseiten (Dashboard, Feed, ProfileDetail, Settings) bekommen `pt-[calc(env(safe-area-inset-top)+20px)]` statt `+16px` und `pb-[calc(env(safe-area-inset-bottom)+120px)]` statt `+100px`.
-
-**Dateien:** `src/components/BottomNav.tsx`, `src/pages/Dashboard.tsx`, `src/pages/FeedPage.tsx`, `src/pages/ProfileDetail.tsx`, `src/pages/Settings.tsx`, `index.html` (viewport meta)
-
----
-
-### 6. Gender-Sheet (Bottom Sheet) verbessern
-**Problem:** Sheet ist funktional aber "desktop-mäßig" — feste 60vh Höhe ist OK, aber Scrollbalken nicht sichtbar, Layout generisch.
-
-**Fix:**
-- Sichtbaren Scroll-Indicator erzwingen (custom scrollbar CSS für dieses Sheet)
-- Größere Avatare (48px statt 44px)
-- Mehr vertikales Padding pro Eintrag
-- Section-Header mit Zähler prominenter
-- Sheet-Backdrop dunkler für mehr Fokus
-
-**Dateien:** `src/components/WeeklyGenderCards.tsx`, `src/index.css` (scrollbar override für Sheet)
-
----
-
-### 7. Feed überarbeiten
-**Problem:** Feed-Cards sind funktional aber basisch. Das Layout mit zwei Avataren + Pfeil + "folgt" Label ist OK, aber die Gesamtanmutung ist nicht poliert genug.
-
-**Fix:**
-- Kompaktere Cards mit mehr Informationsdichte
-- Event-Type Badge (Follow/Unfollow/Neuer Follower) als farbiger Tag
-- Zeitstempel pro Event hinzufügen
-- Tracked-Profil-Name prominenter anzeigen
-- Bei Klick auf einen Feed-Eintrag → zum Profil navigieren
-- Empty State aufwerten
-
-**Dateien:** `src/components/EventFeedItem.tsx`, `src/pages/FeedPage.tsx`
-
----
-
-### Zusammenfassung: Dateien die geändert werden
-
-| Datei | Änderungen |
+| Datei | Aktion |
 |---|---|
-| `src/components/AppTutorial.tsx` | Tutorial robuster, zentrierter, Step-Indicator |
-| `src/components/SpotlightOverlay.tsx` | Besseres Positioning |
-| `src/lib/native.ts` | `openInstagram()` Hilfsfunktion |
-| `src/pages/ProfileDetail.tsx` | Instagram-Links extern, Padding |
-| `src/components/WeeklyGenderCards.tsx` | Instagram-Links extern, Sheet-Verbesserung |
-| `src/pages/Onboarding.tsx` | Single-Screen Redesign |
-| `src/components/SpyFindings.tsx` | Analyse überarbeiten |
-| `src/components/BottomNav.tsx` | Größer, mehr Abstand |
-| `src/pages/FeedPage.tsx` | Feed überarbeiten, Padding |
-| `src/components/EventFeedItem.tsx` | Feed-Cards aufwerten |
-| `src/pages/Dashboard.tsx` | Padding |
-| `src/pages/Settings.tsx` | Padding |
-| `src/index.css` | Scrollbar-Override für Sheets |
-| `index.html` | viewport-fit=cover prüfen |
-| `src/i18n/locales/{de,en,ar}.json` | Neue Keys für SpyFindings |
+| `src/lib/native.ts` | Scheme `secretspy` zu `spysecret` |
+| `public/404.html` | NEU -- SPA Hash-Fallback |
+| `public/_redirects` | NEU -- Lovable SPA Routing |
+| `src/components/SpaRedirector.tsx` | NEU -- 404-Redirect Handler |
+| `src/pages/AuthCallback.tsx` | Token-Verarbeitung + `setSession()` |
+| `src/pages/NativeCallback.tsx` | Robuster Redirect + Fallback-UI |
+| `src/App.tsx` | SpaRedirector einbinden |
 
