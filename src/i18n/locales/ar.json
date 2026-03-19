@@ -586,7 +586,10 @@
     "feature_gender": "تحليل الجنس",
     "feature_gender_desc": "اكتشف من يتابع هدفك حقاً",
     "current_mission": "المهمة الحالية",
-    "capabilities": "ماذا يستطيع جاسوسك؟"
+    "capabilities": "ماذا يستطيع جاسوسك؟",
+    "push_scan_title": "فحص فوري",
+    "unfollow_scan_title": "فحص إلغاء المتابعة",
+    "unlimited": "∞ غير محدود"
   },
   "spy_findings": {
     "after_next_scan": "سيظهر بعد الفحص التالي"
