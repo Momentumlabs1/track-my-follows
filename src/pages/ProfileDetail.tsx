@@ -218,9 +218,9 @@ const ProfileDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)]">
       {/* ─── Navigation Bar ─── */}
-      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+8px)] pb-2">
+      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+12px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
@@ -553,7 +553,7 @@ function CellRow({ username, displayName, avatarUrl, detectedAt, timeAgo, index 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.02 }} className="native-cell">
       <InstagramAvatar src={avatarUrl} alt={username} fallbackInitials={username} size={40} />
       <div className="flex-1 min-w-0">
-        <a href={`https://instagram.com/${username}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>@{username}</a>
+        <button onClick={() => import('@/lib/native').then(m => m.openInstagram(username))} className="font-semibold text-foreground text-start" style={{ fontSize: '0.875rem' }}>@{username}</button>
         {displayName && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{displayName}</p>}
       </div>
       <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.75rem' }}>{timeAgo(detectedAt)}</span>
@@ -593,7 +593,7 @@ function EventList({ events, shouldBlur, showPaywall, timeAgo, emptyIcon, emptyT
             </div>
             <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
               <div className="flex items-baseline gap-1.5">
-                <a href={`https://instagram.com/${event.username}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>@{event.username}</a>
+                <button onClick={() => import('@/lib/native').then(m => m.openInstagram(event.username))} className="font-semibold text-foreground text-start" style={{ fontSize: '0.875rem' }}>@{event.username}</button>
                 {!event.isRead && !shouldBlur && <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />}
               </div>
               {event.displayName && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{event.displayName}</p>}

@@ -592,6 +592,18 @@
     "unlimited": "∞ غير محدود"
   },
   "spy_findings": {
+    "title": "تحليل الجاسوس",
+    "female_ratio": "نسبة الإناث",
+    "follow_unfollow": "متابعة وإلغاء متابعة",
+    "ghost_desc": "تابع ثم ألغى المتابعة بسرعة",
+    "private_accounts": "حسابات خاصة",
+    "private_desc": "من بين المتابعات الجديدة",
+    "based_on_initial": "بناءً على أول فحص",
+    "followback_rate": "معدل المتابعة المتبادلة",
+    "followback_low": "قليلون يتابعون بالمقابل – اهتمام من طرف واحد",
+    "followback_mid": "بعضهم يتابع بالمقابل",
+    "followback_high": "كثيرون يتابعون بالمقابل – اهتمام متبادل",
+    "not_enough_data": "لا توجد بيانات كافية بعد",
     "after_next_scan": "سيظهر بعد الفحص التالي"
   },
   "spy_status": {
