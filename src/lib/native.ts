@@ -65,6 +65,20 @@ export const manageSubscription = () => {
 
 export const NATIVE_DEEPLINK_SCHEME = 'secretspy';
 
+export const openInstagram = (username: string) => {
+  if (isNativeApp()) {
+    // Try Instagram deep link first, fallback to web
+    const nativeUrl = `instagram://user?username=${username}`;
+    const webUrl = `https://instagram.com/${username}`;
+    window.location.href = nativeUrl;
+    setTimeout(() => {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }, 500);
+  } else {
+    window.open(`https://instagram.com/${username}`, '_blank', 'noopener,noreferrer');
+  }
+};
+
 export const openOAuth = async (oauthUrl: string) => {
   if (!isNativeApp()) return;
   const despia = (await import('despia-native')).default;

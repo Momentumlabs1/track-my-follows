@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-
+import { Ghost, ShieldCheck, ArrowLeftRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 
@@ -30,7 +30,6 @@ export function SpyFindings({
   const data = useMemo(() => {
     const now = Date.now();
 
-    // ── Real events (not initial) ──
     const realFollows7d = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -53,7 +52,6 @@ export function SpyFindings({
         now - new Date(e.detected_at).getTime() < THIRTY_DAYS
     );
 
-    // ── Initial events as fallback ──
     const initialFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -64,7 +62,7 @@ export function SpyFindings({
     const hasRealData = realFollows7d.length >= 2;
     const isEarlyStage = !hasRealData;
 
-    // ── 1. Ghost-Follows (30d) — need real follow+unfollow pairs ──
+    // Follow & Unfollow (30d)
     let ghostCount = 0;
     if (!isEarlyStage) {
       for (const follow of realFollows30d) {
@@ -78,7 +76,7 @@ export function SpyFindings({
     }
     const hasGhostData = !isEarlyStage && realFollows30d.length >= 2;
 
-    // ── 2. Private Accounts — can use initial as fallback! ──
+    // Private Accounts
     const privateSource = hasRealData ? realFollows7d : initialFollows;
     const privateCount = privateSource.filter((e) => (e as any).target_is_private === true).length;
     const privatePct: number | null = privateSource.length > 0
@@ -87,7 +85,7 @@ export function SpyFindings({
     const hasPrivateData = privateSource.length > 0;
     const privateIsInitial = !hasRealData && initialFollows.length > 0;
 
-    // ── 3. Followback-Rate (7d) — needs real events ──
+    // Followback-Rate (7d)
     const followedUsernames = new Set(realFollows7d.map((e) => e.target_username));
     const followbackCount = followerEvents.filter(
       (e) => e.event_type === "gained" && followedUsernames.has(e.username)
@@ -108,85 +106,109 @@ export function SpyFindings({
     };
   }, [followEvents, followerEvents, profileFollowings, followerCount, followingCount]);
 
+  const getBarColor = (value: number | null, invert = false) => {
+    if (value === null) return "hsl(var(--muted-foreground) / 0.3)";
+    const v = invert ? 100 - value : value;
+    if (v < 20) return "hsl(142 71% 45%)"; // green
+    if (v < 50) return "hsl(25 95% 53%)"; // orange
+    return "hsl(4 90% 58%)"; // red
+  };
+
   return (
     <div className="mb-2">
       <p className="section-header mb-3 flex items-center gap-1.5">
-        🔍 {t("spy_findings.title", "Spy-Analyse")}
+        {t("spy_findings.title", "Spy-Analyse")}
       </p>
 
-      {/* Cards: Ghost-Follows + Private Accounts side by side */}
       <div className="grid grid-cols-2 gap-3 mb-3">
+        {/* Follow & Unfollow */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16 }}
-          className="rounded-[20px] p-4"
+          className="rounded-2xl p-4"
           style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
         >
-          <span style={{ fontSize: "1.5rem" }}>👻</span>
-          <p style={{ fontSize: "1.75rem", fontWeight: 900, color: "hsl(var(--foreground))", lineHeight: 1, marginTop: 8 }}>
+          <Ghost className="h-5 w-5 text-muted-foreground mb-2" />
+          <p className="text-foreground font-black tabular-nums" style={{ fontSize: "1.5rem", lineHeight: 1 }}>
             {data.hasGhostData ? data.ghostCount : "—"}
           </p>
-          <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", marginTop: 4 }}>
-            Ghost-Follows
+          <p className="text-muted-foreground font-semibold mt-1.5" style={{ fontSize: "0.6875rem" }}>
+            {t("spy_findings.follow_unfollow", "Follow & Unfollow")}
           </p>
-          <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6, marginTop: 2 }}>
+          {data.hasGhostData && data.ghostCount > 0 && (
+            <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "hsl(var(--border) / 0.3)" }}>
+              <motion.div className="h-full rounded-full" style={{ background: "hsl(4 90% 58%)" }}
+                initial={{ width: 0 }} animate={{ width: `${Math.min(data.ghostCount * 20, 100)}%` }}
+                transition={{ duration: 0.6, delay: 0.3 }} />
+            </div>
+          )}
+          <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.5625rem", opacity: 0.6 }}>
             {data.hasGhostData
               ? t("spy_findings.ghost_desc", "Gefolgt & schnell entfolgt")
               : data.isEarlyStage
-                ? t("spy_findings.after_next_scan", "Wird nach dem nächsten Scan sichtbar")
-                : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
+                ? t("spy_findings.after_next_scan")
+                : t("spy_findings.not_enough_data")}
           </p>
         </motion.div>
 
+        {/* Private Accounts */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
-          className="rounded-[20px] p-4"
+          className="rounded-2xl p-4"
           style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
         >
-          <span style={{ fontSize: "1.5rem" }}>🔒</span>
-          <p style={{ fontSize: "1.75rem", fontWeight: 900, color: "hsl(var(--foreground))", lineHeight: 1, marginTop: 8 }}>
+          <ShieldCheck className="h-5 w-5 text-muted-foreground mb-2" />
+          <p className="text-foreground font-black tabular-nums" style={{ fontSize: "1.5rem", lineHeight: 1 }}>
             {data.privatePct !== null ? `${data.privatePct}%` : "—"}
           </p>
-          <p className="text-muted-foreground" style={{ fontSize: "0.6875rem", marginTop: 4 }}>
+          <p className="text-muted-foreground font-semibold mt-1.5" style={{ fontSize: "0.6875rem" }}>
             {t("spy_findings.private_accounts", "Private Accounts")}
           </p>
-          <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6, marginTop: 2 }}>
+          {data.privatePct !== null && (
+            <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "hsl(var(--border) / 0.3)" }}>
+              <motion.div className="h-full rounded-full" style={{ background: getBarColor(data.privatePct) }}
+                initial={{ width: 0 }} animate={{ width: `${data.privatePct}%` }}
+                transition={{ duration: 0.6, delay: 0.3 }} />
+            </div>
+          )}
+          <p className="text-muted-foreground mt-1.5" style={{ fontSize: "0.5625rem", opacity: 0.6 }}>
             {data.hasPrivateData
               ? data.privateIsInitial
                 ? t("spy_findings.based_on_initial", "Basierend auf erstem Scan")
                 : t("spy_findings.private_desc", "Bei neuen Follows")
-              : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
+              : t("spy_findings.not_enough_data")}
           </p>
         </motion.div>
       </div>
 
-      {/* Card: Followback-Rate — wide banner */}
+      {/* Followback-Rate */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.28 }}
-        className="rounded-[20px] px-5 py-4"
+        className="rounded-2xl px-5 py-4"
         style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
       >
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-              🔁 {t("spy_findings.followback_rate", "Followback-Rate")}
-            </p>
-            <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "hsl(var(--foreground))" }}>
-              {data.followbackRate !== null ? `${data.followbackRate}%` : "—"}
+        <div className="flex items-center gap-3 mb-2">
+          <ArrowLeftRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-muted-foreground font-semibold" style={{ fontSize: "0.75rem" }}>
+              {t("spy_findings.followback_rate", "Followback-Rate")}
             </p>
           </div>
+          <p className="text-foreground font-black tabular-nums" style={{ fontSize: "1.25rem" }}>
+            {data.followbackRate !== null ? `${data.followbackRate}%` : "—"}
+          </p>
         </div>
         {data.followbackRate !== null && (
           <>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--border) / 0.3)" }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: data.followbackRate < 20 ? "#FF3B30" : data.followbackRate < 50 ? "#FF9500" : "#34C759" }}
+                style={{ background: data.followbackRate < 20 ? "hsl(4 90% 58%)" : data.followbackRate < 50 ? "hsl(25 95% 53%)" : "hsl(142 71% 45%)" }}
                 initial={{ width: 0 }}
                 animate={{ width: `${data.followbackRate}%` }}
                 transition={{ duration: 0.8, delay: 0.3 }}
@@ -194,18 +216,18 @@ export function SpyFindings({
             </div>
             <p className="text-muted-foreground mt-2" style={{ fontSize: "0.5625rem", opacity: 0.6 }}>
               {data.followbackRate < 20
-                ? t("spy_findings.followback_low", "Wenige folgen zurück – einseitiges Interesse")
+                ? t("spy_findings.followback_low")
                 : data.followbackRate < 50
-                  ? t("spy_findings.followback_mid", "Manche folgen zurück")
-                  : t("spy_findings.followback_high", "Viele folgen zurück – gegenseitiges Interesse")}
+                  ? t("spy_findings.followback_mid")
+                  : t("spy_findings.followback_high")}
             </p>
           </>
         )}
         {data.followbackRate === null && (
           <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.6 }}>
             {data.isEarlyStage
-              ? t("spy_findings.after_next_scan", "Wird nach dem nächsten Scan sichtbar")
-              : t("spy_findings.not_enough_data", "Noch nicht genug Daten")}
+              ? t("spy_findings.after_next_scan")
+              : t("spy_findings.not_enough_data")}
           </p>
         )}
       </motion.div>

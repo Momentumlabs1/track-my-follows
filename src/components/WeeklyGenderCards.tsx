@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { detectGender } from "@/lib/genderDetection";
+import { openInstagram } from "@/lib/native";
 import type { FollowEvent } from "@/hooks/useTrackedProfiles";
 import silhouetteFemale from "@/assets/silhouette-female.png";
 import silhouetteMale from "@/assets/silhouette-male.png";
@@ -63,7 +64,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
     const male: GenderedFollow[] = [];
     const now = Date.now();
 
-    // Only real (non-initial) events from the last 7 days
     const realFollows = followEvents.filter(
       (e) =>
         (e.event_type === "follow" || e.event_type === "new_following") &&
@@ -113,10 +113,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Female Bubble */}
-          <button
-            onClick={() => femaleCount > 0 && setSheetGender("female")}
-            className="text-start"
-          >
+          <button onClick={() => femaleCount > 0 && setSheetGender("female")} className="text-start">
             <div
               className="rounded-3xl overflow-hidden relative"
               style={{
@@ -130,39 +127,24 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                 <img src={silhouetteFemale} alt="" className="w-full h-full object-cover rounded-3xl" style={{ opacity: 0.3 }} />
               </div>
               <div className="absolute top-4 left-4">
-                <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
-                  {femaleCount}
-                </span>
-                <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>
-                  {t("weekly.new_women", "neue Frauen")}
-                </p>
+                <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{femaleCount}</span>
+                <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_women", "neue Frauen")}</p>
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {femaleFollows.slice(0, 4).map((f) => (
-                  <InstagramAvatar
-                    key={f.username}
-                    src={f.avatarUrl}
-                    alt={f.username}
-                    fallbackInitials={f.username}
-                    size={30}
-                  />
+                  <InstagramAvatar key={f.username} src={f.avatarUrl} alt={f.username} fallbackInitials={f.username} size={30} />
                 ))}
               </div>
               {femaleCount === 0 && (
                 <div className="absolute bottom-3 left-3">
-                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.6)" }}>
-                    {t("weekly.no_activity", "Keine neue Aktivität")}
-                  </p>
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.6)" }}>{t("weekly.no_activity")}</p>
                 </div>
               )}
             </div>
           </button>
 
           {/* Male Bubble */}
-          <button
-            onClick={() => maleCount > 0 && setSheetGender("male")}
-            className="text-start"
-          >
+          <button onClick={() => maleCount > 0 && setSheetGender("male")} className="text-start">
             <div
               className="rounded-3xl overflow-hidden relative"
               style={{
@@ -176,35 +158,22 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                 <img src={silhouetteMale} alt="" className="w-full h-full object-cover rounded-3xl" style={{ opacity: 0.3 }} />
               </div>
               <div className="absolute top-4 left-4">
-                <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>
-                  {maleCount}
-                </span>
-                <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>
-                  {t("weekly.new_men", "neue Männer")}
-                </p>
+                <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{maleCount}</span>
+                <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_men", "neue Männer")}</p>
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {maleFollows.slice(0, 4).map((f) => (
-                  <InstagramAvatar
-                    key={f.username}
-                    src={f.avatarUrl}
-                    alt={f.username}
-                    fallbackInitials={f.username}
-                    size={30}
-                  />
+                  <InstagramAvatar key={f.username} src={f.avatarUrl} alt={f.username} fallbackInitials={f.username} size={30} />
                 ))}
               </div>
               {maleCount === 0 && (
                 <div className="absolute bottom-3 left-3">
-                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.6)" }}>
-                    {t("weekly.no_activity", "Keine neue Aktivität")}
-                  </p>
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.6)" }}>{t("weekly.no_activity")}</p>
                 </div>
               )}
             </div>
           </button>
         </div>
-
       </div>
 
       {/* Bottom Sheet */}
@@ -215,7 +184,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-black/60"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -223,7 +192,7 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="absolute bottom-0 left-0 right-0 rounded-t-3xl flex flex-col"
-              style={{ background: "hsl(var(--card))", height: "60vh" }}
+              style={{ background: "hsl(var(--card))", height: "65vh" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Drag handle */}
@@ -238,17 +207,15 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                 </button>
               </div>
               {/* Scrollable list */}
-              <div className="overflow-y-auto flex-1 pb-[calc(env(safe-area-inset-bottom)+16px)]" style={{ scrollbarWidth: 'thin' }}>
+              <div className="overflow-y-auto flex-1 pb-[calc(env(safe-area-inset-bottom)+16px)] gender-sheet-scroll">
                 {sheetData.map((item) => (
-                  <a
+                  <button
                     key={item.username}
-                    href={`https://instagram.com/${item.username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 px-5 py-3.5"
+                    onClick={() => openInstagram(item.username)}
+                    className="w-full flex items-center gap-4 px-5 py-4 text-start"
                     style={{ borderBottom: '0.5px solid hsl(var(--border) / 0.5)' }}
                   >
-                    <InstagramAvatar src={item.avatarUrl} alt={item.username} fallbackInitials={item.username} size={44} />
+                    <InstagramAvatar src={item.avatarUrl} alt={item.username} fallbackInitials={item.username} size={48} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate" style={{ fontSize: "0.9375rem" }}>@{item.username}</p>
                       {item.displayName && (
@@ -258,11 +225,11 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
                     <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "0.75rem" }}>
                       {timeAgo(item.detectedAt)}
                     </span>
-                  </a>
+                  </button>
                 ))}
                 {sheetData.length === 0 && (
                   <p className="text-muted-foreground text-center py-8" style={{ fontSize: "0.875rem" }}>
-                    {t("profile.noEventsYet", "Keine Einträge")}
+                    {t("profile.noEventsYet")}
                   </p>
                 )}
               </div>

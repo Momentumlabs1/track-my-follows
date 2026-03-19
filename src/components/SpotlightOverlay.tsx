@@ -12,6 +12,26 @@ interface SpotlightOverlayProps {
   agentComment?: string;
   visible: boolean;
   hideButton?: boolean;
+  stepIndex?: number;
+  totalSteps?: number;
+}
+
+function StepIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1 mb-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-full transition-all"
+          style={{
+            width: i === current ? 16 : 6,
+            height: 6,
+            background: i === current ? "#FF2D55" : "rgba(255,255,255,0.2)",
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function SpotlightOverlay({
@@ -24,6 +44,8 @@ export function SpotlightOverlay({
   agentComment,
   visible,
   hideButton = false,
+  stepIndex,
+  totalSteps,
 }: SpotlightOverlayProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -59,7 +81,9 @@ export function SpotlightOverlay({
   const holeW = rect.width + pad * 2;
   const holeH = rect.height + pad * 2;
 
-  const tooltipLeft = Math.max(16, Math.min(rect.left, window.innerWidth - 316));
+  // Center tooltip horizontally
+  const tooltipWidth = Math.min(300, window.innerWidth - 48);
+  const tooltipLeft = Math.max(24, (window.innerWidth - tooltipWidth) / 2);
   const tooltipTop =
     position === "bottom"
       ? rect.bottom + 16
@@ -88,7 +112,7 @@ export function SpotlightOverlay({
             <rect width="100%" height="100%" fill="rgba(0,0,0,0.75)" mask="url(#spotlight-mask)" />
           </svg>
 
-          {/* Tooltip */}
+          {/* Tooltip — centered */}
           <motion.div
             ref={tooltipRef}
             initial={{ opacity: 0, y: position === "bottom" ? 12 : -12 }}
@@ -99,19 +123,21 @@ export function SpotlightOverlay({
               left: tooltipLeft,
               top: tooltipTop,
               zIndex: 9999,
-              maxWidth: 300,
-              width: "calc(100% - 32px)",
+              width: tooltipWidth,
               pointerEvents: "auto",
             }}
           >
             <div
               style={{
                 background: "#1C1C1E",
-                borderRadius: 16,
+                borderRadius: 20,
                 padding: 20,
                 boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
               }}
             >
+              {stepIndex != null && totalSteps != null && (
+                <StepIndicator current={stepIndex} total={totalSteps} />
+              )}
               <div className="flex items-center gap-2.5 mb-2">
                 <SpyIcon size={24} />
                 <p style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>
@@ -143,40 +169,6 @@ export function SpotlightOverlay({
               )}
             </div>
           </motion.div>
-
-          {/* Agent comment bubble */}
-          {agentComment && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-              style={{
-                position: "fixed",
-                bottom: 100,
-                right: 20,
-                zIndex: 10000,
-                pointerEvents: "none",
-              }}
-            >
-              <div
-                style={{
-                  background: "#2C2C2E",
-                  borderRadius: 16,
-                  padding: "10px 14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-                  maxWidth: 260,
-                }}
-              >
-                <SpyIcon size={20} />
-                <span style={{ fontSize: 13, color: "#EBEBF5", fontWeight: 500 }}>
-                  {agentComment}
-                </span>
-              </div>
-            </motion.div>
-          )}
         </motion.div>
       )}
     </AnimatePresence>

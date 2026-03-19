@@ -15,6 +15,7 @@ type StepDef =
       commentKey: string;
       position: "top" | "bottom";
       hideButton?: boolean;
+      navigateTo?: string;
     }
   | { type: "action"; action: "wait_for_add_profile" | "wait_for_scan_complete"; waitingKey: string }
   | { type: "completion" };
@@ -26,19 +27,39 @@ const STEPS: StepDef[] = [
   { type: "action", action: "wait_for_add_profile", waitingKey: "tutorial.waiting_add" },
   // Step 2: Wait for scan complete → /profile/*
   { type: "action", action: "wait_for_scan_complete", waitingKey: "tutorial.waiting_scan" },
-  // Step 3: Gender bar
+  // Step 3: Gender bar (on profile page)
   { type: "spotlight", targetId: "gender-bar", titleKey: "tutorial.step5_title", textKey: "tutorial.step5_text", commentKey: "tutorial.comment_gender", position: "bottom" },
-  // Step 4: Tabs
+  // Step 4: Tabs (on profile page)
   { type: "spotlight", targetId: "tabs-section", titleKey: "tutorial.step6_title", textKey: "tutorial.step6_text", commentKey: "tutorial.comment_tabs", position: "top" },
-  // Step 5: Locked analysis
+  // Step 5: Locked analysis (on profile page)
   { type: "spotlight", targetId: "locked-analysis", titleKey: "tutorial.step7_title", textKey: "tutorial.step7_text", commentKey: "tutorial.comment_pro", position: "top" },
   // Step 6: Spy agent zone (back on dashboard)
-  { type: "spotlight", targetId: "spy-agent-zone", titleKey: "tutorial.step8_title", textKey: "tutorial.step8_text", commentKey: "tutorial.comment_spy", position: "bottom" },
+  { type: "spotlight", targetId: "spy-agent-zone", titleKey: "tutorial.step8_title", textKey: "tutorial.step8_text", commentKey: "tutorial.comment_spy", position: "bottom", navigateTo: "/dashboard" },
   // Step 7: Completion
   { type: "completion" },
 ];
 
-function WaitingBubble({ text }: { text: string }) {
+const TOTAL_STEPS = STEPS.length;
+
+function StepIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1 mb-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-full transition-all"
+          style={{
+            width: i === current ? 16 : 6,
+            height: 6,
+            background: i === current ? "hsl(347 100% 59%)" : "hsl(0 0% 30%)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function WaitingBubble({ text, stepIndex }: { text: string; stepIndex: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -47,28 +68,31 @@ function WaitingBubble({ text }: { text: string }) {
       transition={{ duration: 0.4 }}
       style={{
         position: "fixed",
-        bottom: 100,
-        right: 20,
+        bottom: 120,
+        left: "50%",
+        transform: "translateX(-50%)",
         zIndex: 9999,
         pointerEvents: "none",
+        width: "calc(100% - 48px)",
+        maxWidth: 320,
       }}
     >
       <div
         style={{
           background: "#1C1C1E",
-          borderRadius: 16,
-          padding: "12px 16px",
+          borderRadius: 20,
+          padding: "14px 18px",
           display: "flex",
           alignItems: "center",
-          gap: 10,
-          boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
-          maxWidth: 280,
+          gap: 12,
+          boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
         }}
       >
-        <SpyIcon size={22} glow />
-        <span style={{ fontSize: 13, color: "#EBEBF5", fontWeight: 500 }}>
-          {text}
-        </span>
+        <SpyIcon size={24} glow />
+        <div className="flex-1">
+          <StepIndicator current={stepIndex} total={TOTAL_STEPS - 1} />
+          <span style={{ fontSize: 13, color: "#EBEBF5", fontWeight: 500 }}>{text}</span>
+        </div>
       </div>
     </motion.div>
   );
@@ -84,11 +108,12 @@ function CompletionBubble({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.5, ease: "easeOut" }}
       style={{
         position: "fixed",
-        bottom: 100,
-        right: 20,
+        bottom: 120,
+        left: "50%",
+        transform: "translateX(-50%)",
         zIndex: 9999,
-        maxWidth: 300,
-        width: "calc(100% - 40px)",
+        maxWidth: 320,
+        width: "calc(100% - 48px)",
       }}
     >
       <div
@@ -162,12 +187,14 @@ export function AppTutorial() {
     return () => clearTimeout(timer);
   }, [tutorialKey, forceShow, user]);
 
-  // Navigate to dashboard for spy-agent-zone step
+  // Navigate to required page for spotlight steps
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
-    if (currentStep?.type === "spotlight" && currentStep.targetId === "spy-agent-zone") {
-      if (!location.pathname.startsWith("/dashboard")) navigate("/dashboard");
+    if (currentStep?.type === "spotlight" && currentStep.navigateTo) {
+      if (!location.pathname.startsWith(currentStep.navigateTo)) {
+        navigate(currentStep.navigateTo);
+      }
     }
   }, [step, phase]);
 
@@ -204,7 +231,7 @@ export function AppTutorial() {
     }
   }, [step, phase]);
 
-  // Poll for target element existence (up to 5s)
+  // Poll for target element existence (up to 10s)
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
@@ -219,7 +246,7 @@ export function AppTutorial() {
       return;
     }
 
-    // Poll every 500ms for up to 5s
+    // Poll every 500ms for up to 10s
     setTargetReady(false);
     let attempts = 0;
     const interval = setInterval(() => {
@@ -228,8 +255,8 @@ export function AppTutorial() {
       if (found) {
         setTargetReady(true);
         clearInterval(interval);
-      } else if (attempts >= 10) {
-        // Skip this step after 5s
+      } else if (attempts >= 20) {
+        // Skip this step after 10s
         clearInterval(interval);
         advanceStep();
       }
@@ -279,7 +306,7 @@ export function AppTutorial() {
   // Render nothing
   if (phase === "idle" || phase === "done") return null;
 
-  // Intro bubble
+  // Intro bubble — centered
   if (phase === "intro") {
     return (
       <AnimatePresence>
@@ -291,11 +318,12 @@ export function AppTutorial() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           style={{
             position: "fixed",
-            bottom: 100,
-            right: 20,
+            bottom: 120,
+            left: "50%",
+            transform: "translateX(-50%)",
             zIndex: 9999,
-            maxWidth: 300,
-            width: "calc(100% - 40px)",
+            maxWidth: 320,
+            width: "calc(100% - 48px)",
           }}
         >
           <div
@@ -375,7 +403,7 @@ export function AppTutorial() {
   if (currentStep.type === "action") {
     return (
       <AnimatePresence>
-        <WaitingBubble text={t(currentStep.waitingKey)} />
+        <WaitingBubble text={t(currentStep.waitingKey)} stepIndex={step} />
       </AnimatePresence>
     );
   }
@@ -394,6 +422,8 @@ export function AppTutorial() {
       agentComment={t(currentStep.commentKey)}
       visible={spotlightVisible}
       hideButton={currentStep.hideButton}
+      stepIndex={step}
+      totalSteps={TOTAL_STEPS - 1}
     />
   );
 }
