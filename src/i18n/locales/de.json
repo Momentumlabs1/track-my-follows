@@ -523,9 +523,17 @@
     "comment_spy": "Dein persönlicher Spion 🕵️",
     "comment_done": "Viel Spaß, Agent! 🚀"
   },
-  "paywall": {
+  "paywall_extra": {
     "unlock_spy_agent": "🔒 Spy Agent freischalten",
-    "unlock_spy": "Spy freischalten"
+    "unlock_spy": "Spy freischalten",
+    "subscription_disclosure": "Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen."
+  },
+  "locked_feature": {
+    "available_with_pro": "Verfügbar mit Pro"
+  },
+  "dashboard_extra": {
+    "account_singular": "Account",
+    "account_plural": "Accounts"
   },
   "spy_detail": {
     "your_spy": "Dein Spion",
