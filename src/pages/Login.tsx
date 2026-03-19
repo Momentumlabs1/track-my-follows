@@ -6,7 +6,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { getOAuthRedirectUrl } from "@/lib/oauth";
+import { getOAuthRedirectUrl, shouldSkipBrowserRedirect } from "@/lib/oauth";
 import logoWide from "@/assets/logo-wide.png";
 
 const SIGNUP_COOLDOWN_SECONDS = 60;
@@ -46,13 +46,17 @@ const Login = () => {
     setSocialLoading(provider);
     try {
       const redirectUrl = getOAuthRedirectUrl();
+      const skipBrowserRedirect = shouldSkipBrowserRedirect();
+      const queryParams = provider === "google" ? { prompt: "select_account" } : undefined;
 
-      console.info("[auth/login] OAuth start", { provider, redirectUrl });
+      console.info("[auth/login] OAuth start", { provider, redirectUrl, skipBrowserRedirect });
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectUrl,
+          skipBrowserRedirect,
+          queryParams,
         },
       });
 
@@ -60,7 +64,6 @@ const Login = () => {
         toast.error(error.message);
         return;
       }
-
     } catch (err) {
       toast.error(String(err));
     } finally {
