@@ -22,7 +22,7 @@ export function BottomNav() {
     {
       to: "/dashboard",
       label: t("nav.spy", "Spy"),
-      icon: (active: boolean) => <SpyIcon size={28} className={active ? "" : "opacity-50"} />,
+      icon: (active: boolean) => <SpyIcon size={32} className={active ? "" : "opacity-50"} />,
       isActive: location.pathname === "/dashboard" || location.pathname.startsWith("/profile/") || location.pathname === "/add-profile",
     },
     {
