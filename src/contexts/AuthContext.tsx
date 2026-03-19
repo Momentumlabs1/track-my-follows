@@ -48,50 +48,6 @@ async function syncUserSettings(userId: string) {
   }
 }
 
-/**
- * Check if the current URL contains OAuth return parameters.
- */
-function getOAuthCode(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("code");
-}
-
-function hasOAuthParams(): boolean {
-  const params = new URLSearchParams(window.location.search);
-  const hash = window.location.hash.substring(1);
-  const hashParams = new URLSearchParams(hash);
-
-  return !!(
-    getOAuthCode() ||
-    params.get("error") ||
-    hashParams.get("access_token") ||
-    hashParams.get("error")
-  );
-}
-
-function cleanOAuthParams() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("code");
-  url.searchParams.delete("error");
-  url.searchParams.delete("error_description");
-
-  if (url.hash) {
-    const hashParams = new URLSearchParams(url.hash.substring(1));
-    const oauthKeys = ["access_token", "refresh_token", "expires_in", "expires_at", "token_type", "type", "provider_token", "provider_refresh_token", "error", "error_description", "error_code"];
-    let hadOAuthKey = false;
-    for (const key of oauthKeys) {
-      if (hashParams.has(key)) {
-        hashParams.delete(key);
-        hadOAuthKey = true;
-      }
-    }
-    if (hadOAuthKey) {
-      const remaining = hashParams.toString();
-      url.hash = remaining ? `#${remaining}` : "";
-    }
-  }
-  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -113,57 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // 2) Init: let Supabase SDK handle OAuth params via getSession, then finalize
     const init = async () => {
-      const isOAuthReturn = hasOAuthParams();
-      console.info("[auth/init] starting", { isOAuthReturn, url: window.location.href });
-
-      if (isOAuthReturn) {
-        // For PKCE, exchange the returned code immediately to avoid long polling
-        // windows in native/webview contexts.
-        const oauthCode = getOAuthCode();
-        if (oauthCode) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(oauthCode);
-          if (exchangeError) {
-            console.warn("[auth/init] code exchange failed", { message: exchangeError.message });
-          }
-        }
-
-        let resolved = false;
-
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (initialSession) {
-          if (mounted) setSession(initialSession);
-          resolved = true;
-        }
-
-        if (!resolved) {
-          for (let attempt = 0; attempt < 4; attempt++) {
-            await new Promise(r => setTimeout(r, 250));
-            const { data: { session: s } } = await supabase.auth.getSession();
-            console.info(`[auth/init] OAuth retry ${attempt + 1}/4`, { hasSession: !!s });
-            if (s) {
-              if (mounted) setSession(s);
-              resolved = true;
-              break;
-            }
-          }
-        }
-
-        cleanOAuthParams();
-
-        if (!resolved) {
-          console.warn("[auth/init] OAuth return but no session after retries");
-        }
-      } else {
-        // Normal app load — single getSession check
-        const { data: { session: s } } = await supabase.auth.getSession();
-        console.info("[auth/init] normal load", { hasSession: !!s });
-        if (mounted && s) {
-          setSession(s);
-        }
+      const { data: { session: s } } = await supabase.auth.getSession();
+      console.info("[auth/init]", { hasSession: !!s });
+      if (mounted && s) {
+        setSession(s);
       }
-
       if (mounted) {
         setLoading(false);
       }
