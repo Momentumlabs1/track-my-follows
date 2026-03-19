@@ -553,7 +553,7 @@ function CellRow({ username, displayName, avatarUrl, detectedAt, timeAgo, index 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.02 }} className="native-cell">
       <InstagramAvatar src={avatarUrl} alt={username} fallbackInitials={username} size={40} />
       <div className="flex-1 min-w-0">
-        <a href={`https://instagram.com/${username}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>@{username}</a>
+        <button onClick={() => import('@/lib/native').then(m => m.openInstagram(username))} className="font-semibold text-foreground text-start" style={{ fontSize: '0.875rem' }}>@{username}</button>
         {displayName && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{displayName}</p>}
       </div>
       <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.75rem' }}>{timeAgo(detectedAt)}</span>
