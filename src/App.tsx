@@ -46,6 +46,7 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/native-callback" element={<NativeCallback />} />
+        <Route path="/oauth/*" element={<OAuthReturn />} />
         <Route path="/legal/impressum" element={<LegalImpressum />} />
         <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
         <Route path="/legal/agb" element={<LegalAGB />} />
