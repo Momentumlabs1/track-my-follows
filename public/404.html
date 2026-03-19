@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Redirecting…</title>
+  <script>
+    // SPA fallback for static hosts (Despia / Netlify / Lovable)
+    // Preserves path + hash so tokens aren't lost during OAuth redirects
+    var path = window.location.pathname;
+    var hash = window.location.hash;
+    var search = window.location.search;
+    // Redirect to root with the original path as a query param
+    var redirectUrl = '/?redirect=' + encodeURIComponent(path + search) + hash;
+    window.location.replace(redirectUrl);
+  </script>
+</head>
+<body>
+  <p>Redirecting…</p>
+</body>
+</html>
