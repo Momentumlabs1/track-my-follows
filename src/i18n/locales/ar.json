@@ -1,7 +1,12 @@
 {
   "app_name": "Spy Secret",
-  "splash": { "subtitle": "اعرف من يتابعون" },
-  "tabs": { "whats_new": "ما الجديد؟", "profiles": "الحسابات" },
+  "splash": {
+    "subtitle": "اعرف من يتابعون"
+  },
+  "tabs": {
+    "whats_new": "ما الجديد؟",
+    "profiles": "الحسابات"
+  },
   "feed": {
     "today": "اليوم",
     "yesterday": "أمس",
@@ -42,7 +47,9 @@
     "spy_inactive": "الجاسوس غير نشط",
     "locked": "مقفل",
     "greeting_subtitle_pro": "جاسوسك نشط — إليك نظرة عامة.",
-    "greeting_subtitle_free": "فعّل جاسوسك للتحكم الكامل."
+    "greeting_subtitle_free": "فعّل جاسوسك للتحكم الكامل.",
+    "account_singular": "حساب",
+    "account_plural": "حسابات"
   },
   "add_profile": {
     "title": "من تريد تتبعه؟",
@@ -198,8 +205,20 @@
     "follows_now": "يتابع الآن",
     "new_follower_of": "متابع جديد لـ"
   },
-  "category": { "influencer": "مؤثر", "celebrity": "مشهور", "private": "خاص" },
-  "gender": { "female": "نساء", "male": "رجال", "unknown": "غير معروف", "confidence_high": "ثقة عالية", "confidence_medium": "ثقة متوسطة", "confidence_low": "الجاسوس مرهق", "based_on_sample": "بناءً على {{count}} من {{total}} حساب تم تحليله" },
+  "category": {
+    "influencer": "مؤثر",
+    "celebrity": "مشهور",
+    "private": "خاص"
+  },
+  "gender": {
+    "female": "نساء",
+    "male": "رجال",
+    "unknown": "غير معروف",
+    "confidence_high": "ثقة عالية",
+    "confidence_medium": "ثقة متوسطة",
+    "confidence_low": "الجاسوس مرهق",
+    "based_on_sample": "بناءً على {{count}} من {{total}} حساب تم تحليله"
+  },
   "insights": {
     "title": "إحصائيات",
     "activity_heatmap": "خريطة النشاط",
@@ -253,29 +272,9 @@
     "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc."
   },
   "paywall": {
-    "title": "اشترك في Pro",
-    "subtitle": "افتح جميع الميزات",
-    "feature_profiles": "تتبع حتى 5 حسابات",
-    "feature_hourly": "تحديثات كل ساعة",
-    "feature_unfollows": "كشف إلغاء المتابعة",
-    "feature_push": "إشعارات فورية",
-    "feature_stats": "إحصائيات ورؤى",
-    "feature_unblur": "معاينة واضحة",
-    "weekly": "أسبوعي",
-    "monthly": "شهري",
-    "yearly": "سنوي",
-    "save_percent": "وفّر {{percent}}%",
-    "free_trial": "3 أيام مجاناً",
-    "continue": "متابعة",
-    "restore": "استعادة المشتريات",
-    "terms": "شروط الاستخدام",
-    "privacy": "سياسة الخصوصية",
-    "cancel_note": "يمكنك الإلغاء في أي وقت. يتم الدفع بعد انتهاء الفترة التجريبية.",
-    "per_week": "/أسبوع",
-    "per_month": "/شهر",
-    "per_year": "/سنة",
-    "scanLocked": "قم بالترقية للحصول على تحديثات كل ساعة",
-    "trackMore": "تتبع المزيد من الحسابات مع Pro"
+    "unlock_spy_agent": "🔒 فتح عميل التجسس",
+    "unlock_spy": "فتح الجاسوس",
+    "subscription_disclosure": "يتم تجديد الاشتراك تلقائياً ما لم يتم إلغاؤه قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك إدارة اشتراكك من إعدادات App Store."
   },
   "auth": {
     "sign_in_apple": "تسجيل الدخول بـ Apple",
@@ -376,7 +375,7 @@
     "error": "حدث خطأ ما",
     "retry": "حاول مرة أخرى"
   },
-    "unfollow_check": {
+  "unfollow_check": {
     "button": "فحص إلغاء المتابعات",
     "checking": "جاري الفحص...",
     "pro_only": "Pro: كشف إلغاء المتابعة",
@@ -394,8 +393,17 @@
     "new_follows": "متابعات جديدة",
     "new_followers": "متابعون جدد"
   },
-  "scan_status": { "auto_hourly": "كل ساعة", "once_daily": "1×/يوم" },
-  "nav": { "dashboard": "الرئيسية", "add": "إضافة", "settings": "الإعدادات", "feed": "الخلاصة", "spy": "جاسوس" },
+  "scan_status": {
+    "auto_hourly": "كل ساعة",
+    "once_daily": "1×/يوم"
+  },
+  "nav": {
+    "dashboard": "الرئيسية",
+    "add": "إضافة",
+    "settings": "الإعدادات",
+    "feed": "الخلاصة",
+    "spy": "جاسوس"
+  },
   "landing": {
     "beta_badge": "مهمة بيتا سرية 🕵️",
     "hero_line1": "الثقة جيدة.",
@@ -549,16 +557,7 @@
     "capabilities": "ماذا يستطيع جاسوسك؟"
   },
   "spy_findings": {
-    "title": "تحليل الجاسوس",
-    "female_ratio": "نسبة الإناث",
-    "ghost_desc": "تابع ثم ألغى المتابعة بسرعة",
-    "private_accounts": "حسابات خاصة",
-    "private_desc": "من بين المتابعات الجديدة",
-    "followback_rate": "معدل المتابعة العكسية",
-    "followback_low": "قليل من يتابعون بالمقابل – اهتمام أحادي",
-    "followback_mid": "بعضهم يتابع بالمقابل",
-    "followback_high": "كثير يتابعون بالمقابل – اهتمام متبادل",
-    "not_enough_data": "لا توجد بيانات كافية بعد"
+    "after_next_scan": "سيظهر بعد الفحص التالي"
   },
   "spy_status": {
     "title": "جاسوسك...",
@@ -618,11 +617,7 @@
     "summary": "ملخص",
     "gender_distribution": "توزيع الجنس للمتابعات الجديدة: {{percent}}% إناث"
   },
-  "paywall": {
-    "unlock_spy_agent": "🔒 فتح عميل التجسس",
-    "unlock_spy": "فتح الجاسوس"
-  },
-  "spy_findings": {
-    "after_next_scan": "سيظهر بعد الفحص التالي"
+  "locked_feature": {
+    "available_with_pro": "متاح مع Pro"
   }
 }

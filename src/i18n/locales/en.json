@@ -1,7 +1,12 @@
 {
   "app_name": "Spy Secret",
-  "splash": { "subtitle": "See who they follow" },
-  "tabs": { "whats_new": "What's new?", "profiles": "Profiles" },
+  "splash": {
+    "subtitle": "See who they follow"
+  },
+  "tabs": {
+    "whats_new": "What's new?",
+    "profiles": "Profiles"
+  },
   "feed": {
     "today": "Today",
     "yesterday": "Yesterday",
@@ -42,7 +47,9 @@
     "spy_inactive": "Spy not active",
     "locked": "LOCKED",
     "greeting_subtitle_pro": "Your spy is active — here's your overview.",
-    "greeting_subtitle_free": "Unlock your spy for full control."
+    "greeting_subtitle_free": "Unlock your spy for full control.",
+    "account_singular": "Account",
+    "account_plural": "Accounts"
   },
   "add_profile": {
     "title": "Who do you want\nto track?",
@@ -205,8 +212,15 @@
     "follows_now": "now follows",
     "new_follower_of": "new follower of"
   },
-  "category": { "influencer": "Influencer", "celebrity": "Celebrity", "private": "Private" },
-  "gender": { "female": "Women", "male": "Men", "unknown": "Unknown", "confidence_high": "High confidence", "confidence_medium": "Medium confidence", "confidence_low": "Spy is overwhelmed", "based_on_sample": "Based on {{count}} of {{total}} analyzed accounts" },
+  "category": {
+    "influencer": "Influencer",
+    "celebrity": "Celebrity",
+    "private": "Private"
+  },
+  "gender": {
+    "female_short": "female",
+    "unknown_short": "unrecognized"
+  },
   "insights": {
     "title": "Insights",
     "activity_heatmap": "Activity Heatmap",
@@ -260,29 +274,9 @@
     "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
   },
   "paywall": {
-    "title": "Go Pro",
-    "subtitle": "Unlock all features",
-    "feature_profiles": "Track up to 5 profiles",
-    "feature_hourly": "Hourly scan updates",
-    "feature_unfollows": "Unfollow detection",
-    "feature_push": "Push notifications",
-    "feature_stats": "Statistics & insights",
-    "feature_unblur": "Unblurred previews",
-    "weekly": "Weekly",
-    "monthly": "Monthly",
-    "yearly": "Yearly",
-    "save_percent": "SAVE {{percent}}%",
-    "free_trial": "3 days free",
-    "continue": "Continue",
-    "restore": "Restore Purchases",
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy",
-    "cancel_note": "Cancel anytime. Billed after free trial ends.",
-    "per_week": "/week",
-    "per_month": "/month",
-    "per_year": "/year",
-    "scanLocked": "Upgrade to Pro for hourly updates",
-    "trackMore": "Track unlimited profiles with Pro"
+    "unlock_spy_agent": "🔒 Unlock Spy Agent",
+    "unlock_spy": "Unlock Spy",
+    "subscription_disclosure": "The subscription renews automatically unless cancelled at least 24 hours before the end of the current period. You can manage your subscription in the App Store settings."
   },
   "auth": {
     "sign_in_apple": "Sign in with Apple",
@@ -401,8 +395,17 @@
     "new_follows": "new follows",
     "new_followers": "new followers"
   },
-  "scan_status": { "auto_hourly": "Hourly", "once_daily": "1×/day" },
-  "nav": { "dashboard": "Home", "add": "Add", "settings": "Settings", "feed": "Feed", "spy": "Spy" },
+  "scan_status": {
+    "auto_hourly": "Hourly",
+    "once_daily": "1×/day"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "add": "Add",
+    "settings": "Settings",
+    "feed": "Feed",
+    "spy": "Spy"
+  },
   "landing": {
     "beta_badge": "Secret Beta Mission 🕵️",
     "hero_line1": "Trust is good.",
@@ -523,10 +526,6 @@
     "comment_spy": "Your personal spy 🕵️",
     "comment_done": "Have fun, Agent! 🚀"
   },
-  "paywall": {
-    "unlock_spy_agent": "🔒 Unlock Spy Agent",
-    "unlock_spy": "Unlock Spy"
-  },
   "spy_detail": {
     "your_spy": "Your Spy",
     "spy_profile": "Spy Profile",
@@ -599,10 +598,6 @@
     "not_enough_data": "Not enough data yet",
     "after_next_scan": "Will be visible after the next scan"
   },
-  "gender": {
-    "female_short": "female",
-    "unknown_short": "unrecognized"
-  },
   "weekly": {
     "title": "New follows this week",
     "overall_title": "Gender distribution",
@@ -632,5 +627,8 @@
     "tap_to_close": "Hide analysis",
     "info_hourly": "Your spy scans automatically every hour. You can also trigger manual scans.",
     "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
+  },
+  "locked_feature": {
+    "available_with_pro": "Available with Pro"
   }
 }

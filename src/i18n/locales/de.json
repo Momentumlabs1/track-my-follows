@@ -1,7 +1,12 @@
 {
   "app_name": "Spy Secret",
-  "splash": { "subtitle": "Sieh wem sie folgen" },
-  "tabs": { "whats_new": "Neuigkeiten", "profiles": "Profile" },
+  "splash": {
+    "subtitle": "Sieh wem sie folgen"
+  },
+  "tabs": {
+    "whats_new": "Neuigkeiten",
+    "profiles": "Profile"
+  },
   "feed": {
     "today": "Heute",
     "yesterday": "Gestern",
@@ -42,7 +47,9 @@
     "spy_inactive": "Spion nicht aktiv",
     "locked": "GESPERRT",
     "greeting_subtitle_pro": "Dein Spion ist aktiv — hier ist dein Überblick.",
-    "greeting_subtitle_free": "Schalte deinen Spion frei für volle Kontrolle."
+    "greeting_subtitle_free": "Schalte deinen Spion frei für volle Kontrolle.",
+    "account_singular": "Account",
+    "account_plural": "Accounts"
   },
   "add_profile": {
     "title": "Wen willst du\ntracken?",
@@ -205,8 +212,15 @@
     "follows_now": "folgt jetzt",
     "new_follower_of": "neuer Follower von"
   },
-  "category": { "influencer": "Influencer", "celebrity": "Promi", "private": "Privat" },
-  "gender": { "female": "Frauen", "male": "Männer", "unknown": "Unbekannt", "confidence_high": "Hohe Sicherheit", "confidence_medium": "Mittlere Sicherheit", "confidence_low": "Spy ist überfordert", "based_on_sample": "Basiert auf {{count}} von {{total}} analysierten Accounts" },
+  "category": {
+    "influencer": "Influencer",
+    "celebrity": "Promi",
+    "private": "Privat"
+  },
+  "gender": {
+    "female_short": "weiblich",
+    "unknown_short": "n.e."
+  },
   "insights": {
     "title": "Insights",
     "activity_heatmap": "Aktivitäts-Heatmap",
@@ -282,7 +296,8 @@
     "per_month": "/Monat",
     "per_year": "/Jahr",
     "scanLocked": "Upgrade auf Pro für stündliche Updates",
-    "trackMore": "Tracke mehr Profile mit Pro"
+    "trackMore": "Tracke mehr Profile mit Pro",
+    "subscription_disclosure": "Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen."
   },
   "auth": {
     "sign_in_apple": "Mit Apple anmelden",
@@ -401,8 +416,17 @@
     "new_follows": "neue Follows",
     "new_followers": "neue Follower"
   },
-  "scan_status": { "auto_hourly": "Stündlich", "once_daily": "1×/Tag" },
-  "nav": { "dashboard": "Home", "add": "Hinzufügen", "settings": "Einstellungen", "feed": "Feed", "spy": "Spy" },
+  "scan_status": {
+    "auto_hourly": "Stündlich",
+    "once_daily": "1×/Tag"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "add": "Hinzufügen",
+    "settings": "Einstellungen",
+    "feed": "Feed",
+    "spy": "Spy"
+  },
   "landing": {
     "beta_badge": "Geheime Beta-Mission 🕵️",
     "hero_line1": "Vertrauen ist gut.",
@@ -523,11 +547,6 @@
     "comment_spy": "Dein persönlicher Spion 🕵️",
     "comment_done": "Viel Spaß, Agent! 🚀"
   },
-  "paywall2": {
-    "unlock_spy_agent": "🔒 Spy Agent freischalten",
-    "unlock_spy": "Spy freischalten",
-    "subscription_disclosure": "Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen."
-  },
   "locked_feature": {
     "available_with_pro": "Verfügbar mit Pro"
   },
@@ -602,10 +621,6 @@
     "followback_high": "Viele folgen zurück – gegenseitiges Interesse",
     "not_enough_data": "Noch nicht genug Daten",
     "after_next_scan": "Wird nach dem nächsten Scan sichtbar"
-  },
-  "gender": {
-    "female_short": "weiblich",
-    "unknown_short": "n.e."
   },
   "weekly": {
     "title": "Diese Woche neu gefolgt",
