@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BottomNav } from "@/components/BottomNav";
+import { AppTutorial } from "@/components/AppTutorial";
 import { PaywallSheet } from "@/components/PaywallSheet";
 import { useDirection } from "@/hooks/useDirection";
 import Splash from "./pages/Splash";
