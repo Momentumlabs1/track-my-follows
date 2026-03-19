@@ -280,7 +280,7 @@ export function SpyStatusCard({
                     ) : (
                       <Search className="h-4 w-4 text-primary" />
                     )}
-                    <span className="text-[12px] font-bold text-foreground">Push Scan</span>
+                    <span className="text-[12px] font-bold text-foreground">{t("spy_detail.push_scan_title", "Push Scan")}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
                     {pushRemaining > 0
