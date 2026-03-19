@@ -593,7 +593,7 @@ function EventList({ events, shouldBlur, showPaywall, timeAgo, emptyIcon, emptyT
             </div>
             <div className={`flex-1 min-w-0 ${shouldBlur ? "blur-md" : ""}`}>
               <div className="flex items-baseline gap-1.5">
-                <a href={`https://instagram.com/${event.username}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>@{event.username}</a>
+                <button onClick={() => import('@/lib/native').then(m => m.openInstagram(event.username))} className="font-semibold text-foreground text-start" style={{ fontSize: '0.875rem' }}>@{event.username}</button>
                 {!event.isRead && !shouldBlur && <span className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />}
               </div>
               {event.displayName && <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{event.displayName}</p>}
