@@ -524,7 +524,11 @@
     "comment_tabs": "Updates with every scan!",
     "comment_pro": "Nothing will slip past you 🔍",
     "comment_spy": "Your personal spy 🕵️",
-    "comment_done": "Have fun, Agent! 🚀"
+    "comment_done": "Have fun, Agent! 🚀",
+    "waiting_add": "Enter a username... 🔎",
+    "waiting_scan": "Scan running – hang tight! ⏳",
+    "done_title": "Tutorial complete! 🎉",
+    "done_cta": "Got it! 🕵️"
   },
   "spy_detail": {
     "your_spy": "Your Spy",

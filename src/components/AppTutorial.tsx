@@ -16,15 +16,16 @@ type StepDef =
       position: "top" | "bottom";
       hideButton?: boolean;
     }
-  | { type: "action"; action: "wait_for_add_profile" | "wait_for_scan_complete" };
+  | { type: "action"; action: "wait_for_add_profile" | "wait_for_scan_complete"; waitingKey: string }
+  | { type: "completion" };
 
 const STEPS: StepDef[] = [
   // Step 0: Spotlight on "+" button — user must tap it
   { type: "spotlight", targetId: "add-profile-btn", titleKey: "tutorial.step2_title", textKey: "tutorial.step2_text", commentKey: "tutorial.comment_add", position: "top", hideButton: true },
-  // Step 1: Wait for navigation to /analyzing or /add-profile
-  { type: "action", action: "wait_for_add_profile" },
+  // Step 1: Wait for navigation to /add-profile or /analyzing
+  { type: "action", action: "wait_for_add_profile", waitingKey: "tutorial.waiting_add" },
   // Step 2: Wait for scan complete → /profile/*
-  { type: "action", action: "wait_for_scan_complete" },
+  { type: "action", action: "wait_for_scan_complete", waitingKey: "tutorial.waiting_scan" },
   // Step 3: Gender bar
   { type: "spotlight", targetId: "gender-bar", titleKey: "tutorial.step5_title", textKey: "tutorial.step5_text", commentKey: "tutorial.comment_gender", position: "bottom" },
   // Step 4: Tabs
@@ -33,7 +34,106 @@ const STEPS: StepDef[] = [
   { type: "spotlight", targetId: "locked-analysis", titleKey: "tutorial.step7_title", textKey: "tutorial.step7_text", commentKey: "tutorial.comment_pro", position: "top" },
   // Step 6: Spy agent zone (back on dashboard)
   { type: "spotlight", targetId: "spy-agent-zone", titleKey: "tutorial.step8_title", textKey: "tutorial.step8_text", commentKey: "tutorial.comment_spy", position: "bottom" },
+  // Step 7: Completion
+  { type: "completion" },
 ];
+
+function WaitingBubble({ text }: { text: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.4 }}
+      style={{
+        position: "fixed",
+        bottom: 100,
+        right: 20,
+        zIndex: 9999,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        style={{
+          background: "#1C1C1E",
+          borderRadius: 16,
+          padding: "12px 16px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+          maxWidth: 280,
+        }}
+      >
+        <SpyIcon size={22} glow />
+        <span style={{ fontSize: 13, color: "#EBEBF5", fontWeight: 500 }}>
+          {text}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+function CompletionBubble({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      style={{
+        position: "fixed",
+        bottom: 100,
+        right: 20,
+        zIndex: 9999,
+        maxWidth: 300,
+        width: "calc(100% - 40px)",
+      }}
+    >
+      <div
+        style={{
+          background: "#1C1C1E",
+          borderRadius: 20,
+          padding: 20,
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-0.5">
+            <SpyIcon size={32} glow />
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
+              {t("tutorial.done_title", "Tutorial abgeschlossen! 🎉")}
+            </p>
+            <p style={{ fontSize: 14, color: "#8E8E93", marginTop: 6, lineHeight: 1.5 }}>
+              {t("tutorial.comment_done", "Viel Spaß, Agent! 🚀")}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            marginTop: 16,
+            padding: "13px 0",
+            background: "#FF2D55",
+            borderRadius: 12,
+            border: "none",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: "pointer",
+            minHeight: 48,
+          }}
+        >
+          {t("tutorial.done_cta", "Alles klar! 🕵️")}
+        </button>
+      </div>
+    </motion.div>
+  );
+}
 
 export function AppTutorial() {
   const { t } = useTranslation();
@@ -44,17 +144,17 @@ export function AppTutorial() {
   const [phase, setPhase] = useState<"idle" | "intro" | "walkthrough" | "done">("idle");
   const [step, setStep] = useState(0);
   const [spotlightVisible, setSpotlightVisible] = useState(false);
+  const [targetReady, setTargetReady] = useState(false);
   const transitionTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
   const forceShow = (location.state as { showWelcome?: boolean } | null)?.showWelcome === true;
 
-  // ONLY trigger on fresh registration via showWelcome flag — never auto-trigger
+  // ONLY trigger on fresh registration via showWelcome flag
   useEffect(() => {
     if (!tutorialKey) return;
     if (localStorage.getItem(tutorialKey)) return;
     
-    // Must have explicit showWelcome from registration flow
     const hasFlag = forceShow || (user && sessionStorage.getItem(`show_welcome_${user.id}`));
     if (!hasFlag) return;
     
@@ -104,29 +204,65 @@ export function AppTutorial() {
     }
   }, [step, phase]);
 
-  // Show spotlight with delay when entering a new spotlight step
+  // Poll for target element existence (up to 5s)
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
-    if (currentStep?.type !== "spotlight") return;
+    if (currentStep?.type !== "spotlight") {
+      setTargetReady(false);
+      return;
+    }
+
+    const el = document.getElementById(currentStep.targetId);
+    if (el) {
+      setTargetReady(true);
+      return;
+    }
+
+    // Poll every 500ms for up to 5s
+    setTargetReady(false);
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      const found = document.getElementById(currentStep.targetId);
+      if (found) {
+        setTargetReady(true);
+        clearInterval(interval);
+      } else if (attempts >= 10) {
+        // Skip this step after 5s
+        clearInterval(interval);
+        advanceStep();
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [step, phase]);
+
+  // Show spotlight with delay when target is ready
+  useEffect(() => {
+    if (phase !== "walkthrough") return;
+    const currentStep = STEPS[step];
+    if (currentStep?.type !== "spotlight" || !targetReady) {
+      setSpotlightVisible(false);
+      return;
+    }
 
     setSpotlightVisible(false);
     const timer = setTimeout(() => setSpotlightVisible(true), 300);
     return () => clearTimeout(timer);
-  }, [step, phase]);
+  }, [step, phase, targetReady]);
 
   const advanceStep = useCallback(() => {
     setSpotlightVisible(false);
+    setTargetReady(false);
     clearTimeout(transitionTimer.current);
 
     const nextStep = step + 1;
     if (nextStep >= STEPS.length) {
-      // Tutorial complete
       if (tutorialKey) localStorage.setItem(tutorialKey, "1");
       setPhase("done");
       return;
     }
-    // 300ms pause between steps
     transitionTimer.current = setTimeout(() => setStep(nextStep), 300);
   }, [step, tutorialKey]);
 
@@ -225,10 +361,27 @@ export function AppTutorial() {
   // Walkthrough phase
   const currentStep = STEPS[step];
   if (!currentStep) return null;
-  if (currentStep.type === "action") return null;
 
-  const targetExists = !!document.getElementById(currentStep.targetId);
-  if (!targetExists) return null;
+  // Completion step
+  if (currentStep.type === "completion") {
+    return (
+      <AnimatePresence>
+        <CompletionBubble onClose={handleClose} />
+      </AnimatePresence>
+    );
+  }
+
+  // Action steps: show waiting bubble
+  if (currentStep.type === "action") {
+    return (
+      <AnimatePresence>
+        <WaitingBubble text={t(currentStep.waitingKey)} />
+      </AnimatePresence>
+    );
+  }
+
+  // Spotlight steps: wait for element to be ready
+  if (!targetReady) return null;
 
   return (
     <SpotlightOverlay
