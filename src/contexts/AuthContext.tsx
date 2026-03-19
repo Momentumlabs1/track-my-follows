@@ -70,6 +70,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const init = async () => {
+      // Check if we received tokens from Despia native OAuth deeplink return
+      const url = new URL(window.location.href);
+      const accessToken = url.searchParams.get("access_token");
+      const refreshToken = url.searchParams.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        console.info("[auth/init] Setting session from native OAuth tokens");
+        // Clean URL
+        url.searchParams.delete("access_token");
+        url.searchParams.delete("refresh_token");
+        window.history.replaceState({}, "", url.pathname + url.search);
+
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) {
+          console.error("[auth/init] setSession failed", error.message);
+        }
+      }
+
       const { data: { session: s } } = await supabase.auth.getSession();
       console.info("[auth/init]", { hasSession: !!s });
       if (mounted && s) {
