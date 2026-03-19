@@ -245,7 +245,7 @@ export default function SpyDetail() {
             ) : (
               <Search className="h-5 w-5 text-primary" />
             )}
-            <span className="text-[13px] font-bold text-foreground">Push Scan</span>
+            <span className="text-[13px] font-bold text-foreground">{t("spy_detail.push_scan_title", "Push Scan")}</span>
           </div>
           <p className="text-[10px] text-muted-foreground mb-3">
             {pushRemaining > 0
