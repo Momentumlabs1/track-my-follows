@@ -63,7 +63,7 @@ export const manageSubscription = () => {
   }
 };
 
-export const NATIVE_DEEPLINK_SCHEME = 'secretspy';
+export const NATIVE_DEEPLINK_SCHEME = 'spysecret';
 
 export const openInstagram = (username: string) => {
   if (isNativeApp()) {

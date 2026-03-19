@@ -14,14 +14,16 @@ const SUPABASE_ANON_KEY =
  * Flow per Despia docs:
  * 1. Supabase redirects here after OAuth with tokens in URL hash
  * 2. We extract access_token + refresh_token
- * 3. We redirect to deeplink: secretspy://oauth/auth?access_token=xxx&refresh_token=yyy
+ * 3. We redirect to deeplink: spysecret://oauth/auth?access_token=xxx&refresh_token=yyy
  * 4. The "oauth/" prefix tells Despia to close the browser session
  * 5. Despia navigates the WebView to /auth?access_token=xxx&refresh_token=yyy
- * 6. AuthContext picks up tokens and calls setSession()
+ * 6. AuthCallback picks up tokens and calls setSession()
  */
 const NativeCallback = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [deeplinkUrl, setDeeplinkUrl] = useState<string | null>(null);
+  const [showFallback, setShowFallback] = useState(false);
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -30,13 +32,11 @@ const NativeCallback = () => {
 
     const run = async () => {
       try {
-        // Get deeplink scheme from query params (set by auth-start edge function)
-        // Falls back to hardcoded scheme
         const deeplinkScheme = searchParams.get("deeplink_scheme") ||
                                new URLSearchParams(window.location.search).get("deeplink_scheme") ||
                                NATIVE_DEEPLINK_SCHEME;
 
-        // Parse tokens from URL hash (Supabase implicit flow puts them here)
+        // Parse tokens from URL hash (Supabase implicit flow)
         const hash = window.location.hash.substring(1);
         const hashParams = new URLSearchParams(hash);
 
@@ -64,14 +64,12 @@ const NativeCallback = () => {
         }
 
         if (!accessToken) {
-          // Check for OAuth errors
           const oauthError = hashParams.get("error") || searchParams.get("error");
           const errorDesc = hashParams.get("error_description") || searchParams.get("error_description");
 
           if (oauthError) {
-            // Redirect error to app
             const errorUrl = `${deeplinkScheme}://oauth/auth?error=${encodeURIComponent(oauthError)}&error_description=${encodeURIComponent(errorDesc || '')}`;
-            window.location.href = errorUrl;
+            window.location.replace(errorUrl);
             return;
           }
 
@@ -79,22 +77,22 @@ const NativeCallback = () => {
           return;
         }
 
-        // Build deeplink URL per Despia docs:
-        // Format: secretspy://oauth/auth?access_token=xxx&refresh_token=yyy
-        // - secretspy:// = app's deeplink scheme
-        // - oauth/ = REQUIRED prefix — tells Despia to close ASWebAuthenticationSession
-        // - auth = path where WebView navigates (/auth?access_token=xxx)
+        // Build deeplink: spysecret://oauth/auth?access_token=xxx&refresh_token=yyy
         const params = new URLSearchParams();
         params.set("access_token", accessToken);
         if (refreshToken) {
           params.set("refresh_token", refreshToken);
         }
 
-        const deeplinkUrl = `${deeplinkScheme}://oauth/auth?${params.toString()}`;
-        console.log("[native-callback] Redirecting to deeplink:", deeplinkUrl);
+        const url = `${deeplinkScheme}://oauth/auth?${params.toString()}`;
+        console.log("[native-callback] Redirecting to deeplink:", url);
+        setDeeplinkUrl(url);
 
-        // This closes ASWebAuthenticationSession and opens /auth?tokens in WebView
-        window.location.href = deeplinkUrl;
+        // Use replace for more reliable redirect
+        window.location.replace(url);
+
+        // Show fallback button after 3 seconds if redirect didn't work
+        setTimeout(() => setShowFallback(true), 3000);
       } catch (err) {
         setError(String(err));
       }
@@ -114,6 +112,14 @@ const NativeCallback = () => {
         <>
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Weiterleitung zu SpySecret…</p>
+          {showFallback && deeplinkUrl && (
+            <a
+              href={deeplinkUrl}
+              className="mt-4 px-6 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-medium"
+            >
+              App öffnen
+            </a>
+          )}
         </>
       )}
     </div>

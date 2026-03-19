@@ -39,6 +39,7 @@ function AppContent() {
   useDirection();
   return (
     <>
+      <SpaRedirector />
       <Routes>
         <Route path="/" element={<Splash />} />
         <Route path="/splash" element={<Splash />} />
