@@ -274,7 +274,7 @@ export default function SpyDetail() {
             ) : (
               <Eye className="h-5 w-5 text-primary" />
             )}
-            <span className="text-[13px] font-bold text-foreground">Unfollow Scan</span>
+            <span className="text-[13px] font-bold text-foreground">{t("spy_detail.unfollow_scan_title", "Unfollow Scan")}</span>
           </div>
           <p className="text-[10px] text-muted-foreground mb-3">
             {unfollowRemaining > 0

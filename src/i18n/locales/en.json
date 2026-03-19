@@ -223,7 +223,8 @@
     "female_bar": "♀ Women",
     "male_bar": "♂ Men",
     "followed_distribution": "Gender distribution of followed accounts",
-    "analysis_running": "Gender analysis running..."
+    "analysis_running": "Gender analysis running...",
+    "accounts_count": "{{count}} accounts"
   },
   "insights": {
     "title": "Insights",

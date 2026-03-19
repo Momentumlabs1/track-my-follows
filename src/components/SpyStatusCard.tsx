@@ -309,7 +309,7 @@ export function SpyStatusCard({
                     ) : (
                       <Eye className="h-4 w-4 text-primary" />
                     )}
-                    <span className="text-[12px] font-bold text-foreground">Unfollow Scan</span>
+                    <span className="text-[12px] font-bold text-foreground">{t("spy_detail.unfollow_scan_title", "Unfollow Scan")}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mb-2.5 leading-snug">
                     {unfollowRemaining > 0
