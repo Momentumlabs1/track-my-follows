@@ -48,50 +48,6 @@ async function syncUserSettings(userId: string) {
   }
 }
 
-/**
- * Check if the current URL contains OAuth return parameters.
- */
-function getOAuthCode(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("code");
-}
-
-function hasOAuthParams(): boolean {
-  const params = new URLSearchParams(window.location.search);
-  const hash = window.location.hash.substring(1);
-  const hashParams = new URLSearchParams(hash);
-
-  return !!(
-    getOAuthCode() ||
-    params.get("error") ||
-    hashParams.get("access_token") ||
-    hashParams.get("error")
-  );
-}
-
-function cleanOAuthParams() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("code");
-  url.searchParams.delete("error");
-  url.searchParams.delete("error_description");
-
-  if (url.hash) {
-    const hashParams = new URLSearchParams(url.hash.substring(1));
-    const oauthKeys = ["access_token", "refresh_token", "expires_in", "expires_at", "token_type", "type", "provider_token", "provider_refresh_token", "error", "error_description", "error_code"];
-    let hadOAuthKey = false;
-    for (const key of oauthKeys) {
-      if (hashParams.has(key)) {
-        hashParams.delete(key);
-        hadOAuthKey = true;
-      }
-    }
-    if (hadOAuthKey) {
-      const remaining = hashParams.toString();
-      url.hash = remaining ? `#${remaining}` : "";
-    }
-  }
-  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
