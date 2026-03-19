@@ -217,7 +217,11 @@
     "confidence_high": "ثقة عالية",
     "confidence_medium": "ثقة متوسطة",
     "confidence_low": "الجاسوس مرهق",
-    "based_on_sample": "بناءً على {{count}} من {{total}} حساب تم تحليله"
+    "based_on_sample": "بناءً على {{count}} من {{total}} حساب تم تحليله",
+    "female_bar": "♀ نساء",
+    "male_bar": "♂ رجال",
+    "followed_distribution": "توزيع الجنس للحسابات المتابعة",
+    "analysis_running": "تحليل الجنس قيد التنفيذ..."
   },
   "insights": {
     "title": "إحصائيات",
