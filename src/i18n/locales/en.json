@@ -219,7 +219,11 @@
   },
   "gender": {
     "female_short": "female",
-    "unknown_short": "unrecognized"
+    "unknown_short": "unrecognized",
+    "female_bar": "♀ Women",
+    "male_bar": "♂ Men",
+    "followed_distribution": "Gender distribution of followed accounts",
+    "analysis_running": "Gender analysis running..."
   },
   "insights": {
     "title": "Insights",
