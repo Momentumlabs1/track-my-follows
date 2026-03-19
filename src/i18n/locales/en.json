@@ -664,6 +664,8 @@
     "info_unfollow_baseline": "Unfollow scans only work after the first complete scan."
   },
   "locked_feature": {
-    "available_with_pro": "Available with Pro"
+    "available_with_pro": "Available with Pro",
+    "unlock_with_pro": "Unlock with Pro",
+    "spy_teaser": "Suspicion score, gender analysis & more"
   }
 }
