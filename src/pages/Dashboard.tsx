@@ -94,7 +94,7 @@ const Dashboard = () => {
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
         {/* Top bar */}
-        <div className="px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-2 flex items-center justify-between">
+        <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-2 flex items-center justify-between">
           {isPro ? (
             <span
               className="font-black tracking-wider uppercase flex items-center gap-1.5"
