@@ -63,6 +63,7 @@ function AppContent() {
       </Routes>
       <BottomNav />
       <PaywallSheet />
+      <AppTutorial />
     </>
   );
 }

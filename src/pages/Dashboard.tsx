@@ -89,7 +89,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <WelcomeDialog />
-      <AppTutorial />
+      
 
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
