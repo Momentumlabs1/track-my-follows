@@ -119,20 +119,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.info("[auth/init] starting", { isOAuthReturn, url: window.location.href });
 
       if (isOAuthReturn) {
-        // On OAuth return the SDK's getSession() + onAuthStateChange will
-        // automatically pick up ?code= or #access_token= and exchange them.
-        // We just need to wait for that to complete with retries.
+        // For PKCE, exchange the returned code immediately to avoid long polling
+        // windows in native/webview contexts.
+        const oauthCode = getOAuthCode();
+        if (oauthCode) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(oauthCode);
+          if (exchangeError) {
+            console.warn("[auth/init] code exchange failed", { message: exchangeError.message });
+          }
+        }
+
         let resolved = false;
 
-        for (let attempt = 0; attempt < 8; attempt++) {
-          const { data: { session: s } } = await supabase.auth.getSession();
-          console.info(`[auth/init] OAuth retry ${attempt + 1}/8`, { hasSession: !!s });
-          if (s) {
-            if (mounted) setSession(s);
-            resolved = true;
-            break;
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (initialSession) {
+          if (mounted) setSession(initialSession);
+          resolved = true;
+        }
+
+        if (!resolved) {
+          for (let attempt = 0; attempt < 4; attempt++) {
+            await new Promise(r => setTimeout(r, 250));
+            const { data: { session: s } } = await supabase.auth.getSession();
+            console.info(`[auth/init] OAuth retry ${attempt + 1}/4`, { hasSession: !!s });
+            if (s) {
+              if (mounted) setSession(s);
+              resolved = true;
+              break;
+            }
           }
-          await new Promise(r => setTimeout(r, 500));
         }
 
         cleanOAuthParams();

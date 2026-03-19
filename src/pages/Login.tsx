@@ -46,13 +46,17 @@ const Login = () => {
     setSocialLoading(provider);
     try {
       const redirectUrl = getOAuthRedirectUrl();
+      const skipBrowserRedirect = shouldSkipBrowserRedirect();
+      const queryParams = provider === "google" ? { prompt: "select_account" } : undefined;
 
-      console.info("[auth/login] OAuth start", { provider, redirectUrl });
+      console.info("[auth/login] OAuth start", { provider, redirectUrl, skipBrowserRedirect });
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectUrl,
+          skipBrowserRedirect,
+          queryParams,
         },
       });
 
@@ -60,7 +64,6 @@ const Login = () => {
         toast.error(error.message);
         return;
       }
-
     } catch (err) {
       toast.error(String(err));
     } finally {
