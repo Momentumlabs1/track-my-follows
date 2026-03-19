@@ -626,9 +626,11 @@
   "spy_findings": {
     "title": "Spy-Analyse",
     "female_ratio": "Frauen-Anteil",
+    "follow_unfollow": "Follow & Unfollow",
     "ghost_desc": "Gefolgt & schnell entfolgt",
     "private_accounts": "Private Accounts",
     "private_desc": "Bei neuen Follows",
+    "based_on_initial": "Basierend auf erstem Scan",
     "followback_rate": "Followback-Rate",
     "followback_low": "Wenige folgen zurück – einseitiges Interesse",
     "followback_mid": "Manche folgen zurück",
