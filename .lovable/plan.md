@@ -1,59 +1,51 @@
 
-Zuerst klar und direkt:
 
-**Do I know what the issue is? → Ja.**
+## Diagnose
 
-- Deine OAuth-Authentifizierung bei Supabase **funktioniert** (Auth-Logs zeigen erfolgreiche Apple/Google Logins mit `/callback` 302 + `Login` Event).
-- Der Crash passiert **danach im Frontend-Routing**: Die App landet auf einer nicht registrierten Route (sehr wahrscheinlich `/oauth/auth?...`) und fällt auf `NotFound` zurück.
-- Genau deshalb siehst du den 404-Screen mit BottomNav.
+Der Screenshot zeigt: **Alle Paywall-Texte werden als rohe Translation-Keys angezeigt** (z.B. "paywall.title" statt "Pro freischalten"). Die Übersetzungen existieren aber in allen 3 Sprachdateien (DE, EN, AR).
 
-## Was ich baue (ohne Apple kaputtzumachen)
+### Ursache
+`react-i18next` nutzt standardmäßig `useSuspense: true`. Ohne `<Suspense>`-Boundary in der App (keines vorhanden!) werden Komponenten gerendert bevor i18n fertig initialisiert ist. Das Resultat: `t("paywall.title")` gibt den rohen Key zurück statt den übersetzten Text.
 
-1. **Apple-Flow wieder separat behandeln (wie gewünscht)**
-   - Datei: `src/pages/Login.tsx`
-   - Native:
-     - `google` bleibt auf `skipBrowserRedirect + openOAuth(...)` (wegen WebView/Google-Thematik)
-     - `apple` geht wieder über normalen OAuth-Redirect (kein erzwungener NativeCallback-Zwischenschritt)
-   - Ergebnis: Apple bleibt nah am alten, funktionierenden Verhalten.
+### Zusätzliche Probleme (aus dem Audit)
 
-2. **Fehlende Rückkehr-Route für Deep Link ergänzen**
-   - Datei: `src/App.tsx`
-   - Zusätzliche öffentliche Route(s): `/oauth/auth` (optional auch `/oauth/*` als Fallback)
-   - Diese Route zeigt nicht 404, sondern verarbeitet den Rücksprung und leitet sauber weiter.
+1. **Fehlende Translation-Keys** in allen 3 Locale-Dateien:
+   - `paywall.unlock_spy_agent` (Dashboard.tsx:305)
+   - `locked_feature.available_with_pro` (LockedFeatureCard.tsx:31)
 
-3. **Session-Rückkehr robust machen statt auf 404 stehenzubleiben**
-   - Datei: `src/contexts/AuthContext.tsx`
-   - Wenn `access_token` + `refresh_token` im Query erkannt und Session gesetzt wurde:
-     - URL bereinigen
-     - anschließend auf stabile Zielroute umschreiben (z. B. `/auth/callback` oder `/dashboard`), damit kein Dead-End auf `/oauth/auth` bleibt.
+2. **Hardcodierte deutsche Strings** (nicht übersetzt):
+   - Dashboard.tsx:116-117: `"Account"` / `"Accounts"` statt i18n-Key
+   - Dashboard.tsx:107: `"Spy Secret Pro"` und `:110` `"Spy Secret"` hardcodiert
+   - PaywallSheet.tsx:155-156: Apple-Abo-Hinweis komplett auf Deutsch hardcodiert
 
-4. **BottomNav auf Callback-/Fallback-Routen ausblenden**
-   - Datei: `src/components/BottomNav.tsx`
-   - Callback-/OAuth-Routen in `isHidden` aufnehmen, damit bei Übergangsseiten kein irritierender Nav+404-Mix sichtbar ist.
+## Umsetzungsplan
 
-## Warum genau das dein Problem löst
+### 1. i18n-Config fixen (Hauptproblem)
+**Datei: `src/i18n/index.ts`**
+- `react: { useSuspense: false }` zur Config hinzufügen
+- Damit rendern alle Komponenten sofort mit korrekten Übersetzungen, ohne dass ein `<Suspense>`-Wrapper nötig ist
 
-```text
-Aktuell:
-Login -> Provider -> Supabase ok -> DeepLink zurück -> /oauth/auth (keine Route) -> 404
+### 2. Fehlende Translation-Keys ergänzen
+**Dateien: `src/i18n/locales/de.json`, `en.json`, `ar.json`**
+- `paywall.unlock_spy_agent` hinzufügen (DE: "Spy Agent freischalten", EN: "Unlock Spy Agent", AR: "فتح عميل التجسس")
+- `locked_feature.available_with_pro` hinzufügen (DE: "Verfügbar mit Pro", EN: "Available with Pro", AR: "متاح مع Pro")
+- `paywall.subscription_disclosure` hinzufügen (DE/EN/AR Varianten des Apple-Abo-Hinweises)
 
-Nach Fix:
-Login -> Provider -> Supabase ok -> DeepLink zurück -> OAuth-Return-Route -> Session setzen -> Dashboard
-```
+### 3. Hardcodierte Strings durch i18n-Keys ersetzen
+**Datei: `src/pages/Dashboard.tsx`**
+- Zeile 116-117: `"Account"/"Accounts"` → `t("dashboard.account_count", { count: profiles.length })`
+- Translation-Key in allen 3 Dateien ergänzen
 
-## Technische Details (kurz)
+**Datei: `src/components/PaywallSheet.tsx`**
+- Zeile 155-156: Hardcodierten Abo-Hinweis durch `t("paywall.subscription_disclosure")` ersetzen
+- Key in allen 3 Locales anlegen
 
-- Betroffene Dateien:
-  - `src/pages/Login.tsx`
-  - `src/App.tsx`
-  - `src/contexts/AuthContext.tsx`
-  - `src/components/BottomNav.tsx`
-- Kein Provider-Secret/Apple-Portal-Change nötig.
-- Fokus ist rein auf Frontend-Routing + Return-Handling.
+### 4. Gesamtaudit abschließen
+- Alle Komponenten mit `useTranslation` sind bereits korrekt verdrahtet
+- SpyDetail, FeedPage, Settings, Onboarding, etc. nutzen durchgehend `t()`-Aufrufe
+- Rechtliche Seiten bleiben wie beabsichtigt nur auf Deutsch
 
-## Testplan (end-to-end, Pflicht)
+## Technischer Hintergrund
+- `useSuspense: false` bedeutet: Wenn i18n noch nicht bereit ist, rendert die Komponente trotzdem (mit Fallback-Werten). Sobald i18n fertig ist, wird automatisch neu gerendert mit den richtigen Übersetzungen.
+- Das ist die Standard-Empfehlung für Apps ohne React.Suspense-Setup.
 
-1. Native Apple Login → kein 404, landet auf Dashboard.
-2. Native Google Login → kein 404, landet auf Dashboard.
-3. Web Apple/Google Login (`/auth/callback`) bleibt intakt.
-4. Rücksprung mit abgelaufenem/fehlerhaftem Token zeigt verständlichen Fehler statt NotFound.
