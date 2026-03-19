@@ -557,7 +557,9 @@
     "done_cta": "Alles klar! 🕵️"
   },
   "locked_feature": {
-    "available_with_pro": "Verfügbar mit Pro"
+    "available_with_pro": "Verfügbar mit Pro",
+    "unlock_with_pro": "Mit Pro freischalten",
+    "spy_teaser": "Verdachts-Score, Geschlechter-Analyse & mehr"
   },
   "spy_detail": {
     "your_spy": "Dein Spion",
