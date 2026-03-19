@@ -6,6 +6,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { isNativeApp, openOAuth } from "@/lib/native";
 
 import logoWide from "@/assets/logo-wide.png";
 
