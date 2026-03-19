@@ -1,69 +1,58 @@
 
 
-## Plan: "Spy des Tages" Karte überarbeiten + Spy-Profil stärker highlighten
+## Despia Native OAuth — Richtiger Flow mit `oauth://` Protokoll
 
-### 1. Spy des Tages Karte redesignen (`src/pages/Dashboard.tsx`, Zeilen 208-295)
+### Warum es früher ging und jetzt nicht
 
-**Probleme aktuell:**
-- Pink-Gradient macht Text schwer lesbar
-- Event-Typ (Follow/Unfollow/Follower verloren) ist nicht klar erkennbar
-- Kein Avatar, keine visuelle Zuordnung zum Profil
+Die Despia-Doku zeigt klar: Für nativen OAuth (ASWebAuthenticationSession auf iOS, Chrome Custom Tabs auf Android) muss die OAuth-URL über das **`oauth://`-Protokoll** von Despia geöffnet werden — nicht als normale Navigation im WebView. Der aktuelle Code macht einfach `signInWithOAuth()` ohne `skipBrowserRedirect`, was die URL direkt im WebView öffnet → Google-Webseite statt nativer Picker.
 
-**Neues Design:**
-- **Hintergrund**: `native-card` mit subtiler Border statt knalligem Pink-Gradient
-- **Event-Typ als farbiges Badge** oben links:
-  - 🔴 "Entfolgt" (destructive) | 🟠 "Follower verloren" (orange) | 🟢 "Neuer Follow" (green) | 🔵 "Neuer Follower" (blue)
-- **Avatar des betroffenen Users** links anzeigen
-- **Zwei Zeilen**: "@username hat entfolgt" + darunter "bei @tracked_profile"
-- **SpyIcon** klein (20px) neben dem "SPY DES TAGES" Header statt 📋-Emoji
-- **Timestamp** als dezenter Text rechts oben
-- Free-User Locked-Version: gleicher Style aber mit Blur+Lock
+### Der Despia OAuth-Flow (laut Doku)
 
-### 2. Spy-Profil stärker highlighten (`src/components/ProfileCard.tsx`)
+```text
+1. User tippt "Sign in with Google"
+2. App ruft signInWithOAuth({ skipBrowserRedirect: true }) auf
+   → bekommt die OAuth-URL zurück, navigiert NICHT
+3. App ruft despia('oauth://?url={encodedOAuthUrl}') auf
+   → Despia öffnet ASWebAuthenticationSession (nativer Picker)
+4. User authentifiziert sich nativ
+5. Google redirected zu /native-callback auf deiner Domain
+6. /native-callback Seite extrahiert Tokens/Code aus URL
+7. /native-callback redirected zu deeplink: {scheme}://oauth/auth?tokens
+   → Das "oauth/" Prefix sagt Despia: Browser schließen!
+8. App empfängt Tokens über die WebView-URL, setzt Session
+```
 
-**Aktuell:** Nur ein dünner `border-2 border-primary/50` Ring
-**Neu:**
-- **Glow-Shadow**: `shadow-[0_0_16px_-2px_hsl(var(--primary)/0.3)]` um die Karte
-- **Gradient-Border** statt simple border: Primary-to-Accent
-- **SpyIcon Badge** (16px) als kleines Overlay oben rechts am Avatar
-- **Hintergrund**: Subtiler `bg-primary/5` Tint auf der gesamten Karte
+### Konkrete Änderungen (4 Dateien + 1 neue)
 
-### 3. Translations
-- `simple.spy_of_the_day_subtitle`: "Letzte Aktivität deines Spys" (de) / "Latest spy activity" (en)
+**1. `src/pages/Login.tsx` — Zwei Pfade: Native vs. Web**
+- Wenn `isNativeApp()`: `signInWithOAuth({ skipBrowserRedirect: true })` aufrufen, OAuth-URL holen, dann `despia('oauth://?url=...')` aufrufen
+- Wenn Web: normaler `signInWithOAuth()` wie jetzt (funktioniert im Browser)
 
-### Betroffene Dateien
-- `src/pages/Dashboard.tsx` (Spy des Tages Karten-Bereich)
-- `src/components/ProfileCard.tsx` (Spy-Highlight verstärken)
-- `src/i18n/locales/de.json`
-- `src/i18n/locales/en.json`
+**2. `src/lib/native.ts` — `openOAuth()` Funktion hinzufügen**
+- Neue Exportfunktion: `openOAuth(url: string)` die `despia('oauth://?url=...')` aufruft
+- Kapselt den Despia-Aufruf sauber
 
----
+**3. Neue Seite: `src/pages/NativeCallback.tsx` — Token-Handoff**
+- Route: `/native-callback`
+- Läuft im **Browser** (nicht im WebView), nach Google/Apple Redirect
+- Extrahiert `code` oder `access_token` aus URL
+- Tauscht Code gegen Session (via Supabase) falls nötig
+- Redirected zu Deeplink: `{scheme}://oauth/auth?access_token=...&refresh_token=...`
+- Das `oauth/` Prefix schließt automatisch den Browser
 
-## ✅ Erledigt: Delta-Gate für akkurate Event-Zählung (2026-03-13)
+**4. `src/App.tsx` — Route `/native-callback` hinzufügen**
 
-### Problem
-Beim Page-1-Scan wurden "neu entdeckte" aber schon länger existierende Accounts fälschlich als "neue Follower/Follows" gezählt. Beispiel: saif_nassiri zeigte 87 "neue Follower" obwohl nur ~1 wirklich neu war.
+**5. `src/contexts/AuthContext.tsx` — Token-Empfang**
+- Prüft beim Init ob URL Tokens aus dem Deeplink-Return enthält (z.B. `/auth?access_token=...`)
+- Wenn ja: `supabase.auth.setSession()` mit den Tokens aufrufen
 
-### Implementiert
-1. **Delta-Gate Logik** in allen 3 Edge Functions (smart-scan, trigger-scan, unfollow-check):
-   - `maxAllowed = max(actualCount - lastKnownCount, 0)`
-   - Nur die ersten `maxAllowed` neuen Einträge werden als echte Events geschrieben
-   - Überschüssige Accounts werden als Baseline-Backfill (`is_initial=true`) markiert
-2. **Daten-Reparatur**: Alle falschen `gained`-Events für saif_nassiri, timwger, lisa.jakobi auf `is_initial=true` gesetzt
-3. **Texte korrigiert**: Unfollow-Erkennung nicht mehr als "automatisch jede Stunde" beschrieben (ist manueller Check)
+### Was dafür in Despia konfiguriert sein muss
 
----
+- **App Link Scheme** muss gesetzt sein (z.B. `spysecret://`) — das ist die Deeplink-Scheme
+- **Redirect URL in Supabase**: `https://track-my-follows.lovable.app/native-callback` muss in der Allowlist stehen
+- **Google OAuth Console**: `https://track-my-follows.lovable.app/native-callback` als Redirect URI hinzufügen
 
-## ✅ Erledigt: Dual-Name Gender Detection (2026-03-12)
+### Frage vor Implementierung
 
-### Was implementiert wurde:
-1. **Dual-Name Detection**: `detectGender(displayName, username?)` — Display Name zuerst, Username als Fallback
-2. **Username-Extraktion**: Split bei `.`, `_`, `-` (erster Match gewinnt) + Prefix-Matching (min 4 Buchstaben)
-3. **~200 neue DACH-relevante Namen**: Türkische, arabische und persische Vornamen (inkl. "milad")
-4. **"deniz" zu AMBIGUOUS verschoben** (kann männlich oder weiblich sein im Türkischen)
-5. **Alle 5 Edge Functions aktualisiert**: create-baseline, smart-scan, trigger-scan, unfollow-check, retag-gender
-6. **Frontend aktualisiert**: WeeklyGenderCards + suspicionAnalysis nutzen jetzt Username-Fallback
-7. **retag-gender**: Selektiert jetzt auch `following_username` und entfernt den `NOT NULL`-Filter auf display_name
+Ich muss wissen welche **Deeplink-Scheme** in Despia konfiguriert ist (z.B. `spysecret://`, `spysecretapp://`, etc.). Das findest du in Despia unter "Web App Synchronization" → "App Link Scheme". Ohne das kann der Browser nach dem Login nicht zurück zur App redirecten.
 
-### Noch zu tun:
-- `retag-gender` Edge Function manuell aufrufen, um bestehende "unknown"-Einträge mit dem neuen Dual-Name-System nachzutaggen
