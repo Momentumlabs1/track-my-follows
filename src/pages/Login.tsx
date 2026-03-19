@@ -6,6 +6,7 @@ import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { isNativeApp, openOAuth } from "@/lib/native";
 
 import logoWide from "@/assets/logo-wide.png";
 
@@ -45,15 +46,36 @@ const Login = () => {
   const handleSocialLogin = async (provider: "apple" | "google") => {
     setSocialLoading(provider);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: window.location.origin + "/auth/callback",
-        },
-      });
+      if (isNativeApp()) {
+        // Native path: get URL without navigating, then open via Despia's oauth:// protocol
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            skipBrowserRedirect: true,
+            redirectTo: "https://track-my-follows.lovable.app/native-callback",
+          },
+        });
 
-      if (error) {
-        toast.error(error.message);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+
+        if (data?.url) {
+          await openOAuth(data.url);
+        }
+      } else {
+        // Web path: standard redirect within browser
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: window.location.origin + "/auth/callback",
+          },
+        });
+
+        if (error) {
+          toast.error(error.message);
+        }
       }
     } catch (err) {
       toast.error(String(err));

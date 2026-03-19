@@ -27,6 +27,7 @@ import SpyDetail from "./pages/SpyDetail";
 import FeedPage from "./pages/FeedPage";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
+import NativeCallback from "./pages/NativeCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ function AppContent() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/native-callback" element={<NativeCallback />} />
         <Route path="/legal/impressum" element={<LegalImpressum />} />
         <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
         <Route path="/legal/agb" element={<LegalAGB />} />
