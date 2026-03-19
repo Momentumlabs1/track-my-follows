@@ -288,7 +288,7 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {isProMax ? "∞ unlimited" : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
+                    {isProMax ? t("spy_detail.unlimited", "∞ unlimited") : t("spy_detail.remaining", { current: pushRemaining, max: 4 })}
                   </p>
                   {!isProMax && <Progress value={(pushRemaining / 4) * 100} className="h-1.5 bg-muted" />}
                 </button>
