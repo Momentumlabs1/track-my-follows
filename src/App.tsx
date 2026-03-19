@@ -27,6 +27,7 @@ import SpyDetail from "./pages/SpyDetail";
 import FeedPage from "./pages/FeedPage";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
+import NativeCallback from "./pages/NativeCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
