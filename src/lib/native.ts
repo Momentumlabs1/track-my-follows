@@ -63,6 +63,14 @@ export const manageSubscription = () => {
   }
 };
 
+export const NATIVE_DEEPLINK_SCHEME = 'spysecret';
+
+export const openOAuth = async (oauthUrl: string) => {
+  if (!isNativeApp()) return;
+  const despia = (await import('despia-native')).default;
+  return despia(`oauth://?url=${encodeURIComponent(oauthUrl)}`);
+};
+
 export const getAppVersion = async (): Promise<{ versionNumber: string; bundleNumber: string }> => {
   if (!isNativeApp()) return { versionNumber: 'web', bundleNumber: '0' };
   const despia = (await import('despia-native')).default;
