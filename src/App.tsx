@@ -28,6 +28,7 @@ import FeedPage from "./pages/FeedPage";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
 import NativeCallback from "./pages/NativeCallback";
+import OAuthReturn from "./pages/OAuthReturn";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/native-callback" element={<NativeCallback />} />
+        <Route path="/oauth/*" element={<OAuthReturn />} />
         <Route path="/legal/impressum" element={<LegalImpressum />} />
         <Route path="/legal/datenschutz" element={<LegalDatenschutz />} />
         <Route path="/legal/agb" element={<LegalAGB />} />

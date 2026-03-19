@@ -8,7 +8,7 @@ export function BottomNav() {
   const { t } = useTranslation();
   const location = useLocation();
   const hiddenRoutes = ["/", "/splash", "/onboarding", "/login"];
-  const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing") || location.pathname.startsWith("/legal") || location.pathname === "/spy";
+  const isHidden = hiddenRoutes.includes(location.pathname) || location.pathname.startsWith("/analyzing") || location.pathname.startsWith("/legal") || location.pathname.startsWith("/oauth") || location.pathname === "/spy";
 
   if (isHidden) return null;
 
