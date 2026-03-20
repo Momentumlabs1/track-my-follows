@@ -231,7 +231,7 @@ const Login = () => {
             {/* Social login buttons */}
             <div className="space-y-3">
               <button
-                onClick={() => handleSocialLogin("apple")}
+                onClick={handleAppleLogin}
                 disabled={!!socialLoading}
                 className="w-full flex items-center justify-center gap-3 rounded-2xl bg-foreground text-background py-3.5 text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
               >
