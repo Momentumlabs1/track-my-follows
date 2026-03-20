@@ -248,7 +248,7 @@ const Login = () => {
               </button>
 
               <button
-                onClick={() => handleSocialLogin("google")}
+                onClick={handleGoogleLogin}
                 disabled={!!socialLoading}
                 className="w-full flex items-center justify-center gap-3 rounded-2xl bg-background border border-border/50 py-3.5 text-sm font-semibold transition-all hover:bg-muted disabled:opacity-60"
               >
