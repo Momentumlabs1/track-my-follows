@@ -45,7 +45,7 @@ function useTimeAgoShort() {
   };
 }
 
-export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGenderCardsProps) {
+export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct = 0, malePct = 0, showGenderPct = false }: WeeklyGenderCardsProps) {
   const { t } = useTranslation();
   const [sheetGender, setSheetGender] = useState<"female" | "male" | null>(null);
   const timeAgo = useTimeAgoShort();

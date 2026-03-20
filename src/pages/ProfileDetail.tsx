@@ -340,7 +340,7 @@ const ProfileDetail = () => {
 
             <div className="border-t border-border/20 my-5" />
 
-            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} femalePct={femalePct} malePct={malePct} showGenderPct={showGender} />
             <div className="h-4" />
           </div>
         </div>
