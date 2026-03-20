@@ -286,33 +286,8 @@ const ProfileDetail = () => {
       </motion.div>
 
 
-      {/* ═══ GENDER BAR — Free user teaser ═══ */}
-      {!isPro && showGender && (
-        <div className="px-5 mb-4">
-          <button
-            onClick={() => showPaywall("gender_bar")}
-            className="w-full relative rounded-2xl overflow-hidden p-4 active:scale-[0.98] transition-transform"
-            style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
-          >
-            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-            </span>
-            {/* Blurred fake bar */}
-            <div className="h-7 rounded-full overflow-hidden flex blur-md pointer-events-none select-none">
-              <div style={{ background: "#FF2D55", width: "62%" }} className="h-full" />
-              <div style={{ background: "#007AFF", width: "38%" }} className="h-full" />
-            </div>
-            {/* Lock overlay */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
-              <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-primary-foreground text-xs"
-                style={{ background: "hsl(var(--primary) / 0.9)", backdropFilter: "blur(4px)" }}>
-                <Lock className="h-3.5 w-3.5" />
-                {t("gender.distribution_pro", "Geschlechterverteilung · Pro")}
-              </span>
-            </div>
-          </button>
-        </div>
-      )}
+
+
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
       <div id="locked-analysis" className="px-5 mb-2">
@@ -345,54 +320,8 @@ const ProfileDetail = () => {
           )}
           <div className={(!isPro || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
 
-            {/* Gender ratio inline */}
-            {showGender && (
-              <div id="gender-bar" className="mb-4">
-                <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-                  {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-                </span>
-                <div className="h-7 rounded-full overflow-hidden flex">
-                  <motion.div
-                    style={{ background: "#FF2D55" }}
-                    className="h-full flex items-center justify-center"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${femalePct}%` }}
-                    transition={{ duration: 0.8 }}
-                  >
-                    {femalePct >= 15 && (
-                      <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                        {t("gender.female_bar", "♀ Frau")} {femalePct}%
-                      </span>
-                    )}
-                  </motion.div>
-                  <motion.div
-                    style={{ background: "#007AFF" }}
-                    className="h-full flex items-center justify-center"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${malePct}%` }}
-                    transition={{ duration: 0.8, delay: 0.1 }}
-                  >
-                    {malePct >= 15 && (
-                      <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                        {t("gender.male_bar", "♂ Mann")} {malePct}%
-                      </span>
-                    )}
-                  </motion.div>
-                </div>
-              </div>
-            )}
-            {/* Gender analysis running but all unknown */}
-            {!showGender && followings.length > 0 && (
-              <div className="mb-4">
-                <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-                  {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-                </span>
-                <div className="h-7 rounded-full" style={{ background: "hsl(var(--border))" }} />
-                <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
-                  {t("gender.analysis_running")} · {t("gender.accounts_count", { count: followings.length })}
-                </p>
-              </div>
-            )}
+
+
 
             <SpyStatusCard
               analysis={suspicionAnalysis}
@@ -411,7 +340,7 @@ const ProfileDetail = () => {
 
             <div className="border-t border-border/20 my-5" />
 
-            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} />
+            <WeeklyGenderCards followEvents={followEvents} profileFollowings={followings} femalePct={femalePct} malePct={malePct} showGenderPct={showGender} />
             <div className="h-4" />
           </div>
         </div>

@@ -18,6 +18,9 @@ interface WeeklyGenderCardsProps {
     gender_tag?: string | null;
     first_seen_at?: string;
   }>;
+  femalePct?: number;
+  malePct?: number;
+  showGenderPct?: boolean;
 }
 
 interface GenderedFollow {
@@ -42,7 +45,7 @@ function useTimeAgoShort() {
   };
 }
 
-export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGenderCardsProps) {
+export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct = 0, malePct = 0, showGenderPct = false }: WeeklyGenderCardsProps) {
   const { t } = useTranslation();
   const [sheetGender, setSheetGender] = useState<"female" | "male" | null>(null);
   const timeAgo = useTimeAgoShort();
@@ -129,6 +132,9 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{femaleCount}</span>
                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_women", "neue Frauen")}</p>
+                {showGenderPct && femalePct > 0 && (
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginTop: 4 }}>♀ {femalePct}%</p>
+                )}
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {femaleFollows.slice(0, 4).map((f) => (
@@ -160,6 +166,9 @@ export function WeeklyGenderCards({ followEvents, profileFollowings }: WeeklyGen
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{maleCount}</span>
                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_men", "neue Männer")}</p>
+                {showGenderPct && malePct > 0 && (
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginTop: 4 }}>♂ {malePct}%</p>
+                )}
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {maleFollows.slice(0, 4).map((f) => (
