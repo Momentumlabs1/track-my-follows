@@ -470,7 +470,7 @@ Deno.serve(async (req) => {
       last_following_count: userInfo.following_count ?? allFollowings.length,
       last_follower_count: userInfo.follower_count ?? allFollowers.length,
       total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowsFound + newFollowersFound,
-      total_unfollows_detected: (profile.total_unfollows_detected ?? 0) + unfollowsFound + lostFollowers,
+      total_unfollows_detected: (profile.total_unfollows_detected ?? 0) + unfollowsFound,
       total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
     }).eq("id", profile.id);
 
