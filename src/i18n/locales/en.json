@@ -556,7 +556,17 @@
     "waiting_add": "Enter a username... 🔎",
     "waiting_scan": "Scan running – hang tight! ⏳",
     "done_title": "Tutorial complete! 🎉",
-    "done_cta": "Got it! 🕵️"
+    "done_cta": "Got it! 🕵️",
+    "profile_intro_title": "Profile View 📋",
+    "profile_intro_text": "Here you can see all the details of your tracked profile – followers, follows, analysis and more.",
+    "pro_upsell_title": "Become a Pro Agent 🕵️",
+    "pro_upsell_text": "Unlock all features",
+    "pro_feature_1": "Spy Agent: Automatic scans around the clock",
+    "pro_feature_2": "Unfollow tracking in real-time",
+    "pro_feature_3": "Gender analysis & suspicion score",
+    "pro_feature_4": "Track up to 10 profiles at once",
+    "pro_cta": "Unlock Pro 🚀",
+    "pro_later": "Later"
   },
   "spy_detail": {
     "your_spy": "Your Spy",
