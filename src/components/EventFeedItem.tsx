@@ -28,7 +28,7 @@ function useTimeAgoShort() {
 
 type EventStyle = { emoji: string; borderColor: string; label: string; badgeBg: string };
 
-function getEventStyle(event: UnifiedFeedEvent, t: (k: string, d?: string) => string): EventStyle {
+function getEventStyle(event: UnifiedFeedEvent, t: ReturnType<typeof useTranslation>["t"]): EventStyle {
   if (event.source === "follow") {
     if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
       return { emoji: "💔", borderColor: "hsl(4 90% 58%)", label: t("events.hasUnfollowed", "Entfolgt"), badgeBg: "hsl(4 90% 58% / 0.15)" };
