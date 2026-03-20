@@ -416,6 +416,33 @@ Deno.serve(async (req) => {
       console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers`);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
 
+      // ── Refresh avatar URLs in existing records ──
+      const avatarMap = new Map<string, string>();
+      for (const u of followingUsers) { if (u.profile_pic_url) avatarMap.set(u.pk, u.profile_pic_url); }
+      const followerAvatarMap = new Map<string, string>();
+      for (const u of followerUsers) { if (u.profile_pic_url) followerAvatarMap.set(u.pk, u.profile_pic_url); }
+
+      // Refresh profile_followings avatars
+      for (const [pk, url] of avatarMap) {
+        await supabase.from("profile_followings").update({ following_avatar_url: url })
+          .eq("tracked_profile_id", profile.id).eq("following_user_id", pk);
+      }
+      // Refresh follow_events avatars (by username for efficiency)
+      const usernameAvatarMap = new Map<string, string>();
+      for (const u of followingUsers) { if (u.profile_pic_url) usernameAvatarMap.set(u.username, u.profile_pic_url); }
+      for (const [uname, url] of usernameAvatarMap) {
+        await supabase.from("follow_events").update({ target_avatar_url: url })
+          .eq("tracked_profile_id", profile.id).eq("target_username", uname);
+      }
+      // Refresh profile_followers + follower_events avatars
+      for (const [pk, url] of followerAvatarMap) {
+        await supabase.from("profile_followers").update({ follower_avatar_url: url })
+          .eq("tracked_profile_id", profile.id).eq("follower_user_id", pk);
+        await supabase.from("follower_events").update({ profile_pic_url: url })
+          .eq("profile_id", profile.id).eq("instagram_user_id", pk);
+      }
+      console.log(`[trigger-scan] ${profile.username}: refreshed ${avatarMap.size} following + ${followerAvatarMap.size} follower avatars`);
+
       // Update counts + last_following/follower_count
       await supabase.from("tracked_profiles").update({
         last_following_count: actualFollowingCount,
