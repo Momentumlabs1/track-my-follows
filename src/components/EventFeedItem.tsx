@@ -4,7 +4,7 @@ import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
-import { Lock, ChevronRight } from "lucide-react";
+import { Lock } from "lucide-react";
 import { haptic } from "@/lib/native";
 import type { UnifiedFeedEvent } from "@/pages/Dashboard";
 
@@ -26,6 +26,21 @@ function useTimeAgoShort() {
   };
 }
 
+type EventStyle = { emoji: string; borderColor: string; label: string; badgeBg: string };
+
+function getEventStyle(event: UnifiedFeedEvent, t: ReturnType<typeof useTranslation>["t"]): EventStyle {
+  if (event.source === "follow") {
+    if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
+      return { emoji: "💔", borderColor: "hsl(4 90% 58%)", label: t("events.hasUnfollowed", "Entfolgt"), badgeBg: "hsl(4 90% 58% / 0.15)" };
+    }
+    return { emoji: "✅", borderColor: "hsl(142 71% 45%)", label: t("events.follows_now", "Neuer Follow"), badgeBg: "hsl(142 71% 45% / 0.15)" };
+  }
+  if (event.event_type === "lost") {
+    return { emoji: "😢", borderColor: "hsl(25 95% 53%)", label: t("events.lostFollower", "Verloren"), badgeBg: "hsl(25 95% 53% / 0.15)" };
+  }
+  return { emoji: "👋", borderColor: "hsl(210 100% 56%)", label: t("events.newFollower", "Neuer Follower"), badgeBg: "hsl(210 100% 56% / 0.15)" };
+}
+
 export const EventFeedItem = memo(function EventFeedItem({ event, index }: EventFeedItemProps) {
   const { t } = useTranslation();
   const { shouldBlur, showPaywall } = useSubscription();
@@ -33,111 +48,62 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
   const timeAgo = useTimeAgoShort();
 
   const trackedUsername = event.tracked_profiles?.username ?? "???";
-  const trackedAvatar = event.tracked_profiles?.avatar_url ?? null;
-
   const isFollowSource = event.source === "follow";
 
-  let leftUsername: string;
-  let leftAvatar: string | null;
-  let leftIsTracked: boolean;
-  let rightUsername: string;
-  let rightAvatar: string | null;
-  let rightIsTracked: boolean;
+  // Actor = who did the action, target = who was affected
+  const actorUsername = isFollowSource ? trackedUsername : (event.username || "???");
+  const actorAvatar = isFollowSource ? (event.tracked_profiles?.avatar_url ?? null) : (event.profile_pic_url ?? null);
+  const targetUsername = isFollowSource ? (event.target_username || "???") : trackedUsername;
 
-  if (isFollowSource) {
-    leftUsername = trackedUsername;
-    leftAvatar = trackedAvatar;
-    leftIsTracked = true;
-    rightUsername = event.target_username || "???";
-    rightAvatar = event.target_avatar_url ?? null;
-    rightIsTracked = false;
-  } else {
-    leftUsername = event.username || "???";
-    leftAvatar = event.profile_pic_url ?? null;
-    leftIsTracked = false;
-    rightUsername = trackedUsername;
-    rightAvatar = trackedAvatar;
-    rightIsTracked = true;
-  }
-
-  // Event type badge
-  const getBadge = () => {
-    if (isFollowSource) {
-      if (event.event_type === "unfollow" || event.event_type === "unfollowed") {
-        return { label: t("events.hasUnfollowed", "Entfolgt"), color: "hsl(4 90% 58%)" };
-      }
-      return { label: t("events.follows_now", "folgt jetzt"), color: "hsl(142 71% 45%)" };
-    }
-    if (event.event_type === "lost") {
-      return { label: t("events.lostFollower", "Verloren"), color: "hsl(25 95% 53%)" };
-    }
-    return { label: t("events.newFollower", "Neuer Follower"), color: "hsl(210 100% 56%)" };
-  };
-
-  const badge = getBadge();
+  const style = getEventStyle(event, t);
 
   const handleTap = () => {
-    if (shouldBlur) {
-      showPaywall("blur");
-      return;
-    }
+    if (shouldBlur) { showPaywall("blur"); return; }
     haptic.light();
     navigate(`/profile/${event.tracked_profile_id}`);
   };
 
-  const AvatarBlock = ({ src, alt, username, isTracked, blur }: {
-    src: string | null; alt: string; username: string; isTracked: boolean; blur: boolean;
-  }) => (
-    <div className={`flex flex-col items-center gap-1 ${blur ? "blur-md" : ""}`}>
-      {isTracked ? (
-        <div className="rounded-xl overflow-hidden" style={{ padding: '1.5px', background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))' }}>
-          <InstagramAvatar src={src} alt={alt} fallbackInitials={username} size={44} className="!rounded-[10px]" />
-        </div>
-      ) : (
-        <InstagramAvatar src={src} alt={alt} fallbackInitials={username} size={44} />
-      )}
-      <span className="text-[0.625rem] text-muted-foreground truncate max-w-[80px]">
-        @{username}
-      </span>
-    </div>
-  );
-
   return (
     <motion.button
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
+      initial={{ opacity: 0, x: -8 }}
+      whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: Math.min(index * 0.02, 0.15), duration: 0.2 }}
-      className="native-card p-3.5 relative w-full text-start"
+      transition={{ delay: Math.min(index * 0.02, 0.12), duration: 0.2 }}
+      className="relative w-full text-start rounded-xl overflow-hidden active:scale-[0.98] transition-transform"
+      style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.2)" }}
       onClick={handleTap}
     >
-      {/* Top row: badge + timestamp */}
-      <div className="flex items-center justify-between mb-2.5 px-1">
-        <span
-          className="font-semibold rounded-full px-2 py-0.5"
-          style={{ fontSize: '0.5625rem', background: `${badge.color}20`, color: badge.color }}
-        >
-          {badge.label}
-        </span>
-        <span className="text-[0.625rem] text-muted-foreground">
+      {/* Colored left border */}
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: style.borderColor }} />
+
+      <div className={`flex items-center gap-3 py-3 pl-4 pr-3 ${shouldBlur ? "blur-md" : ""}`}>
+        {/* Emoji */}
+        <span className="text-lg flex-shrink-0" style={{ width: 28, textAlign: "center" }}>{style.emoji}</span>
+
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <InstagramAvatar src={actorAvatar} alt={actorUsername} fallbackInitials={actorUsername} size={36} />
+        </div>
+
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className="text-foreground font-semibold truncate" style={{ fontSize: "0.8125rem" }}>
+            @{actorUsername}
+          </p>
+          <p className="text-muted-foreground truncate" style={{ fontSize: "0.6875rem" }}>
+            {style.label} · @{targetUsername}
+          </p>
+        </div>
+
+        {/* Time */}
+        <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "0.625rem" }}>
           {timeAgo(event.detected_at)}
         </span>
       </div>
 
-      {/* Avatar row */}
-      <div className="flex items-center justify-center gap-4">
-        <AvatarBlock src={leftAvatar} alt={leftUsername} username={leftUsername} isTracked={leftIsTracked} blur={shouldBlur} />
-
-        <div className="flex flex-col items-center gap-0.5">
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
-        </div>
-
-        <AvatarBlock src={rightAvatar} alt={rightUsername} username={rightUsername} isTracked={rightIsTracked} blur={shouldBlur} />
-      </div>
-
       {/* Paywall overlay */}
       {shouldBlur && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
           <span className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 text-[0.8125rem]">
             <Lock className="h-3.5 w-3.5" /> {t("events.upgrade_to_reveal")}
           </span>

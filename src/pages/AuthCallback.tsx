@@ -44,15 +44,23 @@ const AuthCallback = () => {
         const code = url.searchParams.get("code");
         if (code) {
           console.info("[auth/callback] Exchanging code for session");
-          const { data, error: codeError } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error: codeError } = await supabase.auth.exchangeCodeForSession(code);
           if (codeError || !data.session) {
             console.error("[auth/callback] Code exchange failed:", codeError?.message);
             setError(codeError?.message || "Code exchange failed");
             return;
           }
-          // onAuthStateChange will pick up the session
           console.info("[auth/callback] Code exchange successful");
-          navigate("/dashboard", { replace: true });
+          // Check if new user → trigger tutorial
+          const codeUser = data.session.user;
+          const codeCreatedAt = new Date(codeUser.created_at).getTime();
+          if (Date.now() - codeCreatedAt < 60_000) {
+            console.info("[auth/callback] New user via code exchange, setting showWelcome");
+            sessionStorage.setItem(`show_welcome_${codeUser.id}`, "1");
+            navigate("/dashboard", { replace: true, state: { showWelcome: true } });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
           return;
         }
       }
@@ -76,6 +84,18 @@ const AuthCallback = () => {
         }
 
         console.info("[auth/callback] Session set successfully");
+        // Check if user is new (created < 60s ago) → trigger tutorial
+        const { data: { user: sessionUser } } = await supabase.auth.getUser();
+        if (sessionUser) {
+          const createdAt = new Date(sessionUser.created_at).getTime();
+          const isNew = Date.now() - createdAt < 60_000;
+          if (isNew) {
+            console.info("[auth/callback] New user detected, setting showWelcome");
+            sessionStorage.setItem(`show_welcome_${sessionUser.id}`, "1");
+            navigate("/dashboard", { replace: true, state: { showWelcome: true } });
+            return;
+          }
+        }
         navigate("/dashboard", { replace: true });
         return;
       }
