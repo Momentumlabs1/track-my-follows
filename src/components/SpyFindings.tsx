@@ -69,6 +69,9 @@ export function SpyFindings(props: SpyFindingsProps) {
     return "hsl(4 90% 58%)";
   };
 
+  const ghostActive = data.hasGhostData && data.ghostCount > 0;
+  const privateActive = data.privatePct !== null && data.privatePct > 0;
+
   return (
     <div className="mb-2">
       <p className="section-header mb-3 flex items-center gap-1.5">
@@ -79,42 +82,65 @@ export function SpyFindings(props: SpyFindingsProps) {
       <div className="grid grid-cols-2 gap-3">
         {/* Ghost Follow & Unfollow */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl p-4 relative overflow-hidden"
-          style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.15)" }}
+          initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ delay: 0.16, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl relative overflow-hidden"
+          style={{
+            background: ghostActive
+              ? "linear-gradient(145deg, hsl(4 90% 58% / 0.18), hsl(var(--card)) 60%)"
+              : "hsl(var(--card))",
+            boxShadow: ghostActive
+              ? "0 0 24px hsl(4 90% 58% / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.04)"
+              : "inset 0 1px 0 hsl(0 0% 100% / 0.04), 0 2px 8px hsl(0 0% 0% / 0.2)",
+            border: "1px solid hsl(var(--border) / 0.12)",
+          }}
         >
-          {data.hasGhostData && data.ghostCount > 0 && (
+          <div className="p-4 pb-3">
             <div
-              className="absolute inset-0 rounded-2xl"
+              className="w-10 h-10 rounded-[14px] flex items-center justify-center mb-4"
               style={{
-                background: "linear-gradient(135deg, hsl(4 90% 58% / 0.12), hsl(4 90% 58% / 0.04))",
+                background: ghostActive
+                  ? "hsl(4 90% 58% / 0.15)"
+                  : "hsl(var(--muted) / 0.5)",
+                boxShadow: ghostActive
+                  ? "0 0 12px hsl(4 90% 58% / 0.1)"
+                  : "none",
               }}
-            />
-          )}
-          <div className="relative">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: "hsl(var(--muted) / 0.6)" }}>
-              <Ghost className="h-[18px] w-[18px] text-muted-foreground" />
+            >
+              <Ghost
+                className="h-[20px] w-[20px]"
+                style={{ color: ghostActive ? "hsl(4 90% 58%)" : "hsl(var(--muted-foreground))" }}
+              />
             </div>
-            <p className="text-foreground font-black tabular-nums tracking-tight" style={{ fontSize: "1.75rem", lineHeight: 1 }}>
+            <p
+              className="text-foreground font-black tabular-nums"
+              style={{ fontSize: "2rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+            >
               {data.hasGhostData ? String(data.ghostCount) : "—"}
             </p>
-            <p className="text-muted-foreground font-semibold mt-2" style={{ fontSize: "0.6875rem" }}>
+            <p className="text-muted-foreground font-semibold mt-2.5" style={{ fontSize: "0.6875rem", letterSpacing: "0.01em" }}>
               {t("spy_findings.follow_unfollow", "Follow & Unfollow")}
             </p>
-            {data.hasGhostData && data.ghostCount > 0 && (
-              <div className="h-1 rounded-full overflow-hidden mt-2.5" style={{ background: "hsl(var(--border) / 0.2)" }}>
+          </div>
+
+          {/* Bottom strip */}
+          <div
+            className="px-4 py-2.5"
+            style={{ borderTop: "1px solid hsl(var(--border) / 0.08)" }}
+          >
+            {ghostActive && (
+              <div className="h-[3px] rounded-full overflow-hidden mb-2" style={{ background: "hsl(var(--border) / 0.12)" }}>
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: "hsl(4 90% 58%)" }}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(data.ghostCount * 20, 100)}%` }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
+                  transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
             )}
-            <p className="text-muted-foreground mt-2" style={{ fontSize: "0.5625rem", opacity: 0.5 }}>
+            <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.45 }}>
               {data.hasGhostData
                 ? t("spy_findings.ghost_desc", "Gefolgt & schnell entfolgt")
                 : data.isEarlyStage
@@ -126,42 +152,65 @@ export function SpyFindings(props: SpyFindingsProps) {
 
         {/* Private Accounts */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl p-4 relative overflow-hidden"
-          style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.15)" }}
+          initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ delay: 0.24, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl relative overflow-hidden"
+          style={{
+            background: privateActive
+              ? `linear-gradient(145deg, ${getBarColor(data.privatePct).replace(")", " / 0.18)")}, hsl(var(--card)) 60%)`
+              : "hsl(var(--card))",
+            boxShadow: privateActive
+              ? `0 0 24px ${getBarColor(data.privatePct).replace(")", " / 0.08)")}, inset 0 1px 0 hsl(0 0% 100% / 0.04)`
+              : "inset 0 1px 0 hsl(0 0% 100% / 0.04), 0 2px 8px hsl(0 0% 0% / 0.2)",
+            border: "1px solid hsl(var(--border) / 0.12)",
+          }}
         >
-          {data.privatePct !== null && data.privatePct > 30 && (
+          <div className="p-4 pb-3">
             <div
-              className="absolute inset-0 rounded-2xl"
+              className="w-10 h-10 rounded-[14px] flex items-center justify-center mb-4"
               style={{
-                background: `linear-gradient(135deg, ${getBarColor(data.privatePct).replace(")", " / 0.12)")}, ${getBarColor(data.privatePct).replace(")", " / 0.04)")})`,
+                background: privateActive
+                  ? `${getBarColor(data.privatePct).replace(")", " / 0.15)")}`
+                  : "hsl(var(--muted) / 0.5)",
+                boxShadow: privateActive
+                  ? `0 0 12px ${getBarColor(data.privatePct).replace(")", " / 0.1)")}`
+                  : "none",
               }}
-            />
-          )}
-          <div className="relative">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: "hsl(var(--muted) / 0.6)" }}>
-              <ShieldCheck className="h-[18px] w-[18px] text-muted-foreground" />
+            >
+              <ShieldCheck
+                className="h-[20px] w-[20px]"
+                style={{ color: privateActive ? getBarColor(data.privatePct) : "hsl(var(--muted-foreground))" }}
+              />
             </div>
-            <p className="text-foreground font-black tabular-nums tracking-tight" style={{ fontSize: "1.75rem", lineHeight: 1 }}>
+            <p
+              className="text-foreground font-black tabular-nums"
+              style={{ fontSize: "2rem", lineHeight: 1, letterSpacing: "-0.02em" }}
+            >
               {data.privatePct !== null ? `${data.privatePct}%` : "—"}
             </p>
-            <p className="text-muted-foreground font-semibold mt-2" style={{ fontSize: "0.6875rem" }}>
+            <p className="text-muted-foreground font-semibold mt-2.5" style={{ fontSize: "0.6875rem", letterSpacing: "0.01em" }}>
               {t("spy_findings.private_accounts", "Private Accounts")}
             </p>
-            {data.privatePct != null && data.privatePct > 0 && (
-              <div className="h-1 rounded-full overflow-hidden mt-2.5" style={{ background: "hsl(var(--border) / 0.2)" }}>
+          </div>
+
+          {/* Bottom strip */}
+          <div
+            className="px-4 py-2.5"
+            style={{ borderTop: "1px solid hsl(var(--border) / 0.08)" }}
+          >
+            {privateActive && (
+              <div className="h-[3px] rounded-full overflow-hidden mb-2" style={{ background: "hsl(var(--border) / 0.12)" }}>
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: getBarColor(data.privatePct) }}
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(data.privatePct, 100)}%` }}
-                  transition={{ duration: 0.6, delay: 0.35 }}
+                  animate={{ width: `${Math.min(data.privatePct!, 100)}%` }}
+                  transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
             )}
-            <p className="text-muted-foreground mt-2" style={{ fontSize: "0.5625rem", opacity: 0.5 }}>
+            <p className="text-muted-foreground" style={{ fontSize: "0.5625rem", opacity: 0.45 }}>
               {data.hasPrivateData
                 ? data.privateIsInitial
                   ? t("spy_findings.based_on_initial", "Basierend auf erstem Scan")
