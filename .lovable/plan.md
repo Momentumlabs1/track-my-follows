@@ -1,30 +1,47 @@
 
+Ziel: Den Spy-Drag wirklich ohne Widerstand machen (kein „festkleben“ in der Bubble) und Start-Ladegefühl für kritische Bilder absichern.
 
-# "Spy des Tages" — Intelligente Auswahl statt letztes Event
+1) Ursache im aktuellen Code beheben (Hauptgrund für das „Hängen“)
+- In `src/components/SpyAgentCard.tsx` liegt die Idle-Wobble-Animation aktuell auf demselben `motion.div`, der auch `drag` macht.
+- Zusätzlich ist `dragSnapToOrigin` aktiv.
+- Diese Kombination erzeugt das „magnetische“ Gefühl (optisch + physikalisch), obwohl `dragElastic` schon angepasst wurde.
 
-## Problem
-Aktuell: `allEvents[0]` = einfach das neueste Event. Das kann von **jedem** getrackten Profil sein und hat keinen Bezug zum Spy.
+2) Drag-Mechanik umbauen auf direktes Finger-Tracking
+- Draggable Wrapper und visuelle Animation trennen:
+  - Äußerer Wrapper: nur Drag-Logik (keine Idle-Animation, kein Scale-Boost beim Ziehen).
+  - Inneres Element: nur Idle-Animation, und die wird beim Drag sofort deaktiviert.
+- `dragSnapToOrigin` entfernen.
+- Stattdessen `x/y` MotionValues nutzen und nach `onDragEnd` manuell auf `0,0` zurückanimieren (kurz, linear/schnell), damit es beim Ziehen keinen Rückzug gibt.
+- Optional für noch direkteres Pickup: `useDragControls` + `snapToCursor: true`.
 
-## Lösung
+3) Ruckler während Drag minimieren
+- Während des Ziehens keine unnötigen großen Re-Renders vom Dashboard auslösen:
+  - Hover-Updates nur bei tatsächlichem Zielwechsel (oder per `requestAnimationFrame`).
+  - Drop-Ziel-Erkennung weiter über `elementFromPoint`, aber Drag-Element während Drag mit `pointer-events: none`, damit Treffer stabil bleiben.
+- Dadurch kein „Mikro-Stottern“ mehr beim Überfahren der Karten.
 
-### Schritt 1: Spy-Events filtern
-Nur Events vom Profil mit `has_spy = true` berücksichtigen.
+4) „Sofort geladen“-Gefühl für Spy/Bilder absichern
+- Kritische Above-the-fold Assets priorisieren:
+  - `SpyIcon` mit `loading="eager"` + `fetchPriority="high"` (wo sinnvoll).
+  - Erste sichtbare Avatare ebenfalls priorisieren (nicht global alles eager, um Netzwerk nicht zu überladen).
+- Optional: kleines Preload der Spy-Icon-Asset beim App-Start.
 
-### Schritt 2: Priorisierungs-Logik
-Aus den Spy-Events der letzten 24h das "interessanteste" wählen:
+5) Abnahme (E2E mobil)
+- Test auf 391x844:
+  - Spy greift sofort beim ersten Pixel Bewegung.
+  - Kein wahrnehmbarer Zug zurück während Drag.
+  - Drop auf Profil funktioniert weiterhin zuverlässig.
+  - Nach Loslassen sauberer Return in die Bubble ohne „Gummiband“-Effekt.
+  - Initiale Dashboard-Ansicht zeigt Spy/Icon/Avatare ohne spürbares Nachladen.
 
-1. **Höchste Prio:** Neue weibliche Follows (Diego folgt einer Frau) — `source: "follow"`, `gender_tag: "female"`
-2. **Hohe Prio:** Neue weibliche Follower (Frau folgt Diego) — `source: "follower"`, `gender_tag: "female"`
-3. **Mittlere Prio:** Unfollow-Events (Drama!)
-4. **Niedrige Prio:** Sonstige neue Follows/Follower
-5. **Fallback:** Neuestes Spy-Event überhaupt
-
-### Schritt 3: Anpassung in `FeedPage.tsx`
-- Spy-Profil aus `profiles` ermitteln (`profiles.find(p => p.has_spy)`)
-- `allEvents` nach `tracked_profile_id === spyProfile.id` filtern
-- Priorisierungsfunktion anwenden
-- Falls kein Spy-Event existiert: Fallback auf neuestes Event wie bisher
-
-### Betroffene Datei
-- `src/pages/FeedPage.tsx` — Zeilen 86–93 (Spy of the Day Selektion)
-
+Technische Details (Dateien)
+- `src/components/SpyAgentCard.tsx`
+  - Drag/Animation entkoppeln
+  - `dragSnapToOrigin` entfernen
+  - MotionValues + manuelles Reset
+  - optional `useDragControls` + `snapToCursor`
+  - pointer-events Handling während Drag
+- `src/pages/Dashboard.tsx`
+  - Hover-State-Updates beim Drag entlasten (nur bei Wechsel/RAF)
+- `src/components/SpyIcon.tsx` und ggf. `src/components/InstagramAvatar.tsx`
+  - Priorisierte Ladeattribute für kritische sichtbare Bilder
