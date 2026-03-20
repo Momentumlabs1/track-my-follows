@@ -104,7 +104,6 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
           if (!didDrag.current && Date.now() - tapStartTime.current < 300) navigate("/spy");
         }}
         className="relative z-[99999] cursor-grab active:cursor-grabbing touch-none select-none"
-        style={{ x: dragX, y: dragY, WebkitTouchCallout: "none", pointerEvents: isDragging ? "none" : "auto" }}
       >
         {/* Inner element — idle animation only, stops during drag */}
         <motion.div
