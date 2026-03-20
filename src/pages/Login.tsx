@@ -46,31 +46,45 @@ const Login = () => {
   const handleAppleLogin = async () => {
     setSocialLoading("apple");
     try {
-      AppleID.auth.init({
-        clientId: "app.spysecretapple.web",
-        scope: "name email",
-        redirectURI: window.location.origin + "/auth/callback",
-        usePopup: true,
-      });
+      if (isNativeApp()) {
+        // Native: use auth-start edge function + oauth:// deeplink (same as Google)
+        const { data, error } = await supabase.functions.invoke("auth-start", {
+          body: { provider: "apple", deeplink_scheme: NATIVE_DEEPLINK_SCHEME },
+        });
+        if (error || !data?.url) {
+          console.error("[auth] Apple OAuth start failed:", error);
+          toast.error("OAuth start failed");
+          return;
+        }
+        const despia = (await import("despia-native")).default;
+        despia(`oauth://?url=${encodeURIComponent(data.url)}`);
+      } else {
+        // Web: Apple JS SDK popup with hardcoded production redirect
+        AppleID.auth.init({
+          clientId: "app.spysecretapple.web",
+          scope: "name email",
+          redirectURI: "https://track-my-follows.lovable.app/auth/callback",
+          usePopup: true,
+        });
 
-      const response = await AppleID.auth.signIn();
-      const idToken = response.authorization.id_token;
+        const response = await AppleID.auth.signIn();
+        const idToken = response.authorization.id_token;
 
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: "apple",
-        token: idToken,
-      });
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "apple",
+          token: idToken,
+        });
 
-      if (error) {
-        console.error("[auth] Apple signInWithIdToken failed:", error);
-        toast.error(error.message);
-        return;
+        if (error) {
+          console.error("[auth] Apple signInWithIdToken failed:", error);
+          toast.error(error.message);
+          return;
+        }
+
+        toast.success(t("auth.login_success"));
+        navigate("/dashboard");
       }
-
-      toast.success(t("auth.login_success"));
-      navigate("/dashboard");
     } catch (err: any) {
-      // User cancelled the Apple dialog
       if (err?.error === "popup_closed_by_user") return;
       console.error("[auth] Apple login error:", err);
       toast.error(String(err?.error || err));
