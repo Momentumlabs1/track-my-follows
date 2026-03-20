@@ -132,6 +132,9 @@ export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct =
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{femaleCount}</span>
                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_women", "neue Frauen")}</p>
+                {showGenderPct && femalePct > 0 && (
+                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginTop: 4 }}>♀ {femalePct}%</p>
+                )}
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {femaleFollows.slice(0, 4).map((f) => (
