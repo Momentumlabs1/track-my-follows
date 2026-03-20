@@ -39,7 +39,7 @@ const STEPS: StepDef[] = [
   { type: "completion" },
 ];
 
-const TOTAL_STEPS = STEPS.length;
+const VISUAL_STEPS = STEPS.length - 1; // exclude completion from indicator
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -90,7 +90,7 @@ function WaitingBubble({ text, stepIndex }: { text: string; stepIndex: number })
       >
         <SpyIcon size={24} glow />
         <div className="flex-1">
-          <StepIndicator current={stepIndex} total={TOTAL_STEPS - 1} />
+          <StepIndicator current={stepIndex} total={VISUAL_STEPS} />
           <span style={{ fontSize: 13, color: "#EBEBF5", fontWeight: 500 }}>{text}</span>
         </div>
       </div>
@@ -171,6 +171,7 @@ export function AppTutorial() {
   const [spotlightVisible, setSpotlightVisible] = useState(false);
   const [targetReady, setTargetReady] = useState(false);
   const transitionTimer = useRef<ReturnType<typeof setTimeout>>();
+  const lastProfileIdRef = useRef<string | null>(null);
 
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
   const forceShow = (location.state as { showWelcome?: boolean } | null)?.showWelcome === true;
@@ -186,6 +187,12 @@ export function AppTutorial() {
     const timer = setTimeout(() => setPhase("intro"), 2000);
     return () => clearTimeout(timer);
   }, [tutorialKey, forceShow, user]);
+
+  // Track latest profile ID from URL for navigation after scan
+  useEffect(() => {
+    const match = location.pathname.match(/\/(analyzing|profile)\/([a-f0-9-]+)/);
+    if (match) lastProfileIdRef.current = match[2];
+  }, [location.pathname]);
 
   // Navigate to required page for spotlight steps
   useEffect(() => {
@@ -211,6 +218,22 @@ export function AppTutorial() {
     } else if (currentStep.action === "wait_for_scan_complete") {
       if (location.pathname.startsWith("/profile/")) {
         advanceStep();
+      }
+      // If user is on /analyzing, poll for redirect to /profile
+      // If user went back to /dashboard, try to navigate to the first profile
+      if (location.pathname === "/dashboard") {
+        // Check if there are tracked profiles and navigate to the first one
+        const checkProfiles = setInterval(() => {
+          const profileLinks = document.querySelectorAll('[data-profile-id]');
+          if (profileLinks.length > 0) {
+            const firstId = profileLinks[0].getAttribute('data-profile-id');
+            if (firstId) {
+              clearInterval(checkProfiles);
+              navigate(`/profile/${firstId}`);
+            }
+          }
+        }, 1000);
+        return () => clearInterval(checkProfiles);
       }
     }
   }, [location.pathname, step, phase]);
@@ -246,21 +269,22 @@ export function AppTutorial() {
       return;
     }
 
-    // Poll every 500ms for up to 10s
+    // Poll every 300ms for up to 10s
     setTargetReady(false);
     let attempts = 0;
+    const maxAttempts = 33; // ~10s
     const interval = setInterval(() => {
       attempts++;
       const found = document.getElementById(currentStep.targetId);
       if (found) {
         setTargetReady(true);
         clearInterval(interval);
-      } else if (attempts >= 20) {
+      } else if (attempts >= maxAttempts) {
         // Skip this step after 10s
         clearInterval(interval);
         advanceStep();
       }
-    }, 500);
+    }, 300);
 
     return () => clearInterval(interval);
   }, [step, phase]);
@@ -311,6 +335,13 @@ export function AppTutorial() {
     return (
       <AnimatePresence>
         <motion.div
+          key="intro-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.6)" }}
+        />
+        <motion.div
           key="intro-bubble"
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -318,49 +349,44 @@ export function AppTutorial() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           style={{
             position: "fixed",
-            bottom: 120,
+            top: "50%",
             left: "50%",
-            transform: "translateX(-50%)",
+            transform: "translate(-50%, -50%)",
             zIndex: 9999,
-            maxWidth: 320,
+            maxWidth: 340,
             width: "calc(100% - 48px)",
           }}
         >
           <div
             style={{
               background: "#1C1C1E",
-              borderRadius: 20,
-              padding: 20,
+              borderRadius: 24,
+              padding: 24,
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
             }}
           >
-            <div className="flex items-start gap-3">
-              <div className="shrink-0 mt-0.5">
-                <SpyIcon size={32} glow />
-              </div>
-              <div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
-                  {t("tutorial.intro_title", "Hey! Willkommen bei Spy Secret.")}
-                </p>
-                <p style={{ fontSize: 14, color: "#8E8E93", marginTop: 6, lineHeight: 1.5 }}>
-                  {t("tutorial.intro_text", "Lass uns dein erstes Profil scannen!")}
-                </p>
-              </div>
+            <div className="flex flex-col items-center text-center gap-3 mb-4">
+              <SpyIcon size={48} glow />
+              <p style={{ fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
+                {t("tutorial.intro_title", "Hey! Willkommen bei Spy Secret.")}
+              </p>
+              <p style={{ fontSize: 14, color: "#8E8E93", lineHeight: 1.5 }}>
+                {t("tutorial.intro_text", "Lass uns dein erstes Profil scannen!")}
+              </p>
             </div>
             <button
               onClick={handleIntroStart}
               style={{
                 width: "100%",
-                marginTop: 16,
-                padding: "13px 0",
+                padding: "14px 0",
                 background: "#FF2D55",
-                borderRadius: 12,
+                borderRadius: 14,
                 border: "none",
                 color: "#fff",
                 fontWeight: 700,
-                fontSize: 15,
+                fontSize: 16,
                 cursor: "pointer",
-                minHeight: 48,
+                minHeight: 50,
               }}
             >
               {t("tutorial.intro_cta", "Los geht's →")}
@@ -369,7 +395,7 @@ export function AppTutorial() {
               onClick={handleClose}
               style={{
                 width: "100%",
-                marginTop: 8,
+                marginTop: 10,
                 padding: "8px 0",
                 background: "transparent",
                 border: "none",
@@ -423,7 +449,7 @@ export function AppTutorial() {
       visible={spotlightVisible}
       hideButton={currentStep.hideButton}
       stepIndex={step}
-      totalSteps={TOTAL_STEPS - 1}
+      totalSteps={VISUAL_STEPS}
     />
   );
 }
