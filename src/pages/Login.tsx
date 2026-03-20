@@ -43,45 +43,65 @@ const Login = () => {
     });
   };
 
-  const handleSocialLogin = async (provider: "apple" | "google") => {
-    setSocialLoading(provider);
+  const handleAppleLogin = async () => {
+    setSocialLoading("apple");
+    try {
+      AppleID.auth.init({
+        clientId: "app.spysecretapple.web",
+        scope: "name email",
+        redirectURI: window.location.origin + "/auth/callback",
+        usePopup: true,
+      });
+
+      const response = await AppleID.auth.signIn();
+      const idToken = response.authorization.id_token;
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: idToken,
+      });
+
+      if (error) {
+        console.error("[auth] Apple signInWithIdToken failed:", error);
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success(t("auth.login_success"));
+      navigate("/dashboard");
+    } catch (err: any) {
+      // User cancelled the Apple dialog
+      if (err?.error === "popup_closed_by_user") return;
+      console.error("[auth] Apple login error:", err);
+      toast.error(String(err?.error || err));
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setSocialLoading("google");
     try {
       if (isNativeApp()) {
-        // NATIVE FLOW per Despia docs:
-        // 1. Get OAuth URL from auth-start edge function
-        // 2. Open in ASWebAuthenticationSession via despia('oauth://?url=...')
-        // 3. After OAuth, NativeCallback.tsx redirects to deeplink
-        // 4. Deeplink closes browser, WebView navigates to /auth?tokens
-        // 5. AuthContext picks up tokens and sets session
         const { data, error } = await supabase.functions.invoke("auth-start", {
-          body: {
-            provider,
-            deeplink_scheme: NATIVE_DEEPLINK_SCHEME,
-          },
+          body: { provider: "google", deeplink_scheme: NATIVE_DEEPLINK_SCHEME },
         });
-
         if (error || !data?.url) {
           console.error("[auth] Failed to get OAuth URL:", error);
           toast.error("OAuth start failed");
           return;
         }
-
-        // Open in ASWebAuthenticationSession (iOS) / Chrome Custom Tab (Android)
         const despia = (await import("despia-native")).default;
         despia(`oauth://?url=${encodeURIComponent(data.url)}`);
       } else {
-        // WEB FLOW: Standard Supabase OAuth redirect (no edge function needed)
         const { error } = await supabase.auth.signInWithOAuth({
-          provider,
+          provider: "google",
           options: {
             redirectTo: window.location.origin + "/auth/callback",
             scopes: "openid email profile",
           },
         });
-
-        if (error) {
-          toast.error(error.message);
-        }
+        if (error) toast.error(error.message);
       }
     } catch (err) {
       toast.error(String(err));
