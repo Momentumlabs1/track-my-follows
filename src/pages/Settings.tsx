@@ -114,7 +114,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)] pt-[calc(env(safe-area-inset-top)+8px)]">
+    <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)] pt-[calc(env(safe-area-inset-top)+20px)]">
       <main className="container relative max-w-2xl py-6 px-5">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-extrabold mb-6">{t("settings.title")}</h1>

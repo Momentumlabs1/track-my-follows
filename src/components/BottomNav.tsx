@@ -34,8 +34,8 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 start-0 end-0 z-50 bg-background pb-[calc(env(safe-area-inset-bottom)+4px)]" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
-      <div className="flex items-center justify-around pt-2.5 pb-1" style={{ height: '82px' }}>
+    <nav className="fixed bottom-0 start-0 end-0 z-50 bg-background pb-[calc(env(safe-area-inset-bottom)+8px)]" style={{ borderTop: '0.5px solid hsl(var(--hairline))' }}>
+      <div className="flex items-center justify-around pt-2.5 pb-2" style={{ height: '84px' }}>
         {navItems.map((item) => (
           <Link
             key={item.to}

@@ -220,7 +220,7 @@ const ProfileDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)]">
       {/* ─── Navigation Bar ─── */}
-      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+12px)] pb-2">
+      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
@@ -285,6 +285,34 @@ const ProfileDetail = () => {
 
       </motion.div>
 
+
+      {/* ═══ GENDER BAR — Free user teaser ═══ */}
+      {!isPro && showGender && (
+        <div className="px-5 mb-4">
+          <button
+            onClick={() => showPaywall("gender_bar")}
+            className="w-full relative rounded-2xl overflow-hidden p-4 active:scale-[0.98] transition-transform"
+            style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)" }}
+          >
+            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
+              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
+            </span>
+            {/* Blurred fake bar */}
+            <div className="h-7 rounded-full overflow-hidden flex blur-md pointer-events-none select-none">
+              <div style={{ background: "#FF2D55", width: "62%" }} className="h-full" />
+              <div style={{ background: "#007AFF", width: "38%" }} className="h-full" />
+            </div>
+            {/* Lock overlay */}
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
+              <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-primary-foreground text-xs"
+                style={{ background: "hsl(var(--primary) / 0.9)", backdropFilter: "blur(4px)" }}>
+                <Lock className="h-3.5 w-3.5" />
+                {t("gender.distribution_pro", "Geschlechterverteilung · Pro")}
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* ═══ ANALYSIS SECTIONS ═══ */}
       <div id="locked-analysis" className="px-5 mb-2">

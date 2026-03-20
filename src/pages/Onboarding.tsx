@@ -36,7 +36,7 @@ export default function Onboarding() {
         <motion.img
           src={logoWide}
           alt="Spy-Secret"
-          className="h-7 object-contain mb-6"
+          className="h-6 object-contain mb-5"
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -47,9 +47,9 @@ export default function Onboarding() {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-5"
+          className="mb-4"
         >
-          <SpyIcon size={56} glow />
+          <SpyIcon size={52} glow />
         </motion.div>
 
         {/* Headline */}
@@ -57,14 +57,14 @@ export default function Onboarding() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-center mb-6"
+          className="text-center mb-5"
         >
-          <h1 className="text-[24px] font-extrabold tracking-tight text-foreground leading-tight">
+          <h1 className="text-[22px] font-extrabold tracking-tight text-foreground leading-tight">
             {t("onboarding.slide1_title")}
             <br />
             <span className="text-primary">{t("onboarding.slide1_highlight")}</span>
           </h1>
-          <p className="text-[13px] text-muted-foreground max-w-[280px] mx-auto mt-2.5 leading-relaxed">
+          <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto mt-2 leading-relaxed">
             {t("onboarding.slide1_desc")}
           </p>
         </motion.div>
@@ -74,7 +74,7 @@ export default function Onboarding() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex items-center justify-center gap-5 mb-6"
+          className="flex items-center justify-center gap-5"
         >
           {[
             { icon: <Shield className="h-5 w-5 text-primary" />, label: t("onboarding.pill_anonymous") },
@@ -90,25 +90,6 @@ export default function Onboarding() {
               </span>
             </div>
           ))}
-        </motion.div>
-
-        {/* Notification preview */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, duration: 0.4 }}
-          className="w-full max-w-[280px] rounded-2xl bg-card/50 border border-border/30 p-3.5 backdrop-blur-sm shadow-lg"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-              <span className="text-base">💘</span>
-            </div>
-            <div className="text-start flex-1 min-w-0">
-              <p className="text-[12px] font-bold text-foreground">Spy-Secret</p>
-              <p className="text-[11px] text-muted-foreground">{t("onboarding.notification_example")}</p>
-            </div>
-            <span className="text-[10px] text-foreground/30 shrink-0 self-start">2m</span>
-          </div>
         </motion.div>
       </div>
 

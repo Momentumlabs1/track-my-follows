@@ -109,7 +109,7 @@ const FeedPage = () => {
   return (
     <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)]">
       {/* Header */}
-      <div className="px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-4">
+        <div className="px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <img src={logoSquare} alt="Spy-Secret" className="h-8 w-8" />
