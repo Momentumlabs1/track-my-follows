@@ -1,60 +1,61 @@
 
+Ziel: Diego-Seite bereinigen und Logik so umbauen, dass „Entfolgt“ nur noch echte **Outgoing-Unfollows** zeigt (wen der getrackte Account entfolgt hat), nicht „Follower verloren“.
 
-## Gesamtplan: Alle offenen Issues fixen
+1) Aktueller Stand (für deinen anderen Chat, exakt)
+- DB für `53a7b35e-6d18-4a2d-96ae-f98a8c043665`:
+  - `follow_events`: nur `follow` (58), **keine** `unfollow`.
+  - `follower_events`: `lost` = 11.
+- UI mischt beides:
+  - `ProfileDetail.tsx`: Tab-Count `Entfolgt` = `unfollowedByThem.length + lostFollowerEvents.length`.
+  - Darum siehst du 11 im Entfolgt-Tab, obwohl es keine outgoing unfollows gibt.
+- Unfollow-Check mischt ebenfalls:
+  - `unfollow-check` liefert `unfollows_found` **und** `lost_followers`.
+  - Frontend summiert das als „Unfollows“.
 
-### 1. Tutorial bei OAuth-Registrierung triggern
+2) Gewünschtes Verhalten (Fix-Ziel)
+- „Entfolgt“ zeigt nur: `follow_events` mit `event_type in ('unfollow','unfollowed')` und `direction='following'`.
+- „Follower verloren“ wird nicht mehr als „Entfolgt“ dargestellt.
+- Diego-Seite soll danach nicht mehr die 11 als Entfolgt anzeigen.
 
-**Problem:** `AppTutorial` prüft auf `showWelcome` Flag, aber OAuth-Flow setzt diesen nie.
+3) Konkreter Umsetzungsplan
+A. Profile-UI entkoppeln (`src/pages/ProfileDetail.tsx`)
+- Tab-Count für `unfollowed` nur noch `unfollowedByThem.length`.
+- Block „Follower verloren“ aus `unfollowed`-Tab entfernen.
+- Optional (sauber): „Follower verloren“ in `new_followers`-Tab als eigene Sektion verschieben (separat benannt), damit Bedeutung klar bleibt.
+- Info-Text im Unfollow-Bereich sprachlich auf outgoing unfollows präzisieren.
 
-**Fix in `src/pages/AuthCallback.tsx`:**
-- Nach erfolgreichem `setSession()`: Prüfen ob der User neu ist (created_at < 60 Sekunden alt)
-- Wenn ja: `sessionStorage.setItem('show_welcome_' + userId, '1')` setzen
-- Dann zu `/dashboard` mit `state: { showWelcome: true }` navigieren
+B. Unfollow-Feedback im UI korrigieren
+- `src/components/UnfollowCheckButton.tsx`:
+  - „Unfollows erkannt“ nur aus `unfollows_found`.
+  - `lost_followers` nicht mehr in rotem Entfolgt-Total addieren.
+- `src/components/SpyStatusCard.tsx` + `src/pages/SpyDetail.tsx`:
+  - Toast-Gesamtsummen nicht mehr mit `lost_followers` als „unfollow“ vermischen.
 
-**Fix in `src/contexts/AuthContext.tsx`:**
-- In `syncUserSettings`: Wenn kein `existing` Record gefunden wird (= neuer User), `sessionStorage.setItem('show_welcome_' + userId, '1')` setzen
+C. Backend-Logik klarziehen (`supabase/functions/unfollow-check/index.ts`)
+- Follower-Diff intern weiter nutzbar halten (Baseline-Konsistenz), aber:
+  - `lost` nicht mehr als „Unfollow“-Zahl in Response/Tracking zählen.
+  - `total_unfollows_detected` nur outgoing unfollows erhöhen.
+  - `unfollow_checks.unfollows_found` nur outgoing unfollows.
+- Optional kompatibel: `lost_followers` Feld weiterhin senden, aber semantisch getrennt (nicht als unfollow).
 
-### 2. Feed visuell aufwerten
+D. Diego-Daten bereinigen (Migration)
+- Für Profil Diego die 11 `follower_events(event_type='lost')` löschen, damit die Seite sofort sauber ist.
+- Falls nötig: zugehörigen `unfollow_checks`-Eintrag korrigieren oder entfernen, damit Historie nicht misleading bleibt.
 
-**Datei: `src/components/EventFeedItem.tsx`**
-- Farbige linke Border-Leiste je Event-Typ (rot = unfollow, grün = neuer follow, blau = neuer follower, orange = verloren)
-- Emoji-Icons statt generischem Chevron (💔 Entfolgt, ✅ Neuer Follow, 👋 Neuer Follower, 😢 Verloren)
-- Kompakteres Layout: eine Zeile mit Avatar, Username, Verb, tracked-Profile statt zwei Avatare nebeneinander
-- Spy-Branding: SpyIcon im Header wenn Event von Spy-Profil kommt
+4) Validierung nach Umsetzung
+- SQL-Check:
+  - `follow_events` unfollow-count für Diego > sollte 0 oder realer Wert sein.
+  - `follower_events lost` für Diego nach Cleanup = 0.
+- UI-Check auf `/profile/53a7...`:
+  - Entfolgt-Tab zeigt nur outgoing unfollows.
+  - Kein „Follower verloren“ mehr unter Entfolgt.
+- Manueller Unfollow-Check:
+  - Ergebnis trennt klar „entfolgt“ vs. sonstige Aktivität.
 
-**Datei: `src/pages/FeedPage.tsx`**
-- Bessere Sektions-Header mit Spy-Thema
-- Animierter leerer Zustand mit mehr Persönlichkeit
-
-### 3. SpyFindings visuell aufwerten
-
-**Datei: `src/components/SpyFindings.tsx`**
-- Karten-basiertes Layout statt einfacher Auflistung
-- Farbige Icons und Progress-Bars für Statistiken
-- "Verdachtsmomente"-Score prominenter darstellen
-- Spy-Agenten-Ton in den Texten
-
-### 4. Supabase-Domain im OAuth-Dialog
-
-**Keine Code-Änderung möglich.** Erfordert Supabase Custom Auth Domain (kostenpflichtig, manuell einzurichten). Alternativ: Akzeptieren dass die Supabase-URL gezeigt wird.
-
-### 5. Apple OAuth Despia-Config
-
-**Manuelle Aktion:** `appleid.apple.com` von "Never Open in Browser" nach "Open Always in Browser" verschieben.
-
----
-
-### Dateien die geändert werden
-
-| Datei | Änderung |
-|---|---|
-| `src/pages/AuthCallback.tsx` | Neuer-User-Check + showWelcome Flag setzen |
-| `src/contexts/AuthContext.tsx` | showWelcome bei neuem User in syncUserSettings |
-| `src/components/EventFeedItem.tsx` | Komplett überarbeiten: farbige Borders, Emojis, kompakteres Layout |
-| `src/pages/FeedPage.tsx` | Spy-Branding, bessere leere Zustände |
-| `src/components/SpyFindings.tsx` | Karten-Layout, Progress-Bars, Spy-Ton |
-
-### Was du manuell machen musst
-1. In Despia: `appleid.apple.com` → "Open Always in Browser"
-2. Optional: Supabase Custom Auth Domain einrichten für Branding
-
+5) Dateien
+- `src/pages/ProfileDetail.tsx`
+- `src/components/UnfollowCheckButton.tsx`
+- `src/components/SpyStatusCard.tsx`
+- `src/pages/SpyDetail.tsx`
+- `supabase/functions/unfollow-check/index.ts`
+- `supabase/migrations/<neu>.sql`
