@@ -106,7 +106,7 @@ export default function SpyDetail() {
         setUnfollowScanning(false);
         return;
       }
-      const total = (data?.unfollows_found || 0) + (data?.lost_followers || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
+      const total = (data?.unfollows_found || 0) + (data?.new_follows_found || 0) + (data?.new_followers_found || 0);
       toast.success(t("spy_detail.unfollow_complete", { count: total }));
       invalidateAll();
       navigate(`/profile/${spyProfile.id}`, { state: { activeTab: "unfollowed" } });

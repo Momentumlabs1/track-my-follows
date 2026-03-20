@@ -155,7 +155,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     }
   };
 
-  const totalUnfollows = result ? result.unfollows_found + result.lost_followers : 0;
+  const totalUnfollows = result ? result.unfollows_found : 0;
   const totalNew = result ? result.new_follows_found + result.new_followers_found : 0;
 
   return (

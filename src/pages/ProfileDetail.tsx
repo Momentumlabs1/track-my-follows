@@ -532,7 +532,7 @@ const ProfileDetail = () => {
                 </div>
               </div>
             )}
-            {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
+            {unfollowedByThem.length === 0 && (
               <div className="native-card p-8 text-center">
                 <span style={{ fontSize: '2rem' }} className="block mb-2">✨</span>
                 <p className="font-semibold text-foreground" style={{ fontSize: '0.875rem' }}>{t("profile.no_unfollows_yet")}</p>

@@ -478,7 +478,7 @@ Deno.serve(async (req) => {
     await supabase.from("unfollow_checks").insert({
       tracked_profile_id: profileId,
       user_id: user.id,
-      unfollows_found: unfollowsFound + lostFollowers,
+      unfollows_found: unfollowsFound,
       new_follows_found: newFollowsFound + newFollowersFound,
     });
 
