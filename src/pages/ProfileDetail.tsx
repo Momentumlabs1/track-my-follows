@@ -220,7 +220,7 @@ const ProfileDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-[calc(env(safe-area-inset-bottom)+120px)]">
       {/* ─── Navigation Bar ─── */}
-      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+12px)] pb-2">
+      <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+20px)] pb-2">
         <button onClick={() => navigate("/dashboard")} className="p-2 -ms-2 text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
