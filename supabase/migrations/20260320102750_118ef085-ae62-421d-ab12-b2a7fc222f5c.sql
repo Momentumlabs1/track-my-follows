@@ -1,0 +1,1 @@
+DELETE FROM follow_events WHERE tracked_profile_id = '53a7b35e-6d18-4a2d-96ae-f98a8c043665' AND event_type = 'unfollow' AND direction = 'following' AND detected_at = '2026-03-19 18:53:39.578761+00'; UPDATE tracked_profiles SET total_unfollows_detected = 0, pending_unfollow_hint = 0 WHERE id = '53a7b35e-6d18-4a2d-96ae-f98a8c043665';

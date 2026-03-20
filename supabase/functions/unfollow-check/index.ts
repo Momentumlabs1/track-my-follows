@@ -257,8 +257,10 @@ Deno.serve(async (req) => {
         const lastSeen = new Date(e.last_seen_at as string).getTime();
         
         // Only flag as unfollow if the account was confirmed at least once
-        // (last_seen_at > first_seen_at means it was seen in a subsequent scan)
-        if (lastSeen <= firstSeen) {
+        // Require at least 5 minutes between first_seen and last_seen
+        // to distinguish a real confirmation scan from baseline upsert timing
+        const CONFIRMATION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+        if ((lastSeen - firstSeen) < CONFIRMATION_THRESHOLD_MS) {
           skippedUnconfirmed++;
           // Don't flag as unfollow — this account was only seen once (baseline only)
           // Just mark as not current silently (will be re-added if seen again)
@@ -356,7 +358,8 @@ Deno.serve(async (req) => {
         const firstSeen = new Date(f.first_seen_at as string).getTime();
         const lastSeen = new Date(f.last_seen_at as string).getTime();
 
-        if (lastSeen <= firstSeen) {
+        const CONFIRMATION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+        if ((lastSeen - firstSeen) < CONFIRMATION_THRESHOLD_MS) {
           skippedUnconfirmedFollowers++;
           continue;
         }
