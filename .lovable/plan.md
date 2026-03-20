@@ -1,54 +1,53 @@
 
 
-## Apple Sign-In auf nativen Flow umbauen (kein Browser-Redirect)
+## Problem: Tutorial-Spotlight ist verschoben und fehl am Platz
 
-### Problem
+Nach Code-Analyse gibt es **4 konkrete Bugs** im Tutorial-System:
 
-Beide OAuth-Provider (Apple + Google) leiten aktuell uber `bqqmfajowxzkdcvmrtyd.supabase.co/auth/v1/authorize` weiter. iOS zeigt diese Domain dem User in einem System-Dialog und auf der Consent-Seite. Das sieht unprofessionell aus.
+### Bug 1: Tooltip ist NICHT am Element positioniert (Hauptproblem)
 
-### Losung: Apple bekommt nativen ID-Token-Flow
+Die `SpotlightOverlay` positioniert das Tooltip-Fenster **immer horizontal zentriert** auf dem Bildschirm (`(window.innerWidth - tooltipWidth) / 2`). Der Spotlight-Ausschnitt (das "Loch") liegt aber auf dem tatsachlichen Element. Auf breiten Screens (du hast 1493px) sieht man:
+- Loch links/rechts auf dem Element
+- Tooltip in der Mitte
+- Beides passt visuell nicht zusammen → "verschoben"
 
-Statt den User uber Supabase OAuth zu leiten, nutzen wir **Apple JS SDK** direkt. Das zeigt auf iOS den **nativen Apple-Dialog** (kein Browser, kein supabase.co sichtbar). Auf Web zeigt es Apples eigenes Popup.
+**Fix**: Tooltip horizontal am Element ausrichten, nicht am Bildschirm.
 
-Google bleibt vorerst unverandert (Vanity/Custom Domain muss separat eingerichtet werden).
+### Bug 2: Doppelte ID `add-profile-btn`
 
-### Technische Anderungen
+In `Dashboard.tsx` gibt es ZWEI Elemente mit `id="add-profile-btn"` (Zeile 381 + 397) — eins fur "Profile vorhanden", eins fur "keine Profile". `getElementById` findet das falsche Element → Spotlight zeigt auf unsichtbares Element.
 
-**1. `index.html`** -- Apple JS SDK laden
-- Script-Tag hinzufugen: `<script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>`
+**Fix**: Nur ein Element bekommt die ID, basierend auf dem aktuellen State.
 
-**2. `src/vite-env.d.ts`** -- TypeScript-Deklaration
-- `AppleID` global deklarieren damit TypeScript den Apple JS SDK kennt
+### Bug 3: `gender-bar` ID existiert nur bedingt
 
-**3. `src/pages/Login.tsx`** -- Apple-Flow umschreiben
-- Bisheriger Apple-Flow: `auth-start` Edge Function -> `oauth://` -> ASWebAuthenticationSession -> supabase.co sichtbar
-- Neuer Apple-Flow:
-  1. `AppleID.auth.init()` mit clientId (`app.spysecretapple.web`), scope, redirectURI
-  2. `AppleID.auth.signIn()` aufrufen -- zeigt nativen Apple-Dialog
-  3. Response enthalt `id_token`
-  4. `supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken })` aufrufen
-  5. Session ist gesetzt, navigate zu `/dashboard`
-- Kein `auth-start`, kein `oauth://`, kein Browser-Redirect mehr fur Apple
-- Google-Flow bleibt komplett unverandert (Web: `signInWithOAuth`, Native: `auth-start` + `oauth://`)
+`id={showGender ? "gender-bar" : undefined}` — beim ersten Scan hat das Profil moglicherweise noch keine Gender-Daten. Die ID existiert nicht, der Spotlight pollt 10 Sekunden und skippt dann. Aber die Positionierung ist trotzdem fehlerhaft.
 
-### Was sich andert
+**Fix**: ID immer setzen (unabhangig von `showGender`), damit der Spotlight-Step das Element findet.
 
-| Aspekt | Vorher | Nachher |
-|--------|--------|---------|
-| Apple Login | Browser offnet sich, supabase.co sichtbar | Nativer Apple-Dialog, kein Browser |
-| Google Login | Keine Anderung | Keine Anderung (braucht Vanity Domain) |
-| Edge Function auth-start | Wird von Apple + Google genutzt | Nur noch von Google genutzt |
-| Neue Dependency | -- | Apple JS SDK (CDN Script) |
+### Bug 4: Rect-Messung nach Scroll veraltet
 
-### Voraussetzung (bereits erfullt laut Memory)
+`scrollIntoView({ behavior: "smooth" })` braucht ~300-500ms. Die Rect-Messung in SpotlightOverlay passiert bei Mount + 100ms + 300ms. Wenn der Scroll langer dauert, ist die Position falsch.
 
-- Apple Service ID `app.spysecretapple.web` ist konfiguriert
-- Apple Provider ist in Supabase Auth aktiviert
-- Return URL ist auf `bqqmfajowxzkdcvmrtyd.supabase.co/auth/v1/callback` gesetzt
+**Fix**: In SpotlightOverlay kontinuierlich messen (requestAnimationFrame) solange sichtbar, statt nur 3x.
 
-### Dateien
+---
 
-- `index.html` (1 Zeile hinzufugen)
-- `src/vite-env.d.ts` (Apple JS Typen)
-- `src/pages/Login.tsx` (Apple-Handler umschreiben, ~20 Zeilen)
+## Technische Anderungen
+
+### 1. `src/components/SpotlightOverlay.tsx`
+- Tooltip horizontal am Target-Element ausrichten (nicht Bildschirm-Mitte)
+- Clamp damit Tooltip nicht aus dem Viewport ragt
+- `requestAnimationFrame`-Loop fur kontinuierliche Rect-Messung statt statischer Timeouts
+
+### 2. `src/pages/Dashboard.tsx`
+- Zweites `id="add-profile-btn"` entfernen (nur das kontextuell richtige Element bekommt die ID)
+
+### 3. `src/pages/ProfileDetail.tsx`
+- `id="gender-bar"` immer setzen, nicht nur wenn `showGender` true ist
+
+### Ergebnis
+- Spotlight-Loch und Tooltip sind immer am gleichen Element
+- Kein "Verschieben" mehr auf Desktop oder Mobile
+- Tutorial-Steps finden ihre Elemente zuverlassig
 
