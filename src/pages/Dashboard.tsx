@@ -378,7 +378,6 @@ const Dashboard = () => {
           ))}
 
           <button
-            id="add-profile-btn"
             onClick={() => navigate("/add-profile")}
             className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 min-h-[44px] text-muted-foreground bg-card border border-border"
             style={{ fontSize: "0.875rem" }}

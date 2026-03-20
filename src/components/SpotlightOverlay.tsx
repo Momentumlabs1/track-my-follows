@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SpyIcon } from "@/components/SpyIcon";
 
@@ -50,24 +50,32 @@ export function SpotlightOverlay({
   const [rect, setRect] = useState<DOMRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipHeight, setTooltipHeight] = useState(200);
+  const rafRef = useRef<number>(0);
+
+  // Continuous measurement via rAF
+  const measure = useCallback(() => {
+    const el = document.getElementById(targetId);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setRect((prev) => {
+        if (!prev || Math.abs(prev.top - r.top) > 0.5 || Math.abs(prev.left - r.left) > 0.5 ||
+            Math.abs(prev.width - r.width) > 0.5 || Math.abs(prev.height - r.height) > 0.5) {
+          return r;
+        }
+        return prev;
+      });
+    }
+  }, [targetId]);
 
   useEffect(() => {
-    const measure = () => {
-      const el = document.getElementById(targetId);
-      if (el) setRect(el.getBoundingClientRect());
+    if (!visible) return;
+    const loop = () => {
+      measure();
+      rafRef.current = requestAnimationFrame(loop);
     };
-    measure();
-    const t1 = setTimeout(measure, 100);
-    const t2 = setTimeout(measure, 300);
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
-    };
-  }, [targetId]);
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [visible, measure]);
 
   useEffect(() => {
     if (tooltipRef.current) setTooltipHeight(tooltipRef.current.offsetHeight);
@@ -81,9 +89,11 @@ export function SpotlightOverlay({
   const holeW = rect.width + pad * 2;
   const holeH = rect.height + pad * 2;
 
-  // Center tooltip horizontally
+  // Align tooltip horizontally to target element, clamped to viewport
   const tooltipWidth = Math.min(300, window.innerWidth - 48);
-  const tooltipLeft = Math.max(24, (window.innerWidth - tooltipWidth) / 2);
+  const elementCenterX = rect.left + rect.width / 2;
+  const idealLeft = elementCenterX - tooltipWidth / 2;
+  const tooltipLeft = Math.max(24, Math.min(idealLeft, window.innerWidth - tooltipWidth - 24));
   const tooltipTop =
     position === "bottom"
       ? rect.bottom + 16
@@ -112,7 +122,6 @@ export function SpotlightOverlay({
             <rect width="100%" height="100%" fill="rgba(0,0,0,0.75)" mask="url(#spotlight-mask)" />
           </svg>
 
-          {/* Tooltip — centered */}
           <motion.div
             ref={tooltipRef}
             initial={{ opacity: 0, y: position === "bottom" ? 12 : -12 }}
