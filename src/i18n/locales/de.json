@@ -554,7 +554,17 @@
     "waiting_add": "Gib einen Benutzernamen ein... 🔎",
     "waiting_scan": "Scan läuft – gleich geht's weiter! ⏳",
     "done_title": "Tutorial abgeschlossen! 🎉",
-    "done_cta": "Alles klar! 🕵️"
+    "done_cta": "Alles klar! 🕵️",
+    "profile_intro_title": "Profilansicht 📋",
+    "profile_intro_text": "Hier siehst du alle Details zu deinem getrackten Profil – Follower, Follows, Analysen und mehr.",
+    "pro_upsell_title": "Werde Pro-Agent 🕵️",
+    "pro_upsell_text": "Schalte alle Features frei",
+    "pro_feature_1": "Spy-Agent: Automatische Scans rund um die Uhr",
+    "pro_feature_2": "Unfollow-Tracking in Echtzeit",
+    "pro_feature_3": "Geschlechteranalyse & Verdachts-Score",
+    "pro_feature_4": "Bis zu 10 Profile gleichzeitig tracken",
+    "pro_cta": "Pro freischalten 🚀",
+    "pro_later": "Später"
   },
   "locked_feature": {
     "available_with_pro": "Verfügbar mit Pro",
