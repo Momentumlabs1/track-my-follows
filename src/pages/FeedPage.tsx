@@ -83,8 +83,31 @@ const FeedPage = () => {
     return groups;
   }, [visibleEvents]);
 
-  // Spy of the Day
-  const latestEvent = allEvents[0] ?? null;
+  // Spy of the Day – pick the most interesting event from the spy profile
+  const spyProfile = profiles.find((p) => p.has_spy);
+  const latestEvent = useMemo(() => {
+    if (!spyProfile) return allEvents[0] ?? null;
+    const spyEvents = allEvents.filter((e) => e.tracked_profile_id === spyProfile.id);
+    if (spyEvents.length === 0) return allEvents[0] ?? null;
+
+    const getPriority = (e: UnifiedFeedEvent): number => {
+      // Female follow (outgoing) = highest
+      if (e.source === "follow" && e.event_type === "follow" && e.gender_tag === "female") return 5;
+      // Female follower (incoming)
+      if (e.source === "follower" && e.event_type === "gained" && e.gender_tag === "female") return 4;
+      // Unfollow events
+      if (e.event_type === "unfollow" || e.event_type === "unfollowed") return 3;
+      // Lost follower
+      if (e.event_type === "lost") return 2;
+      // Any other event
+      return 1;
+    };
+
+    // Pick highest priority, then most recent
+    return spyEvents.reduce((best, curr) =>
+      getPriority(curr) > getPriority(best) ? curr : best, spyEvents[0]);
+  }, [allEvents, spyProfile]);
+
   const latestInfo = latestEvent ? (() => {
     if (latestEvent.source === "follow") {
       return { username: latestEvent.target_username || "???", verb: latestEvent.event_type === "unfollow" ? t("events.hasUnfollowed") : t("events.newFollowing") };
