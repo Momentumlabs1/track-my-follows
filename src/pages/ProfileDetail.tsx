@@ -279,9 +279,19 @@ const ProfileDetail = () => {
           </div>
 
           {/* Following + Gender bar */}
-          <div className="px-5 py-3 rounded-2xl text-center" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)", minWidth: 120 }}>
+          <div
+            id={showGender ? "gender-bar" : undefined}
+            className="px-5 py-3 rounded-2xl text-center relative overflow-hidden"
+            style={{
+              background: showGender
+                ? `linear-gradient(to right, #FF2D55 ${femalePct}%, #007AFF ${femalePct}%)`
+                : "hsl(var(--card))",
+              border: "1px solid hsl(var(--border) / 0.3)",
+              minWidth: 120,
+            }}
+          >
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+              <span className={`font-extrabold tabular-nums ${showGender ? "text-white" : "text-foreground"}`} style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
                 {formatCount(followingCount)}
               </span>
               {followingDelta != null && followingDelta !== 0 && (
@@ -290,17 +300,11 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t("dashboard.following")}</p>
+            <p className={`mt-0.5 ${showGender ? "text-white/70" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>{t("dashboard.following")}</p>
             {showGender && (
-              <div id="gender-bar" className="mt-2">
-                <div className="h-[6px] rounded-full overflow-hidden flex" style={{ minWidth: 80 }}>
-                  <div className="h-full" style={{ background: "#FF2D55", width: `${femalePct}%` }} />
-                  <div className="h-full" style={{ background: "#007AFF", width: `${malePct}%` }} />
-                </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-muted-foreground tabular-nums" style={{ fontSize: '0.5625rem' }}>♀ {femalePct}%</span>
-                  <span className="text-muted-foreground tabular-nums" style={{ fontSize: '0.5625rem' }}>♂ {malePct}%</span>
-                </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-white/50 tabular-nums" style={{ fontSize: '0.5rem' }}>♀ {femalePct}%</span>
+                <span className="text-white/50 tabular-nums" style={{ fontSize: '0.5rem' }}>♂ {malePct}%</span>
               </div>
             )}
           </div>
