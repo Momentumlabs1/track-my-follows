@@ -532,14 +532,6 @@ const ProfileDetail = () => {
                 </div>
               </div>
             )}
-            {lostFollowerEvents.length > 0 && (
-              <div>
-                <p className="section-header px-1 mb-2 flex items-center gap-1.5">↓ {t("profile.lost_followers_title")} <span className="text-orange-500">{lostFollowerEvents.length}</span></p>
-                <div className="native-card overflow-hidden">
-                  {lostFollowerEvents.map((e, i) => <CellRow key={e.id} username={e.username} displayName={e.full_name} avatarUrl={e.profile_pic_url} detectedAt={e.detected_at} timeAgo={timeAgo} index={i} />)}
-                </div>
-              </div>
-            )}
             {unfollowedByThem.length === 0 && lostFollowerEvents.length === 0 && (
               <div className="native-card p-8 text-center">
                 <span style={{ fontSize: '2rem' }} className="block mb-2">✨</span>
