@@ -358,7 +358,8 @@ Deno.serve(async (req) => {
         const firstSeen = new Date(f.first_seen_at as string).getTime();
         const lastSeen = new Date(f.last_seen_at as string).getTime();
 
-        if (lastSeen <= firstSeen) {
+        const CONFIRMATION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+        if ((lastSeen - firstSeen) < CONFIRMATION_THRESHOLD_MS) {
           skippedUnconfirmedFollowers++;
           continue;
         }
