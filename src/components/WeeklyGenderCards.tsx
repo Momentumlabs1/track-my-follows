@@ -110,37 +110,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct =
   return (
     <>
       <div className="mb-2">
-        {/* Gender distribution bar across both bubbles */}
-        {showGenderPct && (femalePct > 0 || malePct > 0) && (
-          <div id="gender-bar" className="mb-3">
-            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-            </span>
-            <div className="h-7 rounded-full overflow-hidden flex">
-              <div
-                className="h-full flex items-center justify-center transition-all duration-700"
-                style={{ background: "#FF2D55", width: `${femalePct}%` }}
-              >
-                {femalePct >= 12 && (
-                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                    ♀ {femalePct}%
-                  </span>
-                )}
-              </div>
-              <div
-                className="h-full flex items-center justify-center transition-all duration-700"
-                style={{ background: "#007AFF", width: `${malePct}%` }}
-              >
-                {malePct >= 12 && (
-                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                    ♂ {malePct}%
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         <p className="section-header mb-3">
           {t("weekly.title", "Diese Woche neu gefolgt")}
         </p>

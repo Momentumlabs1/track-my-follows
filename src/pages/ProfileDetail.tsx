@@ -263,25 +263,49 @@ const ProfileDetail = () => {
 
         {/* Stats row */}
         <div className="flex justify-center gap-4 mb-4">
-          {[
-            { label: t("dashboard.followers"), value: followerCount, delta: followerDelta },
-            { label: t("dashboard.following"), value: followingCount, delta: followingDelta },
-          ].map((s) => (
-            <div key={s.label} className="px-5 py-3 rounded-2xl text-center" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)", minWidth: 120 }}>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
-                  {formatCount(s.value)}
+          {/* Followers */}
+          <div className="px-5 py-3 rounded-2xl text-center" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)", minWidth: 120 }}>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+                {formatCount(followerCount)}
+              </span>
+              {followerDelta != null && followerDelta !== 0 && (
+                <span className={`font-bold ${followerDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.75rem' }}>
+                  {followerDelta > 0 ? "+" : ""}{followerDelta}
                 </span>
-                {s.delta != null && s.delta !== 0 && (
-                  <span className={`font-bold ${s.delta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.75rem' }}>
-                    {s.delta > 0 ? "+" : ""}{s.delta}
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{s.label}</p>
+              )}
             </div>
-          ))}
+            <p className="mt-0.5 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t("dashboard.followers")}</p>
+          </div>
+
+          {/* Following + Gender bar */}
+          <div className="px-5 py-3 rounded-2xl text-center" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.3)", minWidth: 120 }}>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="font-extrabold text-foreground tabular-nums" style={{ fontSize: '1.375rem', lineHeight: 1.1, letterSpacing: "-0.5px" }}>
+                {formatCount(followingCount)}
+              </span>
+              {followingDelta != null && followingDelta !== 0 && (
+                <span className={`font-bold ${followingDelta > 0 ? "text-brand-green" : "text-destructive"}`} style={{ fontSize: '0.75rem' }}>
+                  {followingDelta > 0 ? "+" : ""}{followingDelta}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t("dashboard.following")}</p>
+            {showGender && (
+              <div id="gender-bar" className="mt-2">
+                <div className="h-[6px] rounded-full overflow-hidden flex" style={{ minWidth: 80 }}>
+                  <div className="h-full" style={{ background: "#FF2D55", width: `${femalePct}%` }} />
+                  <div className="h-full" style={{ background: "#007AFF", width: `${malePct}%` }} />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-muted-foreground tabular-nums" style={{ fontSize: '0.5625rem' }}>♀ {femalePct}%</span>
+                  <span className="text-muted-foreground tabular-nums" style={{ fontSize: '0.5625rem' }}>♂ {malePct}%</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
 
       </motion.div>
 
