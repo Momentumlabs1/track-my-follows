@@ -76,6 +76,18 @@ const AuthCallback = () => {
         }
 
         console.info("[auth/callback] Session set successfully");
+        // Check if user is new (created < 60s ago) → trigger tutorial
+        const { data: { user: sessionUser } } = await supabase.auth.getUser();
+        if (sessionUser) {
+          const createdAt = new Date(sessionUser.created_at).getTime();
+          const isNew = Date.now() - createdAt < 60_000;
+          if (isNew) {
+            console.info("[auth/callback] New user detected, setting showWelcome");
+            sessionStorage.setItem(`show_welcome_${sessionUser.id}`, "1");
+            navigate("/dashboard", { replace: true, state: { showWelcome: true } });
+            return;
+          }
+        }
         navigate("/dashboard", { replace: true });
         return;
       }
