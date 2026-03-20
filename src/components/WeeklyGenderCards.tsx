@@ -110,6 +110,37 @@ export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct =
   return (
     <>
       <div className="mb-2">
+        {/* Gender distribution bar across both bubbles */}
+        {showGenderPct && (femalePct > 0 || malePct > 0) && (
+          <div id="gender-bar" className="mb-3">
+            <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
+              {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
+            </span>
+            <div className="h-7 rounded-full overflow-hidden flex">
+              <div
+                className="h-full flex items-center justify-center transition-all duration-700"
+                style={{ background: "#FF2D55", width: `${femalePct}%` }}
+              >
+                {femalePct >= 12 && (
+                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
+                    ♀ {femalePct}%
+                  </span>
+                )}
+              </div>
+              <div
+                className="h-full flex items-center justify-center transition-all duration-700"
+                style={{ background: "#007AFF", width: `${malePct}%` }}
+              >
+                {malePct >= 12 && (
+                  <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
+                    ♂ {malePct}%
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <p className="section-header mb-3">
           {t("weekly.title", "Diese Woche neu gefolgt")}
         </p>
@@ -132,9 +163,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct =
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{femaleCount}</span>
                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_women", "neue Frauen")}</p>
-                {showGenderPct && femalePct > 0 && (
-                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginTop: 4 }}>♀ {femalePct}%</p>
-                )}
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {femaleFollows.slice(0, 4).map((f) => (
@@ -166,9 +194,6 @@ export function WeeklyGenderCards({ followEvents, profileFollowings, femalePct =
               <div className="absolute top-4 left-4">
                 <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{maleCount}</span>
                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{t("weekly.new_men", "neue Männer")}</p>
-                {showGenderPct && malePct > 0 && (
-                  <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginTop: 4 }}>♂ {malePct}%</p>
-                )}
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex gap-1.5">
                 {maleFollows.slice(0, 4).map((f) => (
