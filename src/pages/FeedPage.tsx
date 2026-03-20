@@ -261,11 +261,25 @@ const FeedPage = () => {
             )}
           </div>
         ) : (
-          <div className="text-center py-20 px-5">
-            <span style={{ fontSize: '2.5rem' }} className="block mb-3">🕵️</span>
-            <p className="font-semibold text-foreground" style={{ fontSize: '0.9375rem' }}>{t("feed.empty_title", "Noch keine Aktivitäten")}</p>
-            <p className="text-muted-foreground mt-1 max-w-[260px] mx-auto" style={{ fontSize: '0.8125rem' }}>{t("feed.empty_subtitle")}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center py-20 px-5"
+          >
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            >
+              <SpyIcon size={48} glow />
+            </motion.div>
+            <p className="font-bold text-foreground mt-4" style={{ fontSize: '1rem' }}>
+              {t("feed.empty_title", "Dein Spion wartet...")}
+            </p>
+            <p className="text-muted-foreground mt-1.5 max-w-[260px] mx-auto" style={{ fontSize: '0.8125rem' }}>
+              {t("feed.empty_subtitle", "Sobald sich etwas bei deinen Profilen tut, erscheinen die Events hier.")}
+            </p>
+          </motion.div>
         )}
       </main>
     </div>

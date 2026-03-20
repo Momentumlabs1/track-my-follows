@@ -44,15 +44,23 @@ const AuthCallback = () => {
         const code = url.searchParams.get("code");
         if (code) {
           console.info("[auth/callback] Exchanging code for session");
-          const { data, error: codeError } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error: codeError } = await supabase.auth.exchangeCodeForSession(code);
           if (codeError || !data.session) {
             console.error("[auth/callback] Code exchange failed:", codeError?.message);
             setError(codeError?.message || "Code exchange failed");
             return;
           }
-          // onAuthStateChange will pick up the session
           console.info("[auth/callback] Code exchange successful");
-          navigate("/dashboard", { replace: true });
+          // Check if new user → trigger tutorial
+          const codeUser = data.session.user;
+          const codeCreatedAt = new Date(codeUser.created_at).getTime();
+          if (Date.now() - codeCreatedAt < 60_000) {
+            console.info("[auth/callback] New user via code exchange, setting showWelcome");
+            sessionStorage.setItem(`show_welcome_${codeUser.id}`, "1");
+            navigate("/dashboard", { replace: true, state: { showWelcome: true } });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
           return;
         }
       }

@@ -38,6 +38,9 @@ async function syncUserSettings(userId: string) {
       await supabase.from("user_settings").update({ timezone }).eq("user_id", userId);
     }
   } else {
+    // No existing settings = new user → set tutorial flag
+    console.info("[auth] New user detected in syncUserSettings, setting showWelcome");
+    sessionStorage.setItem(`show_welcome_${userId}`, "1");
     const language = supportedLangs.includes(browserLang) ? browserLang : 'en';
     i18n.changeLanguage(language);
     await supabase.from("user_settings").upsert({
