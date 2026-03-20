@@ -280,7 +280,7 @@ const ProfileDetail = () => {
 
           {/* Following + Gender bar */}
           <div
-            id={showGender ? "gender-bar" : undefined}
+            id="gender-bar"
             className="px-5 py-3 rounded-2xl text-center relative overflow-hidden"
             style={{
               background: showGender
