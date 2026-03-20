@@ -1,0 +1,1 @@
+DELETE FROM follower_events WHERE profile_id = '53a7b35e-6d18-4a2d-96ae-f98a8c043665' AND event_type = 'lost' AND detected_at = '2026-03-19 18:53:39.112+00';

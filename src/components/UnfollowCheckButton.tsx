@@ -110,7 +110,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         showPaywall("unfollows");
       } else if (data.unfollows_found !== undefined) {
         setPhase("done");
-        const totalUnfollows = (data.unfollows_found || 0) + (data.lost_followers || 0);
         const totalNew = (data.new_follows_found || 0) + (data.new_followers_found || 0);
         setResult({
           unfollows_found: data.unfollows_found || 0,
@@ -119,8 +118,8 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
           new_followers_found: data.new_followers_found || 0,
         });
         setChecksRemaining(data.checks_remaining ?? null);
-        if (totalUnfollows > 0) {
-          toast.success(`🚩 ${totalUnfollows} ${t("unfollow_check.unfollows_detected")}`);
+        if ((data.unfollows_found || 0) > 0) {
+          toast.success(`🚩 ${data.unfollows_found} ${t("unfollow_check.unfollows_detected")}`);
         } else {
           toast.success(`✅ ${t("unfollow_check.no_unfollows")}`);
         }
@@ -156,7 +155,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     }
   };
 
-  const totalUnfollows = result ? result.unfollows_found + result.lost_followers : 0;
+  const totalUnfollows = result ? result.unfollows_found : 0;
   const totalNew = result ? result.new_follows_found + result.new_followers_found : 0;
 
   return (
