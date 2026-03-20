@@ -297,12 +297,21 @@ Deno.serve(async (req) => {
     // Batch insert new rows
     await batchInsert(supabase, "profile_followings", newRows);
 
-    // Update existing rows (gender_tag + category) — batch by gender/category combo
+    // Build avatar lookup from API data
+    const avatarByPk = new Map<string, string>();
+    for (const u of allFollowings) { if (u.profile_pic_url) avatarByPk.set(u.pk, u.profile_pic_url); }
+
+    // Update existing rows (gender_tag + category + avatar refresh)
     let updatedCount = 0;
     for (const u of updateUsers) {
+      const freshAvatar = avatarByPk.get(u.pk);
       const { error: updateErr } = await supabase
         .from("profile_followings")
-        .update({ gender_tag: u.genderTag, category: u.category })
+        .update({
+          gender_tag: u.genderTag,
+          category: u.category,
+          ...(freshAvatar ? { following_avatar_url: freshAvatar } : {}),
+        })
         .eq("tracked_profile_id", profileId)
         .eq("following_user_id", u.pk)
         .eq("direction", "following");

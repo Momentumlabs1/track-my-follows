@@ -482,6 +482,29 @@ async function performSpyScan(
     }
   }
 
+  // ── Refresh avatar URLs in existing records ──
+  const avatarMap = new Map<string, string>();
+  for (const u of followingUsers) { if (u.profile_pic_url) avatarMap.set(u.pk, u.profile_pic_url); }
+  const followerAvatarMap = new Map<string, string>();
+  for (const u of followerUsers) { if (u.profile_pic_url) followerAvatarMap.set(u.pk, u.profile_pic_url); }
+  for (const [pk, url] of avatarMap) {
+    await supabaseClient.from("profile_followings").update({ following_avatar_url: url })
+      .eq("tracked_profile_id", profileId).eq("following_user_id", pk);
+  }
+  const usernameAvatarMap = new Map<string, string>();
+  for (const u of followingUsers) { if (u.profile_pic_url) usernameAvatarMap.set(u.username, u.profile_pic_url); }
+  for (const [uname, url] of usernameAvatarMap) {
+    await supabaseClient.from("follow_events").update({ target_avatar_url: url })
+      .eq("tracked_profile_id", profileId).eq("target_username", uname);
+  }
+  for (const [pk, url] of followerAvatarMap) {
+    await supabaseClient.from("profile_followers").update({ follower_avatar_url: url })
+      .eq("tracked_profile_id", profileId).eq("follower_user_id", pk);
+    await supabaseClient.from("follower_events").update({ profile_pic_url: url })
+      .eq("profile_id", profileId).eq("instagram_user_id", pk);
+  }
+  console.log(`[SPY-SCAN] ${username}: refreshed ${avatarMap.size} following + ${followerAvatarMap.size} follower avatars`);
+
   // ── Update profile ──
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
@@ -549,6 +572,21 @@ async function performBasicScan(
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
+
+  // ── Refresh avatar URLs in existing records ──
+  const avatarMap = new Map<string, string>();
+  for (const u of followingUsers) { if (u.profile_pic_url) avatarMap.set(u.pk, u.profile_pic_url); }
+  for (const [pk, url] of avatarMap) {
+    await supabaseClient.from("profile_followings").update({ following_avatar_url: url })
+      .eq("tracked_profile_id", profileId).eq("following_user_id", pk);
+  }
+  const usernameAvatarMap = new Map<string, string>();
+  for (const u of followingUsers) { if (u.profile_pic_url) usernameAvatarMap.set(u.username, u.profile_pic_url); }
+  for (const [uname, url] of usernameAvatarMap) {
+    await supabaseClient.from("follow_events").update({ target_avatar_url: url })
+      .eq("tracked_profile_id", profileId).eq("target_username", uname);
+  }
+  console.log(`[BASIC-SCAN] ${username}: refreshed ${avatarMap.size} following avatars`);
 
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
