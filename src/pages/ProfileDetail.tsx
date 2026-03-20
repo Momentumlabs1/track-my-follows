@@ -320,54 +320,8 @@ const ProfileDetail = () => {
           )}
           <div className={(!isPro || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
 
-            {/* Gender ratio inline */}
-            {showGender && (
-              <div id="gender-bar" className="mb-4">
-                <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-                  {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-                </span>
-                <div className="h-7 rounded-full overflow-hidden flex">
-                  <motion.div
-                    style={{ background: "#FF2D55" }}
-                    className="h-full flex items-center justify-center"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${femalePct}%` }}
-                    transition={{ duration: 0.8 }}
-                  >
-                    {femalePct >= 15 && (
-                      <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                        {t("gender.female_bar", "♀ Frau")} {femalePct}%
-                      </span>
-                    )}
-                  </motion.div>
-                  <motion.div
-                    style={{ background: "#007AFF" }}
-                    className="h-full flex items-center justify-center"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${malePct}%` }}
-                    transition={{ duration: 0.8, delay: 0.1 }}
-                  >
-                    {malePct >= 15 && (
-                      <span className="text-white font-semibold whitespace-nowrap" style={{ fontSize: '0.625rem' }}>
-                        {t("gender.male_bar", "♂ Mann")} {malePct}%
-                      </span>
-                    )}
-                  </motion.div>
-                </div>
-              </div>
-            )}
-            {/* Gender analysis running but all unknown */}
-            {!showGender && followings.length > 0 && (
-              <div className="mb-4">
-                <span className="text-muted-foreground uppercase tracking-wider font-medium block mb-2" style={{ fontSize: '0.6875rem' }}>
-                  {t("gender.followed_distribution", "Geschlechterverteilung der gefolgten Accounts")}
-                </span>
-                <div className="h-7 rounded-full" style={{ background: "hsl(var(--border))" }} />
-                <p style={{ fontSize: "0.6875rem" }} className="text-muted-foreground mt-1.5 text-center">
-                  {t("gender.analysis_running")} · {t("gender.accounts_count", { count: followings.length })}
-                </p>
-              </div>
-            )}
+
+
 
             <SpyStatusCard
               analysis={suspicionAnalysis}
