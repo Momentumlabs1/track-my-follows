@@ -284,10 +284,11 @@ const ProfileDetail = () => {
             className="px-5 py-3 rounded-2xl text-center relative overflow-hidden"
             style={{
               background: showGender
-                ? `linear-gradient(to right, #FF2D55 ${femalePct}%, #007AFF ${femalePct}%)`
+                ? `linear-gradient(135deg, hsl(340 82% 52% / 0.9) 0%, hsl(340 75% 48%) ${femalePct}%, hsl(215 100% 55%) ${femalePct}%, hsl(215 90% 50% / 0.9) 100%)`
                 : "hsl(var(--card))",
-              border: "1px solid hsl(var(--border) / 0.3)",
+              border: showGender ? "none" : "1px solid hsl(var(--border) / 0.3)",
               minWidth: 120,
+              boxShadow: showGender ? "0 4px 20px -4px hsl(340 80% 50% / 0.3), 0 4px 20px -4px hsl(215 100% 55% / 0.3)" : undefined,
             }}
           >
             <div className="flex items-baseline justify-center gap-1">
@@ -300,13 +301,7 @@ const ProfileDetail = () => {
                 </span>
               )}
             </div>
-            <p className={`mt-0.5 ${showGender ? "text-white/70" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>{t("dashboard.following")}</p>
-            {showGender && (
-              <div className="flex justify-between mt-1">
-                <span className="text-white/50 tabular-nums" style={{ fontSize: '0.5rem' }}>♀ {femalePct}%</span>
-                <span className="text-white/50 tabular-nums" style={{ fontSize: '0.5rem' }}>♂ {malePct}%</span>
-              </div>
-            )}
+            <p className={`mt-0.5 ${showGender ? "text-white/80" : "text-muted-foreground"}`} style={{ fontSize: '0.6875rem' }}>{t("dashboard.following")}</p>
           </div>
         </div>
 
