@@ -1,55 +1,49 @@
 
 
-## Analyse: Was ist kaputt auf der Saif-Profilseite
+## Apple Sign-In Fix: "Anmeldung nicht abgeschlossen" auf mehreren Geraeten
 
-### 3 separate Probleme identifiziert
+### Ursache
 
----
+Der neue Apple JS SDK Flow (`AppleID.auth.signIn()` mit `usePopup: true`) schlaegt fehl, weil:
 
-### 1. Bilder/Avatare fehlen (zeigen nur pinke Initialen)
+1. **In der Despia-App (WebView)**: Apple's Popup-Flow funktioniert nicht zuverlaessig in WebViews. Das Apple-SDK oeffnet ein Popup-Fenster, das im WebView-Kontext blockiert oder fehlerhaft ablaeuft.
+2. **Redirect-URI Mismatch**: `window.location.origin` ist in der Preview/Despia ein anderer Origin als `https://track-my-follows.lovable.app`, aber nur diese Domain ist bei Apple registriert.
+3. **Domain-Verifizierung**: Apple verlangt, dass die Domain, von der das JS SDK aufgerufen wird, im Apple Developer Portal unter der Service-ID verifiziert ist.
 
-**Ursache:** Instagram CDN URLs laufen ab. Die gespeicherten URLs in `follow_events.target_avatar_url` und `profile_followings.following_avatar_url` enthalten Ablauf-Timestamps (`&oe=69C36CDE`). Wenn diese URLs alt sind (Tage/Wochen), gibt Instagram 403/404 zuruck. Der `image-proxy` leitet die Anfrage weiter, bekommt einen Fehler, und `InstagramAvatar` zeigt den Fallback.
+### Loesung: Hybrid-Strategie
 
-**Fix:** Bei jedem Scan (`trigger-scan`, `smart-scan`) die Avatar-URLs in bestehenden `follow_events` und `profile_followings` aktualisieren, wenn der gleiche Username erneut gefunden wird. Zusatzlich: das Profil-Avatar (`tracked_profiles.avatar_url`) wird bereits bei jedem Scan aktualisiert -- die Events aber nicht.
+**Native App (Despia)**: Apple bekommt denselben Flow wie Google -- ueber `auth-start` Edge Function + `oauth://` Deeplink. Das funktioniert zuverlaessig (Supabase.co bleibt sichtbar, aber Login funktioniert).
 
-**Anderungen:**
-- `supabase/functions/trigger-scan/index.ts`: Nach dem Diffing auch bestehende `follow_events` mit frischen Avatar-URLs updaten (UPDATE WHERE target_username IN ...)
-- `supabase/functions/smart-scan/index.ts`: Gleiche Logik
-- `supabase/functions/create-baseline/index.ts`: Avatar-URLs in `profile_followings` bei Re-Runs auffrischen
+**Web Browser**: Apple JS SDK Popup-Flow bleibt erhalten, aber mit **hardcoded** redirectURI auf `https://track-my-follows.lovable.app/auth/callback` (nicht `window.location.origin`).
 
----
+### Aenderungen
 
-### 2. Gender-Bubbles zeigen 0/0
+**`src/pages/Login.tsx`** (~25 Zeilen):
+- `handleAppleLogin` pruefen: Wenn `isNativeApp()` → alten OAuth-Flow nutzen (wie `handleGoogleLogin` fuer native)
+- Wenn NICHT native → Apple JS SDK Popup-Flow behalten, aber redirectURI hardcoden
+- Error-Handling fuer beide Pfade
 
-**Ursache:** Kein Code-Bug. Die WeeklyGenderCards filtern korrekt: nur `is_initial: false`, `direction: "following"`, innerhalb der letzten 7 Tage. Saif hat in den letzten 7 Tagen nur 1 neuen Follow (xmaeyaxx) und dessen `gender_tag` ist "unknown". Daher 0 female, 0 male.
+```text
+handleAppleLogin:
+  if (isNativeApp()):
+    → supabase.functions.invoke("auth-start", { provider: "apple", deeplink_scheme })
+    → despia("oauth://...")
+    → ASWebAuthenticationSession oeffnet sich
+    → NativeCallback → Deeplink → AuthCallback → Dashboard
+  else:
+    → AppleID.auth.init({ redirectURI: "https://track-my-follows.lovable.app/auth/callback" })
+    → AppleID.auth.signIn() popup
+    → signInWithIdToken()
+    → Dashboard
+```
 
-Die gerade per Push-Scan neu erkannten Follows (dlraysin, yourpropfirm) werden vermutlich auch als "unknown" getaggt, weil die Gender-Detection diese Usernames nicht zuordnen kann.
+### Ergebnis
 
-**Kein Code-Fix notig** -- das System funktioniert korrekt. Die Bubbles zeigen 0 weil es schlicht keine als weiblich/mannlich erkannten neuen Follows gibt.
+| Kontext | Vorher | Nachher |
+|---------|--------|---------|
+| Native App | Apple JS SDK popup → Fehler | auth-start OAuth → funktioniert |
+| Web Browser | window.location.origin → Fehler auf Preview | Hardcoded live-URL → funktioniert |
 
----
-
-### 3. "Muessten mehr Aktivitaten da sein" (tagl. Scans)
-
-**Ursache:** Saif hatte bis gerade eben KEINEN Spy. Der Spy war auf `timwger`. Ohne Spy bekommt ein Profil nur 1x taglich einen Quick-Scan (nur Following-Liste, erste Seite). Wenn saif_nassiri in der letzten Woche kaum neue Accounts gefolgt ist, gibt es einfach wenig zu erkennen.
-
-Jetzt wo der Spy auf Saif verschoben wurde, bekommt er stundliche Voll-Scans (Following + Follower). Mehr Aktivitat wird erst sichtbar wenn tatsachlich neue Follows passieren.
-
-**Kein Code-Fix notig** -- erwartetes Verhalten.
-
----
-
-### Zusammenfassung: Was zu tun ist
-
-Nur Problem 1 (abgelaufene Avatar-URLs) ist ein echter Bug. Die anderen beiden Punkte funktionieren wie designed.
-
-**Plan fur Avatar-URL Refresh:**
-
-1. **`trigger-scan/index.ts`** (~15 Zeilen): Nach dem Erkennen neuer Follows, bestehende `profile_followings`-Rows mit frischen `following_avatar_url` updaten (batch UPDATE fur alle gescannten Usernames)
-
-2. **`smart-scan/index.ts`** (~15 Zeilen): Gleiche Avatar-Refresh-Logik
-
-3. **`follow_events` Avatar-Refresh**: Beim Scan alle gescannten Usernames sammeln und ein bulk UPDATE auf `follow_events.target_avatar_url` ausfuhren fur Events dieses Profils
-
-Das stellt sicher, dass bei jedem Scan (stuendlich fur Spy-Profile, taglich fur andere) alle Avatar-URLs aufgefrischt werden.
+### Spaeter (Schritt 2 - Custom Domain)
+Sobald eine Supabase Custom Auth Domain eingerichtet ist, verschwindet auch "supabase.co" aus dem nativen OAuth-Dialog. Das ist ein separater Schritt.
 
