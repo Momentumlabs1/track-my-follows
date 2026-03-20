@@ -18,6 +18,9 @@ interface WeeklyGenderCardsProps {
     gender_tag?: string | null;
     first_seen_at?: string;
   }>;
+  femalePct?: number;
+  malePct?: number;
+  showGenderPct?: boolean;
 }
 
 interface GenderedFollow {
