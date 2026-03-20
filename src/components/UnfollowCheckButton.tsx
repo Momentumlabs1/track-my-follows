@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Lock, Shield, UserMinus, UserPlus, Users } from "lucide-react";
+import { Search, Lock, Shield, UserMinus, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -12,12 +12,11 @@ interface UnfollowCheckButtonProps {
   profileId: string;
 }
 
-type ScanPhase = "idle" | "scanning_following" | "scanning_followers" | "evaluating" | "done";
+type ScanPhase = "idle" | "scanning_following" | "evaluating" | "done";
 
 const PHASE_TIMINGS: Record<string, number> = {
   scanning_following: 0,
-  scanning_followers: 8000,
-  evaluating: 25000,
+  evaluating: 15000,
 };
 
 const TIMEOUT_MS = 180_000;
@@ -32,8 +31,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const [result, setResult] = useState<{
     unfollows_found: number;
     new_follows_found: number;
-    lost_followers: number;
-    new_followers_found: number;
   } | null>(null);
   const phaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,7 +49,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     loadChecks();
   }, [profileId, plan]);
 
-  // Cleanup timers
   useEffect(() => {
     return () => {
       phaseTimers.current.forEach(clearTimeout);
@@ -68,13 +64,10 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     setResult(null);
     setPhase("scanning_following");
 
-    // Simulate phase progression
     phaseTimers.current = [
-      setTimeout(() => setPhase("scanning_followers"), PHASE_TIMINGS.scanning_followers),
       setTimeout(() => setPhase("evaluating"), PHASE_TIMINGS.evaluating),
     ];
 
-    // Timeout handler
     timeoutTimer.current = setTimeout(() => {
       setLoading(false);
       setPhase("idle");
@@ -92,12 +85,9 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         error?: string;
         unfollows_found?: number;
         new_follows_found?: number;
-        lost_followers?: number;
-        new_followers_found?: number;
         checks_remaining?: number;
       };
 
-      // Clear timeout
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
       phaseTimers.current.forEach(clearTimeout);
 
@@ -108,14 +98,14 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
       } else if (data.error === "PRO_REQUIRED") {
         setPhase("idle");
         showPaywall("unfollows");
+      } else if (data.error === "PARTIAL_FETCH") {
+        setPhase("idle");
+        toast.error(t("unfollow_check.partial_fetch", "Scan unvollständig – bitte erneut versuchen."));
       } else if (data.unfollows_found !== undefined) {
         setPhase("done");
-        const totalNew = (data.new_follows_found || 0) + (data.new_followers_found || 0);
         setResult({
           unfollows_found: data.unfollows_found || 0,
           new_follows_found: data.new_follows_found || 0,
-          lost_followers: data.lost_followers || 0,
-          new_followers_found: data.new_followers_found || 0,
         });
         setChecksRemaining(data.checks_remaining ?? null);
         if ((data.unfollows_found || 0) > 0) {
@@ -126,7 +116,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         queryClient.invalidateQueries({ queryKey: ["follow_events"] });
         queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
         queryClient.invalidateQueries({ queryKey: ["profile_followings"] });
-        queryClient.invalidateQueries({ queryKey: ["follower_events"] });
       }
     } catch (err) {
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
@@ -136,7 +125,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
       console.error("Unfollow check error:", err);
     } finally {
       setLoading(false);
-      // Keep phase for result display, reset after delay
       setTimeout(() => {
         setPhase((prev) => prev === "done" ? "idle" : prev);
       }, 10000);
@@ -149,18 +137,13 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const phaseLabel = (): string => {
     switch (phase) {
       case "scanning_following": return t("unfollow_check.phase_following", "🔍 Scanning following list...");
-      case "scanning_followers": return t("unfollow_check.phase_followers", "🔍 Scanning follower list...");
       case "evaluating": return t("unfollow_check.phase_evaluating", "📊 Evaluating results...");
       default: return t("unfollow_check.checking");
     }
   };
 
-  const totalUnfollows = result ? result.unfollows_found : 0;
-  const totalNew = result ? result.new_follows_found + result.new_followers_found : 0;
-
   return (
     <div className="space-y-3">
-      {/* Scanning state - full card takeover */}
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div
@@ -170,25 +153,20 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
             exit={{ opacity: 0, scale: 0.98 }}
             className="native-card p-5 border border-primary/20 relative overflow-hidden"
           >
-            {/* Animated background glow */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"
               animate={{ opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 3, repeat: Infinity }}
             />
-            
             <div className="relative flex flex-col items-center gap-4">
-              {/* Animated spy icon */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               >
                 <SpyIcon size={36} glow />
               </motion.div>
-              
-              {/* Phase text */}
               <div className="text-center">
-                <motion.p 
+                <motion.p
                   key={phase}
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -200,8 +178,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                   {t("unfollow_check.please_wait", "Das kann bis zu 2 Minuten dauern...")}
                 </p>
               </div>
-              
-              {/* Progress bar */}
               <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
@@ -210,18 +186,13 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
-
-              {/* Phase steps */}
               <div className="flex items-center gap-3 w-full justify-center">
                 {[
                   { key: "scanning_following", label: "Following" },
-                  { key: "scanning_followers", label: "Followers" },
                   { key: "evaluating", label: "Auswertung" },
                 ].map((step, i) => {
                   const isActive = phase === step.key;
-                  const isDone = (phase === "scanning_followers" && i === 0) || 
-                                 (phase === "evaluating" && i <= 1) ||
-                                 (phase === "done" && i <= 2);
+                  const isDone = (phase === "evaluating" && i === 0) || (phase === "done" && i <= 1);
                   return (
                     <div key={step.key} className="flex items-center gap-1.5">
                       <motion.div
@@ -250,29 +221,19 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
             exit={{ opacity: 0, y: -8 }}
             className="space-y-2"
           >
-            {/* Unfollows result */}
-            {totalUnfollows > 0 ? (
+            {result.unfollows_found > 0 ? (
               <div className="native-card p-4 border border-destructive/30 bg-destructive/5">
-                <div className="flex items-center gap-2.5 mb-2">
+                <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center">
                     <span className="text-sm">🚩</span>
                   </div>
                   <div>
                     <p className="text-[13px] font-bold text-destructive">
-                      {totalUnfollows} {t("unfollow_check.unfollows_detected")}
+                      {result.unfollows_found} {t("unfollow_check.unfollows_detected")}
                     </p>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      {result.unfollows_found > 0 && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <UserMinus className="h-2.5 w-2.5" /> {result.unfollows_found} entfolgt
-                        </span>
-                      )}
-                      {result.lost_followers > 0 && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Users className="h-2.5 w-2.5" /> {result.lost_followers} Follower verloren
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <UserMinus className="h-2.5 w-2.5" /> {result.unfollows_found} entfolgt
+                    </span>
                   </div>
                 </div>
               </div>
@@ -289,13 +250,12 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
               </div>
             )}
 
-            {/* New activity */}
-            {totalNew > 0 && (
+            {result.new_follows_found > 0 && (
               <div className="native-card p-3 border border-primary/20">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-3.5 w-3.5 text-primary" />
                   <p className="text-[11px] text-muted-foreground">
-                    +{totalNew} {t("unfollow_check.new_activity_found", "neue Aktivität gefunden")}
+                    +{result.new_follows_found} {t("unfollow_check.new_activity_found", "neue Aktivität gefunden")}
                   </p>
                 </div>
               </div>
@@ -315,7 +275,6 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                 : "bg-secondary text-foreground"
             }`}
           >
-            {/* Shimmer */}
             {isPro && !isDisabled && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
