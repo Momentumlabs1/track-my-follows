@@ -88,7 +88,7 @@ export function SpyWidget({ spyProfile, onDragMoveSpy, isDragging, onDragStateCh
         dragElastic={0}
         dragMomentum={false}
         dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
-        style={{ x: dragX, y: dragY }}
+        style={{ x: dragX, y: dragY, WebkitTouchCallout: "none", pointerEvents: isDragging ? "none" : "auto" } as any}
         onPointerDown={(e) => {
           e.stopPropagation();
           tapStartTime.current = Date.now();
