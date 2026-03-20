@@ -68,13 +68,26 @@ export const EventFeedItem = memo(function EventFeedItem({ event, index }: Event
   };
 
   const renderAvatar = (username: string, avatar: string | null | undefined, isTracked: boolean, size: number) => (
-    <div className="flex-shrink-0">
+    <div className="flex-shrink-0 relative">
       {isTracked ? (
-        <div className="rounded-xl overflow-hidden" style={{ padding: '2px', background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))' }}>
-          <InstagramAvatar src={avatar} alt={username} fallbackInitials={username} size={size} className="!rounded-[10px]" />
+        <div className="rounded-xl overflow-hidden" style={{ padding: '2.5px', background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))' }}>
+          <InstagramAvatar src={avatar} alt={username} fallbackInitials={username} size={size} className="!rounded-[9px]" />
         </div>
       ) : (
         <InstagramAvatar src={avatar} alt={username} fallbackInitials={username} size={size} />
+      )}
+      {isTracked && (
+        <div
+          className="absolute -bottom-0.5 -right-0.5 rounded-md px-1 py-px font-bold uppercase tracking-wide"
+          style={{
+            fontSize: '0.5rem',
+            background: 'linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-rose)))',
+            color: '#fff',
+            lineHeight: 1.3,
+          }}
+        >
+          SPY
+        </div>
       )}
     </div>
   );
