@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpotlightOverlay } from "@/components/SpotlightOverlay";
-import { Shield, Eye, Users, TrendingUp } from "lucide-react";
+import { Shield, Eye, Users, TrendingUp, Check, X } from "lucide-react";
 
 type StepDef =
   | {
@@ -169,13 +170,38 @@ function InfoBubble({ title, text, onNext, stepIndex }: { title: string; text: s
   );
 }
 
+function ComparisonRow({ label, free, pro }: { label: string; free: boolean; pro: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <span style={{ fontSize: 13, color: "#EBEBF5", flex: 1 }}>{label}</span>
+      <div className="flex items-center gap-6" style={{ width: 80, justifyContent: "space-around" }}>
+        {free ? (
+          <Check size={15} color="#8E8E93" />
+        ) : (
+          <X size={15} color="rgba(255,255,255,0.15)" />
+        )}
+        {pro ? (
+          <Check size={15} color="#FF2D55" />
+        ) : (
+          <X size={15} color="rgba(255,255,255,0.15)" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProUpsellBubble({ onUnlock, onLater, stepIndex }: { onUnlock: () => void; onLater: () => void; stepIndex: number }) {
   const { t } = useTranslation();
-  const features = [
-    { icon: Shield, text: t("tutorial.pro_feature_1", "Spy-Agent: Automatische Scans rund um die Uhr") },
-    { icon: Eye, text: t("tutorial.pro_feature_2", "Unfollow-Tracking in Echtzeit") },
-    { icon: Users, text: t("tutorial.pro_feature_3", "Geschlechteranalyse & Verdachts-Score") },
-    { icon: TrendingUp, text: t("tutorial.pro_feature_4", "Bis zu 10 Profile gleichzeitig tracken") },
+
+  const rows = [
+    { label: t("tutorial.compare_profiles", "Profile tracken"), free: true, pro: true, freeDetail: "1", proDetail: "5" },
+    { label: t("tutorial.compare_scans", "Scans pro Tag"), free: true, pro: true, freeDetail: "1", proDetail: "∞" },
+    { label: t("tutorial.compare_new_follows", "Folgt neu"), free: true, pro: true },
+    { label: t("tutorial.compare_new_followers", "Neue Follower"), free: true, pro: true },
+    { label: t("tutorial.compare_unfollows", "Entfolgt-Tracking"), free: false, pro: true },
+    { label: t("tutorial.compare_spy", "Spy-Agent"), free: false, pro: true },
+    { label: t("tutorial.compare_suspicion", "Verdachts-Score"), free: false, pro: true },
+    { label: t("tutorial.compare_gender", "Geschlechteranalyse"), free: false, pro: true },
   ];
 
   return (
@@ -197,8 +223,8 @@ function ProUpsellBubble({ onUnlock, onLater, stepIndex }: { onUnlock: () => voi
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 9999,
-          maxWidth: 340,
-          width: "calc(100% - 48px)",
+          maxWidth: 360,
+          width: "calc(100% - 32px)",
         }}
       >
         <div
@@ -222,25 +248,18 @@ function ProUpsellBubble({ onUnlock, onLater, stepIndex }: { onUnlock: () => voi
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 mb-5">
-            {features.map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: "rgba(255,45,85,0.12)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <f.icon size={18} color="#FF2D55" />
-                </div>
-                <span style={{ fontSize: 14, color: "#EBEBF5", fontWeight: 500 }}>{f.text}</span>
-              </div>
+          {/* Free vs Pro header */}
+          <div className="flex items-center justify-between mb-1">
+            <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", flex: 1 }}></span>
+            <div className="flex items-center gap-6" style={{ width: 80, justifyContent: "space-around" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>FREE</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#FF2D55" }}>PRO</span>
+            </div>
+          </div>
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }} className="mb-5">
+            {rows.map((r, i) => (
+              <ComparisonRow key={i} label={r.label} free={r.free} pro={r.pro} />
             ))}
           </div>
 
@@ -350,6 +369,7 @@ export function AppTutorial() {
   const { showPaywall } = useSubscription();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: profiles } = useTrackedProfiles();
 
   const [phase, setPhase] = useState<"idle" | "intro" | "walkthrough" | "done">("idle");
   const [step, setStep] = useState(0);
@@ -360,19 +380,24 @@ export function AppTutorial() {
   const advancingRef = useRef(false);
 
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
-  const forceShow = (location.state as { showWelcome?: boolean } | null)?.showWelcome === true;
 
-  // ONLY trigger on fresh registration via showWelcome flag
+  // FIX 1: Trigger based ONLY on user + no localStorage key + 0 profiles
+  const shouldStartTutorial = useMemo(() => {
+    if (!user) return false;
+    if (!tutorialKey) return false;
+    if (localStorage.getItem(tutorialKey)) return false;
+    // Wait until profiles query has loaded
+    if (profiles === undefined) return false;
+    if (profiles && profiles.length > 0) return false;
+    return true;
+  }, [user, tutorialKey, profiles]);
+
   useEffect(() => {
-    if (!tutorialKey) return;
-    if (localStorage.getItem(tutorialKey)) return;
-    
-    const hasFlag = forceShow || (user && sessionStorage.getItem(`show_welcome_${user.id}`));
-    if (!hasFlag) return;
-    
+    if (!shouldStartTutorial) return;
+    if (phase !== "idle") return;
     const timer = setTimeout(() => setPhase("intro"), 2000);
     return () => clearTimeout(timer);
-  }, [tutorialKey, forceShow, user]);
+  }, [shouldStartTutorial, phase]);
 
   // Track latest profile ID from URL for navigation after scan
   useEffect(() => {
@@ -405,6 +430,7 @@ export function AppTutorial() {
       if (location.pathname.startsWith("/profile/")) {
         advanceStep();
       }
+      // FIX 6: Actively navigate to profile when found on dashboard
       if (location.pathname === "/dashboard") {
         const checkProfiles = setInterval(() => {
           const profileLinks = document.querySelectorAll('[data-profile-id]');
@@ -413,6 +439,7 @@ export function AppTutorial() {
             if (firstId) {
               clearInterval(checkProfiles);
               navigate(`/profile/${firstId}`);
+              // advanceStep will be called when location changes to /profile/*
             }
           }
         }, 1000);
@@ -421,7 +448,7 @@ export function AppTutorial() {
     }
   }, [location.pathname, step, phase]);
 
-  // For spotlight steps with hideButton: intercept click on target element
+  // FIX 2: For spotlight steps with hideButton, intercept click and skip Step 1
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
@@ -429,7 +456,20 @@ export function AppTutorial() {
       const handler = (e: MouseEvent) => {
         const el = document.getElementById(currentStep.targetId);
         if (el && (el === e.target || el.contains(e.target as Node))) {
-          advanceStep();
+          // If this is Step 0 (add-profile-btn), skip Step 1 entirely → go to Step 2
+          if (step === 0) {
+            if (advancingRef.current) return;
+            advancingRef.current = true;
+            setSpotlightVisible(false);
+            setTargetReady(false);
+            clearTimeout(transitionTimer.current);
+            transitionTimer.current = setTimeout(() => {
+              setStep(2); // Skip step 1 (wait_for_add_profile), go to step 2 (wait_for_scan)
+              advancingRef.current = false;
+            }, 300);
+          } else {
+            advanceStep();
+          }
         }
       };
       document.addEventListener("click", handler, true);
@@ -470,21 +510,19 @@ export function AppTutorial() {
     return () => clearInterval(interval);
   }, [step, phase]);
 
-  // Auto-scroll to target when ready
+  // FIX 4: Auto-scroll BEFORE spotlight (500ms delay for scroll to finish)
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
     if (currentStep?.type === "spotlight" && targetReady) {
       const el = document.getElementById(currentStep.targetId);
       if (el) {
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
   }, [step, phase, targetReady]);
 
-  // Show spotlight with delay when target is ready
+  // FIX 4 continued: Show spotlight with 500ms delay (after scroll completes)
   useEffect(() => {
     if (phase !== "walkthrough") return;
     const currentStep = STEPS[step];
@@ -494,14 +532,16 @@ export function AppTutorial() {
     }
 
     setSpotlightVisible(false);
-    const timer = setTimeout(() => setSpotlightVisible(true), 400);
+    const timer = setTimeout(() => setSpotlightVisible(true), 500);
     return () => clearTimeout(timer);
   }, [step, phase, targetReady]);
 
+  // FIX 5: advanceStep with 300ms pause between steps
   const advanceStep = useCallback(() => {
     if (advancingRef.current) return;
     advancingRef.current = true;
 
+    // 1. Hide current overlay
     setSpotlightVisible(false);
     setTargetReady(false);
     clearTimeout(transitionTimer.current);
@@ -509,21 +549,24 @@ export function AppTutorial() {
     const nextStep = step + 1;
     if (nextStep >= STEPS.length) {
       if (tutorialKey) localStorage.setItem(tutorialKey, "1");
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
       setPhase("done");
       advancingRef.current = false;
       return;
     }
+
+    // 2. 300ms pause then show next step
     transitionTimer.current = setTimeout(() => {
       setStep(nextStep);
       advancingRef.current = false;
     }, 300);
   }, [step, tutorialKey, navigate]);
 
+  // FIX 8: All exit paths → dashboard
   const handleClose = useCallback(() => {
     if (tutorialKey) localStorage.setItem(tutorialKey, "1");
-    navigate("/dashboard");
     setPhase("done");
+    navigate("/dashboard", { replace: true });
   }, [tutorialKey, navigate]);
 
   const handleIntroStart = useCallback(() => {
@@ -534,14 +577,14 @@ export function AppTutorial() {
   const handleProUnlock = useCallback(() => {
     if (tutorialKey) localStorage.setItem(tutorialKey, "1");
     setPhase("done");
-    navigate("/dashboard");
+    navigate("/dashboard", { replace: true });
     setTimeout(() => showPaywall("tutorial"), 500);
   }, [tutorialKey, navigate, showPaywall]);
 
   // Render nothing
   if (phase === "idle" || phase === "done") return null;
 
-  // Intro bubble — centered
+  // FIX 3: Intro bubble — centered BOTTOM, above BottomNav
   if (phase === "intro") {
     return (
       <AnimatePresence>
@@ -554,17 +597,17 @@ export function AppTutorial() {
         />
         <motion.div
           key="intro-bubble"
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           style={{
             position: "fixed",
-            top: "50%",
+            bottom: 120,
             left: "50%",
-            transform: "translate(-50%, -50%)",
+            transform: "translateX(-50%)",
             zIndex: 9999,
-            maxWidth: 340,
+            maxWidth: 360,
             width: "calc(100% - 48px)",
           }}
         >
@@ -576,28 +619,30 @@ export function AppTutorial() {
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.6)",
             }}
           >
-            <div className="flex flex-col items-center text-center gap-3 mb-4">
-              <SpyIcon size={48} glow />
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
-                {t("tutorial.intro_title", "Hey! Willkommen bei Spy Secret.")}
-              </p>
-              <p style={{ fontSize: 14, color: "#8E8E93", lineHeight: 1.5 }}>
-                {t("tutorial.intro_text", "Lass uns dein erstes Profil scannen!")}
-              </p>
+            <div className="flex items-start gap-3 mb-4">
+              <SpyIcon size={36} glow className="flex-shrink-0 mt-0.5" />
+              <div>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
+                  {t("tutorial.intro_title", "Hey! Willkommen bei Spy Secret.")}
+                </p>
+                <p style={{ fontSize: 15, color: "#8E8E93", lineHeight: 1.5, marginTop: 4 }}>
+                  {t("tutorial.intro_text", "Lass uns dein erstes Profil scannen!")}
+                </p>
+              </div>
             </div>
             <button
               onClick={handleIntroStart}
               style={{
                 width: "100%",
-                padding: "14px 0",
+                padding: "13px 0",
                 background: "#FF2D55",
-                borderRadius: 14,
+                borderRadius: 12,
                 border: "none",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: 16,
                 cursor: "pointer",
-                minHeight: 50,
+                minHeight: 48,
               }}
             >
               {t("tutorial.intro_cta", "Los geht's →")}
@@ -606,12 +651,12 @@ export function AppTutorial() {
               onClick={handleClose}
               style={{
                 width: "100%",
-                marginTop: 10,
+                marginTop: 8,
                 padding: "8px 0",
                 background: "transparent",
                 border: "none",
-                color: "#8E8E93",
-                fontSize: 13,
+                color: "rgba(255,255,255,0.3)",
+                fontSize: 14,
                 cursor: "pointer",
               }}
             >
@@ -666,8 +711,13 @@ export function AppTutorial() {
     );
   }
 
-  // Action steps: show waiting bubble
+  // FIX 2: Action steps — Step 1 shows NOTHING (no popup flash)
   if (currentStep.type === "action") {
+    // Step 1 (wait_for_add_profile) is silent — no UI, just route detection
+    if (currentStep.action === "wait_for_add_profile") {
+      return null;
+    }
+    // Step 2 (wait_for_scan) shows waiting bubble
     return (
       <AnimatePresence>
         <WaitingBubble text={t(currentStep.waitingKey)} stepIndex={step} />
