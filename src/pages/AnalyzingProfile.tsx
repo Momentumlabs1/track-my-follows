@@ -142,7 +142,7 @@ const AnalyzingProfile = () => {
           />
         </div>
         <p className="text-[11px] text-muted-foreground text-center mt-1.5 font-semibold tabular-nums">
-          {progress}%
+          {Math.round(progress)}%
         </p>
       </div>
 
