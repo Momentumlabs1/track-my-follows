@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Crown, Loader2 } from "lucide-react";
+import { X, Check, Minus, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib/native";
+import spyGif from "@/assets/spy-logo-animated.gif";
 
 type Period = "weekly" | "monthly" | "yearly";
 
@@ -15,6 +16,12 @@ const PRICES: Record<Period, { price: string; unit: string; trial: boolean }> = 
   yearly: { price: "99,95", unit: "per_year", trial: true },
 };
 
+interface ComparisonRow {
+  label: string;
+  free: string | boolean;
+  pro: string | boolean;
+}
+
 export function PaywallSheet() {
   const { t } = useTranslation();
   const { isPaywallOpen, closePaywall, refetch } = useSubscription();
@@ -22,17 +29,16 @@ export function PaywallSheet() {
   const [selected, setSelected] = useState<Period>("yearly");
   const [loading, setLoading] = useState(false);
 
-  // Calculate savings: yearly = 99.95 vs weekly*52 = 257.40 → ~61% savings
-  const weeklyEquiv = selected === "yearly" ? (99.95 / 52).toFixed(2) : selected === "monthly" ? (14.95 / 4.33).toFixed(2) : "4,95";
   const savingsPercent = selected === "yearly" ? 61 : selected === "monthly" ? 30 : 0;
 
-  const features = [
-    t("paywall.feature_profiles"),
-    t("paywall.feature_hourly"),
-    t("paywall.feature_unfollows"),
-    t("paywall.feature_push"),
-    t("paywall.feature_stats"),
-    t("paywall.feature_unblur"),
+  const comparisonRows: ComparisonRow[] = [
+    { label: t("paywall.comp_profiles"), free: "1", pro: "5" },
+    { label: t("paywall.comp_scans"), free: t("paywall.comp_once_daily"), pro: t("paywall.comp_hourly") },
+    { label: t("paywall.comp_spy_agent"), free: false, pro: true },
+    { label: t("paywall.comp_unfollow"), free: false, pro: true },
+    { label: t("paywall.comp_gender"), free: false, pro: true },
+    { label: t("paywall.comp_suspicion"), free: false, pro: true },
+    { label: t("paywall.comp_push"), free: false, pro: true },
   ];
 
   const handlePurchase = async () => {
@@ -96,25 +102,66 @@ export function PaywallSheet() {
             </button>
 
             <div className="px-6 pb-8 pt-2">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl gradient-bg mb-3">
-                  <Crown className="h-7 w-7 text-primary-foreground" />
-                </div>
-                <h2 className="text-2xl font-extrabold">{t("paywall.title")} 🔓</h2>
+              {/* Hero: Spy GIF */}
+              <div className="text-center mb-5">
+                <motion.img
+                  src={spyGif}
+                  alt="Spy Agent"
+                  className="h-20 w-20 mx-auto mb-3 drop-shadow-lg"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", damping: 15 }}
+                />
+                <h2 className="text-2xl font-extrabold text-foreground">{t("paywall.title")} 🕵️</h2>
                 <p className="text-sm text-muted-foreground mt-1">{t("paywall.subtitle")}</p>
               </div>
 
-              <div className="space-y-2.5 mb-6">
-                {features.map((f) => (
-                  <div key={f} className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full gradient-bg flex items-center justify-center flex-shrink-0">
-                      <Check className="h-3 w-3 text-primary-foreground" />
+              {/* Comparison Table */}
+              <div className="rounded-2xl border border-border overflow-hidden mb-6">
+                {/* Table Header */}
+                <div className="grid grid-cols-[1fr_60px_60px] items-center px-4 py-3 border-b border-border bg-muted/30">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t("paywall.comp_feature")}</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground text-center uppercase tracking-wider">Free</span>
+                  <span className="text-[11px] font-bold text-center uppercase tracking-wider gradient-text">Pro</span>
+                </div>
+                {/* Rows */}
+                {comparisonRows.map((row, i) => (
+                  <div
+                    key={row.label}
+                    className={`grid grid-cols-[1fr_60px_60px] items-center px-4 py-3 ${
+                      i < comparisonRows.length - 1 ? "border-b border-border/50" : ""
+                    }`}
+                  >
+                    <span className="text-[13px] font-medium text-foreground">{row.label}</span>
+                    <div className="flex justify-center">
+                      {typeof row.free === "boolean" ? (
+                        row.free ? (
+                          <Check className="h-4 w-4 text-muted-foreground/50" />
+                        ) : (
+                          <Minus className="h-4 w-4 text-muted-foreground/40" />
+                        )
+                      ) : (
+                        <span className="text-[12px] text-muted-foreground">{row.free}</span>
+                      )}
                     </div>
-                    <span className="text-[13px] font-medium text-foreground">{f}</span>
+                    <div className="flex justify-center">
+                      {typeof row.pro === "boolean" ? (
+                        row.pro ? (
+                          <div className="h-5 w-5 rounded-full gradient-bg flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        ) : (
+                          <Minus className="h-4 w-4 text-muted-foreground/40" />
+                        )
+                      ) : (
+                        <span className="text-[12px] font-bold text-primary">{row.pro}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
+              {/* Price Cards */}
               <div className="grid grid-cols-3 gap-2 mb-6">
                 {(["weekly", "monthly", "yearly"] as Period[]).map((period) => {
                   const isSelected = selected === period;
@@ -147,7 +194,7 @@ export function PaywallSheet() {
 
               {savingsPercent > 0 && (
                 <p className="text-center text-[12px] text-muted-foreground mb-4">
-                  ≈ €{weeklyEquiv}{t("paywall.per_week")} · {t("paywall.save_percent", { percent: savingsPercent })}
+                  {t("paywall.save_percent", { percent: savingsPercent })}
                 </p>
               )}
 
