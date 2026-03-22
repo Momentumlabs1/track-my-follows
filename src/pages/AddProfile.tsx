@@ -33,6 +33,7 @@ const AddProfile = () => {
 
     // Step 1: Pre-check username via check-username edge function
     setChecking(true);
+    let avatarFromCheck: string | null = null;
     try {
       const { data: checkData, error: checkError } = await supabase.functions.invoke("check-username", {
         body: { username: username.trim().toLowerCase() },
@@ -48,7 +49,7 @@ const AddProfile = () => {
       }
 
       // Save avatar URL for passing to analyzing page
-      const avatarFromCheck = checkData.avatar_url || null;
+      avatarFromCheck = checkData.avatar_url || null;
       if (avatarFromCheck) {
         setCheckedAvatarUrl(avatarFromCheck);
       }
@@ -71,7 +72,7 @@ const AddProfile = () => {
       onSuccess: (data) => {
         haptic.success();
         navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`, {
-          state: { avatarUrl: avatarFromCheck || checkedAvatarUrl },
+          state: { avatarUrl: avatarFromCheck },
         });
       },
       onError: (err) => {
