@@ -374,7 +374,10 @@
     "terms_age_text": "I am at least 16 years old, I accept the",
     "terms_and": "and have read the",
     "terms_privacy": "Privacy Policy",
-    "terms_read": ""
+    "terms_read": "",
+    "login_failed": "Login failed",
+    "redirecting": "Redirecting…",
+    "open_app": "Open App"
   },
   "onboarding": {
     "slide1_title": "Trust is good.",

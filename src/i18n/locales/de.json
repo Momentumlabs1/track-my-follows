@@ -372,7 +372,10 @@
     "terms_age_text": "Ich bin mindestens 16 Jahre alt, akzeptiere die",
     "terms_and": "und habe die",
     "terms_privacy": "Datenschutzerklärung",
-    "terms_read": "gelesen"
+    "terms_read": "gelesen",
+    "login_failed": "Login fehlgeschlagen",
+    "redirecting": "Weiterleitung…",
+    "open_app": "App öffnen"
   },
   "onboarding": {
     "slide1_title": "Vertrauen ist gut.",

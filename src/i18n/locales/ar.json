@@ -372,7 +372,10 @@
     "terms_age_text": "أنا أبلغ 16 سنة على الأقل، أوافق على",
     "terms_and": "وقد قرأت",
     "terms_privacy": "سياسة الخصوصية",
-    "terms_read": ""
+    "terms_read": "",
+    "login_failed": "فشل تسجيل الدخول",
+    "redirecting": "جاري التحويل…",
+    "open_app": "فتح التطبيق"
   },
   "onboarding": {
     "slide1_title": "الثقة جيدة.",
