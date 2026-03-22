@@ -276,7 +276,9 @@
     "impressum": "Impressum",
     "privacy": "Datenschutz",
     "pro_required_push": "Push-Benachrichtigungen erfordern Pro",
-    "disclaimer": "Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt."
+    "disclaimer": "Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt.",
+    "restart_tutorial": "Tutorial neu starten",
+    "tutorial_reset": "Tutorial wird beim nächsten App-Start angezeigt"
   },
   "paywall": {
     "title": "Spy Agent freischalten",

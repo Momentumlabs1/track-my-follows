@@ -276,7 +276,9 @@
     "impressum": "Imprint",
     "privacy": "Privacy Policy",
     "pro_required_push": "Push notifications require Pro",
-    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc."
+    "disclaimer": "Spy-Secret is an independent product and is in no way affiliated with, associated with, or officially endorsed by Instagram or Meta Platforms, Inc.",
+    "restart_tutorial": "Restart tutorial",
+    "tutorial_reset": "Tutorial will show on next app start"
   },
   "paywall": {
     "title": "Unlock Spy Agent",

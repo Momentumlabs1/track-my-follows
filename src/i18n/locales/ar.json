@@ -274,7 +274,9 @@
     "impressum": "البيان القانوني",
     "privacy": "سياسة الخصوصية",
     "pro_required_push": "الإشعارات تتطلب Pro",
-    "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc."
+    "disclaimer": "Spy-Secret منتج مستقل وليس مرتبطاً بأي شكل من الأشكال بـ Instagram أو Meta Platforms, Inc.",
+    "restart_tutorial": "إعادة تشغيل الدليل التعليمي",
+    "tutorial_reset": "سيظهر الدليل التعليمي عند بدء التطبيق التالي"
   },
   "paywall": {
     "title": "فتح عميل التجسس",
