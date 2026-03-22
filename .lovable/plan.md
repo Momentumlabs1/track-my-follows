@@ -1,49 +1,29 @@
 
 
-## Apple Sign-In Fix: "Anmeldung nicht abgeschlossen" auf mehreren Geraeten
+## Profilbild sofort zeigen + flüssigerer Ladebalken
 
-### Ursache
+### Problem
+1. **Avatar erst am Ende sichtbar**: Das Profilbild wird erst nach Abschluss des Scans aus der DB geladen. Dabei hat `check-username` (das VOR der Scan-Seite läuft) bereits die `avatar_url` zurückgegeben.
+2. **Fortschrittsbalken unlogisch**: Springt von 30% direkt auf 85% — der Scan dauert 5-15 Sekunden, aber der Balken steht die ganze Zeit still bei 30%.
 
-Der neue Apple JS SDK Flow (`AppleID.auth.signIn()` mit `usePopup: true`) schlaegt fehl, weil:
+### Lösung
 
-1. **In der Despia-App (WebView)**: Apple's Popup-Flow funktioniert nicht zuverlaessig in WebViews. Das Apple-SDK oeffnet ein Popup-Fenster, das im WebView-Kontext blockiert oder fehlerhaft ablaeuft.
-2. **Redirect-URI Mismatch**: `window.location.origin` ist in der Preview/Despia ein anderer Origin als `https://track-my-follows.lovable.app`, aber nur diese Domain ist bei Apple registriert.
-3. **Domain-Verifizierung**: Apple verlangt, dass die Domain, von der das JS SDK aufgerufen wird, im Apple Developer Portal unter der Service-ID verifiziert ist.
+**1. Avatar sofort zeigen**
 
-### Loesung: Hybrid-Strategie
+In `AddProfile.tsx`: Die `avatar_url` aus der `check-username`-Response an die Analyzing-Seite weitergeben (via Route-State oder URL-Param).
 
-**Native App (Despia)**: Apple bekommt denselben Flow wie Google -- ueber `auth-start` Edge Function + `oauth://` Deeplink. Das funktioniert zuverlaessig (Supabase.co bleibt sichtbar, aber Login funktioniert).
+In `AnalyzingProfile.tsx`: Den übergebenen Avatar sofort als `avatarUrl` setzen, statt auf den Scan zu warten.
 
-**Web Browser**: Apple JS SDK Popup-Flow bleibt erhalten, aber mit **hardcoded** redirectURI auf `https://track-my-follows.lovable.app/auth/callback` (nicht `window.location.origin`).
+**2. Simulierter Fortschritt während des Scans**
 
-### Aenderungen
+Statt bei 30% stehen zu bleiben, einen `setInterval` starten der den Balken langsam von 30% auf ~80% hochzählt (z.B. +1% alle 300ms, verlangsamt sich gegen Ende). Wenn der Scan fertig ist, springt er auf 85% → 100%.
 
-**`src/pages/Login.tsx`** (~25 Zeilen):
-- `handleAppleLogin` pruefen: Wenn `isNativeApp()` → alten OAuth-Flow nutzen (wie `handleGoogleLogin` fuer native)
-- Wenn NICHT native → Apple JS SDK Popup-Flow behalten, aber redirectURI hardcoden
-- Error-Handling fuer beide Pfade
+So sieht der User durchgehend Bewegung statt eines eingefrorenen Balkens.
 
-```text
-handleAppleLogin:
-  if (isNativeApp()):
-    → supabase.functions.invoke("auth-start", { provider: "apple", deeplink_scheme })
-    → despia("oauth://...")
-    → ASWebAuthenticationSession oeffnet sich
-    → NativeCallback → Deeplink → AuthCallback → Dashboard
-  else:
-    → AppleID.auth.init({ redirectURI: "https://track-my-follows.lovable.app/auth/callback" })
-    → AppleID.auth.signIn() popup
-    → signInWithIdToken()
-    → Dashboard
-```
+### Änderungen
 
-### Ergebnis
-
-| Kontext | Vorher | Nachher |
-|---------|--------|---------|
-| Native App | Apple JS SDK popup → Fehler | auth-start OAuth → funktioniert |
-| Web Browser | window.location.origin → Fehler auf Preview | Hardcoded live-URL → funktioniert |
-
-### Spaeter (Schritt 2 - Custom Domain)
-Sobald eine Supabase Custom Auth Domain eingerichtet ist, verschwindet auch "supabase.co" aus dem nativen OAuth-Dialog. Das ist ein separater Schritt.
+| Datei | Was |
+|-------|-----|
+| `src/pages/AddProfile.tsx` | `avatar_url` aus check-username Response speichern, via `navigate` state an Analyzing-Seite übergeben |
+| `src/pages/AnalyzingProfile.tsx` | Avatar aus `location.state` sofort setzen; Intervall-basierter Fortschritt 30→80% während Scan läuft |
 
