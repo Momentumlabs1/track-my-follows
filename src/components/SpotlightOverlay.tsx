@@ -93,11 +93,16 @@ export function SpotlightOverlay({
   const tooltipWidth = Math.min(300, window.innerWidth - 48);
   const elementCenterX = rect.left + rect.width / 2;
   const idealLeft = elementCenterX - tooltipWidth / 2;
-  const tooltipLeft = Math.max(24, Math.min(idealLeft, window.innerWidth - tooltipWidth - 24));
-  const tooltipTop =
+  const edgePadding = 24;
+  const tooltipLeft = Math.max(edgePadding, Math.min(idealLeft, window.innerWidth - tooltipWidth - edgePadding));
+  const idealTop =
     position === "bottom"
       ? rect.bottom + 16
       : rect.top - tooltipHeight - 16;
+  const tooltipTop = Math.max(
+    edgePadding,
+    Math.min(idealTop, window.innerHeight - tooltipHeight - edgePadding),
+  );
 
   return (
     <AnimatePresence>
