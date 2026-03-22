@@ -427,18 +427,11 @@ async function performSpyScan(
     console.log(`[SPY-SCAN] ${username}: back to public!`);
   }
 
-  // ── DELTA-GATE: compute max allowed new events based on actual count changes ──
-  const lastFollowingCount = profile.last_following_count as number | null;
-  const lastFollowerCount = profile.last_follower_count as number | null;
-  
-  const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
-    ? Math.max(actualFollowingCount - lastFollowingCount, 0)
-    : 200; // first scan: allow all from page 1
-  const maxNewFollowers = lastFollowerCount !== null && lastFollowerCount !== undefined
-    ? Math.max(actualFollowerCount - lastFollowerCount, 0)
-    : 200; // first scan: allow all from page 1
+  // ── Fixed max: trust DB diff, not count delta ──
+  const maxNewFollows = 200;
+  const maxNewFollowers = 200;
 
-  console.log(`[DELTA-GATE] ${username}: following ${lastFollowingCount}→${actualFollowingCount} (max ${maxNewFollows}), followers ${lastFollowerCount}→${actualFollowerCount} (max ${maxNewFollowers})`);
+  console.log(`[SPY-SCAN] ${username}: following=${actualFollowingCount}, followers=${actualFollowerCount}, maxNew=200`);
 
   // ── CALL 1: Following page 1 ──
   await sleep(500);
