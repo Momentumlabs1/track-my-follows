@@ -12,6 +12,7 @@ const AddProfile = () => {
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [checkedAvatarUrl, setCheckedAvatarUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const addProfile = useAddTrackedProfile();
   const { data: profiles = [] } = useTrackedProfiles();
@@ -46,6 +47,11 @@ const AddProfile = () => {
         return;
       }
 
+      // Save avatar URL for passing to analyzing page
+      if (checkData.avatar_url) {
+        setCheckedAvatarUrl(checkData.avatar_url);
+      }
+
       if (checkData.is_private) {
         haptic.error();
         setError(t("errors.profile_private"));
@@ -63,7 +69,9 @@ const AddProfile = () => {
     addProfile.mutate(username, {
       onSuccess: (data) => {
         haptic.success();
-        navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`);
+        navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`, {
+          state: { avatarUrl: checkedAvatarUrl },
+        });
       },
       onError: (err) => {
         haptic.error();
