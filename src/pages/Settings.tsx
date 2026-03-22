@@ -255,6 +255,21 @@ const Settings = () => {
               </p>
             </div>
 
+            {/* Tutorial Restart */}
+            <button
+              onClick={() => {
+                if (user) {
+                  localStorage.removeItem(`tutorial_shown_${user.id}`);
+                  haptic.success();
+                  toast.success(t('settings.tutorial_reset'));
+                }
+              }}
+              className="w-full ios-card flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span className="text-[13px] font-semibold">{t('settings.restart_tutorial')}</span>
+            </button>
+
             {/* Logout */}
             <button
               onClick={handleLogout}

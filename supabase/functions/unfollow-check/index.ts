@@ -79,7 +79,7 @@ async function fetchAllFollowings(userId: string, hikerApiKey: string): Promise<
   const MAX_PAGES = 60;
 
   while (page < MAX_PAGES) {
-    let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${userId}`;
+    let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
