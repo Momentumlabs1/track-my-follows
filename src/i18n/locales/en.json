@@ -314,7 +314,13 @@
     "trackMore": "Track more profiles with Pro",
     "unlock_spy_agent": "🔒 Unlock Spy Agent",
     "unlock_spy": "Unlock Spy",
-    "subscription_disclosure": "The subscription renews automatically unless cancelled at least 24 hours before the end of the current period. You can manage your subscription in the App Store settings."
+    "subscription_disclosure": "The subscription renews automatically unless cancelled at least 24 hours before the end of the current period. You can manage your subscription in the App Store settings.",
+    "success_title": "Welcome to Pro! 🎉",
+    "success_subtitle": "Your spy is now ready for action",
+    "success_spy_unlocked": "Spy Agent unlocked",
+    "success_hourly_scans": "Hourly scans activated",
+    "success_all_analytics": "All analytics available",
+    "success_cta": "Let's go!"
   },
   "auth": {
     "sign_in_apple": "Sign in with Apple",

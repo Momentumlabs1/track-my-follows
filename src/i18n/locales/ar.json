@@ -312,7 +312,13 @@
     "trackMore": "تتبع حسابات أكثر مع Pro",
     "unlock_spy_agent": "🔒 فتح عميل التجسس",
     "unlock_spy": "فتح الجاسوس",
-    "subscription_disclosure": "يتم تجديد الاشتراك تلقائياً ما لم يتم إلغاؤه قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك إدارة اشتراكك من إعدادات App Store."
+    "subscription_disclosure": "يتم تجديد الاشتراك تلقائياً ما لم يتم إلغاؤه قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك إدارة اشتراكك من إعدادات App Store.",
+    "success_title": "مرحباً في Pro! 🎉",
+    "success_subtitle": "جاسوسك جاهز للعمل الآن",
+    "success_spy_unlocked": "عميل التجسس مُفعّل",
+    "success_hourly_scans": "فحص كل ساعة مُفعّل",
+    "success_all_analytics": "جميع التحليلات متاحة",
+    "success_cta": "هيا بنا!"
   },
   "auth": {
     "sign_in_apple": "تسجيل الدخول بـ Apple",
