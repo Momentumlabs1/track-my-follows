@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,17 +22,40 @@ const AnalyzingProfile = () => {
   const { t } = useTranslation();
   const { profileId, username } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    (location.state as any)?.avatarUrl || null
+  );
   const scanStarted = useRef(false);
+  const scanDone = useRef(false);
 
+  // Smooth progress simulation: 0→15→30 via steps, then 30→80 via interval
   useEffect(() => {
     const t1 = setTimeout(() => { setCurrentStep(1); setProgress(15); }, 1200);
     const t2 = setTimeout(() => { setCurrentStep(2); setProgress(30); }, 2500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  // Simulated progress from 30% to 80% while scan is running
+  useEffect(() => {
+    if (currentStep < 2 || scanDone.current) return;
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (scanDone.current || prev >= 78) {
+          clearInterval(interval);
+          return prev;
+        }
+        // Slow down as we approach 80%
+        const remaining = 78 - prev;
+        const increment = Math.max(0.3, remaining * 0.04);
+        return Math.min(78, prev + increment);
+      });
+    }, 300);
+    return () => clearInterval(interval);
+  }, [currentStep]);
 
   useEffect(() => {
     if (currentStep < 2 || scanStarted.current) return;
