@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { NATIVE_DEEPLINK_SCHEME } from "@/lib/native";
 
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
