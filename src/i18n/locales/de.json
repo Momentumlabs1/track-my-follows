@@ -312,7 +312,13 @@
     "per_year": "/Jahr",
     "scanLocked": "Upgrade auf Pro für stündliche Updates",
     "trackMore": "Tracke mehr Profile mit Pro",
-    "subscription_disclosure": "Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen."
+    "subscription_disclosure": "Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt wird. Die Kündigung erfolgt über die Abo-Verwaltung in den App Store Einstellungen.",
+    "success_title": "Willkommen im Pro! 🎉",
+    "success_subtitle": "Dein Spion ist ab sofort einsatzbereit",
+    "success_spy_unlocked": "Spy Agent freigeschaltet",
+    "success_hourly_scans": "Stündliche Scans aktiviert",
+    "success_all_analytics": "Alle Analysen verfügbar",
+    "success_cta": "Los geht's!"
   },
   "auth": {
     "sign_in_apple": "Mit Apple anmelden",
