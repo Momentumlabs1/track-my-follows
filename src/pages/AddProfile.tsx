@@ -48,8 +48,9 @@ const AddProfile = () => {
       }
 
       // Save avatar URL for passing to analyzing page
-      if (checkData.avatar_url) {
-        setCheckedAvatarUrl(checkData.avatar_url);
+      const avatarFromCheck = checkData.avatar_url || null;
+      if (avatarFromCheck) {
+        setCheckedAvatarUrl(avatarFromCheck);
       }
 
       if (checkData.is_private) {
