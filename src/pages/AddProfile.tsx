@@ -71,7 +71,7 @@ const AddProfile = () => {
       onSuccess: (data) => {
         haptic.success();
         navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`, {
-          state: { avatarUrl: checkedAvatarUrl },
+          state: { avatarUrl: avatarFromCheck || checkedAvatarUrl },
         });
       },
       onError: (err) => {
