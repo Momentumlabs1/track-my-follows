@@ -12,6 +12,7 @@ const AddProfile = () => {
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [checkedAvatarUrl, setCheckedAvatarUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const addProfile = useAddTrackedProfile();
   const { data: profiles = [] } = useTrackedProfiles();
