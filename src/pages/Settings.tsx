@@ -176,8 +176,8 @@ const Settings = () => {
 
             {/* Subscription */}
             <div className="ios-card relative overflow-hidden">
-              <div className="absolute inset-0 aurora-bg opacity-10" />
-              <div className="relative">
+              <div className="absolute inset-0 aurora-bg opacity-10 pointer-events-none" />
+              <div className="relative z-10">
                 <div className="flex items-center gap-2.5 mb-4">
                   <Crown className="h-4 w-4 text-primary" />
                   <h2 className="font-bold text-sm">{t("settings.subscription")}</h2>
@@ -217,9 +217,9 @@ const Settings = () => {
                 <button
                   onClick={handleRestore}
                   disabled={restoring}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-secondary text-secondary-foreground text-[12px] font-semibold min-h-[44px] disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-secondary text-secondary-foreground text-[13px] font-semibold min-h-[48px] active:scale-[0.97] transition-transform disabled:opacity-50"
                 >
-                  {restoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                  {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                   {t("settings.restore_purchases")}
                 </button>
               </div>
