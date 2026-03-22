@@ -1,29 +1,29 @@
 
 
-## Profilbild sofort zeigen + flüssigerer Ladebalken
+## Pro-Upgrade Erfolgs-Animation
 
-### Problem
-1. **Avatar erst am Ende sichtbar**: Das Profilbild wird erst nach Abschluss des Scans aus der DB geladen. Dabei hat `check-username` (das VOR der Scan-Seite läuft) bereits die `avatar_url` zurückgegeben.
-2. **Fortschrittsbalken unlogisch**: Springt von 30% direkt auf 85% — der Scan dauert 5-15 Sekunden, aber der Balken steht die ganze Zeit still bei 30%.
+Nach erfolgreichem Kauf wird statt dem sofortigen Schließen der Paywall eine fullscreen Celebration-Animation gezeigt.
 
-### Lösung
+### Was passiert
 
-**1. Avatar sofort zeigen**
+1. Nach `purchase()` Success → statt `closePaywall()` wird ein `showSuccess`-State aktiviert
+2. Die Paywall-Inhalte faden aus, eine Celebration-Sequenz startet:
+   - **Dunkler Fullscreen-Overlay** mit radialem Pink-Glow-Pulse
+   - **Spy-GIF** springt groß rein (scale 0→1.2→1) mit Glow-Effekt
+   - **Konfetti-Partikel** (kleine pinke/weiße Punkte animiert)
+   - **"Willkommen im Pro!" Headline** mit Fade-in
+   - **3 kurze Bullet-Points** (Spy Agent freigeschaltet, Stündliche Scans, Alle Analysen) faden nacheinander ein
+   - **"Los geht's" Button** nach ~2s → schließt alles und navigiert zum Dashboard
 
-In `AddProfile.tsx`: Die `avatar_url` aus der `check-username`-Response an die Analyzing-Seite weitergeben (via Route-State oder URL-Param).
+### Dateien
 
-In `AnalyzingProfile.tsx`: Den übergebenen Avatar sofort als `avatarUrl` setzen, statt auf den Scan zu warten.
+- **`src/components/PaywallSheet.tsx`**: `showSuccess` State hinzufügen, nach Purchase statt `closePaywall()` die Success-View zeigen. Celebration-UI inline als conditional render im gleichen Sheet-Container.
+- **`src/i18n/locales/de.json`**, **`en.json`**, **`ar.json`**: Neue Keys: `paywall.success_title`, `paywall.success_subtitle`, `paywall.success_spy_unlocked`, `paywall.success_hourly_scans`, `paywall.success_all_analytics`, `paywall.success_cta`
 
-**2. Simulierter Fortschritt während des Scans**
+### Technische Details
 
-Statt bei 30% stehen zu bleiben, einen `setInterval` starten der den Balken langsam von 30% auf ~80% hochzählt (z.B. +1% alle 300ms, verlangsamt sich gegen Ende). Wenn der Scan fertig ist, springt er auf 85% → 100%.
-
-So sieht der User durchgehend Bewegung statt eines eingefrorenen Balkens.
-
-### Änderungen
-
-| Datei | Was |
-|-------|-----|
-| `src/pages/AddProfile.tsx` | `avatar_url` aus check-username Response speichern, via `navigate` state an Analyzing-Seite übergeben |
-| `src/pages/AnalyzingProfile.tsx` | Avatar aus `location.state` sofort setzen; Intervall-basierter Fortschritt 30→80% während Scan läuft |
+- Konfetti: 20-30 `motion.div` Kreise mit randomisierten Positionen, Delays und Rotationen (rein CSS/framer-motion, keine externe Library)
+- Timing: Spy-Icon bei 0s, Titel bei 0.4s, Bullets bei 0.7/0.9/1.1s, Button bei 1.8s
+- Der gleiche `motion.div` Container bleibt offen (kein re-mount), nur der Inhalt wechselt via AnimatePresence
+- Haptic: `haptic.success()` beim Übergang + nochmal beim Button-Tap
 
