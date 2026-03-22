@@ -102,23 +102,25 @@ const NativeCallback = () => {
     run();
   }, [searchParams]);
 
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-4">
       {error ? (
         <div className="text-center space-y-2">
-          <p className="text-destructive font-medium">Login fehlgeschlagen</p>
+          <p className="text-destructive font-medium">{t('auth.login_failed')}</p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       ) : (
         <>
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Weiterleitung zu SpySecret…</p>
+          <p className="text-sm text-muted-foreground">{t('auth.redirecting')}</p>
           {showFallback && deeplinkUrl && (
             <a
               href={deeplinkUrl}
               className="mt-4 px-6 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-medium"
             >
-              App öffnen
+              {t('auth.open_app')}
             </a>
           )}
         </>

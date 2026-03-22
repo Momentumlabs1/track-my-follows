@@ -192,8 +192,8 @@ Deno.serve(async (req) => {
       }
       isFullBaseline = false;
     } else {
-      // Up to 10K: paginate ALL pages using v1 endpoint
-      console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings via v1...`);
+      // Up to 10K: paginate ALL pages using gql endpoint
+      console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings via gql...`);
       let nextMaxId: string | null = null;
       let prevMaxId: string | null = null;
       let page = 0;
@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
 
       let apiLimitHit = false;
       do {
-        let url = `https://api.hikerapi.com/v1/user/following/chunk?user_id=${igUserId}`;
+        let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}`;
         if (nextMaxId) url += `&max_id=${nextMaxId}`;
 
         const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });

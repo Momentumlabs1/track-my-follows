@@ -115,17 +115,19 @@ const AuthCallback = () => {
     }
   }, [user, loading, error, navigate]);
 
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-4">
       {error ? (
         <div className="text-center space-y-2">
-          <p className="text-destructive font-medium">Login fehlgeschlagen</p>
+          <p className="text-destructive font-medium">{t('auth.login_failed')}</p>
           <p className="text-sm text-muted-foreground">{error}</p>
           <button
             onClick={() => navigate("/login", { replace: true })}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
           >
-            Zurück zum Login
+            {t('auth.back_to_login')}
           </button>
         </div>
       ) : (

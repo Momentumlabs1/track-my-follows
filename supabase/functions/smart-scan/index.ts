@@ -556,11 +556,8 @@ async function performBasicScan(
     console.log(`[BASIC-SCAN] ${username}: back to public!`);
   }
 
-  // ── DELTA-GATE for basic scan ──
-  const lastFollowingCount = profile.last_following_count as number | null;
-  const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
-    ? Math.max(actualFollowingCount - lastFollowingCount, 0)
-    : 200;
+  // ── Fixed max: trust DB diff, not count delta ──
+  const maxNewFollows = 200;
 
   await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
