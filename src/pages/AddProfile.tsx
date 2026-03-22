@@ -47,6 +47,11 @@ const AddProfile = () => {
         return;
       }
 
+      // Save avatar URL for passing to analyzing page
+      if (checkData.avatar_url) {
+        setCheckedAvatarUrl(checkData.avatar_url);
+      }
+
       if (checkData.is_private) {
         haptic.error();
         setError(t("errors.profile_private"));
