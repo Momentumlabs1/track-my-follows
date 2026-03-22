@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -49,6 +49,37 @@ const STEPS: StepDef[] = [
 // Count visual steps (exclude action steps and completion)
 const VISUAL_STEPS = STEPS.filter(s => s.type !== "action" && s.type !== "completion").length;
 
+const TUTORIAL_SIDE_PADDING = 24;
+const TUTORIAL_BOTTOM_OFFSET = "max(120px, calc(env(safe-area-inset-bottom) + 88px))";
+
+const centeredBottomBubbleStyle = (maxWidth: number): CSSProperties => ({
+  position: "fixed",
+  bottom: TUTORIAL_BOTTOM_OFFSET,
+  left: TUTORIAL_SIDE_PADDING,
+  right: TUTORIAL_SIDE_PADDING,
+  marginLeft: "auto",
+  marginRight: "auto",
+  zIndex: 9999,
+  pointerEvents: "auto",
+  width: `min(${maxWidth}px, calc(100vw - ${TUTORIAL_SIDE_PADDING * 2}px))`,
+});
+
+const centeredModalContainerStyle: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 9999,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: `${TUTORIAL_SIDE_PADDING}px`,
+  pointerEvents: "none",
+};
+
+const centeredModalCardStyle = (maxWidth: number): CSSProperties => ({
+  width: `min(${maxWidth}px, calc(100vw - ${TUTORIAL_SIDE_PADDING * 2}px))`,
+  pointerEvents: "auto",
+});
+
 function getVisualIndex(stepIndex: number): number {
   let visual = 0;
   for (let i = 0; i < stepIndex; i++) {
@@ -83,16 +114,7 @@ function WaitingBubble({ text, stepIndex }: { text: string; stepIndex: number })
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.4 }}
-      style={{
-        position: "fixed",
-        bottom: 120,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 9999,
-        pointerEvents: "none",
-        width: "calc(100% - 48px)",
-        maxWidth: 320,
-      }}
+      style={centeredBottomBubbleStyle(320)}
     >
       <div
         style={{
@@ -123,18 +145,11 @@ function InfoBubble({ title, text, onNext, stepIndex }: { title: string; text: s
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        zIndex: 9999,
-        maxWidth: 340,
-        width: "calc(100% - 48px)",
-      }}
+      style={centeredModalContainerStyle}
     >
       <div
         style={{
+          ...centeredModalCardStyle(340),
           background: "#1C1C1E",
           borderRadius: 24,
           padding: 24,
@@ -217,18 +232,11 @@ function ProUpsellBubble({ onUnlock, onLater, stepIndex }: { onUnlock: () => voi
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 9999,
-          maxWidth: 360,
-          width: "calc(100% - 32px)",
-        }}
+        style={centeredModalContainerStyle}
       >
         <div
           style={{
+            ...centeredModalCardStyle(360),
             background: "#1C1C1E",
             borderRadius: 24,
             padding: 24,
@@ -309,15 +317,7 @@ function CompletionBubble({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{
-        position: "fixed",
-        bottom: 120,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 9999,
-        maxWidth: 320,
-        width: "calc(100% - 48px)",
-      }}
+      style={centeredBottomBubbleStyle(320)}
     >
       <div
         style={{
@@ -601,15 +601,7 @@ export function AppTutorial() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          style={{
-            position: "fixed",
-            bottom: 120,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 9999,
-            maxWidth: 360,
-            width: "calc(100% - 48px)",
-          }}
+          style={centeredBottomBubbleStyle(360)}
         >
           <div
             style={{
