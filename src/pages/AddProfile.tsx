@@ -69,7 +69,9 @@ const AddProfile = () => {
     addProfile.mutate(username, {
       onSuccess: (data) => {
         haptic.success();
-        navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`);
+        navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`, {
+          state: { avatarUrl: checkedAvatarUrl },
+        });
       },
       onError: (err) => {
         haptic.error();
