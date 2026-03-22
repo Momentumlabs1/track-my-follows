@@ -395,8 +395,7 @@ export function AppTutorial() {
   useEffect(() => {
     if (!shouldStartTutorial) return;
     if (phase !== "idle") return;
-    const timer = setTimeout(() => setPhase("intro"), 2000);
-    return () => clearTimeout(timer);
+    setPhase("intro");
   }, [shouldStartTutorial, phase]);
 
   // Track latest profile ID from URL for navigation after scan
