@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib/native";
+import { supabase } from "@/integrations/supabase/client";
 import spyGif from "@/assets/spy-logo-animated.gif";
 
 type Period = "weekly" | "monthly" | "yearly";
@@ -182,6 +183,20 @@ export function PaywallSheet() {
       if (isNativeApp()) {
         await purchase(user.id, PRODUCTS[selected]);
         haptic.success();
+        
+        // Poll until webhook updates DB to pro (max 15s)
+        for (let i = 0; i < 10; i++) {
+          const { data } = await supabase
+            .from("subscriptions")
+            .select("plan_type, status")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          
+          if (data?.plan_type === "pro" && ["active", "in_trial"].includes(data.status)) {
+            break;
+          }
+          await new Promise(r => setTimeout(r, 1500));
+        }
         await refetch();
         setShowSuccess(true);
       } else {
