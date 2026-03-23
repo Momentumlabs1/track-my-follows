@@ -8,7 +8,7 @@ export default function Datenschutz() {
       <h2>1. Verantwortlicher</h2>
       <p>Smart Trading AI GmbH, Franzosenhausweg 41, 4030 Linz, Österreich</p>
       <p>Geschäftsführer: Saifuldeen Alnaseri</p>
-      <p>E-Mail: kontakt@smarttradingai.com</p>
+      <p>E-Mail: info@spy-secret.com</p>
       <p>Telefon: +43 676 4512064</p>
       <p>Firmenbuchnummer: FN 650520 y</p>
       <p>Firmenbuchgericht: Landesgericht Linz</p>
