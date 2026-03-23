@@ -356,8 +356,10 @@ Deno.serve(async (req) => {
     // ══════════════════════════════════════════
 
     // Always mark baseline_complete = true (even partial) to prevent infinite recovery loops
+    // Also store instagram_user_id so subsequent scans skip the user-info call
     await supabase.from("tracked_profiles").update({
       baseline_complete: true,
+      instagram_user_id: igUserId,
       last_following_count: followingCount,
       last_follower_count: userInfo.follower_count || 0,
       gender_female_count: dbFemale,

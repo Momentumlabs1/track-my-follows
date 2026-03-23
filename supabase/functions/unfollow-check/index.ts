@@ -373,8 +373,7 @@ Deno.serve(async (req) => {
     // Update counters
     await supabase.from("tracked_profiles").update({
       pending_unfollow_hint: 0,
-      last_following_count: userInfo.following_count ?? allFollowings.length,
-      last_follower_count: userInfo.follower_count ?? 0,
+      last_following_count: allFollowings.length,
       total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowsFound,
       total_unfollows_detected: (profile.total_unfollows_detected ?? 0) + unfollowsFound,
       total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
