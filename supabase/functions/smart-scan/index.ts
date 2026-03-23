@@ -69,9 +69,9 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Fetch page 1 only ──
+// ── Fetch page 1 only (count=200 explicit) ──
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}`;
+  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
   const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
