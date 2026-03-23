@@ -1,54 +1,63 @@
 
 
-## Problem
+# Fix: Baseline Recovery Loop drosseln + saif_nassiri fixen
 
-Race condition: After `purchase()` resolves, `refetch()` runs immediately but the RevenueCat webhook hasn't updated the `subscriptions` table yet. So the app reads stale "free" data.
+## Ist-Zustand (Problem)
 
-**Flow:**
-```text
-purchase() resolves → refetch() → DB still "free" → success animation shows → account stays free
-                                    ↑ webhook hasn't arrived yet
+1. **`smart-scan` Zeile 672-692**: Jede Stunde wird für jedes Profil mit `baseline_complete = false` ein `create-baseline` als fire-and-forget abgefeuert — ohne Cooldown, ohne await.
+2. **saif_nassiri Spy-Profil** (`64c4865c...`): Hat `baseline_complete = false` + `has_spy = true`. Jede ungerade Stunde (Spy = stündlich) werden die normalen 2-3 Scan-Calls PLUS ~6-7 Baseline-Calls abgefeuert = ~46 Calls/Stunde statt 2-3.
+3. Das `create-baseline` setzt `baseline_complete` nur auf `true` wenn `isFullBaseline = true`. Falls die API mal einen 402/429 zurückgibt, bleibt es `false` und der Loop geht ewig weiter.
+
+## Sofort-Fix: DB Update
+
+SQL im Supabase Editor ausführen:
+```sql
+UPDATE tracked_profiles 
+SET baseline_complete = true 
+WHERE id = '64c4865c-3806-43a7-93a1-224ef23b8e09';
 ```
+(Spalte heißt `username`, nicht `instagram_username`)
 
-The realtime listener should eventually catch the DB change, but by then the user may have already closed the paywall.
+## Code-Fix: Recovery-Loop drosseln
 
-## Fix
+**Datei: `supabase/functions/smart-scan/index.ts`** (Zeile 672-692)
 
-**File: `src/components/PaywallSheet.tsx`** — Replace the single `refetch()` with a polling retry that waits for the subscription to actually update to "pro":
+Änderungen:
+1. **Cooldown**: Nur 1x pro 24h pro Profil triggern (prüfe `updated_at` oder neues Feld `last_baseline_attempt`)
+2. **Await statt fire-and-forget**: Auf die Antwort warten, damit keine parallelen Runs entstehen
+3. **Partial-Baseline akzeptieren**: Wenn `create-baseline` mit `isFullBaseline = false` endet (wegen 402/429), trotzdem `baseline_complete = true` setzen — die Daten reichen für den Scan-Betrieb
 
+Konkreter Code-Ansatz:
 ```typescript
-// After purchase succeeds:
-haptic.success();
-
-// Poll up to 10 times (every 1.5s = max 15s) until subscription updates
-let retries = 0;
-const pollSubscription = async () => {
-  while (retries < 10) {
-    await refetch();
-    // Check if plan is now pro (need to read from context or re-query)
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("plan_type, status")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    
-    if (data?.plan_type === "pro" && ["active", "in_trial"].includes(data.status)) {
-      break;
+// Baseline Recovery — max 1x pro 24h
+if (profile.initial_scan_done === true && profile.baseline_complete === false && !profile.is_private) {
+  const lastAttempt = profile.updated_at ? new Date(profile.updated_at).getTime() : 0;
+  const hoursSinceUpdate = (Date.now() - lastAttempt) / (1000 * 60 * 60);
+  
+  if (hoursSinceUpdate >= 24) {
+    console.log(`[BASELINE-RECOVERY] ${profile.username}: triggering (last attempt ${hoursSinceUpdate.toFixed(1)}h ago)`);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/create-baseline`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ profileId: profile.id }),
+      });
+      // ... log result
+    } catch (err) {
+      console.error(`[BASELINE-RECOVERY] ${profile.username}: error:`, err);
     }
-    retries++;
-    await new Promise(r => setTimeout(r, 1500));
   }
-  await refetch(); // Final refetch to update context
-};
-
-await pollSubscription();
-setShowSuccess(true);
+}
 ```
 
-This ensures the success animation only shows once the DB is actually updated, and the context has the correct "pro" state.
+Zusätzlich in **`create-baseline/index.ts`**: `baseline_complete` immer auf `true` setzen (auch bei partial), da ein partieller Baseline besser ist als ein endloser Recovery-Loop.
 
-**Additional safeguard:** The realtime listener in `SubscriptionContext.tsx` is already set up, so even if polling somehow misses it, the realtime event will trigger `fetchSubscription()` eventually.
+## Dateien
 
-### Files to edit
-1. **`src/components/PaywallSheet.tsx`** — Add polling logic in `handlePurchase` after `purchase()` succeeds
+1. **DB**: `UPDATE tracked_profiles SET baseline_complete = true WHERE id = '64c4865c-3806-43a7-93a1-224ef23b8e09'`
+2. **`supabase/functions/smart-scan/index.ts`** — Recovery-Loop mit 24h-Cooldown + await
+3. **`supabase/functions/create-baseline/index.ts`** — `baseline_complete` immer auf `true` setzen (Zeile 359)
 
