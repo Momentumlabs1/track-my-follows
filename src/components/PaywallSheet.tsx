@@ -15,9 +15,9 @@ const PURCHASE_POLL_INTERVAL_MS = 1500;
 const PURCHASE_POLL_ATTEMPTS = 20;
 
 const PRICES: Record<Period, { price: string; unit: string; trial: boolean }> = {
-  weekly: { price: "4,95", unit: "per_week", trial: false },
-  monthly: { price: "14,95", unit: "per_month", trial: true },
-  yearly: { price: "99,95", unit: "per_year", trial: true },
+  weekly: { price: "4,99", unit: "per_week", trial: false },
+  monthly: { price: "14,99", unit: "per_month", trial: true },
+  yearly: { price: "99,99", unit: "per_year", trial: true },
 };
 
 interface ComparisonRow {

@@ -21,9 +21,9 @@ export default function AGB() {
           <tr><th>Zeitraum</th><th>Preis</th></tr>
         </thead>
         <tbody>
-          <tr><td>Wöchentlich</td><td>€ 4,95 pro Woche</td></tr>
-          <tr><td>Monatlich</td><td>€ 14,95 pro Monat</td></tr>
-          <tr><td>Jährlich</td><td>€ 99,95 pro Jahr</td></tr>
+          <tr><td>Wöchentlich</td><td>€ 4,99 pro Woche</td></tr>
+          <tr><td>Monatlich</td><td>€ 14,99 pro Monat</td></tr>
+          <tr><td>Jährlich</td><td>€ 99,99 pro Jahr</td></tr>
         </tbody>
       </table>
       <p>Alle Preise sind Endpreise inklusive der gesetzlichen Mehrwertsteuer. Die Zahlung erfolgt über den Apple App Store oder Google Play Store als In-App-Kauf. Die Abonnements verlängern sich automatisch um den jeweiligen Zeitraum, sofern sie nicht mindestens 24 Stunden vor Ablauf der aktuellen Laufzeit gekündigt werden. Die Kündigung erfolgt ausschließlich über die Abonnementverwaltung des jeweiligen App Stores (Apple: Einstellungen &gt; Apple-ID &gt; Abonnements; Google: Play Store &gt; Abonnements).</p>
