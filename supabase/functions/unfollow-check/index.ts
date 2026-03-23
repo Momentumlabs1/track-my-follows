@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
     const allFollowings = await fetchAllFollowings(igUserId, hikerApiKey);
     
     // ── Partial fetch guard ──
-    const expectedCount = userInfo.following_count ?? 0;
+    const expectedCount = profile.following_count ?? 0;
     if (expectedCount > 0 && allFollowings.length < expectedCount * 0.7) {
       console.error(`[unfollow-check] PARTIAL_FETCH: got ${allFollowings.length} but expected ~${expectedCount}`);
       // Refund the budget
