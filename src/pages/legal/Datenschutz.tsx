@@ -65,7 +65,7 @@ export default function Datenschutz() {
       <p>Sie haben zudem das Recht, eine Beschwerde bei der zuständigen Aufsichtsbehörde einzureichen: Österreichische Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, dsb@dsb.gv.at, <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at</a></p>
 
       <h2>7. Rechte betroffener Instagram-Nutzer</h2>
-      <p>Auch Personen, deren öffentliche Instagram-Profile durch unsere Nutzer überwacht werden, haben Rechte gemäß DSGVO. Wenn Sie feststellen, dass Ihr Instagram-Profil über Spy-Secret getrackt wird, können Sie uns unter kontakt@smarttradingai.com kontaktieren und die Löschung aller zu Ihrem Profil gespeicherten Daten verlangen. Wir werden diesem Antrag innerhalb von 30 Tagen nachkommen.</p>
+      <p>Auch Personen, deren öffentliche Instagram-Profile durch unsere Nutzer überwacht werden, haben Rechte gemäß DSGVO. Wenn Sie feststellen, dass Ihr Instagram-Profil über Spy-Secret getrackt wird, können Sie uns unter info@spy-secret.com kontaktieren und die Löschung aller zu Ihrem Profil gespeicherten Daten verlangen. Wir werden diesem Antrag innerhalb von 30 Tagen nachkommen.</p>
       <p>Alternativ können Sie Ihr Instagram-Profil auf „privat" stellen – die Überwachung wird dann automatisch eingestellt.</p>
 
       <h2>8. Cookies und lokale Speicherung</h2>

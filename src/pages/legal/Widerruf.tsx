@@ -24,7 +24,7 @@ export default function Widerruf() {
       <h2>5. Muster-Widerrufsformular</h2>
       <p>(Wenn Sie den Vertrag widerrufen wollen, füllen Sie bitte dieses Formular aus und senden Sie es zurück.)</p>
       <ul>
-        <li>An: Smart Trading AI GmbH, Franzosenhausweg 41, 4030 Linz, Österreich, E-Mail: kontakt@smarttradingai.com</li>
+        <li>An: Smart Trading AI GmbH, Franzosenhausweg 41, 4030 Linz, Österreich, E-Mail: info@spy-secret.com</li>
         <li>Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung: Spy-Secret Abonnement</li>
         <li>Bestellt am (*) / erhalten am (*)</li>
         <li>Name des/der Verbraucher(s)</li>
