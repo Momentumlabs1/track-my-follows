@@ -61,7 +61,7 @@ export default function Datenschutz() {
         <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO) – Sie erhalten Ihre Daten in einem maschinenlesbaren Format.</li>
         <li>Widerspruchsrecht (Art. 21 DSGVO) – Sie können der Verarbeitung Ihrer Daten jederzeit widersprechen, insbesondere gegen das Profiling gemäß Abschnitt 2.3.</li>
       </ul>
-      <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: kontakt@smarttradingai.com</p>
+      <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: info@spy-secret.com</p>
       <p>Sie haben zudem das Recht, eine Beschwerde bei der zuständigen Aufsichtsbehörde einzureichen: Österreichische Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, dsb@dsb.gv.at, <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at</a></p>
 
       <h2>7. Rechte betroffener Instagram-Nutzer</h2>
