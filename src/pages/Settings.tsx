@@ -65,7 +65,7 @@ const Settings = () => {
     if (isNativeApp()) {
       manageSubscription();
     } else {
-      toast.info(t("settings.manage_in_app_store"));
+      window.open("https://apps.apple.com/account/subscriptions", "_blank", "noopener,noreferrer");
     }
   };
 
@@ -75,8 +75,17 @@ const Settings = () => {
     setRestoring(true);
     try {
       await restorePurchases(user.id);
+      // Wait a moment for webhook to process
+      await new Promise(r => setTimeout(r, 2000));
       await refetch();
-      if (plan === "pro") {
+      // Check DB directly instead of stale state
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan_type, status")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const isPro = data?.plan_type === "pro" && ["active", "in_trial"].includes(data?.status ?? "");
+      if (isPro) {
         haptic.success();
         toast.success(t("settings.subscription_restored"));
       } else {
