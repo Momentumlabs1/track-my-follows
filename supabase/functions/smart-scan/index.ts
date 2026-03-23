@@ -519,39 +519,35 @@ async function performBasicScan(
   const profileId = profile.id as string;
   const username = profile.username as string;
 
-  const userInfoRes = await fetch(
-    `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
-    { headers: { "x-access-key": hikerApiKey } },
-  );
-  if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
-  const userInfo = await userInfoRes.json();
-  const igUserId = String(userInfo.pk || userInfo.id);
-  const actualFollowingCount = userInfo.following_count ?? 0;
-  const actualFollowerCount = userInfo.follower_count ?? 0;
+  // Use stored instagram_user_id — no user-info API call needed
+  const igUserId = profile.instagram_user_id as string | null;
+  if (!igUserId) {
+    console.error(`[BASIC-SCAN] ${username}: no instagram_user_id stored, skipping`);
+    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, error: "no_ig_id" };
+  }
 
-  // ── Private account check ──
-  if (userInfo.is_private === true) {
+  const actualFollowingCount = (profile.following_count as number) ?? 0;
+  const actualFollowerCount = (profile.follower_count as number) ?? 0;
+
+  // ── Fixed max: trust DB diff, not count delta ──
+  const maxNewFollows = 200;
+
+  // ── CALL 1: Following page 1 (only API call for basic scan) ──
+  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+
+  // ── Private detection: empty/404 = private ──
+  if (followingUsers.length === 0 && actualFollowingCount > 0) {
     await supabaseClient.from("tracked_profiles").update({
       is_private: true,
-      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-      display_name: userInfo.full_name || null,
-      follower_count: actualFollowerCount,
-      following_count: actualFollowingCount,
       last_scanned_at: new Date().toISOString(),
     }).eq("id", profileId);
-    console.log(`[BASIC-SCAN] ${username}: private, tracking frozen`);
+    console.log(`[BASIC-SCAN] ${username}: likely private (empty response), tracking frozen`);
     return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
   }
   if (profile.is_private) {
     await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
     console.log(`[BASIC-SCAN] ${username}: back to public!`);
   }
-
-  // ── Fixed max: trust DB diff, not count delta ──
-  const maxNewFollows = 200;
-
-  await sleep(500);
-  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
   // ── Refresh avatar URLs in existing records ──
