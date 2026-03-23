@@ -8,7 +8,7 @@ export default function Datenschutz() {
       <h2>1. Verantwortlicher</h2>
       <p>Smart Trading AI GmbH, Franzosenhausweg 41, 4030 Linz, Österreich</p>
       <p>Geschäftsführer: Saifuldeen Alnaseri</p>
-      <p>E-Mail: kontakt@smarttradingai.com</p>
+      <p>E-Mail: info@spy-secret.com</p>
       <p>Telefon: +43 676 4512064</p>
       <p>Firmenbuchnummer: FN 650520 y</p>
       <p>Firmenbuchgericht: Landesgericht Linz</p>
@@ -61,11 +61,11 @@ export default function Datenschutz() {
         <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO) – Sie erhalten Ihre Daten in einem maschinenlesbaren Format.</li>
         <li>Widerspruchsrecht (Art. 21 DSGVO) – Sie können der Verarbeitung Ihrer Daten jederzeit widersprechen, insbesondere gegen das Profiling gemäß Abschnitt 2.3.</li>
       </ul>
-      <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: kontakt@smarttradingai.com</p>
+      <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: info@spy-secret.com</p>
       <p>Sie haben zudem das Recht, eine Beschwerde bei der zuständigen Aufsichtsbehörde einzureichen: Österreichische Datenschutzbehörde, Barichgasse 40-42, 1030 Wien, dsb@dsb.gv.at, <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at</a></p>
 
       <h2>7. Rechte betroffener Instagram-Nutzer</h2>
-      <p>Auch Personen, deren öffentliche Instagram-Profile durch unsere Nutzer überwacht werden, haben Rechte gemäß DSGVO. Wenn Sie feststellen, dass Ihr Instagram-Profil über Spy-Secret getrackt wird, können Sie uns unter kontakt@smarttradingai.com kontaktieren und die Löschung aller zu Ihrem Profil gespeicherten Daten verlangen. Wir werden diesem Antrag innerhalb von 30 Tagen nachkommen.</p>
+      <p>Auch Personen, deren öffentliche Instagram-Profile durch unsere Nutzer überwacht werden, haben Rechte gemäß DSGVO. Wenn Sie feststellen, dass Ihr Instagram-Profil über Spy-Secret getrackt wird, können Sie uns unter info@spy-secret.com kontaktieren und die Löschung aller zu Ihrem Profil gespeicherten Daten verlangen. Wir werden diesem Antrag innerhalb von 30 Tagen nachkommen.</p>
       <p>Alternativ können Sie Ihr Instagram-Profil auf „privat" stellen – die Überwachung wird dann automatisch eingestellt.</p>
 
       <h2>8. Cookies und lokale Speicherung</h2>
