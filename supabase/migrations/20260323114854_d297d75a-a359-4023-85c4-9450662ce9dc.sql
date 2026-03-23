@@ -1,0 +1,1 @@
+ALTER TABLE tracked_profiles ADD COLUMN IF NOT EXISTS instagram_user_id text;
