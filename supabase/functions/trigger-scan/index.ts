@@ -88,8 +88,8 @@ async function fetchAllFollowerPages(userId: string, hikerApiKey: string): Promi
 
   do {
     const url = nextMaxId
-      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&max_id=${nextMaxId}`
-      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}`;
+      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
+      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
     if (res.status === 402) { await res.text(); console.warn(`[fetchAllFollowerPages] 402 on page ${page}, stopping`); break; }
