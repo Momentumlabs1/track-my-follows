@@ -5,11 +5,54 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type RevenueCatEvent = {
+  app_user_id?: string;
+  original_app_user_id?: string;
+  type?: string;
+  product_id?: string;
+  new_product_id?: string;
+  expiration_at_ms?: number;
+  store?: string;
+  transferred_to?: string[];
+};
+
 function getBillingPeriod(productId: string): string | null {
   if (productId.includes("weekly")) return "weekly";
   if (productId.includes("monthly")) return "monthly";
   if (productId.includes("yearly")) return "yearly";
   return null;
+}
+
+function resolveUserId(event: RevenueCatEvent): string | null {
+  if (event.app_user_id) return event.app_user_id;
+  if (event.original_app_user_id) return event.original_app_user_id;
+  if (Array.isArray(event.transferred_to) && event.transferred_to.length > 0) {
+    return event.transferred_to[0];
+  }
+  return null;
+}
+
+async function upsertProSubscription(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  billingPeriod: string | null,
+  store: string | null,
+  expirationMs?: number,
+) {
+  await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      plan_type: "pro",
+      billing_period: billingPeriod,
+      status: "active",
+      store,
+      revenuecat_app_user_id: userId,
+      revenuecat_entitlement: "pro",
+      current_period_end: expirationMs ? new Date(expirationMs).toISOString() : null,
+      max_tracked_profiles: 5,
+    },
+    { onConflict: "user_id" }
+  );
 }
 
 Deno.serve(async (req) => {
@@ -29,7 +72,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const event = body.event;
+    const event = body.event as RevenueCatEvent;
     if (!event) {
       return new Response(JSON.stringify({ error: "No event" }), {
         status: 400,
@@ -41,9 +84,9 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const userId = event.app_user_id;
+    const userId = resolveUserId(event);
     const eventType = event.type;
-    const productId = event.product_id || "";
+    const productId = event.product_id || event.new_product_id || "";
     const expirationMs = event.expiration_at_ms;
     const store = event.store === "APP_STORE" ? "apple" : event.store === "PLAY_STORE" ? "google" : event.store;
     const billingPeriod = getBillingPeriod(productId);
@@ -53,42 +96,33 @@ Deno.serve(async (req) => {
     switch (eventType) {
       case "INITIAL_PURCHASE":
       case "NON_RENEWING_PURCHASE": {
-        await supabase.from("subscriptions").upsert(
-          {
-            user_id: userId,
-            plan_type: "pro",
-            billing_period: billingPeriod,
-            status: "active",
-            store,
-            revenuecat_app_user_id: userId,
-            revenuecat_entitlement: "pro",
-            current_period_end: expirationMs ? new Date(expirationMs).toISOString() : null,
-            max_tracked_profiles: 5,
-          },
-          { onConflict: "user_id" }
-        );
+        if (!userId) break;
+        await upsertProSubscription(supabase, userId, billingPeriod, store, expirationMs);
         break;
       }
 
       case "RENEWAL": {
-        await supabase
-          .from("subscriptions")
-          .update({
-            status: "active",
-            current_period_end: expirationMs ? new Date(expirationMs).toISOString() : null,
-          })
-          .eq("user_id", userId);
+        if (!userId) break;
+        await upsertProSubscription(supabase, userId, billingPeriod, store, expirationMs);
         break;
       }
 
       case "PRODUCT_CHANGE": {
-        await supabase
-          .from("subscriptions")
-          .update({
-            billing_period: billingPeriod,
-            current_period_end: expirationMs ? new Date(expirationMs).toISOString() : null,
-          })
-          .eq("user_id", userId);
+        if (!userId) break;
+        await upsertProSubscription(supabase, userId, billingPeriod, store, expirationMs);
+        break;
+      }
+
+      case "UNCANCELLATION": {
+        if (!userId) break;
+        await upsertProSubscription(supabase, userId, billingPeriod, store, expirationMs);
+        break;
+      }
+
+      case "TRANSFER": {
+        const transferredToUserId = Array.isArray(event.transferred_to) ? event.transferred_to[0] : null;
+        if (!transferredToUserId) break;
+        await upsertProSubscription(supabase, transferredToUserId, billingPeriod, store, expirationMs);
         break;
       }
 
