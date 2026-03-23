@@ -208,25 +208,25 @@ Deno.serve(async (req) => {
       unfollow_scans_today: unfollowRemaining - 1,
     }).eq("id", profile.id);
 
-    // ── Get IG user ID ──
-    const userInfoRes = await fetch(
-      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-      { headers: { "x-access-key": hikerApiKey } },
-    );
-    if (!userInfoRes.ok) {
-      return new Response(JSON.stringify({ error: `User info failed: ${userInfoRes.status}` }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ── Use stored instagram_user_id — no user-info API call ──
+    const igUserId = profile.instagram_user_id as string | null;
+    if (!igUserId) {
+      return new Response(JSON.stringify({ error: "No instagram_user_id stored. Run a baseline first." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const userInfo = await userInfoRes.json();
-    const igUserId = String(userInfo.pk || userInfo.id);
 
-    // Update profile metadata
+    // ── Following count limit: max 1500 ──
+    if ((profile.following_count ?? 0) > 1500) {
+      // Refund the budget
+      await supabase.from("tracked_profiles").update({
+        unfollow_scans_today: unfollowRemaining,
+      }).eq("id", profile.id);
+      return new Response(JSON.stringify({ error: "FOLLOWING_LIMIT", message: "Unfollow-Check nur bis 1.500 Gefolgten möglich" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Update profile metadata (no user-info, just timestamp)
     await supabase.from("tracked_profiles").update({
       previous_follower_count: profile.follower_count || 0,
       previous_following_count: profile.following_count || 0,
-      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-      display_name: userInfo.full_name || null,
-      follower_count: userInfo.follower_count || 0,
-      following_count: userInfo.following_count || 0,
       last_scanned_at: new Date().toISOString(),
     }).eq("id", profile.id);
 
