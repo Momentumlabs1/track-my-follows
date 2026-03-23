@@ -11,7 +11,7 @@ export default function Impressum() {
       <p>4030 Linz, Österreich</p>
 
       <h2>Kontakt</h2>
-      <p>E-Mail: kontakt@smarttradingai.com</p>
+      <p>E-Mail: info@spy-secret.com</p>
       <p>Telefon: +43 676 4512064</p>
 
       <h2>Vertretungsberechtigter Geschäftsführer</h2>
