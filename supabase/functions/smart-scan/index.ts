@@ -669,26 +669,34 @@ Deno.serve(async (req) => {
           results.push({ username: profile.username as string, scan_type: "basic", ...res });
         }
 
-        // ── Baseline Recovery: If initial scan done but baseline incomplete, trigger it server-side ──
+        // ── Baseline Recovery: max 1x per 24h, awaited (not fire-and-forget) ──
         if (profile.initial_scan_done === true && profile.baseline_complete === false && !profile.is_private) {
-          console.log(`[BASELINE-RECOVERY] ${profile.username}: baseline_complete=false, triggering create-baseline...`);
-          fetch(`${supabaseUrl}/functions/v1/create-baseline`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${serviceRoleKey}`,
-            },
-            body: JSON.stringify({ profileId: profile.id }),
-          }).then(async (res) => {
-            if (res.ok) {
-              console.log(`[BASELINE-RECOVERY] ${profile.username}: create-baseline triggered successfully`);
-            } else {
-              const text = await res.text();
-              console.error(`[BASELINE-RECOVERY] ${profile.username}: create-baseline failed: ${res.status} ${text}`);
+          const lastAttempt = profile.updated_at ? new Date(profile.updated_at as string).getTime() : 0;
+          const hoursSinceUpdate = (Date.now() - lastAttempt) / (1000 * 60 * 60);
+
+          if (hoursSinceUpdate >= 24) {
+            console.log(`[BASELINE-RECOVERY] ${profile.username}: triggering (last update ${hoursSinceUpdate.toFixed(1)}h ago)`);
+            try {
+              const baselineRes = await fetch(`${supabaseUrl}/functions/v1/create-baseline`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${serviceRoleKey}`,
+                },
+                body: JSON.stringify({ profileId: profile.id }),
+              });
+              const baselineText = await baselineRes.text();
+              if (baselineRes.ok) {
+                console.log(`[BASELINE-RECOVERY] ${profile.username}: success — ${baselineText}`);
+              } else {
+                console.error(`[BASELINE-RECOVERY] ${profile.username}: failed ${baselineRes.status} — ${baselineText}`);
+              }
+            } catch (err) {
+              console.error(`[BASELINE-RECOVERY] ${profile.username}: fetch error:`, err);
             }
-          }).catch((err) => {
-            console.error(`[BASELINE-RECOVERY] ${profile.username}: fetch error:`, err);
-          });
+          } else {
+            console.log(`[BASELINE-RECOVERY] ${profile.username}: skipped (last update ${hoursSinceUpdate.toFixed(1)}h ago, need 24h)`);
+          }
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
