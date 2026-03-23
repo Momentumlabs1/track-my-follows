@@ -1,29 +1,54 @@
 
 
-## Pro-Upgrade Erfolgs-Animation
+## Problem
 
-Nach erfolgreichem Kauf wird statt dem sofortigen Schließen der Paywall eine fullscreen Celebration-Animation gezeigt.
+Race condition: After `purchase()` resolves, `refetch()` runs immediately but the RevenueCat webhook hasn't updated the `subscriptions` table yet. So the app reads stale "free" data.
 
-### Was passiert
+**Flow:**
+```text
+purchase() resolves → refetch() → DB still "free" → success animation shows → account stays free
+                                    ↑ webhook hasn't arrived yet
+```
 
-1. Nach `purchase()` Success → statt `closePaywall()` wird ein `showSuccess`-State aktiviert
-2. Die Paywall-Inhalte faden aus, eine Celebration-Sequenz startet:
-   - **Dunkler Fullscreen-Overlay** mit radialem Pink-Glow-Pulse
-   - **Spy-GIF** springt groß rein (scale 0→1.2→1) mit Glow-Effekt
-   - **Konfetti-Partikel** (kleine pinke/weiße Punkte animiert)
-   - **"Willkommen im Pro!" Headline** mit Fade-in
-   - **3 kurze Bullet-Points** (Spy Agent freigeschaltet, Stündliche Scans, Alle Analysen) faden nacheinander ein
-   - **"Los geht's" Button** nach ~2s → schließt alles und navigiert zum Dashboard
+The realtime listener should eventually catch the DB change, but by then the user may have already closed the paywall.
 
-### Dateien
+## Fix
 
-- **`src/components/PaywallSheet.tsx`**: `showSuccess` State hinzufügen, nach Purchase statt `closePaywall()` die Success-View zeigen. Celebration-UI inline als conditional render im gleichen Sheet-Container.
-- **`src/i18n/locales/de.json`**, **`en.json`**, **`ar.json`**: Neue Keys: `paywall.success_title`, `paywall.success_subtitle`, `paywall.success_spy_unlocked`, `paywall.success_hourly_scans`, `paywall.success_all_analytics`, `paywall.success_cta`
+**File: `src/components/PaywallSheet.tsx`** — Replace the single `refetch()` with a polling retry that waits for the subscription to actually update to "pro":
 
-### Technische Details
+```typescript
+// After purchase succeeds:
+haptic.success();
 
-- Konfetti: 20-30 `motion.div` Kreise mit randomisierten Positionen, Delays und Rotationen (rein CSS/framer-motion, keine externe Library)
-- Timing: Spy-Icon bei 0s, Titel bei 0.4s, Bullets bei 0.7/0.9/1.1s, Button bei 1.8s
-- Der gleiche `motion.div` Container bleibt offen (kein re-mount), nur der Inhalt wechselt via AnimatePresence
-- Haptic: `haptic.success()` beim Übergang + nochmal beim Button-Tap
+// Poll up to 10 times (every 1.5s = max 15s) until subscription updates
+let retries = 0;
+const pollSubscription = async () => {
+  while (retries < 10) {
+    await refetch();
+    // Check if plan is now pro (need to read from context or re-query)
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("plan_type, status")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    
+    if (data?.plan_type === "pro" && ["active", "in_trial"].includes(data.status)) {
+      break;
+    }
+    retries++;
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  await refetch(); // Final refetch to update context
+};
+
+await pollSubscription();
+setShowSuccess(true);
+```
+
+This ensures the success animation only shows once the DB is actually updated, and the context has the correct "pro" state.
+
+**Additional safeguard:** The realtime listener in `SubscriptionContext.tsx` is already set up, so even if polling somehow misses it, the realtime event will trigger `fetchSubscription()` eventually.
+
+### Files to edit
+1. **`src/components/PaywallSheet.tsx`** — Add polling logic in `handlePurchase` after `purchase()` succeeds
 
