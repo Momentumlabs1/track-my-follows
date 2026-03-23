@@ -11,6 +11,9 @@ import spyGif from "@/assets/spy-logo-animated.gif";
 
 type Period = "weekly" | "monthly" | "yearly";
 
+const PURCHASE_POLL_INTERVAL_MS = 1500;
+const PURCHASE_POLL_ATTEMPTS = 20;
+
 const PRICES: Record<Period, { price: string; unit: string; trial: boolean }> = {
   weekly: { price: "4,95", unit: "per_week", trial: false },
   monthly: { price: "14,95", unit: "per_month", trial: true },
@@ -174,6 +177,34 @@ export function PaywallSheet() {
     { label: t("paywall.comp_push"), free: false, pro: true },
   ];
 
+  const isUserProInDatabase = async (userId: string) => {
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("plan_type, status, current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!data) return false;
+
+    const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+    const isWithinPaidPeriod =
+      data.plan_type === "pro" &&
+      ["expired", "canceled"].includes(data.status) &&
+      data.current_period_end &&
+      new Date(data.current_period_end) > new Date();
+
+    return isActiveOrTrial || isWithinPaidPeriod;
+  };
+
+  const waitForUpgrade = async (userId: string) => {
+    for (let i = 0; i < PURCHASE_POLL_ATTEMPTS; i++) {
+      const isPro = await isUserProInDatabase(userId);
+      if (isPro) return true;
+      await new Promise((r) => setTimeout(r, PURCHASE_POLL_INTERVAL_MS));
+    }
+    return false;
+  };
+
   const handlePurchase = async () => {
     if (!user) return;
     setLoading(true);
@@ -181,26 +212,27 @@ export function PaywallSheet() {
 
     try {
       if (isNativeApp()) {
+        const alreadyPro = await isUserProInDatabase(user.id);
+        if (alreadyPro) {
+          await refetch();
+          haptic.success();
+          setShowSuccess(true);
+          return;
+        }
+
         await purchase(user.id, PRODUCTS[selected]);
+
+        const upgraded = await waitForUpgrade(user.id);
+        await refetch();
+
+        if (!upgraded) {
+          haptic.error();
+          toast.error("Kauf wurde noch nicht bestätigt. Tippe auf Wiederherstellen.");
+          return;
+        }
+
         haptic.success();
         setShowSuccess(true);
-        
-        // Poll in background until webhook updates DB to pro
-        (async () => {
-          for (let i = 0; i < 10; i++) {
-            const { data } = await supabase
-              .from("subscriptions")
-              .select("plan_type, status")
-              .eq("user_id", user.id)
-              .maybeSingle();
-            
-            if (data?.plan_type === "pro" && ["active", "in_trial"].includes(data.status)) {
-              break;
-            }
-            await new Promise(r => setTimeout(r, 1500));
-          }
-          await refetch();
-        })();
       } else {
         toast.info(t("settings.manage_in_app_store"));
       }
