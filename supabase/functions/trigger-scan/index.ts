@@ -349,12 +349,27 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const profile of profiles) {
-      // Use stored instagram_user_id — no user-info API call
-      const igUserId = profile.instagram_user_id as string | null;
+      // Use stored instagram_user_id — fallback: fetch once and save
+      let igUserId = profile.instagram_user_id as string | null;
       if (!igUserId) {
-        console.error(`[trigger-scan] ${profile.username}: no instagram_user_id stored, skipping`);
-        results.push({ username: profile.username, error: "no_ig_id" });
-        continue;
+        console.log(`[trigger-scan] ${profile.username}: no instagram_user_id, fetching once...`);
+        const userInfoRes = await fetch(
+          `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
+          { headers: { "x-access-key": hikerApiKey } },
+        );
+        if (!userInfoRes.ok) {
+          results.push({ username: profile.username, error: `${userInfoRes.status}` });
+          continue;
+        }
+        const userInfo = await userInfoRes.json();
+        igUserId = String(userInfo.pk || userInfo.id);
+        await supabase.from("tracked_profiles").update({
+          instagram_user_id: igUserId,
+          avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+          display_name: userInfo.full_name || null,
+          follower_count: userInfo.follower_count ?? 0,
+          following_count: userInfo.following_count ?? 0,
+        }).eq("id", profile.id);
       }
 
       const actualFollowingCount = (profile.following_count as number) ?? 0;

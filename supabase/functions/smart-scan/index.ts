@@ -534,9 +534,23 @@ async function performBasicScan(
 
   // Use stored instagram_user_id — no user-info API call needed
   const igUserId = profile.instagram_user_id as string | null;
+  let igUserId = profile.instagram_user_id as string | null;
   if (!igUserId) {
-    console.error(`[BASIC-SCAN] ${username}: no instagram_user_id stored, skipping`);
-    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, error: "no_ig_id" };
+    console.log(`[BASIC-SCAN] ${username}: no instagram_user_id, fetching once...`);
+    const userInfoRes = await fetch(
+      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
+      { headers: { "x-access-key": hikerApiKey } },
+    );
+    if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
+    const userInfo = await userInfoRes.json();
+    igUserId = String(userInfo.pk || userInfo.id);
+    await supabaseClient.from("tracked_profiles").update({
+      instagram_user_id: igUserId,
+      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+      display_name: userInfo.full_name || null,
+      follower_count: userInfo.follower_count ?? 0,
+      following_count: userInfo.following_count ?? 0,
+    }).eq("id", profileId);
   }
 
   const actualFollowingCount = (profile.following_count as number) ?? 0;
