@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { purchase, restorePurchases, haptic, PRODUCTS, isNativeApp } from "@/lib/native";
+import { supabase } from "@/integrations/supabase/client";
 import spyGif from "@/assets/spy-logo-animated.gif";
 
 type Period = "weekly" | "monthly" | "yearly";
