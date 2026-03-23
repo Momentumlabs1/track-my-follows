@@ -399,7 +399,7 @@ Deno.serve(async (req) => {
       const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
 
       // Call 2: Followers — always page 1 only (~200), syncNewFollowers handles baseline internally
-      await sleep(1000);
+      await sleep(500);
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
       console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers`);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
