@@ -69,9 +69,9 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Fetch page 1 only ──
+// ── Fetch page 1 only (count=200 explicit) ──
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}`;
+  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
   const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
@@ -81,7 +81,7 @@ async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string)
   return users;
 }
 
-// ── Fetch ALL pages (full scan) ──
+// ── Fetch ALL pages (full scan, count=200 explicit) ──
 async function fetchAllPages(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
   const allUsers: FollowingUser[] = [];
   let nextMaxId: string | null = null;
@@ -89,8 +89,8 @@ async function fetchAllPages(endpoint: string, userId: string, hikerApiKey: stri
 
   do {
     const url = nextMaxId
-      ? `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&max_id=${nextMaxId}`
-      : `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}`;
+      ? `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
+      : `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
     if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} full-scan page ${page} failed: ${res.status} ${text}`); }
@@ -398,34 +398,28 @@ async function performSpyScan(
   const profileId = profile.id as string;
   const username = profile.username as string;
 
-  // Get user info (for actual counts + avatar)
-  const userInfoRes = await fetch(
-    `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
-    { headers: { "x-access-key": hikerApiKey } },
-  );
-  if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
-  const userInfo = await userInfoRes.json();
-  const igUserId = String(userInfo.pk || userInfo.id);
-  const actualFollowingCount = userInfo.following_count ?? 0;
-  const actualFollowerCount = userInfo.follower_count ?? 0;
-
-  // ── Private account check ──
-  if (userInfo.is_private === true) {
+  // Use stored instagram_user_id — fallback: fetch once and save
+  let igUserId = profile.instagram_user_id as string | null;
+  if (!igUserId) {
+    console.log(`[SPY-SCAN] ${username}: no instagram_user_id, fetching once...`);
+    const userInfoRes = await fetch(
+      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
+      { headers: { "x-access-key": hikerApiKey } },
+    );
+    if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
+    const userInfo = await userInfoRes.json();
+    igUserId = String(userInfo.pk || userInfo.id);
     await supabaseClient.from("tracked_profiles").update({
-      is_private: true,
+      instagram_user_id: igUserId,
       avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
       display_name: userInfo.full_name || null,
-      follower_count: actualFollowerCount,
-      following_count: actualFollowingCount,
-      last_scanned_at: new Date().toISOString(),
+      follower_count: userInfo.follower_count ?? 0,
+      following_count: userInfo.following_count ?? 0,
     }).eq("id", profileId);
-    console.log(`[SPY-SCAN] ${username}: private, tracking frozen`);
-    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
   }
-  if (profile.is_private) {
-    await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
-    console.log(`[SPY-SCAN] ${username}: back to public!`);
-  }
+
+  const actualFollowingCount = (profile.following_count as number) ?? 0;
+  const actualFollowerCount = (profile.follower_count as number) ?? 0;
 
   // ── Fixed max: trust DB diff, not count delta ──
   const maxNewFollows = 200;
@@ -434,8 +428,21 @@ async function performSpyScan(
   console.log(`[SPY-SCAN] ${username}: following=${actualFollowingCount}, followers=${actualFollowerCount}, maxNew=200`);
 
   // ── CALL 1: Following page 1 ──
-  await sleep(500);
   const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+
+  // ── Private detection: empty/404 = private ──
+  if (followingUsers.length === 0 && actualFollowingCount > 0) {
+    await supabaseClient.from("tracked_profiles").update({
+      is_private: true,
+      last_scanned_at: new Date().toISOString(),
+    }).eq("id", profileId);
+    console.log(`[SPY-SCAN] ${username}: likely private (empty response), tracking frozen`);
+    return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
+  }
+  if (profile.is_private) {
+    await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
+    console.log(`[SPY-SCAN] ${username}: back to public!`);
+  }
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
   // ── SMART UNFOLLOW DETECTION (sammelt Hints, KEIN Full-Scan!) ──
@@ -454,7 +461,7 @@ async function performSpyScan(
   }
 
   // ── CALL 2: Followers — paginate for baseline, page 1 for delta ──
-  await sleep(1000);
+  await sleep(500);
   const { count: followerBaselineCount } = await supabaseClient
     .from("profile_followers")
     .select("*", { count: "exact", head: true })
@@ -498,16 +505,13 @@ async function performSpyScan(
   }
   console.log(`[SPY-SCAN] ${username}: refreshed ${avatarMap.size} following + ${followerAvatarMap.size} follower avatars`);
 
-  // ── Update profile ──
+  // ── Update profile (avatar from chunk response if available) ──
+  const firstFollowing = followingUsers[0];
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
     previous_following_count: profile.following_count || 0,
     last_following_count: actualFollowingCount,
     last_follower_count: actualFollowerCount,
-    avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-    display_name: userInfo.full_name || null,
-    follower_count: actualFollowerCount,
-    following_count: actualFollowingCount,
     last_scanned_at: new Date().toISOString(),
     initial_scan_done: true,
   }).eq("id", profileId);
@@ -528,39 +532,49 @@ async function performBasicScan(
   const profileId = profile.id as string;
   const username = profile.username as string;
 
-  const userInfoRes = await fetch(
-    `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
-    { headers: { "x-access-key": hikerApiKey } },
-  );
-  if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
-  const userInfo = await userInfoRes.json();
-  const igUserId = String(userInfo.pk || userInfo.id);
-  const actualFollowingCount = userInfo.following_count ?? 0;
-  const actualFollowerCount = userInfo.follower_count ?? 0;
-
-  // ── Private account check ──
-  if (userInfo.is_private === true) {
+  // Use stored instagram_user_id — no user-info API call needed
+  const igUserId = profile.instagram_user_id as string | null;
+  let igUserId = profile.instagram_user_id as string | null;
+  if (!igUserId) {
+    console.log(`[BASIC-SCAN] ${username}: no instagram_user_id, fetching once...`);
+    const userInfoRes = await fetch(
+      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(username)}`,
+      { headers: { "x-access-key": hikerApiKey } },
+    );
+    if (!userInfoRes.ok) throw new Error(`User info: ${userInfoRes.status}`);
+    const userInfo = await userInfoRes.json();
+    igUserId = String(userInfo.pk || userInfo.id);
     await supabaseClient.from("tracked_profiles").update({
-      is_private: true,
+      instagram_user_id: igUserId,
       avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
       display_name: userInfo.full_name || null,
-      follower_count: actualFollowerCount,
-      following_count: actualFollowingCount,
+      follower_count: userInfo.follower_count ?? 0,
+      following_count: userInfo.following_count ?? 0,
+    }).eq("id", profileId);
+  }
+
+  const actualFollowingCount = (profile.following_count as number) ?? 0;
+  const actualFollowerCount = (profile.follower_count as number) ?? 0;
+
+  // ── Fixed max: trust DB diff, not count delta ──
+  const maxNewFollows = 200;
+
+  // ── CALL 1: Following page 1 (only API call for basic scan) ──
+  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+
+  // ── Private detection: empty/404 = private ──
+  if (followingUsers.length === 0 && actualFollowingCount > 0) {
+    await supabaseClient.from("tracked_profiles").update({
+      is_private: true,
       last_scanned_at: new Date().toISOString(),
     }).eq("id", profileId);
-    console.log(`[BASIC-SCAN] ${username}: private, tracking frozen`);
+    console.log(`[BASIC-SCAN] ${username}: likely private (empty response), tracking frozen`);
     return { new_follows: 0, new_followers: 0, unfollows_detected: 0, frozen: true };
   }
   if (profile.is_private) {
     await supabaseClient.from("tracked_profiles").update({ is_private: false }).eq("id", profileId);
     console.log(`[BASIC-SCAN] ${username}: back to public!`);
   }
-
-  // ── Fixed max: trust DB diff, not count delta ──
-  const maxNewFollows = 200;
-
-  await sleep(500);
-  const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
   // ── Refresh avatar URLs in existing records ──
@@ -583,10 +597,6 @@ async function performBasicScan(
     previous_following_count: profile.following_count || 0,
     last_following_count: actualFollowingCount,
     last_follower_count: actualFollowerCount,
-    avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-    display_name: userInfo.full_name || null,
-    follower_count: actualFollowerCount,
-    following_count: actualFollowingCount,
     last_scanned_at: new Date().toISOString(),
     initial_scan_done: true,
   }).eq("id", profileId);

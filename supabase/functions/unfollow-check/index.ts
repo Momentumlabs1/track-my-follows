@@ -79,7 +79,7 @@ async function fetchAllFollowings(userId: string, hikerApiKey: string): Promise<
   const MAX_PAGES = 60;
 
   while (page < MAX_PAGES) {
-    let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}`;
+    let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}&count=200`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
@@ -208,25 +208,25 @@ Deno.serve(async (req) => {
       unfollow_scans_today: unfollowRemaining - 1,
     }).eq("id", profile.id);
 
-    // ── Get IG user ID ──
-    const userInfoRes = await fetch(
-      `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-      { headers: { "x-access-key": hikerApiKey } },
-    );
-    if (!userInfoRes.ok) {
-      return new Response(JSON.stringify({ error: `User info failed: ${userInfoRes.status}` }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // ── Use stored instagram_user_id — no user-info API call ──
+    const igUserId = profile.instagram_user_id as string | null;
+    if (!igUserId) {
+      return new Response(JSON.stringify({ error: "No instagram_user_id stored. Run a baseline first." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const userInfo = await userInfoRes.json();
-    const igUserId = String(userInfo.pk || userInfo.id);
 
-    // Update profile metadata
+    // ── Following count limit: max 1500 ──
+    if ((profile.following_count ?? 0) > 1500) {
+      // Refund the budget
+      await supabase.from("tracked_profiles").update({
+        unfollow_scans_today: unfollowRemaining,
+      }).eq("id", profile.id);
+      return new Response(JSON.stringify({ error: "FOLLOWING_LIMIT", message: "Unfollow-Check nur bis 1.500 Gefolgten möglich" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Update profile metadata (no user-info, just timestamp)
     await supabase.from("tracked_profiles").update({
       previous_follower_count: profile.follower_count || 0,
       previous_following_count: profile.following_count || 0,
-      avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-      display_name: userInfo.full_name || null,
-      follower_count: userInfo.follower_count || 0,
-      following_count: userInfo.following_count || 0,
       last_scanned_at: new Date().toISOString(),
     }).eq("id", profile.id);
 
@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
     const allFollowings = await fetchAllFollowings(igUserId, hikerApiKey);
     
     // ── Partial fetch guard ──
-    const expectedCount = userInfo.following_count ?? 0;
+    const expectedCount = profile.following_count ?? 0;
     if (expectedCount > 0 && allFollowings.length < expectedCount * 0.7) {
       console.error(`[unfollow-check] PARTIAL_FETCH: got ${allFollowings.length} but expected ~${expectedCount}`);
       // Refund the budget
@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
     // ══════════════════════════════════════════════
     // STEP 4: Detect new follows (in API but not in baseline)
     // ══════════════════════════════════════════════
-    const actualFollowingCount = userInfo.following_count ?? allFollowings.length;
+    const actualFollowingCount = (profile.following_count as number) ?? allFollowings.length;
     const lastFollowingCount = profile.last_following_count as number | null;
     const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
       ? Math.max(actualFollowingCount - lastFollowingCount, 0)
@@ -373,8 +373,7 @@ Deno.serve(async (req) => {
     // Update counters
     await supabase.from("tracked_profiles").update({
       pending_unfollow_hint: 0,
-      last_following_count: userInfo.following_count ?? allFollowings.length,
-      last_follower_count: userInfo.follower_count ?? 0,
+      last_following_count: allFollowings.length,
       total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowsFound,
       total_unfollows_detected: (profile.total_unfollows_detected ?? 0) + unfollowsFound,
       total_scans_executed: (profile.total_scans_executed ?? 0) + 1,

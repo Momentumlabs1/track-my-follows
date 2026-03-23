@@ -376,6 +376,7 @@ export type Database = {
           has_spy: boolean | null
           id: string
           initial_scan_done: boolean | null
+          instagram_user_id: string | null
           is_active: boolean
           is_private: boolean | null
           last_follower_count: number | null
@@ -411,6 +412,7 @@ export type Database = {
           has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
+          instagram_user_id?: string | null
           is_active?: boolean
           is_private?: boolean | null
           last_follower_count?: number | null
@@ -446,6 +448,7 @@ export type Database = {
           has_spy?: boolean | null
           id?: string
           initial_scan_done?: boolean | null
+          instagram_user_id?: string | null
           is_active?: boolean
           is_private?: boolean | null
           last_follower_count?: number | null

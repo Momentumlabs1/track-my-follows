@@ -69,7 +69,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
 }
 
 async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}`;
+  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
   const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
   if (res.status === 404) { await res.text(); return []; }
   if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
@@ -88,8 +88,8 @@ async function fetchAllFollowerPages(userId: string, hikerApiKey: string): Promi
 
   do {
     const url = nextMaxId
-      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&max_id=${nextMaxId}`
-      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}`;
+      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
+      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200`;
     const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
     if (res.status === 404) { await res.text(); break; }
     if (res.status === 402) { await res.text(); console.warn(`[fetchAllFollowerPages] 402 on page ${page}, stopping`); break; }
@@ -349,35 +349,46 @@ Deno.serve(async (req) => {
 
     const results = [];
     for (const profile of profiles) {
-      const userInfoRes = await fetch(
-        `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-        { headers: { "x-access-key": hikerApiKey } },
-      );
-      if (!userInfoRes.ok) {
-        results.push({ username: profile.username, error: `${userInfoRes.status}` });
-        continue;
-      }
-      const userInfo = await userInfoRes.json();
-      const igUserId = String(userInfo.pk || userInfo.id);
-      const actualFollowingCount = userInfo.following_count ?? 0;
-      const actualFollowerCount = userInfo.follower_count ?? 0;
-
-      // ── Private account check ──
-      const isPrivate = userInfo.is_private === true;
-      if (isPrivate) {
+      // Use stored instagram_user_id — fallback: fetch once and save
+      let igUserId = profile.instagram_user_id as string | null;
+      if (!igUserId) {
+        console.log(`[trigger-scan] ${profile.username}: no instagram_user_id, fetching once...`);
+        const userInfoRes = await fetch(
+          `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
+          { headers: { "x-access-key": hikerApiKey } },
+        );
+        if (!userInfoRes.ok) {
+          results.push({ username: profile.username, error: `${userInfoRes.status}` });
+          continue;
+        }
+        const userInfo = await userInfoRes.json();
+        igUserId = String(userInfo.pk || userInfo.id);
         await supabase.from("tracked_profiles").update({
-          is_private: true,
+          instagram_user_id: igUserId,
           avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
           display_name: userInfo.full_name || null,
-          follower_count: actualFollowerCount,
-          following_count: actualFollowingCount,
+          follower_count: userInfo.follower_count ?? 0,
+          following_count: userInfo.following_count ?? 0,
+        }).eq("id", profile.id);
+      }
+
+      const actualFollowingCount = (profile.following_count as number) ?? 0;
+      const actualFollowerCount = (profile.follower_count as number) ?? 0;
+
+      // Call 1: Following page 1
+      const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
+
+      // ── Private detection: empty/404 = private ──
+      if (followingUsers.length === 0 && actualFollowingCount > 0) {
+        await supabase.from("tracked_profiles").update({
+          is_private: true,
           last_scanned_at: new Date().toISOString(),
         }).eq("id", profile.id);
 
         if (!profile.initial_scan_done) {
           results.push({ username: profile.username, error: "profile_private" });
         } else {
-          console.log(`[trigger-scan] ${profile.username}: now private, tracking frozen`);
+          console.log(`[trigger-scan] ${profile.username}: likely private, tracking frozen`);
           results.push({ username: profile.username, new_follows: 0, new_followers: 0, frozen: true });
         }
         continue;
@@ -391,10 +402,6 @@ Deno.serve(async (req) => {
       await supabase.from("tracked_profiles").update({
         previous_follower_count: profile.follower_count || 0,
         previous_following_count: profile.following_count || 0,
-        avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-        display_name: userInfo.full_name || null,
-        follower_count: actualFollowerCount,
-        following_count: actualFollowingCount,
         last_scanned_at: new Date().toISOString(),
         initial_scan_done: true,
       }).eq("id", profile.id);
@@ -404,14 +411,10 @@ Deno.serve(async (req) => {
       // ── No delta-gate: trust the DB diff in syncNewFollows/syncNewFollowers ──
       const maxNewFollows = 200;
       const maxNewFollowers = 200;
-
-      // Call 1: Following page 1
-      await sleep(500);
-      const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
       const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
 
       // Call 2: Followers — always page 1 only (~200), syncNewFollowers handles baseline internally
-      await sleep(1000);
+      await sleep(500);
       const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
       console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers`);
       const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
