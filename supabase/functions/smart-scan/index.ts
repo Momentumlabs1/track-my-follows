@@ -448,7 +448,7 @@ async function performSpyScan(
   }
 
   // ── CALL 2: Followers — paginate for baseline, page 1 for delta ──
-  await sleep(1000);
+  await sleep(500);
   const { count: followerBaselineCount } = await supabaseClient
     .from("profile_followers")
     .select("*", { count: "exact", head: true })
