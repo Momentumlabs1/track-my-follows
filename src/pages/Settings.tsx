@@ -65,7 +65,7 @@ const Settings = () => {
     if (isNativeApp()) {
       manageSubscription();
     } else {
-      toast.info(t("settings.manage_in_app_store"));
+      window.open("https://apps.apple.com/account/subscriptions", "_blank", "noopener,noreferrer");
     }
   };
 
