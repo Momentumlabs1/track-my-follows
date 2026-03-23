@@ -309,7 +309,7 @@ Deno.serve(async (req) => {
     // ══════════════════════════════════════════════
     // STEP 4: Detect new follows (in API but not in baseline)
     // ══════════════════════════════════════════════
-    const actualFollowingCount = userInfo.following_count ?? allFollowings.length;
+    const actualFollowingCount = (profile.following_count as number) ?? allFollowings.length;
     const lastFollowingCount = profile.last_following_count as number | null;
     const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
       ? Math.max(actualFollowingCount - lastFollowingCount, 0)
