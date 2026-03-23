@@ -492,16 +492,13 @@ async function performSpyScan(
   }
   console.log(`[SPY-SCAN] ${username}: refreshed ${avatarMap.size} following + ${followerAvatarMap.size} follower avatars`);
 
-  // ── Update profile ──
+  // ── Update profile (avatar from chunk response if available) ──
+  const firstFollowing = followingUsers[0];
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
     previous_following_count: profile.following_count || 0,
     last_following_count: actualFollowingCount,
     last_follower_count: actualFollowerCount,
-    avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-    display_name: userInfo.full_name || null,
-    follower_count: actualFollowerCount,
-    following_count: actualFollowingCount,
     last_scanned_at: new Date().toISOString(),
     initial_scan_done: true,
   }).eq("id", profileId);
