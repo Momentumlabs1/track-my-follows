@@ -16,7 +16,7 @@ export default function Widerruf() {
         <li>Apple: <a href="https://support.apple.com/de-at/111907" target="_blank" rel="noopener noreferrer">https://support.apple.com/de-at/111907</a></li>
         <li>Google: <a href="https://support.google.com/googleplay/answer/2479637" target="_blank" rel="noopener noreferrer">https://support.google.com/googleplay/answer/2479637</a></li>
       </ul>
-      <p>Die Kündigung eines Abonnements über den App Store ersetzt nicht den Widerruf. Für die Rückerstattung nach Widerruf wenden Sie sich bitte direkt an den jeweiligen App Store oder an uns unter kontakt@smarttradingai.com.</p>
+      <p>Die Kündigung eines Abonnements über den App Store ersetzt nicht den Widerruf. Für die Rückerstattung nach Widerruf wenden Sie sich bitte direkt an den jeweiligen App Store oder an uns unter info@spy-secret.com.</p>
 
       <h2>4. Ausschluss des Widerrufsrechts</h2>
       <p>Das Widerrufsrecht erlischt vorzeitig, wenn der Anbieter mit der Ausführung des Vertrags begonnen hat, nachdem der Verbraucher dazu seine ausdrückliche Zustimmung gegeben und gleichzeitig bestätigt hat, dass er sein Widerrufsrecht bei vollständiger Vertragserfüllung verliert (§ 18 Abs. 1 Z 11 FAGG).</p>
