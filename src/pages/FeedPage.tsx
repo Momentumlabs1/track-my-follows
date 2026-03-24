@@ -6,6 +6,7 @@ import { DaySeparator } from "@/components/DaySeparator";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useFollowEvents, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+import { useFreshAvatarMap } from "@/hooks/useFreshAvatars";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ const FeedPage = () => {
   const { data: profiles = [] } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
   const { data: followerEventsRaw = [] } = useFollowerEvents();
+  const { data: freshAvatars } = useFreshAvatarMap();
 
   // Pull-to-refresh handler (only invalidates queries, does NOT trigger API scan)
   const handleRefresh = useCallback(async () => {
