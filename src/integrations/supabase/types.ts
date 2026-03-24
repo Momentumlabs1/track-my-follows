@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_call_log: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          error_message: string | null
+          function_name: string
+          id: string
+          profile_id: string | null
+          response_time_ms: number | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          profile_id?: string | null
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          profile_id?: string | null
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_call_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follow_events: {
         Row: {
           category: string | null
@@ -379,8 +420,11 @@ export type Database = {
           instagram_user_id: string | null
           is_active: boolean
           is_private: boolean | null
+          last_baseline_attempt_at: string | null
           last_follower_count: number | null
           last_following_count: number | null
+          last_scan_function: string | null
+          last_scan_started_at: string | null
           last_scanned_at: string | null
           pending_unfollow_hint: number | null
           previous_follower_count: number | null
@@ -415,8 +459,11 @@ export type Database = {
           instagram_user_id?: string | null
           is_active?: boolean
           is_private?: boolean | null
+          last_baseline_attempt_at?: string | null
           last_follower_count?: number | null
           last_following_count?: number | null
+          last_scan_function?: string | null
+          last_scan_started_at?: string | null
           last_scanned_at?: string | null
           pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
@@ -451,8 +498,11 @@ export type Database = {
           instagram_user_id?: string | null
           is_active?: boolean
           is_private?: boolean | null
+          last_baseline_attempt_at?: string | null
           last_follower_count?: number | null
           last_following_count?: number | null
+          last_scan_function?: string | null
+          last_scan_started_at?: string | null
           last_scanned_at?: string | null
           pending_unfollow_hint?: number | null
           previous_follower_count?: number | null
@@ -556,6 +606,7 @@ export type Database = {
         Returns: undefined
       }
       delete_own_account: { Args: never; Returns: undefined }
+      get_daily_api_calls: { Args: never; Returns: number }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
       get_user_limits: { Args: { p_user_id: string }; Returns: Json }
       increment_gender_count: {
