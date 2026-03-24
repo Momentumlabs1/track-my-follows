@@ -1,6 +1,9 @@
-// trigger-scan v4 — delta-gate for accurate event counts
+// trigger-scan v5 — audit-hardened with apiGuard, scan locks, budget checks
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
+import { acquireScanLock, releaseScanLock, checkDailyBudget, trackedApiFetch } from "../_shared/apiGuard.ts";
+
+const FUNCTION_NAME = "trigger-scan";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,47 +71,22 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-async function fetchPage1(endpoint: string, userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const baseUrl = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
-  const res = await fetch(baseUrl, { headers: { "x-access-key": hikerApiKey } });
-  if (res.status === 404) { await res.text(); return []; }
-  if (!res.ok) { const text = await res.text(); throw new Error(`${endpoint} fetch failed: ${res.status} ${text}`); }
-  const parsed = parseChunkResponse(await res.json());
+async function fetchPage1(
+  supabase: ReturnType<typeof createClient>,
+  endpoint: string, userId: string, hikerApiKey: string, profileId: string,
+): Promise<FollowingUser[] | null> {
+  const url = `https://api.hikerapi.com/gql/user/${endpoint}/chunk?user_id=${userId}&count=200`;
+  const result = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, url, { "x-access-key": hikerApiKey });
+  if (result.skipped || result.error || !result.response) return null;
+  if (result.response.status === 404) { await result.response.text(); return []; }
+  if (!result.response.ok) { await result.response.text(); return null; }
+  const parsed = parseChunkResponse(await result.response.json());
   const users: FollowingUser[] = [];
   for (const raw of parsed.users) { const u = mapFollowingUser(raw); if (u) users.push(u); }
   return users;
 }
 
-async function fetchAllFollowerPages(userId: string, hikerApiKey: string): Promise<FollowingUser[]> {
-  const allUsers: FollowingUser[] = [];
-  const seenIds = new Set<string>();
-  let nextMaxId: string | null = null;
-  let page = 0;
-  let lastMaxId: string | null = null;
-
-  do {
-    const url = nextMaxId
-      ? `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200&max_id=${nextMaxId}`
-      : `https://api.hikerapi.com/gql/user/followers/chunk?user_id=${userId}&count=200`;
-    const res = await fetch(url, { headers: { "x-access-key": hikerApiKey } });
-    if (res.status === 404) { await res.text(); break; }
-    if (res.status === 402) { await res.text(); console.warn(`[fetchAllFollowerPages] 402 on page ${page}, stopping`); break; }
-    if (!res.ok) { const text = await res.text(); throw new Error(`followers full page ${page} failed: ${res.status} ${text}`); }
-    const parsed = parseChunkResponse(await res.json());
-    for (const raw of parsed.users) {
-      const u = mapFollowingUser(raw);
-      if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); }
-    }
-    if (parsed.nextMaxId === lastMaxId) { console.warn(`[fetchAllFollowerPages] cursor stuck at page ${page}`); break; }
-    lastMaxId = nextMaxId;
-    nextMaxId = parsed.nextMaxId;
-    page++;
-    if (nextMaxId) await sleep(400);
-  } while (nextMaxId && page < 60);
-
-  console.log(`[fetchAllFollowerPages] ${allUsers.length} total followers fetched in ${page + 1} pages`);
-  return allUsers;
-}
+// ★ Dead code fetchAllFollowerPages REMOVED
 
 async function syncNewFollows(
   supabase: ReturnType<typeof createClient>,
@@ -116,14 +94,15 @@ async function syncNewFollows(
   currentUsers: FollowingUser[],
   lastScannedAt: string | null,
   isInitialScan: boolean,
-  maxAllowed: number, // delta-gate
+  maxAllowed: number,
 ) {
   const { data: existing } = await supabase
     .from("profile_followings")
     .select("following_user_id")
     .eq("tracked_profile_id", profileId)
     .eq("direction", "following")
-    .eq("is_current", true);
+    .eq("is_current", true)
+    .limit(10000);
 
   const existingIds = new Set((existing || []).map((f: Record<string, unknown>) => f.following_user_id as string));
   const newEntries = currentUsers.filter((f) => !existingIds.has(f.pk));
@@ -143,9 +122,12 @@ async function syncNewFollows(
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
       following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
       first_seen_at: ts, direction: "following",
-      gender_tag: genderTag,
-      category: category,
+      gender_tag: genderTag, category: category,
+    }).then(({ error }) => {
+      if (error && error.code === "23505") { /* dup, ignore */ }
+      else if (error) console.warn(`[trigger-scan] insert profile_followings error:`, error.message);
     });
+
     await supabase.from("follow_events").insert({
       tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
       target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
@@ -154,7 +136,7 @@ async function syncNewFollows(
       category: categorizeFollow(f.follower_count, f.is_private),
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
-      is_initial: isInitialScan || isBackfill, // backfill = treated as initial
+      is_initial: isInitialScan || isBackfill,
     });
 
     if (!isInitialScan && !isBackfill) realEventCount++;
@@ -173,16 +155,14 @@ async function syncNewFollowers(
   currentFollowers: FollowingUser[],
   lastScannedAt: string | null,
   isInitialScan: boolean,
-  maxAllowed: number, // delta-gate
+  maxAllowed: number,
 ) {
-  // Check if profile_followers is empty (no baseline yet)
   const { count: baselineCount } = await supabase
     .from("profile_followers")
     .select("*", { count: "exact", head: true })
     .eq("tracked_profile_id", profileId);
 
   if (baselineCount === 0) {
-    // No comparison basis → save ALL as initial baseline
     console.log(`[FOLLOWER-BASELINE] No existing followers for ${profileId}, saving ${currentFollowers.length} as initial baseline`);
     const nowMs = Date.now();
 
@@ -192,48 +172,42 @@ async function syncNewFollowers(
 
       await supabase.from("profile_followers").insert({
         tracked_profile_id: profileId,
-        follower_user_id: f.pk,
-        follower_username: f.username,
-        follower_avatar_url: f.profile_pic_url || null,
-        follower_display_name: f.full_name || null,
+        follower_user_id: f.pk, follower_username: f.username,
+        follower_avatar_url: f.profile_pic_url || null, follower_display_name: f.full_name || null,
         follower_follower_count: f.follower_count || null,
-        follower_is_verified: f.is_verified || false,
-        follower_is_private: f.is_private || false,
+        follower_is_verified: f.is_verified || false, follower_is_private: f.is_private || false,
         first_seen_at: ts,
+      }).then(({ error }) => {
+        if (error && error.code === "23505") { /* dup */ }
+        else if (error) console.warn(`[trigger-scan] insert profile_followers error:`, error.message);
       });
+
       await supabase.from("follower_events").insert({
-        profile_id: profileId,
-        instagram_user_id: f.pk,
-        username: f.username,
-        full_name: f.full_name || null,
-        profile_pic_url: f.profile_pic_url || null,
-        is_verified: f.is_verified || false,
-        follower_count: f.follower_count || null,
-        event_type: "gained",
-        detected_at: ts,
+        profile_id: profileId, instagram_user_id: f.pk, username: f.username,
+        full_name: f.full_name || null, profile_pic_url: f.profile_pic_url || null,
+        is_verified: f.is_verified || false, follower_count: f.follower_count || null,
+        event_type: "gained", detected_at: ts,
         gender_tag: detectGender(f.full_name, f.username),
         category: categorizeFollow(f.follower_count, f.is_private),
-        is_initial: true, // baseline data
+        is_initial: true,
       });
     }
-
     return currentFollowers.length;
   }
 
-  // Delta-gate: only process if follower count actually increased
   if (maxAllowed <= 0) return 0;
 
   const { data: existing } = await supabase
     .from("profile_followers")
     .select("follower_user_id")
     .eq("tracked_profile_id", profileId)
-    .eq("is_current", true);
+    .eq("is_current", true)
+    .limit(10000);
 
   const existingIds = new Set((existing || []).map((f: Record<string, unknown>) => f.follower_user_id as string));
   const newEntries = currentFollowers.filter((f) => !existingIds.has(f.pk));
   if (newEntries.length === 0) return 0;
 
-  // Only process up to maxAllowed as real events
   const toProcess = newEntries.slice(0, maxAllowed);
   const nowMs = Date.now();
 
@@ -243,35 +217,30 @@ async function syncNewFollowers(
 
     await supabase.from("profile_followers").insert({
       tracked_profile_id: profileId,
-      follower_user_id: f.pk,
-      follower_username: f.username,
-      follower_avatar_url: f.profile_pic_url || null,
-      follower_display_name: f.full_name || null,
+      follower_user_id: f.pk, follower_username: f.username,
+      follower_avatar_url: f.profile_pic_url || null, follower_display_name: f.full_name || null,
       follower_follower_count: f.follower_count || null,
-      follower_is_verified: f.is_verified || false,
-      follower_is_private: f.is_private || false,
+      follower_is_verified: f.is_verified || false, follower_is_private: f.is_private || false,
       first_seen_at: ts,
+    }).then(({ error }) => {
+      if (error && error.code === "23505") { /* dup */ }
+      else if (error) console.warn(`[trigger-scan] insert profile_followers error:`, error.message);
     });
+
     await supabase.from("follower_events").insert({
-      profile_id: profileId,
-      instagram_user_id: f.pk,
-      username: f.username,
-      full_name: f.full_name || null,
-      profile_pic_url: f.profile_pic_url || null,
-      is_verified: f.is_verified || false,
-      follower_count: f.follower_count || null,
-      event_type: "gained",
-      detected_at: ts,
+      profile_id: profileId, instagram_user_id: f.pk, username: f.username,
+      full_name: f.full_name || null, profile_pic_url: f.profile_pic_url || null,
+      is_verified: f.is_verified || false, follower_count: f.follower_count || null,
+      event_type: "gained", detected_at: ts,
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
-      is_initial: false, // real event
+      is_initial: false,
     });
   }
 
   if (newEntries.length > maxAllowed) {
-    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${toProcess.length} real events (rest ignored)`);
+    console.log(`[DELTA-GATE] followers: ${newEntries.length} new found, capped to ${toProcess.length} real events`);
   }
-
   return toProcess.length;
 }
 
@@ -283,6 +252,12 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const hikerApiKey = Deno.env.get("HIKER_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // ★ FIX 1.3: Check daily API budget once
+    const budget = await checkDailyBudget(supabase);
+    if (!budget.allowed) {
+      return new Response(JSON.stringify({ error: "API_BUDGET_EXHAUSTED" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // ── Auth ──
     const authHeader = req.headers.get("Authorization");
@@ -297,7 +272,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Subscription check ──
     const { data: sub } = await supabase.from("subscriptions").select("plan_type, status, max_tracked_profiles").eq("user_id", user.id).maybeSingle();
     const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status || "");
     const isProMax = isPro && (sub?.max_tracked_profiles ?? 0) >= 9999;
@@ -314,7 +288,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: "No profile found" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Free user: block if initial_scan_done (except first scan)
     if (!isPro && profiles[0]?.initial_scan_done) {
       return new Response(JSON.stringify({ error: "PAYWALL_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -327,136 +300,115 @@ Deno.serve(async (req) => {
       todayMidnight.setHours(0, 0, 0, 0);
 
       let pushRemaining = profile.push_scans_today ?? 4;
-
       if (resetAt < todayMidnight) {
         pushRemaining = 4;
-        await supabase.from("tracked_profiles").update({
-          push_scans_today: 4,
-          unfollow_scans_today: 1,
-          scans_reset_at: new Date().toISOString(),
-        }).eq("id", profile.id);
+        await supabase.from("tracked_profiles").update({ push_scans_today: 4, unfollow_scans_today: 1, scans_reset_at: new Date().toISOString() }).eq("id", profile.id);
       }
-
       if (pushRemaining <= 0) {
         return new Response(JSON.stringify({ error: "Keine Push-Scans mehr übrig heute", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-
-      await supabase.from("tracked_profiles").update({
-        push_scans_today: pushRemaining - 1,
-        total_scans_executed: (profile.total_scans_executed ?? 0) + 1,
-      }).eq("id", profile.id);
+      await supabase.from("tracked_profiles").update({ push_scans_today: pushRemaining - 1, total_scans_executed: (profile.total_scans_executed ?? 0) + 1 }).eq("id", profile.id);
     }
 
     const results = [];
     for (const profile of profiles) {
-      // Use stored instagram_user_id — fallback: fetch once and save
-      let igUserId = profile.instagram_user_id as string | null;
-      if (!igUserId) {
-        console.log(`[trigger-scan] ${profile.username}: no instagram_user_id, fetching once...`);
-        const userInfoRes = await fetch(
-          `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
-          { headers: { "x-access-key": hikerApiKey } },
-        );
-        if (!userInfoRes.ok) {
-          results.push({ username: profile.username, error: `${userInfoRes.status}` });
-          continue;
-        }
-        const userInfo = await userInfoRes.json();
-        igUserId = String(userInfo.pk || userInfo.id);
-        await supabase.from("tracked_profiles").update({
-          instagram_user_id: igUserId,
-          avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
-          display_name: userInfo.full_name || null,
-          follower_count: userInfo.follower_count ?? 0,
-          following_count: userInfo.following_count ?? 0,
-        }).eq("id", profile.id);
-      }
+      const pId = profile.id as string;
 
-      const actualFollowingCount = (profile.following_count as number) ?? 0;
-      const actualFollowerCount = (profile.follower_count as number) ?? 0;
-
-      // Call 1: Following page 1
-      const followingUsers = await fetchPage1("following", igUserId, hikerApiKey);
-
-      // ── Private detection: empty/404 = private ──
-      if (followingUsers.length === 0 && actualFollowingCount > 0) {
-        await supabase.from("tracked_profiles").update({
-          is_private: true,
-          last_scanned_at: new Date().toISOString(),
-        }).eq("id", profile.id);
-
-        if (!profile.initial_scan_done) {
-          results.push({ username: profile.username, error: "profile_private" });
-        } else {
-          console.log(`[trigger-scan] ${profile.username}: likely private, tracking frozen`);
-          results.push({ username: profile.username, new_follows: 0, new_followers: 0, frozen: true });
-        }
+      // ★ FIX 1.2: Acquire scan lock
+      const locked = await acquireScanLock(supabase, pId, FUNCTION_NAME);
+      if (!locked) {
+        console.log(`[trigger-scan] ${profile.username}: locked, skipping`);
+        results.push({ username: profile.username, error: "locked" });
         continue;
       }
 
-      if (profile.is_private) {
-        await supabase.from("tracked_profiles").update({ is_private: false }).eq("id", profile.id);
-        console.log(`[trigger-scan] ${profile.username}: back to public!`);
+      try {
+        let igUserId = profile.instagram_user_id as string | null;
+        if (!igUserId) {
+          console.log(`[trigger-scan] ${profile.username}: no instagram_user_id, fetching once...`);
+          const result = await trackedApiFetch(
+            supabase, FUNCTION_NAME, pId,
+            `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
+            { "x-access-key": hikerApiKey },
+          );
+          if (result.skipped || result.error || !result.response || !result.response.ok) {
+            results.push({ username: profile.username, error: "api_failed" });
+            continue;
+          }
+          const userInfo = await result.response.json();
+          igUserId = String(userInfo.pk || userInfo.id);
+          await supabase.from("tracked_profiles").update({
+            instagram_user_id: igUserId,
+            avatar_url: userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null,
+            display_name: userInfo.full_name || null,
+            follower_count: userInfo.follower_count ?? 0,
+            following_count: userInfo.following_count ?? 0,
+          }).eq("id", pId);
+        }
+
+        const actualFollowingCount = (profile.following_count as number) ?? 0;
+        const actualFollowerCount = (profile.follower_count as number) ?? 0;
+
+        // Call 1: Following page 1
+        const followingUsers = await fetchPage1(supabase, "following", igUserId, hikerApiKey, pId);
+        if (followingUsers === null) {
+          results.push({ username: profile.username, error: "api_failed" });
+          continue;
+        }
+
+        // ── Private detection ──
+        if (followingUsers.length === 0 && actualFollowingCount > 0) {
+          await supabase.from("tracked_profiles").update({ is_private: true, last_scanned_at: new Date().toISOString() }).eq("id", pId);
+          if (!profile.initial_scan_done) {
+            results.push({ username: profile.username, error: "profile_private" });
+          } else {
+            results.push({ username: profile.username, new_follows: 0, new_followers: 0, frozen: true });
+          }
+          continue;
+        }
+
+        if (profile.is_private) {
+          await supabase.from("tracked_profiles").update({ is_private: false }).eq("id", pId);
+        }
+
+        await supabase.from("tracked_profiles").update({
+          previous_follower_count: profile.follower_count || 0,
+          previous_following_count: profile.following_count || 0,
+          last_scanned_at: new Date().toISOString(),
+          initial_scan_done: true,
+        }).eq("id", pId);
+
+        const isInitialScan = !profile.initial_scan_done;
+        const maxNewFollows = 200;
+        const maxNewFollowers = 200;
+        const newFollowCount = await syncNewFollows(supabase, pId, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
+
+        // Call 2: Followers page 1
+        await sleep(500);
+        const followerUsers = await fetchPage1(supabase, "followers", igUserId, hikerApiKey, pId);
+        let newFollowerCount = 0;
+        if (followerUsers !== null) {
+          console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers`);
+          newFollowerCount = await syncNewFollowers(supabase, pId, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
+        }
+
+        // ★ FIX 1.9: NO avatar refresh for existing rows
+
+        // Update counts
+        await supabase.from("tracked_profiles").update({
+          last_following_count: actualFollowingCount,
+          last_follower_count: actualFollowerCount,
+          ...(newFollowCount + newFollowerCount > 0 && !isInitialScan ? {
+            total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowCount + newFollowerCount,
+          } : {}),
+        }).eq("id", pId);
+
+        console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
+        results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });
+      } finally {
+        // ★ FIX 1.2: ALWAYS release lock
+        await releaseScanLock(supabase, pId);
       }
-
-      await supabase.from("tracked_profiles").update({
-        previous_follower_count: profile.follower_count || 0,
-        previous_following_count: profile.following_count || 0,
-        last_scanned_at: new Date().toISOString(),
-        initial_scan_done: true,
-      }).eq("id", profile.id);
-
-      const isInitialScan = !profile.initial_scan_done;
-
-      // ── No delta-gate: trust the DB diff in syncNewFollows/syncNewFollowers ──
-      const maxNewFollows = 200;
-      const maxNewFollowers = 200;
-      const newFollowCount = await syncNewFollows(supabase, profile.id, followingUsers, profile.last_scanned_at, isInitialScan, maxNewFollows);
-
-      // Call 2: Followers — always page 1 only (~200), syncNewFollowers handles baseline internally
-      await sleep(500);
-      const followerUsers = await fetchPage1("followers", igUserId, hikerApiKey);
-      console.log(`[trigger-scan] ${profile.username}: fetched ${followerUsers.length} followers`);
-      const newFollowerCount = await syncNewFollowers(supabase, profile.id, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
-
-      // ── Refresh avatar URLs in existing records ──
-      const avatarMap = new Map<string, string>();
-      for (const u of followingUsers) { if (u.profile_pic_url) avatarMap.set(u.pk, u.profile_pic_url); }
-      const followerAvatarMap = new Map<string, string>();
-      for (const u of followerUsers) { if (u.profile_pic_url) followerAvatarMap.set(u.pk, u.profile_pic_url); }
-
-      // Refresh profile_followings avatars
-      for (const [pk, url] of avatarMap) {
-        await supabase.from("profile_followings").update({ following_avatar_url: url })
-          .eq("tracked_profile_id", profile.id).eq("following_user_id", pk);
-      }
-      // Refresh follow_events avatars (by username for efficiency)
-      const usernameAvatarMap = new Map<string, string>();
-      for (const u of followingUsers) { if (u.profile_pic_url) usernameAvatarMap.set(u.username, u.profile_pic_url); }
-      for (const [uname, url] of usernameAvatarMap) {
-        await supabase.from("follow_events").update({ target_avatar_url: url })
-          .eq("tracked_profile_id", profile.id).eq("target_username", uname);
-      }
-      // Refresh profile_followers + follower_events avatars
-      for (const [pk, url] of followerAvatarMap) {
-        await supabase.from("profile_followers").update({ follower_avatar_url: url })
-          .eq("tracked_profile_id", profile.id).eq("follower_user_id", pk);
-        await supabase.from("follower_events").update({ profile_pic_url: url })
-          .eq("profile_id", profile.id).eq("instagram_user_id", pk);
-      }
-      console.log(`[trigger-scan] ${profile.username}: refreshed ${avatarMap.size} following + ${followerAvatarMap.size} follower avatars`);
-
-      // Update counts + last_following/follower_count
-      await supabase.from("tracked_profiles").update({
-        last_following_count: actualFollowingCount,
-        last_follower_count: actualFollowerCount,
-        ...(newFollowCount + newFollowerCount > 0 && !isInitialScan ? {
-          total_follows_detected: (profile.total_follows_detected ?? 0) + newFollowCount + newFollowerCount,
-        } : {}),
-      }).eq("id", profile.id);
-
-      console.log(`[trigger-scan] ${profile.username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
-      results.push({ username: profile.username, new_follows: newFollowCount, new_followers: newFollowerCount });
     }
 
     return new Response(JSON.stringify({ results }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
