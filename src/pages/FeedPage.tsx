@@ -6,6 +6,7 @@ import { DaySeparator } from "@/components/DaySeparator";
 import { SpyIcon } from "@/components/SpyIcon";
 import { useFollowEvents, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useFollowerEvents } from "@/hooks/useFollowerEvents";
+import { useFreshAvatarMap } from "@/hooks/useFreshAvatars";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ const FeedPage = () => {
   const { data: profiles = [] } = useTrackedProfiles();
   const { data: followEventsRaw = [], isLoading: eventsLoading } = useFollowEvents();
   const { data: followerEventsRaw = [] } = useFollowerEvents();
+  const { data: freshAvatars } = useFreshAvatarMap();
 
   // Pull-to-refresh handler (only invalidates queries, does NOT trigger API scan)
   const handleRefresh = useCallback(async () => {
@@ -42,10 +44,13 @@ const FeedPage = () => {
   }, [queryClient]);
 
   const allEvents: UnifiedFeedEvent[] = useMemo(() => {
+    const avatarMap = freshAvatars ?? new Map<string, string>();
+
     const fromFollows: UnifiedFeedEvent[] = followEventsRaw.map((e) => ({
       id: e.id, tracked_profile_id: e.tracked_profile_id, detected_at: e.detected_at, is_read: e.is_read,
       source: "follow" as const, event_type: e.event_type, target_username: e.target_username,
-      target_avatar_url: e.target_avatar_url, target_display_name: e.target_display_name,
+      target_avatar_url: avatarMap.get(e.target_username) ?? e.target_avatar_url,
+      target_display_name: e.target_display_name,
       target_follower_count: e.target_follower_count, target_is_private: e.target_is_private,
       direction: e.direction,
       gender_tag: (e as Record<string, unknown>).gender_tag as string | null,
@@ -60,7 +65,8 @@ const FeedPage = () => {
       return {
         id: e.id, tracked_profile_id: e.profile_id, detected_at: e.detected_at, is_read: e.is_read,
         source: "follower" as const, event_type: e.event_type, username: e.username,
-        full_name: e.full_name, profile_pic_url: e.profile_pic_url, follower_count: e.follower_count,
+        full_name: e.full_name, profile_pic_url: avatarMap.get(e.username) ?? e.profile_pic_url,
+        follower_count: e.follower_count,
         is_verified: e.is_verified, gender_tag: e.gender_tag, category: e.category, is_initial: e.is_initial,
         tracked_profiles: tp ? { username: tp.username, avatar_url: tp.avatar_url } : null,
       };
@@ -68,7 +74,7 @@ const FeedPage = () => {
     return [...fromFollows, ...fromFollowers]
       .filter((e) => !e.is_initial)
       .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime());
-  }, [followEventsRaw, followerEventsRaw, profiles, isPro]);
+  }, [followEventsRaw, followerEventsRaw, profiles, isPro, freshAvatars]);
 
 
   const visibleEvents = allEvents.slice(0, visibleCount);
