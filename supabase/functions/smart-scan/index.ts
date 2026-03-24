@@ -533,7 +533,6 @@ async function performBasicScan(
   const username = profile.username as string;
 
   // Use stored instagram_user_id — no user-info API call needed
-  const igUserId = profile.instagram_user_id as string | null;
   let igUserId = profile.instagram_user_id as string | null;
   if (!igUserId) {
     console.log(`[BASIC-SCAN] ${username}: no instagram_user_id, fetching once...`);
