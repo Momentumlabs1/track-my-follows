@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
     
     // ── Partial fetch guard ──
     const expectedCount = profile.following_count ?? 0;
-    if (expectedCount > 0 && allFollowings.length < expectedCount * 0.7) {
+    if (expectedCount >= 10 && allFollowings.length < expectedCount * 0.7) {
       console.error(`[unfollow-check] PARTIAL_FETCH: got ${allFollowings.length} but expected ~${expectedCount}`);
       // Refund the budget
       await supabase.from("tracked_profiles").update({
