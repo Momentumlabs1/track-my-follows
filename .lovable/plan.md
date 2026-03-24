@@ -1,81 +1,36 @@
 
 
-# Unfollow-Check Button: Redesign mit Progress Bar, Erklärung & Funnel-Logik
+# Fix: Unfollow-Check schlägt bei Accounts mit wenigen Followings fehl
 
-## Aktueller Zustand
-- Button zeigt "Unfollows prüfen" mit Shimmer-Effekt
-- Scan-Animation: rotierende SpyIcon + indeterminate Ladebalken (bouncing) + 2 Phasen-Dots
-- Ergebnis: einfache Karte (rot = Unfollows, grün = keine)
-- Free-User sehen Lock-Button, der direkt Paywall triggert
-- Keine Erklärung was der Scan tut, kein echtes Progress-Feedback
+## Problem
+`agent.stickk` folgt nur **1 Person**. Die HikerAPI gibt **0 Followings** zurück (404 oder leere Response). Der `PARTIAL_FETCH`-Guard berechnet `0 < 1 * 0.7 = 0.7` → true → Error 422 wird zurückgegeben. Der Scan bricht ab und das Frontend zeigt "Etwas ist schiefgelaufen".
 
-## Was verbessert wird
+Das passiert bei **jedem Account mit wenigen Followings** (unter ~5).
 
-### 1. Pre-Scan Erklärung (Idle-State)
-Statt nur ein Button: Eine kompakte Card mit Kontext
-- Headline: "Unfollow-Scan" mit SpyIcon
-- Subtext: "Prüft die gesamte Following-Liste auf Veränderungen seit dem letzten Scan"
-- Darunter der CTA-Button
-- Free-User: Teaser-Card mit Lock + "Was ist das?" Erklärung + Paywall-CTA
+## Fix
 
-### 2. Scan-Animation mit echtem Progress Bar
-- Determinate Progress Bar statt bouncing (geschätzt: 0-100% über ~30s)
-- 3 Phasen statt 2: "Verbindung herstellen" → "Following-Liste scannen" → "Ergebnisse auswerten"
-- Jede Phase hat Zeitschätzung und Checkmark wenn done
-- Textlicher Hinweis: "Wir vergleichen alle Followings mit dem letzten Scan"
+### Datei: `supabase/functions/unfollow-check/index.ts`
 
-### 3. Ergebnis-State mit Überleitung
-- Bei Unfollows: Karte mit rotem Alert + "Scrolle nach unten um Details zu sehen" CTA
-- Bei keinen Unfollows: Grüne Bestätigung + "Nächster Scan in X Stunden" Info
-- Neuer Follow-Count wird prominenter angezeigt
-- Result bleibt 15s sichtbar statt 10s
+**1. PARTIAL_FETCH Guard anpassen** (Zeile ~236):
+- Guard nur ab `expectedCount >= 10` aktivieren (bei 0-9 Followings ist 0 ein valides API-Ergebnis)
+- Oder: Threshold auf `expectedCount * 0.5` senken UND Mindestdifferenz von 5 erfordern
 
-### 4. Free-User Funnel
-- Statt nur Lock-Icon: Mini-Preview zeigt "Was du mit Pro siehst"
-- Fake-Scan-Preview: "3 mögliche Unfollows erkannt" (blurred) + CTA "Jetzt freischalten"
-- Tap anywhere → Paywall mit Kontext "unfollows"
-
-## Technische Umsetzung
-
-### Datei: `src/components/UnfollowCheckButton.tsx` (komplett überarbeiten)
-
-**State-Machine erweitern:**
 ```
-type ScanPhase = "idle" | "connecting" | "scanning_following" | "evaluating" | "done";
+// Vorher:
+if (expectedCount > 0 && allFollowings.length < expectedCount * 0.7)
+
+// Nachher:  
+if (expectedCount >= 10 && allFollowings.length < expectedCount * 0.7)
 ```
 
-**Progress-Berechnung:**
-- `connecting`: 0-15% (0-3s)
-- `scanning_following`: 15-70% (3-20s) 
-- `evaluating`: 70-95% (20-30s)
-- `done`: 100%
-- Smooth interpolation mit `useEffect` + interval (100ms updates)
+**2. fetchAllFollowings: 404 besser behandeln** (Zeile ~87):
+- Bei 404 nicht sofort `break` → stattdessen leeres Array zurückgeben ist OK, aber der Guard muss das erlauben
 
-**Idle-State (Pro-User):**
-- Native-card mit SpyIcon, Erklärungstext, Check-Count Badge, CTA Button
+### Datei: `src/components/UnfollowCheckButton.tsx`
 
-**Idle-State (Free-User):**
-- Blurred Teaser-Card mit "3 Unfollows erkannt" (fake) + Lock-Overlay + "Pro freischalten" Button
+**3. Frontend: 422 Error besser abfangen**:
+- Bei `res.error` den Response-Body parsen und `PARTIAL_FETCH`, `FOLLOWING_LIMIT`, etc. als bekannte Fehler mit spezifischen Meldungen anzeigen statt generischem "Etwas ist schiefgelaufen"
+- Aktuell wirft `supabase.functions.invoke` bei non-2xx einen generischen Error
 
-**Scan-State:**
-- Determinate Progress Bar (radix `<Progress>`) mit Prozent-Anzeige
-- 3 Steps mit Check/Spinner/Dot Indikatoren
-- Phase-Labels mit kurzer Erklärung
-
-**Result-State:**
-- Unfollows: rote Card + "↓ Details ansehen" Link-Button
-- Keine Unfollows: grüne Card + checks remaining Badge
-- +X neue Follows weiterhin als secondary Card
-
-### Datei: `src/i18n/locales/de.json` + `en.json`
-Neue Keys:
-- `unfollow_check.description` - Erklärungstext
-- `unfollow_check.phase_connecting` - Phase 1
-- `unfollow_check.scroll_to_details` - CTA
-- `unfollow_check.next_scan_info` - Nächster Scan
-- `unfollow_check.teaser_title` - Free-User Teaser
-- `unfollow_check.teaser_unlock` - CTA Free-User
-
-### Keine Backend-Änderungen nötig
-Alles rein Frontend/UI.
+Deployment der Edge Function nötig nach dem Fix.
 
