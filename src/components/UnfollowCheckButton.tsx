@@ -116,13 +116,17 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
         body: { profileId },
       });
-      if (res.error) throw res.error;
-      const data = res.data as {
+
+      // supabase.functions.invoke returns error for non-2xx, but data may still contain our JSON
+      const data = (res.data ?? {}) as {
         error?: string;
         unfollows_found?: number;
         new_follows_found?: number;
         checks_remaining?: number;
       };
+
+      // If invoke reported an error but we got a known error code in data, handle it gracefully
+      if (res.error && !data.error) throw res.error;
 
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
       phaseTimers.current.forEach(clearTimeout);
@@ -141,6 +145,14 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         setPhase("idle");
         setProgress(0);
         toast.error(t("unfollow_check.partial_fetch", "Scan unvollständig – bitte erneut versuchen."));
+      } else if (data.error === "FOLLOWING_LIMIT") {
+        setPhase("idle");
+        setProgress(0);
+        toast.error(t("unfollow_check.following_limit", "Unfollow-Check nur bis 1.500 Followings möglich."));
+      } else if (data.error) {
+        setPhase("idle");
+        setProgress(0);
+        toast.error(data.error);
       } else if (data.unfollows_found !== undefined) {
         setProgress(100);
         setPhase("done");
