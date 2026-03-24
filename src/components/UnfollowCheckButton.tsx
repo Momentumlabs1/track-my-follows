@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Search, Lock, Shield, UserMinus, UserPlus } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Lock, Shield, UserMinus, UserPlus, Check, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -7,19 +7,23 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { SpyIcon } from "@/components/SpyIcon";
+import { Progress } from "@/components/ui/progress";
 
 interface UnfollowCheckButtonProps {
   profileId: string;
 }
 
-type ScanPhase = "idle" | "scanning_following" | "evaluating" | "done";
-
-const PHASE_TIMINGS: Record<string, number> = {
-  scanning_following: 0,
-  evaluating: 15000,
-};
+type ScanPhase = "idle" | "connecting" | "scanning_following" | "evaluating" | "done";
 
 const TIMEOUT_MS = 180_000;
+
+// Phase progress ranges: connecting 0-15, scanning 15-70, evaluating 70-95, done 100
+const PHASE_RANGES: Record<string, [number, number, number]> = {
+  // [start, end, durationMs]
+  connecting: [0, 15, 3000],
+  scanning_following: [15, 70, 17000],
+  evaluating: [70, 95, 10000],
+};
 
 export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const { t } = useTranslation();
@@ -27,6 +31,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<ScanPhase>("idle");
+  const [progress, setProgress] = useState(0);
   const [checksRemaining, setChecksRemaining] = useState<number | null>(null);
   const [result, setResult] = useState<{
     unfollows_found: number;
@@ -34,6 +39,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   } | null>(null);
   const phaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (plan !== "pro") return;
@@ -53,7 +59,28 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     return () => {
       phaseTimers.current.forEach(clearTimeout);
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
+      if (progressInterval.current) clearInterval(progressInterval.current);
     };
+  }, []);
+
+  // Smooth progress interpolation based on current phase
+  const startProgressAnimation = useCallback((phaseName: string) => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    const range = PHASE_RANGES[phaseName];
+    if (!range) return;
+    const [start, end, duration] = range;
+    const startTime = Date.now();
+    setProgress(start);
+    progressInterval.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const ratio = Math.min(elapsed / duration, 1);
+      // Ease-out curve
+      const eased = 1 - Math.pow(1 - ratio, 2);
+      setProgress(Math.round(start + (end - start) * eased));
+      if (ratio >= 1 && progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    }, 80);
   }, []);
 
   const handleCheck = async () => {
@@ -62,15 +89,24 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
 
     setLoading(true);
     setResult(null);
-    setPhase("scanning_following");
+    setPhase("connecting");
+    startProgressAnimation("connecting");
 
     phaseTimers.current = [
-      setTimeout(() => setPhase("evaluating"), PHASE_TIMINGS.evaluating),
+      setTimeout(() => {
+        setPhase("scanning_following");
+        startProgressAnimation("scanning_following");
+      }, 3000),
+      setTimeout(() => {
+        setPhase("evaluating");
+        startProgressAnimation("evaluating");
+      }, 20000),
     ];
 
     timeoutTimer.current = setTimeout(() => {
       setLoading(false);
       setPhase("idle");
+      setProgress(0);
       toast.error(t("unfollow_check.timeout", "Scan took too long. Please try again."));
     }, TIMEOUT_MS);
 
@@ -90,18 +126,23 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
 
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
       phaseTimers.current.forEach(clearTimeout);
+      if (progressInterval.current) clearInterval(progressInterval.current);
 
       if (data.error === "LIMIT_REACHED") {
         setChecksRemaining(0);
         setPhase("idle");
+        setProgress(0);
         toast.error(t("unfollow_check.limit_reached"));
       } else if (data.error === "PRO_REQUIRED") {
         setPhase("idle");
+        setProgress(0);
         showPaywall("unfollows");
       } else if (data.error === "PARTIAL_FETCH") {
         setPhase("idle");
+        setProgress(0);
         toast.error(t("unfollow_check.partial_fetch", "Scan unvollständig – bitte erneut versuchen."));
       } else if (data.unfollows_found !== undefined) {
+        setProgress(100);
         setPhase("done");
         setResult({
           unfollows_found: data.unfollows_found || 0,
@@ -120,32 +161,43 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     } catch (err) {
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
       phaseTimers.current.forEach(clearTimeout);
+      if (progressInterval.current) clearInterval(progressInterval.current);
       setPhase("idle");
+      setProgress(0);
       toast.error(t("common.error"));
       console.error("Unfollow check error:", err);
     } finally {
       setLoading(false);
       setTimeout(() => {
         setPhase((prev) => prev === "done" ? "idle" : prev);
-      }, 10000);
+        setProgress((prev) => prev === 100 ? 0 : prev);
+      }, 15000);
     }
   };
 
   const isDisabled = loading || (checksRemaining !== null && checksRemaining <= 0 && plan === "pro");
   const isPro = plan === "pro";
 
-  const phaseLabel = (): string => {
-    switch (phase) {
-      case "scanning_following": return t("unfollow_check.phase_following", "🔍 Scanning following list...");
-      case "evaluating": return t("unfollow_check.phase_evaluating", "📊 Evaluating results...");
-      default: return t("unfollow_check.checking");
-    }
+  const SCAN_STEPS = [
+    { key: "connecting", label: t("unfollow_check.phase_connecting", "Verbindung herstellen") },
+    { key: "scanning_following", label: t("unfollow_check.phase_following_short", "Following scannen") },
+    { key: "evaluating", label: t("unfollow_check.phase_evaluating_short", "Auswerten") },
+  ];
+
+  const getStepStatus = (stepKey: string) => {
+    const order = ["connecting", "scanning_following", "evaluating", "done"];
+    const currentIdx = order.indexOf(phase);
+    const stepIdx = order.indexOf(stepKey);
+    if (stepIdx < currentIdx) return "done";
+    if (stepIdx === currentIdx) return "active";
+    return "pending";
   };
 
   return (
     <div className="space-y-3">
       <AnimatePresence mode="wait">
-        {loading ? (
+        {loading || (phase !== "idle" && phase !== "done" && !result) ? (
+          /* ── SCANNING STATE ── */
           <motion.div
             key="scanning"
             initial={{ opacity: 0, scale: 0.98 }}
@@ -163,47 +215,62 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               >
-                <SpyIcon size={36} glow />
+                <SpyIcon size={32} glow />
               </motion.div>
+
               <div className="text-center">
-                <motion.p
-                  key={phase}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-[13px] font-bold text-foreground"
-                >
-                  {phaseLabel()}
-                </motion.p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {t("unfollow_check.please_wait", "Das kann bis zu 2 Minuten dauern...")}
+                <p className="text-[13px] font-bold text-foreground">
+                  {t("unfollow_check.scan_title", "Unfollow-Scan läuft")}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {t("unfollow_check.description", "Vergleicht die Following-Liste mit dem letzten Scan")}
                 </p>
               </div>
-              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
-                  initial={{ x: "-100%", width: "35%" }}
-                  animate={{ x: "350%" }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
+
+              {/* Determinate Progress Bar */}
+              <div className="w-full space-y-1.5">
+                <Progress value={progress} className="h-2" />
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-muted-foreground">
+                    {t("unfollow_check.please_wait", "Das kann bis zu 2 Minuten dauern...")}
+                  </span>
+                  <span className="text-[10px] font-bold text-primary tabular-nums">
+                    {progress}%
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 w-full justify-center">
-                {[
-                  { key: "scanning_following", label: "Following" },
-                  { key: "evaluating", label: "Auswertung" },
-                ].map((step, i) => {
-                  const isActive = phase === step.key;
-                  const isDone = (phase === "evaluating" && i === 0) || (phase === "done" && i <= 1);
+
+              {/* Step indicators */}
+              <div className="flex flex-col gap-2 w-full">
+                {SCAN_STEPS.map((step) => {
+                  const status = getStepStatus(step.key);
                   return (
-                    <div key={step.key} className="flex items-center gap-1.5">
-                      <motion.div
-                        className={`h-2 w-2 rounded-full ${
-                          isDone ? "bg-brand-green" : isActive ? "bg-primary" : "bg-muted-foreground/30"
-                        }`}
-                        animate={isActive ? { scale: [1, 1.3, 1] } : {}}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      />
-                      <span className={`text-[9px] font-medium ${
-                        isActive ? "text-foreground" : isDone ? "text-brand-green" : "text-muted-foreground/50"
+                    <div key={step.key} className="flex items-center gap-2.5">
+                      <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${
+                        status === "done"
+                          ? "bg-brand-green/20"
+                          : status === "active"
+                          ? "bg-primary/20"
+                          : "bg-muted"
+                      }`}>
+                        {status === "done" ? (
+                          <Check className="h-3 w-3 text-brand-green" />
+                        ) : status === "active" ? (
+                          <motion.div
+                            className="h-2 w-2 rounded-full bg-primary"
+                            animate={{ scale: [1, 1.4, 1] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          />
+                        ) : (
+                          <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                        )}
+                      </div>
+                      <span className={`text-[11px] font-medium ${
+                        status === "done"
+                          ? "text-brand-green"
+                          : status === "active"
+                          ? "text-foreground"
+                          : "text-muted-foreground/50"
                       }`}>
                         {step.label}
                       </span>
@@ -213,7 +280,9 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
               </div>
             </div>
           </motion.div>
+
         ) : result ? (
+          /* ── RESULT STATE ── */
           <motion.div
             key="result"
             initial={{ opacity: 0, y: -8 }}
@@ -227,25 +296,42 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                   <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center">
                     <span className="text-sm">🚩</span>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-[13px] font-bold text-destructive">
                       {result.unfollows_found} {t("unfollow_check.unfollows_detected")}
                     </p>
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <UserMinus className="h-2.5 w-2.5" /> {result.unfollows_found} entfolgt
+                      <UserMinus className="h-2.5 w-2.5" /> {result.unfollows_found} {t("unfollow_check.has_unfollowed", "entfolgt")}
                     </span>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    const el = document.querySelector('[data-tab="gone"]');
+                    if (el instanceof HTMLElement) el.click();
+                  }}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold text-destructive py-1.5"
+                >
+                  <ChevronDown className="h-3 w-3" />
+                  {t("unfollow_check.scroll_to_details", "Details ansehen")}
+                </button>
               </div>
             ) : (
               <div className="native-card p-4 border border-brand-green/30 bg-brand-green/5">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-full bg-brand-green/15 flex items-center justify-center">
-                    <span className="text-sm">✅</span>
+                    <Check className="h-4 w-4 text-brand-green" />
                   </div>
-                  <p className="text-[13px] font-bold text-brand-green">
-                    {t("unfollow_check.no_unfollows")}
-                  </p>
+                  <div>
+                    <p className="text-[13px] font-bold text-brand-green">
+                      {t("unfollow_check.no_unfollows")}
+                    </p>
+                    {checksRemaining !== null && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {t("unfollow_check.next_scan_info", "{{count}} Check(s) übrig heute", { count: checksRemaining })}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -261,45 +347,105 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
               </div>
             )}
           </motion.div>
-        ) : (
-          <motion.button
-            key="button"
-            onClick={handleCheck}
-            disabled={isDisabled}
-            whileTap={{ scale: 0.97 }}
+
+        ) : !isPro ? (
+          /* ── FREE USER FUNNEL ── */
+          <motion.div
+            key="free-funnel"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-[13px] font-bold transition-all disabled:opacity-50 min-h-[48px] relative overflow-hidden ${
-              isPro && !isDisabled
-                ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20"
-                : "bg-secondary text-foreground"
-            }`}
+            onClick={() => showPaywall("unfollows")}
+            className="native-card p-4 border border-primary/20 relative overflow-hidden cursor-pointer"
           >
-            {isPro && !isDisabled && (
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-              />
-            )}
-            <span className="relative flex items-center gap-2">
-              {!isPro ? (
-                <><Lock className="h-4 w-4" /> {t("unfollow_check.pro_only")}</>
-              ) : checksRemaining !== null && checksRemaining <= 0 ? (
-                <><Shield className="h-4 w-4" /> {t("unfollow_check.limit_reached")}</>
-              ) : (
-                <>
-                  <Search className="h-4 w-4" />
-                  <span>{t("unfollow_check.button")}</span>
-                  {checksRemaining !== null && (
-                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full tabular-nums">
-                      {checksRemaining}/2
+            {/* Blurred fake preview */}
+            <div className="relative">
+              <div className="blur-sm pointer-events-none select-none">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="h-8 w-8 rounded-full bg-destructive/15 flex items-center justify-center">
+                    <span className="text-sm">🚩</span>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-destructive">
+                      3 {t("unfollow_check.unfollows_detected")}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground">
+                      {t("unfollow_check.teaser_subtitle", "Veränderungen in der Following-Liste erkannt")}
                     </span>
-                  )}
-                </>
+                  </div>
+                </div>
+              </div>
+
+              {/* Overlay CTA */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl">
+                <Lock className="h-5 w-5 text-primary mb-1.5" />
+                <p className="text-[12px] font-bold text-foreground">
+                  {t("unfollow_check.teaser_title", "Unfollow-Erkennung")}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 text-center px-4">
+                  {t("unfollow_check.teaser_desc", "Erkenne sofort wenn jemand entfolgt wird")}
+                </p>
+                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold">
+                  {t("unfollow_check.teaser_unlock", "Mit Pro freischalten")}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+        ) : (
+          /* ── IDLE STATE (PRO) ── */
+          <motion.div
+            key="idle-pro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-2"
+          >
+            <div className="native-card p-4 border border-border/50">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <SpyIcon size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-foreground">
+                    {t("unfollow_check.idle_title", "Unfollow-Scan")}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                    {t("unfollow_check.description", "Vergleicht die Following-Liste mit dem letzten Scan")}
+                  </p>
+                </div>
+                {checksRemaining !== null && (
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full tabular-nums shrink-0">
+                    {checksRemaining}/2
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <motion.button
+              onClick={handleCheck}
+              disabled={isDisabled}
+              whileTap={{ scale: 0.97 }}
+              className={`w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-[13px] font-bold transition-all disabled:opacity-50 min-h-[48px] relative overflow-hidden ${
+                !isDisabled
+                  ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20"
+                  : "bg-secondary text-foreground"
+              }`}
+            >
+              {!isDisabled && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+                  animate={{ x: ["-100%", "200%"] }}
+                  transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                />
               )}
-            </span>
-          </motion.button>
+              <span className="relative flex items-center gap-2">
+                {checksRemaining !== null && checksRemaining <= 0 ? (
+                  <><Shield className="h-4 w-4" /> {t("unfollow_check.limit_reached")}</>
+                ) : (
+                  <><Search className="h-4 w-4" /> {t("unfollow_check.button")}</>
+                )}
+              </span>
+            </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
