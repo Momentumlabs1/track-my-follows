@@ -136,7 +136,7 @@ async function syncNewFollows(
       target_follower_count: f.follower_count || null,
       target_is_private: f.is_private || false,
       is_initial: isInitialScan || isBackfill,
-    }, { onConflict: "tracked_profile_id,target_username,event_type,direction,COALESCE(is_initial, false)", ignoreDuplicates: true });
+    }, { onConflict: "tracked_profile_id,target_username,event_type,direction,is_initial", ignoreDuplicates: true });
 
     if (!isInitialScan && !isBackfill) realEventCount++;
   }
@@ -188,7 +188,7 @@ async function syncNewFollowers(
         gender_tag: detectGender(f.full_name, f.username),
         category: categorizeFollow(f.follower_count, f.is_private),
         is_initial: true,
-      }, { onConflict: "profile_id,username,event_type,COALESCE(is_initial, false)", ignoreDuplicates: true });
+      }, { onConflict: "profile_id,username,event_type,is_initial", ignoreDuplicates: true });
     }
     return currentFollowers.length;
   }
@@ -232,7 +232,7 @@ async function syncNewFollowers(
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
       is_initial: false,
-    }, { onConflict: "profile_id,username,event_type,COALESCE(is_initial, false)", ignoreDuplicates: true });
+    }, { onConflict: "profile_id,username,event_type,is_initial", ignoreDuplicates: true });
   }
 
   if (newEntries.length > maxAllowed) {
