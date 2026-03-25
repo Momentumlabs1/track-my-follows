@@ -26,17 +26,19 @@ export async function acquireScanLock(
 ): Promise<boolean> {
   const cutoff = new Date(Date.now() - LOCK_TIMEOUT_MS).toISOString();
 
-  const { data } = await supabase
+  const { count } = await supabase
     .from("tracked_profiles")
-    .update({
-      last_scan_started_at: new Date().toISOString(),
-      last_scan_function: functionName,
-    })
+    .update(
+      {
+        last_scan_started_at: new Date().toISOString(),
+        last_scan_function: functionName,
+      },
+      { count: "exact" },
+    )
     .eq("id", profileId)
-    .or(`last_scan_started_at.is.null,last_scan_started_at.lt.${cutoff}`)
-    .select("id");
+    .or(`last_scan_started_at.is.null,last_scan_started_at.lt.${cutoff}`);
 
-  return (data?.length ?? 0) > 0;
+  return (count ?? 0) > 0;
 }
 
 export async function releaseScanLock(
