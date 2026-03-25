@@ -160,7 +160,7 @@ async function syncNewFollows(
     });
 
     if (!isBackfill) {
-      await supabaseClient.from("follow_events").insert({
+      await supabaseClient.from("follow_events").upsert({
         tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
         target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
         detected_at: ts, direction: "following", notification_sent: false,
@@ -169,11 +169,11 @@ async function syncNewFollows(
         target_follower_count: f.follower_count || null,
         target_is_private: f.is_private || false,
         is_initial: false,
-      });
+      }, { onConflict: "tracked_profile_id,target_username,event_type,direction,COALESCE(is_initial, false)", ignoreDuplicates: true });
       await supabaseClient.rpc("increment_gender_count", { p_profile_id: profileId, p_gender: genderTag });
       realEventCount++;
     } else {
-      await supabaseClient.from("follow_events").insert({
+      await supabaseClient.from("follow_events").upsert({
         tracked_profile_id: profileId, event_type: "follow", target_username: f.username,
         target_avatar_url: f.profile_pic_url || null, target_display_name: f.full_name || null,
         detected_at: ts, direction: "following", notification_sent: false,
@@ -182,7 +182,7 @@ async function syncNewFollows(
         target_follower_count: f.follower_count || null,
         target_is_private: f.is_private || false,
         is_initial: true,
-      });
+      }, { onConflict: "tracked_profile_id,target_username,event_type,direction,COALESCE(is_initial, false)", ignoreDuplicates: true });
       await supabaseClient.rpc("increment_gender_count", { p_profile_id: profileId, p_gender: genderTag });
     }
   }
@@ -226,7 +226,7 @@ async function syncNewFollowers(
         if (error) console.warn(`[smart-scan] upsert profile_followers error:`, error.message);
       });
 
-      await supabaseClient.from("follower_events").insert({
+      await supabaseClient.from("follower_events").upsert({
         profile_id: profileId, instagram_user_id: f.pk, username: f.username,
         full_name: f.full_name || null, profile_pic_url: f.profile_pic_url || null,
         is_verified: f.is_verified || false, follower_count: f.follower_count || null,
@@ -234,7 +234,7 @@ async function syncNewFollowers(
         gender_tag: detectGender(f.full_name, f.username),
         category: categorizeFollow(f.follower_count, f.is_private),
         is_initial: true,
-      });
+      }, { onConflict: "profile_id,username,event_type,COALESCE(is_initial, false)", ignoreDuplicates: true });
     }
     return currentFollowers.length;
   }
@@ -276,7 +276,7 @@ async function syncNewFollowers(
       if (error) console.warn(`[smart-scan] upsert profile_followers error:`, error.message);
     });
 
-    await supabaseClient.from("follower_events").insert({
+    await supabaseClient.from("follower_events").upsert({
       profile_id: profileId, instagram_user_id: f.pk, username: f.username,
       full_name: f.full_name || null, profile_pic_url: f.profile_pic_url || null,
       is_verified: f.is_verified || false, follower_count: f.follower_count || null,
@@ -284,7 +284,7 @@ async function syncNewFollowers(
       gender_tag: detectGender(f.full_name, f.username),
       category: categorizeFollow(f.follower_count, f.is_private),
       is_initial: false,
-    });
+    }, { onConflict: "profile_id,username,event_type,COALESCE(is_initial, false)", ignoreDuplicates: true });
   }
 
   if (newEntries.length > maxAllowed) {
