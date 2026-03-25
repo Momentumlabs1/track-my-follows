@@ -118,14 +118,13 @@ async function syncNewFollows(
     const category = categorizeFollow(f.follower_count, f.is_private);
     const isBackfill = !isInitialScan && i >= maxAllowed;
 
-    await supabase.from("profile_followings").insert({
+    await supabase.from("profile_followings").upsert({
       tracked_profile_id: profileId, following_username: f.username, following_user_id: f.pk,
       following_avatar_url: f.profile_pic_url || null, following_display_name: f.full_name || null,
       first_seen_at: ts, direction: "following",
       gender_tag: genderTag, category: category,
-    }).then(({ error }) => {
-      if (error && error.code === "23505") { /* dup, ignore */ }
-      else if (error) console.warn(`[trigger-scan] insert profile_followings error:`, error.message);
+    }, { onConflict: "tracked_profile_id,following_user_id,direction", ignoreDuplicates: true }).then(({ error }) => {
+      if (error) console.warn(`[trigger-scan] upsert profile_followings error:`, error.message);
     });
 
     await supabase.from("follow_events").insert({
@@ -170,16 +169,15 @@ async function syncNewFollowers(
       const f = currentFollowers[i];
       const ts = new Date(nowMs - i * 1000).toISOString();
 
-      await supabase.from("profile_followers").insert({
+      await supabase.from("profile_followers").upsert({
         tracked_profile_id: profileId,
         follower_user_id: f.pk, follower_username: f.username,
         follower_avatar_url: f.profile_pic_url || null, follower_display_name: f.full_name || null,
         follower_follower_count: f.follower_count || null,
         follower_is_verified: f.is_verified || false, follower_is_private: f.is_private || false,
         first_seen_at: ts,
-      }).then(({ error }) => {
-        if (error && error.code === "23505") { /* dup */ }
-        else if (error) console.warn(`[trigger-scan] insert profile_followers error:`, error.message);
+      }, { onConflict: "tracked_profile_id,follower_user_id", ignoreDuplicates: true }).then(({ error }) => {
+        if (error) console.warn(`[trigger-scan] upsert profile_followers error:`, error.message);
       });
 
       await supabase.from("follower_events").insert({
@@ -215,16 +213,15 @@ async function syncNewFollowers(
     const f = toProcess[i];
     const ts = new Date(nowMs - i * 1000).toISOString();
 
-    await supabase.from("profile_followers").insert({
+    await supabase.from("profile_followers").upsert({
       tracked_profile_id: profileId,
       follower_user_id: f.pk, follower_username: f.username,
       follower_avatar_url: f.profile_pic_url || null, follower_display_name: f.full_name || null,
       follower_follower_count: f.follower_count || null,
       follower_is_verified: f.is_verified || false, follower_is_private: f.is_private || false,
       first_seen_at: ts,
-    }).then(({ error }) => {
-      if (error && error.code === "23505") { /* dup */ }
-      else if (error) console.warn(`[trigger-scan] insert profile_followers error:`, error.message);
+    }, { onConflict: "tracked_profile_id,follower_user_id", ignoreDuplicates: true }).then(({ error }) => {
+      if (error) console.warn(`[trigger-scan] upsert profile_followers error:`, error.message);
     });
 
     await supabase.from("follower_events").insert({

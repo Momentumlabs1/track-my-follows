@@ -72,23 +72,14 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-async function batchInsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[]) {
+async function batchUpsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[], onConflict: string) {
   if (rows.length === 0) return;
   const CHUNK = 500;
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK);
-    const { error } = await supabase.from(table).insert(chunk);
+    const { error } = await supabase.from(table).upsert(chunk, { onConflict, ignoreDuplicates: true });
     if (error) {
-      if (error.code === "23505") {
-        // Unique constraint violation — insert one by one, skip dups
-        for (const row of chunk) {
-          await supabase.from(table).insert(row).then(({ error: e }) => {
-            if (e && e.code !== "23505") console.error(`[create-baseline] single insert error on ${table}:`, e.message);
-          });
-        }
-      } else {
-        console.error(`[create-baseline] Batch insert error on ${table}:`, error.message);
-      }
+      console.error(`[create-baseline] Batch upsert error on ${table}:`, error.message);
     }
   }
 }
@@ -311,7 +302,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      await batchInsert(supabase, "profile_followings", newRows);
+      await batchUpsert(supabase, "profile_followings", newRows, "tracked_profile_id,following_user_id,direction");
 
       // Update existing rows (gender_tag + category only, no avatar refresh for existing)
       let updatedCount = 0;

@@ -1,0 +1,1 @@
+UPDATE tracked_profiles SET last_scan_started_at = NULL, last_scan_function = NULL WHERE last_scan_started_at IS NOT NULL;

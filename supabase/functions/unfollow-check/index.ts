@@ -114,25 +114,15 @@ async function fetchAllFollowings(
   return allUsers;
 }
 
-// ── Batch insert helper (ON CONFLICT safe) ──
-async function batchInsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[]) {
+// ── Batch upsert helper (ON CONFLICT safe) ──
+async function batchUpsert(supabase: ReturnType<typeof createClient>, table: string, rows: Record<string, unknown>[], onConflict: string) {
   if (rows.length === 0) return;
   const CHUNK = 500;
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK);
-    const { error } = await supabase.from(table).insert(chunk);
+    const { error } = await supabase.from(table).upsert(chunk, { onConflict, ignoreDuplicates: true });
     if (error) {
-      if (error.code === "23505") {
-        // Unique constraint — insert one by one, skip dups
-        for (const row of chunk) {
-          await supabase.from(table).insert(row).then(({ error: e }) => {
-            if (e && e.code !== "23505") console.error(`[unfollow-check] single insert error on ${table}:`, e.message);
-          });
-        }
-      } else {
-        console.error(`[unfollow-check] Insert error on ${table}:`, error.message);
-        throw new Error(`Insert failed on ${table}: ${error.message}`);
-      }
+      console.error(`[unfollow-check] Upsert error on ${table}:`, error.message);
     }
   }
 }
@@ -373,9 +363,9 @@ Deno.serve(async (req) => {
 
       await batchUpdateLastSeen(supabase, confirmIds);
 
-      if (unfollowEvents.length > 0) await batchInsert(supabase, "follow_events", unfollowEvents);
-      if (newFollowEvents.length > 0) await batchInsert(supabase, "follow_events", newFollowEvents);
-      if (newFollowingRows.length > 0) await batchInsert(supabase, "profile_followings", newFollowingRows);
+      if (unfollowEvents.length > 0) await batchUpsert(supabase, "follow_events", unfollowEvents, "id");
+      if (newFollowEvents.length > 0) await batchUpsert(supabase, "follow_events", newFollowEvents, "id");
+      if (newFollowingRows.length > 0) await batchUpsert(supabase, "profile_followings", newFollowingRows, "tracked_profile_id,following_user_id,direction");
 
       for (const g of genderDecrements) {
         await supabase.rpc("decrement_gender_count", { p_profile_id: profile.id, p_gender: g });
