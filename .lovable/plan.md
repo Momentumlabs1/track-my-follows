@@ -1,61 +1,37 @@
 
 
-## Fix: Duplikate in follow_events & follower_events
+## Fix: Fehlendes flipsefelix-Event + stilles Scheitern verhindern
 
 ### Problem
-- `follow_events` und `follower_events` nutzen `.insert()` ohne Unique-Constraint
-- Mehrere Scans erkennen denselben User als "neu" → mehrfach eingefügt
-- @thevibefounder 4x, Follower-Events bis 10x dupliziert
+- `flipsefelix` wurde korrekt in `profile_followings` gespeichert (18:16:26)
+- Aber das zugehörige `follow_event` (is_initial=false) wurde NIE erstellt
+- Ursache: Der Scan lief mit dem alten Code (COALESCE im onConflict), der PostgREST-Upsert schlug lautlos fehl
+- Der Code hat kein Error-Logging für `follow_events` und `follower_events` Upserts
 
-### Lösung (3 Schritte)
+### Lösung (2 Schritte)
 
-**1. Migration: Duplikate bereinigen + Unique Indexes anlegen**
+**1. Migration: Fehlendes Event nachträglich einfügen**
 
 ```sql
--- follow_events: Duplikate löschen (nur die älteste behalten)
-DELETE FROM follow_events a USING follow_events b
-WHERE a.id > b.id
-  AND a.tracked_profile_id = b.tracked_profile_id
-  AND a.target_username = b.target_username
-  AND a.event_type = b.event_type
-  AND a.direction = b.direction
-  AND a.is_initial = b.is_initial;
-
--- follower_events: Duplikate löschen
-DELETE FROM follower_events a USING follower_events b
-WHERE a.id > b.id
-  AND a.profile_id = b.profile_id
-  AND a.username = b.username
-  AND a.event_type = b.event_type
-  AND a.is_initial = b.is_initial;
-
--- Unique Indexes (damit es nie wieder passiert)
-CREATE UNIQUE INDEX uq_follow_event
-  ON follow_events (tracked_profile_id, target_username, event_type, direction, is_initial);
-
-CREATE UNIQUE INDEX uq_follower_event
-  ON follower_events (profile_id, username, event_type, is_initial);
+INSERT INTO follow_events (tracked_profile_id, event_type, target_username, 
+  target_avatar_url, target_display_name, detected_at, direction, 
+  notification_sent, gender_tag, category, is_initial)
+SELECT tracked_profile_id, 'follow', following_username, 
+  following_avatar_url, following_display_name, first_seen_at, 'following',
+  false, gender_tag, category, false
+FROM profile_followings
+WHERE tracked_profile_id = '6a060c46-4919-4d0f-8c18-a509c74d48ea'
+  AND following_username = 'flipsefelix'
+ON CONFLICT DO NOTHING;
 ```
 
-**2. Edge Functions: `.insert()` → `.upsert()` umstellen**
+**2. Edge Functions: Error-Logging für ALLE Upserts hinzufügen**
 
-In `smart-scan/index.ts` und `trigger-scan/index.ts` alle `follow_events` und `follower_events` Inserts auf `.upsert(..., { onConflict: "...", ignoreDuplicates: true })` umstellen — exakt wie bereits bei `profile_followings` gemacht.
+In `trigger-scan/index.ts` und `smart-scan/index.ts` — jeder `follow_events` und `follower_events` Upsert bekommt ein `.then(({ error }) => { if (error) console.warn(...) })`, genau wie es bei `profile_followings` schon gemacht wird.
 
-Betrifft:
-- `smart-scan/index.ts`: 4 Stellen (Zeilen ~163, ~176, ~229, ~279)
-- `trigger-scan/index.ts`: 4 Stellen (Zeilen ~130, ~183, ~227)
+Betrifft ca. 7 Stellen in beiden Files. Damit werden zukünftige Fehler sichtbar in den Logs.
 
-**3. Redeploy Edge Functions**
+**3. Redeploy beider Edge Functions**
 
-Nach dem Code-Update beide Functions deployen.
-
-### Warum dieser Unique Key?
-- `(tracked_profile_id, target_username, event_type, direction, is_initial)` — ein User kann nur einmal pro Event-Typ (follow/unfollow) als initial/non-initial existieren
-- Wenn jemand entfolgt und re-followed, ist das ein anderer `event_type`
-- **Einschränkung**: Wenn jemand tatsächlich 2x entfolgt und 2x re-followed, wird nur das erste Event gespeichert. Das ist akzeptabel — der Use Case ist extrem selten und die Alternative (endlose Duplikate) ist schlimmer.
-
-### Reihenfolge
-1. Migration zuerst (bereinigt + schützt)
-2. Edge Function Code Update
-3. Deploy
+Sicherstellen dass der aktuelle Code (mit korrektem onConflict ohne COALESCE) auch wirklich deployed ist.
 
