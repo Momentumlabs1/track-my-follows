@@ -640,6 +640,16 @@
     "unfollow_scan_title": "Unfollow Scan",
     "unlimited": "∞ unbegrenzt"
   },
+  "dashboard.spy_default_name": "Spion 🕵️",
+  "pro_tutorial": {
+    "welcome_title": "Willkommen im Pro-Team!",
+    "welcome_text": "Du hast jetzt Zugriff auf alle Premium-Features. Lass uns deinen Spion einrichten.",
+    "spy_zone_title": "Dein Spion",
+    "spy_zone_text": "Tippe auf 'Spy hierhin' bei einem Profil um deinen Spion zuzuweisen.",
+    "spy_zone_comment": "Hier wird dein Agent stationiert!",
+    "done_title": "Einsatzbereit! 🎉",
+    "done_text": "Dein Spion wartet auf seinen ersten Auftrag. Viel Erfolg, Agent!"
+  },
   "gender_analysis_running": "Gender-Analyse läuft im Hintergrund...",
   "private_frozen": "Dieses Profil ist jetzt privat – Tracking eingefroren",
   "private_frozen_subtitle": "Bestehende Daten bleiben erhalten. Sobald das Profil wieder öffentlich ist, wird das Tracking automatisch fortgesetzt.",
