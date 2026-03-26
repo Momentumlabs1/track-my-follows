@@ -637,6 +637,16 @@
     "unfollow_scan_title": "Unfollow Scan",
     "unlimited": "∞ unlimited"
   },
+  "dashboard.spy_default_name": "Spy 🕵️",
+  "pro_tutorial": {
+    "welcome_title": "Welcome to Pro!",
+    "welcome_text": "You now have access to all premium features. Let's set up your spy.",
+    "spy_zone_title": "Your Spy",
+    "spy_zone_text": "Tap 'Spy here' on a profile to assign your spy agent.",
+    "spy_zone_comment": "This is where your agent will be stationed!",
+    "done_title": "Ready for action! 🎉",
+    "done_text": "Your spy is waiting for the first mission. Good luck, Agent!"
+  },
   "gender_analysis_running": "Gender analysis running in background...",
   "private_frozen": "This profile is now private – tracking frozen",
   "private_frozen_subtitle": "Existing data is preserved. Tracking will resume automatically once the profile goes public again.",

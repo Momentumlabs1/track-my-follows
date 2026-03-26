@@ -622,6 +622,16 @@
     "unfollow_scan_title": "فحص إلغاء المتابعة",
     "unlimited": "∞ غير محدود"
   },
+  "dashboard.spy_default_name": "جاسوس 🕵️",
+  "pro_tutorial": {
+    "welcome_title": "!مرحبًا في برو",
+    "welcome_text": "لديك الآن حق الوصول إلى جميع الميزات المميزة. دعنا نعد جاسوسك.",
+    "spy_zone_title": "جاسوسك",
+    "spy_zone_text": "اضغط على 'تجسس هنا' على ملف شخصي لتعيين جاسوسك.",
+    "spy_zone_comment": "!هنا سيتم تمركز عميلك",
+    "done_title": "!جاهز للعمل 🎉",
+    "done_text": "!جاسوسك ينتظر مهمته الأولى. حظًا موفقًا أيها العميل"
+  },
   "spy_findings": {
     "title": "تحليل الجاسوس",
     "female_ratio": "نسبة الإناث",
