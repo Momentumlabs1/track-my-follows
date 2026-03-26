@@ -328,24 +328,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Unfollow hint banner */}
-      {spyProfile && (spyProfile.pending_unfollow_hint ?? 0) > 0 && (
-        <div className="px-5 mt-3">
-          <button
-            onClick={() => navigate(`/profile/${spyProfile.id}`)}
-            className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-destructive/20"
-            style={{ background: "hsl(var(--destructive) / 0.08)" }}
-          >
-            <span>⚠️</span>
-            <span className="flex-1 text-start font-semibold text-foreground" style={{ fontSize: "0.8125rem" }}>
-              ~{spyProfile.pending_unfollow_hint} {t("spy.unfollows_detected")}
-            </span>
-            <span className="text-primary font-semibold" style={{ fontSize: "0.8125rem" }}>
-              🔍 {t("spy.reveal_now")}
-            </span>
-          </button>
-        </div>
-      )}
 
       {/* Accounts section — lower z-index so dragged icon floats above */}
       {profiles.length > 0 && (
