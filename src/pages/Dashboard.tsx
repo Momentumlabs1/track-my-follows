@@ -95,23 +95,37 @@ const Dashboard = () => {
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
       {/* Top bar */}
       <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-3">
-        {isPro && (
+        <div className="flex items-center justify-between">
+          {isPro && (
+            <span
+              className="font-bold tracking-wider uppercase flex items-center gap-1"
+              style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.55)" }}
+            >
+              ✦ Spy Secret Pro
+            </span>
+          )}
           <span
-            className="font-bold tracking-wider uppercase flex items-center gap-1"
-            style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.55)" }}
+            className="font-semibold"
+            style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}
           >
-            ✦ Spy Secret Pro
+            {profiles.length} {profiles.length === 1 ? t("dashboard.account_singular", "Account") : t("dashboard.account_plural", "Accounts")}
           </span>
-        )}
+        </div>
+        <p className="text-primary-foreground/60 mt-3" style={{ fontSize: "0.8125rem" }}>
+          {t("dashboard.welcome_back", "Willkommen zurück")}
+        </p>
         <motion.h1
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="font-extrabold text-primary-foreground text-center mt-3"
-          style={{ fontSize: "2rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}
+          className="font-extrabold text-primary-foreground mt-0.5"
+          style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}
         >
-          {spyProfile?.spy_name || t("dashboard.spy_fallback", "Spion 🕵️")}
+          {spyProfile?.spy_name || t("dashboard.spy_default_name", "Spion 🕵️")}
         </motion.h1>
+        <p className="text-primary-foreground/50 mt-1" style={{ fontSize: "0.75rem" }}>
+          {isPro ? t("dashboard.greeting_subtitle_pro") : t("dashboard.greeting_subtitle_free")}
+        </p>
       </div>
 
       {/* ─── Spy Agent Zone ─── */}
