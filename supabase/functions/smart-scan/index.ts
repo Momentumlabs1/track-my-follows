@@ -560,8 +560,8 @@ Deno.serve(async (req) => {
 
         if (hasSpy) {
           const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at as string) : null;
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-          if (lastScan && lastScan > oneHourAgo) {
+          const fiftyFiveMinAgo = new Date(Date.now() - 55 * 60 * 1000);
+          if (lastScan && lastScan > fiftyFiveMinAgo) {
             results.push({ username: profile.username, scan_type: "spy", skipped: true });
             continue;
           }
