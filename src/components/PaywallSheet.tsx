@@ -145,7 +145,7 @@ function SuccessView({ onClose }: { onClose: () => void }) {
 
       {/* CTA Button */}
       <motion.button
-        onClick={() => { haptic.light(); onClose(); }}
+        onClick={() => { haptic.light(); sessionStorage.setItem('show_pro_tutorial', '1'); onClose(); }}
         className="mt-10 w-full max-w-xs pill-btn-primary py-4 justify-center text-[15px] font-bold min-h-[44px] relative z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
