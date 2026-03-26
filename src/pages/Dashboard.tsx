@@ -93,51 +93,29 @@ const Dashboard = () => {
 
       {/* ═══ HEADER ═══ */}
       <div className="relative z-20 gradient-pink" style={{ overflow: "visible" }}>
-        {/* Top bar */}
-         <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-2 flex items-center justify-between">
-          {isPro ? (
-            <span
-              className="font-black tracking-wider uppercase flex items-center gap-1.5"
-              style={{
-                fontSize: "0.6875rem",
-                color: "rgba(255,255,255,0.95)",
-                textShadow: "0 0 12px rgba(255,255,255,0.5), 0 0 24px rgba(255,200,220,0.3)",
-              }}
-            >
-              ✦ Spy Secret Pro
-            </span>
-          ) : (
-            <span className="text-primary-foreground/40 font-bold tracking-wider uppercase" style={{ fontSize: "0.625rem" }}>
-              Spy Secret
-            </span>
-          )}
-          {profiles.length > 0 && (
-            <span className="text-primary-foreground/50" style={{ fontSize: "0.625rem" }}>
-              {profiles.length} {profiles.length === 1 ? t("dashboard.account_singular", "Account") : t("dashboard.account_plural", "Accounts")}
-            </span>
-          )}
-        </div>
-        {/* Greeting */}
-        <div className="px-6 pb-2">
-          <motion.h1 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-            className="font-bold text-primary-foreground" style={{ fontSize: "1.75rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            {t("dashboard.welcome_back", "Willkommen zurück")}
-          </motion.h1>
-          <p className="text-primary-foreground/80 font-mono font-bold mt-1" style={{ fontSize: "0.875rem", letterSpacing: "0.05em" }}>
-            Spy-{spyNumber}
-          </p>
-          <p className="text-primary-foreground/55 mt-1" style={{ fontSize: "0.8125rem" }}>
-            {isPro
-              ? t("dashboard.greeting_subtitle_pro", "Dein Spion ist aktiv — hier ist dein Überblick.")
-              : t("dashboard.greeting_subtitle_free", "Schalte deinen Spion frei für volle Kontrolle.")}
-          </p>
-        </div>
-
-        {/* ─── Spy Agent Zone ─── */}
-        <div id="spy-agent-zone" className="px-5 pt-4 pb-12" style={{ position: "relative", zIndex: 10 }}>
-          <span className="text-primary-foreground/40 font-bold uppercase tracking-widest block mb-2 px-1" style={{ fontSize: "0.5625rem", letterSpacing: "0.12em" }}>
-            {t("spy.agent_zone", "🕵️ Dein Spion")}
+      {/* Top bar */}
+      <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-3">
+        {isPro && (
+          <span
+            className="font-bold tracking-wider uppercase flex items-center gap-1"
+            style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.55)" }}
+          >
+            ✦ Spy Secret Pro
           </span>
+        )}
+        <motion.h1
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="font-extrabold text-primary-foreground text-center mt-3"
+          style={{ fontSize: "2rem", letterSpacing: "-0.03em", lineHeight: 1.1 }}
+        >
+          {spyProfile?.spy_name || t("dashboard.spy_fallback", "Spion 🕵️")}
+        </motion.h1>
+      </div>
+
+      {/* ─── Spy Agent Zone ─── */}
+      <div id="spy-agent-zone" className="px-5 pt-2 pb-12" style={{ position: "relative", zIndex: 10 }}>
           {isPro ? (
             <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 65% 45%), hsl(340 70% 55%))", boxShadow: "0 8px 30px -6px rgba(200,50,100,0.35)", overflow: "visible" }}>
               {/* Scan-line effect on full dark bg */}
