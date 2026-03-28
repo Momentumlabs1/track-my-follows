@@ -75,6 +75,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
 async function fetchAllFollowings(
   supabase: ReturnType<typeof createClient>,
   userId: string, hikerApiKey: string, profileId: string,
+  expectedCount: number,
 ): Promise<FollowingUser[] | null> {
   const allUsers: FollowingUser[] = [];
   const seenIds = new Set<string>();
@@ -104,6 +105,10 @@ async function fetchAllFollowings(
     page++;
 
     if (!nextMaxId || parsed.users.length === 0) break;
+    if (expectedCount > 0 && allUsers.length >= expectedCount * 1.1) {
+      console.log(`[unfollow-check] Early-exit: got ${allUsers.length} users (expected ~${expectedCount}) after ${page} pages`);
+      break;
+    }
     if (nextMaxId === prevMaxId) { console.log(`[unfollow-check] Cursor stuck at page ${page}, stopping`); break; }
     prevMaxId = nextMaxId;
 
@@ -269,7 +274,7 @@ Deno.serve(async (req) => {
       const MAX_ATTEMPTS = 2;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId);
+        allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId, freshFollowingCount);
 
         if (allFollowings === null) {
           await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
