@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
       apiPerHourRes,
       apiRecentRes,
       followEventsCountRes,
+      apiCallsByProfileRes,
     ] = await Promise.all([
       admin.auth.admin.listUsers({ perPage: 1000 }),
       admin.from("subscriptions").select("*"),
@@ -97,6 +98,11 @@ Deno.serve(async (req) => {
       admin
         .from("follow_events")
         .select("tracked_profile_id, id", { count: "exact" }),
+      // Today's calls with profile_id for per-user breakdown
+      admin
+        .from("api_call_log")
+        .select("profile_id, function_name")
+        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
     ]);
 
     const allUsers = usersRes.data?.users || [];
@@ -104,6 +110,18 @@ Deno.serve(async (req) => {
     const allProfiles = profilesRes.data || [];
     const apiCallsToday = apiTodayRes.count || 0;
     const apiCallsThisMonth = apiMonthRes.count || 0;
+
+    // Per-user API calls today (from the new query)
+    const profileUserMap = new Map<string, string>();
+    for (const p of allProfiles) {
+      profileUserMap.set(p.id, p.user_id);
+    }
+    const userCallCounts: Record<string, number> = {};
+    for (const c of (apiCallsByProfileRes.data || [])) {
+      const userId = c.profile_id ? profileUserMap.get(c.profile_id) : null;
+      const key = userId || "__no_user__";
+      userCallCounts[key] = (userCallCounts[key] || 0) + 1;
+    }
 
     // Calls by function (today)
     const todayCalls = apiRecentRes.data || [];
@@ -171,6 +189,7 @@ Deno.serve(async (req) => {
         current_period_end: sub?.current_period_end || null,
         tracked_profiles_count: userProfiles.length,
         spy_profiles_count: userProfiles.filter((p: any) => p.has_spy).length,
+        api_calls_today: userCallCounts[u.id] || 0,
         total_follow_events: userProfiles.reduce(
           (sum: number, p: any) => sum + (feByProfile.get(p.id) || 0),
           0

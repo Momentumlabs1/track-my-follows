@@ -48,6 +48,7 @@ interface AdminData {
     current_period_end: string | null;
     tracked_profiles_count: number;
     spy_profiles_count: number;
+    api_calls_today: number;
     total_follow_events: number;
     last_active: string | null;
   }[];
@@ -110,6 +111,7 @@ export default function AdminPage() {
     label: string;
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showUserCalls, setShowUserCalls] = useState(false);
 
   useEffect(() => {
     if (!user || !isAdminUser(user.email)) {
@@ -270,9 +272,12 @@ export default function AdminPage() {
               </div>
 
               {/* API Kosten heute */}
-              <div className="rounded-2xl border border-border/40 bg-card p-4">
+              <div
+                className="rounded-2xl border border-border/40 bg-card p-4 cursor-pointer transition-colors hover:border-primary/30"
+                onClick={() => setShowUserCalls(!showUserCalls)}
+              >
                 <div className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
-                  API-Kosten Heute
+                  API-Kosten Heute <span className="text-[10px] normal-case">(klicken für Details)</span>
                 </div>
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className="text-xl font-bold">{data.apiCallsToday} Calls</span>
@@ -289,6 +294,57 @@ export default function AdminPage() {
                 <div className="text-xs text-muted-foreground mt-1">
                   {budgetPercent}% vom Budget ({data.dailyBudget})
                 </div>
+                {showUserCalls && (
+                  <div className="mt-3 pt-3 border-t border-border/30 space-y-1.5">
+                    <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-2">
+                      Calls pro User heute
+                    </div>
+                    {[...data.users]
+                      .filter((u) => u.api_calls_today > 0)
+                      .sort((a, b) => b.api_calls_today - a.api_calls_today)
+                      .map((u) => {
+                        const maxUserCalls = Math.max(
+                          ...data!.users.map((x) => x.api_calls_today),
+                          1
+                        );
+                        return (
+                          <div key={u.id} className="flex items-center gap-2">
+                            <span
+                              className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                                u.plan === "pro"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {u.plan}
+                            </span>
+                            <span className="text-xs text-foreground truncate flex-1 font-mono">
+                              {u.email}
+                            </span>
+                            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{
+                                  width: `${(u.api_calls_today / maxUserCalls) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground w-12 text-right font-mono">
+                              {u.api_calls_today}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground w-14 text-right">
+                              ${(u.api_calls_today * 0.00069).toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    {data.users.filter((u) => u.api_calls_today > 0).length === 0 && (
+                      <div className="text-xs text-muted-foreground text-center py-2">
+                        Heute noch keine Calls
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* API Kosten Monat */}
