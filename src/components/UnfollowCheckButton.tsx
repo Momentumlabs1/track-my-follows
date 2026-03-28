@@ -17,12 +17,13 @@ type ScanPhase = "idle" | "connecting" | "scanning_following" | "evaluating" | "
 
 const TIMEOUT_MS = 180_000;
 
-// Phase progress ranges: connecting 0-15, scanning 15-70, evaluating 70-95, done 100
+// Phase progress ranges: connecting 0-15, scanning 15-70, evaluating 70-99, done 100
+// evaluating crawls slowly over 120s so the bar never "stops" while waiting for the API
 const PHASE_RANGES: Record<string, [number, number, number]> = {
   // [start, end, durationMs]
   connecting: [0, 15, 3000],
   scanning_following: [15, 70, 17000],
-  evaluating: [70, 95, 10000],
+  evaluating: [70, 99, 120000],
 };
 
 export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
