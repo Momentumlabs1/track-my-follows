@@ -82,6 +82,7 @@ async function fetchAllFollowings(
   let nextMaxId: string | null = null;
   let prevMaxId: string | null = null;
   let page = 0;
+  let consecutiveDupePages = 0;
   const MAX_PAGES = 60;
 
   while (page < MAX_PAGES) {
