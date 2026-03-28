@@ -240,18 +240,38 @@ Deno.serve(async (req) => {
       // ══════════════════════════════════════════════
       // STEP 1: Fetch ALL current followings from API
       // ══════════════════════════════════════════════
+      // ── Fetch fresh following_count from API to avoid stale DB values ──
+      const infoUrl = `https://api.hikerapi.com/gql/user/info/by/id?id=${igUserId}`;
+      const infoResult = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, infoUrl, { "x-access-key": hikerApiKey });
+
+      let freshFollowingCount = profile.following_count ?? 0;
+      if (infoResult.response?.ok) {
+        try {
+          const info = await infoResult.response.json();
+          const freshCount = info?.following_count ?? info?.response?.following_count;
+          if (typeof freshCount === "number") {
+            console.log(`[unfollow-check] Fresh following_count for ${profile.username}: ${freshCount} (DB had ${profile.following_count})`);
+            freshFollowingCount = freshCount;
+            await supabase.from("tracked_profiles").update({ following_count: freshCount }).eq("id", profileId);
+          }
+        } catch (e) {
+          console.warn(`[unfollow-check] Failed to parse info response:`, e);
+        }
+      } else if (infoResult.response) {
+        await infoResult.response.text(); // drain body
+      }
+
       console.log(`[unfollow-check] Fetching all followings for ${profile.username}...`);
       
       // Retry logic: up to 2 attempts for partial fetches
       let allFollowings: FollowingUser[] | null = null;
-      const expectedCount = profile.following_count ?? 0;
+      const expectedCount = freshFollowingCount;
       const MAX_ATTEMPTS = 2;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId);
 
         if (allFollowings === null) {
-          // API completely failed — refund budget
           await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
           return new Response(JSON.stringify({ error: "API_FAILED" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
@@ -263,14 +283,12 @@ Deno.serve(async (req) => {
             await sleep(2000);
             continue;
           }
-          // Final attempt also partial → refund and fail
           await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
           return new Response(JSON.stringify({ error: "PARTIAL_FETCH", fetched: allFollowings.length, expected: expectedCount }), {
             status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        // Got enough data, proceed
         break;
       }
 
