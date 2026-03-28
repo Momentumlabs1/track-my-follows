@@ -245,6 +245,13 @@ Deno.serve(async (req) => {
           console.log(`[create-baseline] ${username}: page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
 
           if (parsed.users.length === 0) break;
+
+          // ★ Early-exit: stop when we have enough data
+          if (followingCount > 0 && allFollowings.length >= followingCount * 1.1) {
+            console.log(`[create-baseline] ${username}: Early-exit: got ${allFollowings.length} users (expected ~${followingCount}) after ${page + 1} pages`);
+            break;
+          }
+
           if (parsed.nextMaxId && parsed.nextMaxId === prevMaxId) {
             console.warn(`[create-baseline] ${username}: cursor stuck at page ${page}, aborting`);
             break;

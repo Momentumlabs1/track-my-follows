@@ -140,6 +140,11 @@ async function syncNewFollows(
       if (error) console.warn(`[trigger-scan] upsert follow_events error:`, error.message);
     });
 
+    // ★ Bug 2 Fix: Update gender counter for new follows
+    if (!isInitialScan && !isBackfill) {
+      await supabase.rpc("increment_gender_count", { p_profile_id: profileId, p_gender: genderTag });
+    }
+
     if (!isInitialScan && !isBackfill) realEventCount++;
   }
 
