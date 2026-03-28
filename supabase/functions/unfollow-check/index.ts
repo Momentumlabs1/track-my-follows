@@ -107,10 +107,17 @@ async function fetchAllFollowings(
     page++;
 
     if (!nextMaxId || parsed.users.length === 0) break;
-    // Stop if API keeps returning only duplicates (no new unique users)
+    // Track consecutive duplicate pages — only break after 2 in a row AND having ≥50% of expected
     if (newOnThisPage === 0) {
-      console.log(`[unfollow-check] No new unique users on page ${page}, stopping (got ${allUsers.length} total)`);
-      break;
+      consecutiveDupePages++;
+      const hasEnough = expectedCount > 0 && allUsers.length >= expectedCount * 0.5;
+      if (consecutiveDupePages >= 2 || hasEnough) {
+        console.log(`[unfollow-check] ${consecutiveDupePages} consecutive dupe pages at page ${page}, stopping (got ${allUsers.length}/${expectedCount})`);
+        break;
+      }
+      console.log(`[unfollow-check] Dupe page ${page} but only ${allUsers.length}/${expectedCount}, continuing...`);
+    } else {
+      consecutiveDupePages = 0;
     }
     if (expectedCount > 0 && allUsers.length >= expectedCount * 1.1) {
       console.log(`[unfollow-check] Early-exit: got ${allUsers.length} users (expected ~${expectedCount}) after ${page} pages`);
