@@ -401,8 +401,8 @@ Deno.serve(async (req) => {
 
       await batchUpdateLastSeen(supabase, confirmIds);
 
-      if (unfollowEvents.length > 0) await batchUpsert(supabase, "follow_events", unfollowEvents, "id");
-      if (newFollowEvents.length > 0) await batchUpsert(supabase, "follow_events", newFollowEvents, "id");
+      if (unfollowEvents.length > 0) await batchUpsert(supabase, "follow_events", unfollowEvents, "tracked_profile_id,target_username,event_type,direction,is_initial");
+      if (newFollowEvents.length > 0) await batchUpsert(supabase, "follow_events", newFollowEvents, "tracked_profile_id,target_username,event_type,direction,is_initial");
       if (newFollowingRows.length > 0) await batchUpsert(supabase, "profile_followings", newFollowingRows, "tracked_profile_id,following_user_id,direction");
 
       for (const g of genderDecrements) {

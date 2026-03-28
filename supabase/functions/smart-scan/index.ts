@@ -337,8 +337,37 @@ async function performSpyScan(
     }).eq("id", profileId);
   }
 
-  const actualFollowingCount = (profile.following_count as number) ?? 0;
-  const actualFollowerCount = (profile.follower_count as number) ?? 0;
+  // ★ Bug 3 Fix: Fetch fresh counts from API instead of stale DB values
+  let actualFollowingCount = (profile.following_count as number) ?? 0;
+  let actualFollowerCount = (profile.follower_count as number) ?? 0;
+
+  const infoUrl = `https://api.hikerapi.com/gql/user/info/by/id?id=${igUserId}`;
+  const infoResult = await trackedApiFetch(supabaseClient, FUNCTION_NAME, profileId, infoUrl, { "x-access-key": hikerApiKey });
+  if (infoResult.response?.ok) {
+    try {
+      const info = await infoResult.response.json();
+      const freshFollowing = info?.following_count ?? info?.response?.following_count;
+      const freshFollower = info?.follower_count ?? info?.response?.follower_count;
+      if (typeof freshFollowing === "number") {
+        console.log(`[SPY-SCAN] ${username}: fresh following_count=${freshFollowing} (DB had ${actualFollowingCount})`);
+        actualFollowingCount = freshFollowing;
+      }
+      if (typeof freshFollower === "number") {
+        console.log(`[SPY-SCAN] ${username}: fresh follower_count=${freshFollower} (DB had ${actualFollowerCount})`);
+        actualFollowerCount = freshFollower;
+      }
+      // Update DB with fresh counts
+      await supabaseClient.from("tracked_profiles").update({
+        following_count: actualFollowingCount,
+        follower_count: actualFollowerCount,
+      }).eq("id", profileId);
+    } catch (e) {
+      console.warn(`[SPY-SCAN] ${username}: Failed to parse info response:`, e);
+    }
+  } else if (infoResult.response) {
+    await infoResult.response.text(); // drain body
+  }
+
   const maxNewFollows = 200;
   const maxNewFollowers = 200;
 
