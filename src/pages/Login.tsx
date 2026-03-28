@@ -12,6 +12,7 @@ import logoWide from "@/assets/logo-wide.png";
 
 const SIGNUP_COOLDOWN_SECONDS = 60;
 const COOLDOWN_KEY = "signup_cooldown_until";
+const ADMIN_EMAIL = "info@spy-secret.com";
 
 const normalizeEmail = (e: string) => e.trim().toLowerCase();
 
@@ -147,7 +148,7 @@ const Login = () => {
 
       if (!loginError) {
         toast.success(t("auth.login_success"));
-        navigate("/dashboard");
+        navigate(normalizedEmail === ADMIN_EMAIL ? "/admin" : "/dashboard");
         setLoading(false);
         return;
       }
