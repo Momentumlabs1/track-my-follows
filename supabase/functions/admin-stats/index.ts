@@ -97,6 +97,11 @@ Deno.serve(async (req) => {
       admin
         .from("follow_events")
         .select("tracked_profile_id, id", { count: "exact" }),
+      // Today's calls with profile_id for per-user breakdown
+      admin
+        .from("api_call_log")
+        .select("profile_id, function_name")
+        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
     ]);
 
     const allUsers = usersRes.data?.users || [];
@@ -104,6 +109,10 @@ Deno.serve(async (req) => {
     const allProfiles = profilesRes.data || [];
     const apiCallsToday = apiTodayRes.count || 0;
     const apiCallsThisMonth = apiMonthRes.count || 0;
+
+    // Per-user API calls today
+    const todayCallsAll = (await Promise.all([])).length ? [] : // placeholder
+      followEventsCountRes; // we'll use the new query below
 
     // Calls by function (today)
     const todayCalls = apiRecentRes.data || [];
