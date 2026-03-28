@@ -24,6 +24,9 @@ import { motion } from "framer-motion";
 const ADMIN_EMAIL = "info@spy-secret.com";
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
 
+const isAdminUser = (email?: string | null) =>
+  (email ?? "").trim().toLowerCase() === ADMIN_EMAIL;
+
 interface AdminData {
   totalUsers: number;
   proUsers: number;
@@ -109,7 +112,7 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user || !isAdminUser(user.email)) {
       navigate("/dashboard", { replace: true });
     }
   }, [user, navigate]);
@@ -140,7 +143,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.email === ADMIN_EMAIL) {
+    if (isAdminUser(user?.email)) {
       fetchData();
     }
   }, [user, fetchData]);
@@ -180,7 +183,7 @@ export default function AdminPage() {
     }
   };
 
-  if (!user || user.email !== ADMIN_EMAIL) return null;
+  if (!user || !isAdminUser(user.email)) return null;
 
   const budgetPercent = data
     ? Math.min(100, Math.round((data.budgetUsed / data.dailyBudget) * 100))
