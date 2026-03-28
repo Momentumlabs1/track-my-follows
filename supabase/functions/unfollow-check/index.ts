@@ -241,22 +241,37 @@ Deno.serve(async (req) => {
       // STEP 1: Fetch ALL current followings from API
       // ══════════════════════════════════════════════
       console.log(`[unfollow-check] Fetching all followings for ${profile.username}...`);
-      const allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId);
-
-      if (allFollowings === null) {
-        // API failed — refund budget
-        await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
-        return new Response(JSON.stringify({ error: "API_FAILED" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      // ★ FIX: PARTIAL_FETCH guard only for expectedCount >= 10
+      
+      // Retry logic: up to 2 attempts for partial fetches
+      let allFollowings: FollowingUser[] | null = null;
       const expectedCount = profile.following_count ?? 0;
-      if (expectedCount >= 10 && allFollowings.length < expectedCount * 0.7) {
-        console.error(`[unfollow-check] PARTIAL_FETCH: got ${allFollowings.length} but expected ~${expectedCount}`);
-        await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
-        return new Response(JSON.stringify({ error: "PARTIAL_FETCH", fetched: allFollowings.length, expected: expectedCount }), {
-          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const MAX_ATTEMPTS = 2;
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId);
+
+        if (allFollowings === null) {
+          // API completely failed — refund budget
+          await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
+          return new Response(JSON.stringify({ error: "API_FAILED" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // PARTIAL_FETCH guard only for expectedCount >= 10
+        if (expectedCount >= 10 && allFollowings.length < expectedCount * 0.5) {
+          console.warn(`[unfollow-check] Attempt ${attempt}: PARTIAL_FETCH got ${allFollowings.length} but expected ~${expectedCount}`);
+          if (attempt < MAX_ATTEMPTS) {
+            await sleep(2000);
+            continue;
+          }
+          // Final attempt also partial → refund and fail
+          await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
+          return new Response(JSON.stringify({ error: "PARTIAL_FETCH", fetched: allFollowings.length, expected: expectedCount }), {
+            status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Got enough data, proceed
+        break;
       }
 
       // ══════════════════════════════════════════════
