@@ -96,15 +96,21 @@ async function fetchAllFollowings(
 
     const parsed = parseChunkResponse(await result.response.json());
 
+    let newOnThisPage = 0;
     for (const raw of parsed.users) {
       const u = mapFollowingUser(raw);
-      if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); }
+      if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); newOnThisPage++; }
     }
 
     nextMaxId = parsed.nextMaxId;
     page++;
 
     if (!nextMaxId || parsed.users.length === 0) break;
+    // Stop if API keeps returning only duplicates (no new unique users)
+    if (newOnThisPage === 0) {
+      console.log(`[unfollow-check] No new unique users on page ${page}, stopping (got ${allUsers.length} total)`);
+      break;
+    }
     if (expectedCount > 0 && allUsers.length >= expectedCount * 1.1) {
       console.log(`[unfollow-check] Early-exit: got ${allUsers.length} users (expected ~${expectedCount}) after ${page} pages`);
       break;
