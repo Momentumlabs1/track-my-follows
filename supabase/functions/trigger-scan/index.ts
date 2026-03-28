@@ -244,6 +244,10 @@ async function syncNewFollowers(
     }, { onConflict: "profile_id,username,event_type,is_initial", ignoreDuplicates: true }).then(({ error }) => {
       if (error) console.warn(`[trigger-scan] upsert follower_events error:`, error.message);
     });
+
+    // ★ Bug 2 Fix: Update gender counter for new followers
+    const followerGender = detectGender(f.full_name, f.username);
+    await supabase.rpc("increment_gender_count", { p_profile_id: profileId, p_gender: followerGender });
   }
 
   if (newEntries.length > maxAllowed) {
