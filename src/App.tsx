@@ -32,6 +32,7 @@ import AuthCallback from "./pages/AuthCallback";
 import NativeCallback from "./pages/NativeCallback";
 import OAuthReturn from "./pages/OAuthReturn";
 import NotFound from "./pages/NotFound";
+import AdminPage from "./pages/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function AppContent() {
         <Route path="/analyzing/:profileId/:username" element={<ProtectedRoute><AnalyzingProfile /></ProtectedRoute>} />
         <Route path="/spy" element={<ProtectedRoute><SpyDetail /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
