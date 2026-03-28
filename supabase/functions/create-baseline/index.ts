@@ -21,6 +21,8 @@ interface FollowingUser {
   is_verified?: boolean;
 }
 
+type FollowingSource = "gql" | "v1";
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function categorizeFollow(followerCount: number | null | undefined, isPrivate: boolean | undefined): string {
@@ -202,12 +204,20 @@ Deno.serve(async (req) => {
         }
         isFullBaseline = false;
       } else {
-        // Paginate ALL pages — robust cursor-set, no premature dupe-exit
+        // Paginate ALL pages — robust cursor-set + source fallback on stale pages
         console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings via gql...`);
         let nextMaxId: string | null = null;
-        const seenCursors = new Set<string>();
+        const seenCursorsBySource: Record<FollowingSource, Set<string>> = {
+          gql: new Set<string>(),
+          v1: new Set<string>(),
+        };
+        let source: FollowingSource = "gql";
+        let sourceSwitches = 0;
+        let stalePages = 0;
         let page = 0;
-        const maxPages = followingCount > 0 ? Math.min(Math.ceil(followingCount / 200) + 5, 60) : 60;
+        const maxPages = followingCount > 0
+          ? Math.min(Math.max(Math.ceil(followingCount / 200) + 8, 20), 60)
+          : 20;
 
         let apiLimitHit = false;
         do {
@@ -218,7 +228,10 @@ Deno.serve(async (req) => {
             break;
           }
 
-          let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}`;
+          const basePath = source === "gql"
+            ? "https://api.hikerapi.com/gql/user/following/chunk"
+            : "https://api.hikerapi.com/v1/user/following/chunk";
+          let url = `${basePath}?user_id=${igUserId}&count=200`;
           if (nextMaxId) url += `&max_id=${nextMaxId}`;
 
           const result = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, url, { "x-access-key": hikerApiKey });
@@ -241,8 +254,9 @@ Deno.serve(async (req) => {
             const u = mapFollowingUser(raw);
             if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allFollowings.push(u); pageNewCount++; }
           }
+          stalePages = pageNewCount === 0 ? stalePages + 1 : 0;
 
-          console.log(`[create-baseline] ${username}: page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, total=${allFollowings.length}/${followingCount}, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
+          console.log(`[create-baseline] ${username}: [${source}] page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, total=${allFollowings.length}/${followingCount}, cursor=${parsed.nextMaxId ? 'yes' : 'none'}, stale=${stalePages}`);
 
           if (parsed.users.length === 0) break;
 
@@ -252,10 +266,31 @@ Deno.serve(async (req) => {
             break;
           }
 
-          // Cursor loop detection via seen-set
+          // If gql becomes stale, switch once to v1 and continue pagination.
+          if (source === "gql" && sourceSwitches === 0 && stalePages >= 3) {
+            console.warn(`[create-baseline] ${username}: gql stale pages, switching to v1 endpoint`);
+            source = "v1";
+            sourceSwitches++;
+            nextMaxId = parsed.nextMaxId;
+            page++;
+            await sleep(400);
+            continue;
+          }
+
+          // Cursor loop detection via seen-set (per source)
           if (!parsed.nextMaxId) break;
+          const seenCursors = seenCursorsBySource[source];
           if (seenCursors.has(parsed.nextMaxId)) {
-            console.warn(`[create-baseline] ${username}: cursor loop at page ${page} (cursor=${parsed.nextMaxId}), stopping`);
+            if (source === "gql" && sourceSwitches === 0) {
+              console.warn(`[create-baseline] ${username}: gql cursor loop at page ${page}, switching to v1 endpoint`);
+              source = "v1";
+              sourceSwitches++;
+              nextMaxId = parsed.nextMaxId;
+              page++;
+              await sleep(400);
+              continue;
+            }
+            console.warn(`[create-baseline] ${username}: cursor loop at page ${page} on ${source} (cursor=${parsed.nextMaxId}), stopping`);
             break;
           }
           seenCursors.add(parsed.nextMaxId);

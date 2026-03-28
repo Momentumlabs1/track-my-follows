@@ -42,6 +42,20 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const normalizeErrorMessage = useCallback((error: unknown) => {
+    if (typeof error === "string") return error;
+    if (error && typeof error === "object") {
+      const candidate = (error as { message?: unknown }).message;
+      if (typeof candidate === "string" && candidate.trim().length > 0) return candidate;
+      try {
+        return JSON.stringify(error);
+      } catch {
+        return t("common.error");
+      }
+    }
+    return t("common.error");
+  }, [t]);
+
   useEffect(() => {
     if (plan !== "pro") return;
     const loadChecks = async () => {
@@ -161,7 +175,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
       } else if (data.error) {
         setPhase("idle");
         setProgress(0);
-        toast.error(data.error);
+        toast.error(normalizeErrorMessage(data.error));
       } else if (data.unfollows_found !== undefined) {
         setProgress(100);
         setPhase("done");
@@ -185,7 +199,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
       if (progressInterval.current) clearInterval(progressInterval.current);
       setPhase("idle");
       setProgress(0);
-      toast.error(t("common.error"));
+      toast.error(normalizeErrorMessage(err));
       console.error("Unfollow check error:", err);
     } finally {
       setLoading(false);
