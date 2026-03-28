@@ -202,12 +202,12 @@ Deno.serve(async (req) => {
         }
         isFullBaseline = false;
       } else {
-        // Paginate ALL pages
+        // Paginate ALL pages — robust cursor-set, no premature dupe-exit
         console.log(`[create-baseline] ${username}: Loading all ${followingCount} followings via gql...`);
         let nextMaxId: string | null = null;
-        let prevMaxId: string | null = null;
+        const seenCursors = new Set<string>();
         let page = 0;
-        const maxPages = 60;
+        const maxPages = followingCount > 0 ? Math.min(Math.ceil(followingCount / 200) + 5, 60) : 60;
 
         let apiLimitHit = false;
         do {
@@ -242,30 +242,27 @@ Deno.serve(async (req) => {
             if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allFollowings.push(u); pageNewCount++; }
           }
 
-          console.log(`[create-baseline] ${username}: page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
+          console.log(`[create-baseline] ${username}: page ${page}: ${parsed.users.length} raw, ${pageNewCount} new unique, total=${allFollowings.length}/${followingCount}, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
 
           if (parsed.users.length === 0) break;
-          // Stop if API returns only duplicates (no new unique users)
-          if (pageNewCount === 0) {
-            console.log(`[create-baseline] ${username}: No new unique users on page ${page}, stopping (got ${allFollowings.length} total)`);
-            break;
-          }
+
           // ★ Early-exit: stop when we have enough data
           if (followingCount > 0 && allFollowings.length >= followingCount * 1.1) {
             console.log(`[create-baseline] ${username}: Early-exit: got ${allFollowings.length} users (expected ~${followingCount}) after ${page + 1} pages`);
             break;
           }
 
-          if (parsed.nextMaxId && parsed.nextMaxId === prevMaxId) {
-            console.warn(`[create-baseline] ${username}: cursor stuck at page ${page}, aborting`);
+          // Cursor loop detection via seen-set
+          if (!parsed.nextMaxId) break;
+          if (seenCursors.has(parsed.nextMaxId)) {
+            console.warn(`[create-baseline] ${username}: cursor loop at page ${page} (cursor=${parsed.nextMaxId}), stopping`);
             break;
           }
-
-          prevMaxId = nextMaxId;
+          seenCursors.add(parsed.nextMaxId);
           nextMaxId = parsed.nextMaxId;
           page++;
-          if (nextMaxId) await sleep(400);
-        } while (nextMaxId && page < maxPages);
+          await sleep(400);
+        } while (page < maxPages);
 
         if (apiLimitHit) isFullBaseline = false;
       }

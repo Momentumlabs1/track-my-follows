@@ -113,21 +113,29 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("unfollow-check", {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-        body: { profileId },
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${supabaseUrl}/functions/v1/unfollow-check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": anonKey,
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ profileId }),
       });
 
-      // supabase.functions.invoke returns error for non-2xx, but data may still contain our JSON
-      const data = (res.data ?? {}) as {
+      let data: {
         error?: string;
         unfollows_found?: number;
         new_follows_found?: number;
         checks_remaining?: number;
-      };
+        fetched?: number;
+        expected?: number;
+      } = {};
+      try { data = await res.json(); } catch { /* empty body */ }
 
-      // If invoke reported an error but we got a known error code in data, handle it gracefully
-      if (res.error && !data.error) throw res.error;
+      if (!res.ok && !data.error) throw new Error(`HTTP ${res.status}`);
 
       if (timeoutTimer.current) clearTimeout(timeoutTimer.current);
       phaseTimers.current.forEach(clearTimeout);

@@ -71,7 +71,7 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Full pagination fetch — uses trackedApiFetch ──
+// ── Full pagination fetch — robust cursor-set, no premature dupe-exit ──
 async function fetchAllFollowings(
   supabase: ReturnType<typeof createClient>,
   userId: string, hikerApiKey: string, profileId: string,
@@ -79,18 +79,18 @@ async function fetchAllFollowings(
 ): Promise<FollowingUser[] | null> {
   const allUsers: FollowingUser[] = [];
   const seenIds = new Set<string>();
+  const seenCursors = new Set<string>(); // detect true cursor loops
   let nextMaxId: string | null = null;
-  let prevMaxId: string | null = null;
   let page = 0;
-  let consecutiveDupePages = 0;
-  const MAX_PAGES = 60;
+  // Adaptive max pages: enough for expectedCount at ~200/page, with buffer, capped at 60
+  const maxPages = expectedCount > 0 ? Math.min(Math.ceil(expectedCount / 200) + 5, 60) : 60;
 
-  while (page < MAX_PAGES) {
+  while (page < maxPages) {
     let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}&count=200`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
 
     const result = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, url, { "x-access-key": hikerApiKey });
-    if (result.skipped) return null; // 429 → skip profile
+    if (result.skipped) return null;
     if (result.error || !result.response) return null;
     if (result.response.status === 404) { await result.response.text(); break; }
     if (!result.response.ok) { await result.response.text(); return null; }
@@ -103,28 +103,24 @@ async function fetchAllFollowings(
       if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); newOnThisPage++; }
     }
 
-    nextMaxId = parsed.nextMaxId;
     page++;
+    console.log(`[unfollow-check] page ${page}: ${parsed.users.length} raw, ${newOnThisPage} new, total=${allUsers.length}/${expectedCount}, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
 
-    if (!nextMaxId || parsed.users.length === 0) break;
-    // Track consecutive duplicate pages — only break after 2 in a row AND having ≥50% of expected
-    if (newOnThisPage === 0) {
-      consecutiveDupePages++;
-      const hasEnough = expectedCount > 0 && allUsers.length >= expectedCount * 0.5;
-      if (consecutiveDupePages >= 2 || hasEnough) {
-        console.log(`[unfollow-check] ${consecutiveDupePages} consecutive dupe pages at page ${page}, stopping (got ${allUsers.length}/${expectedCount})`);
-        break;
-      }
-      console.log(`[unfollow-check] Dupe page ${page} but only ${allUsers.length}/${expectedCount}, continuing...`);
-    } else {
-      consecutiveDupePages = 0;
-    }
+    if (!parsed.nextMaxId || parsed.users.length === 0) break;
+
+    // Early-exit: got enough data (110% of expected)
     if (expectedCount > 0 && allUsers.length >= expectedCount * 1.1) {
-      console.log(`[unfollow-check] Early-exit: got ${allUsers.length} users (expected ~${expectedCount}) after ${page} pages`);
+      console.log(`[unfollow-check] Early-exit: ${allUsers.length} >= ${expectedCount}*1.1 after ${page} pages`);
       break;
     }
-    if (nextMaxId === prevMaxId) { console.log(`[unfollow-check] Cursor stuck at page ${page}, stopping`); break; }
-    prevMaxId = nextMaxId;
+
+    // True cursor loop detection (not dupe-page based)
+    if (seenCursors.has(parsed.nextMaxId)) {
+      console.log(`[unfollow-check] Cursor loop detected at page ${page} (cursor=${parsed.nextMaxId}), stopping`);
+      break;
+    }
+    seenCursors.add(parsed.nextMaxId);
+    nextMaxId = parsed.nextMaxId;
 
     await sleep(300);
   }
@@ -259,28 +255,50 @@ Deno.serve(async (req) => {
       // ══════════════════════════════════════════════
       // STEP 1: Fetch ALL current followings from API
       // ══════════════════════════════════════════════
-      // ── Fetch fresh following_count from API to avoid stale DB values ──
+      // ── Fetch fresh following_count — try gql/info/by/id first, fallback to v1/user/by/username ──
+      let freshFollowingCount = profile.following_count ?? 0;
+      let expectedCountTrusted = false;
+
       const infoUrl = `https://api.hikerapi.com/gql/user/info/by/id?id=${igUserId}`;
       const infoResult = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, infoUrl, { "x-access-key": hikerApiKey });
 
-      let freshFollowingCount = profile.following_count ?? 0;
       if (infoResult.response?.ok) {
         try {
           const info = await infoResult.response.json();
           const freshCount = info?.following_count ?? info?.response?.following_count;
           if (typeof freshCount === "number") {
-            console.log(`[unfollow-check] Fresh following_count for ${profile.username}: ${freshCount} (DB had ${profile.following_count})`);
+            console.log(`[unfollow-check] Fresh following_count (gql): ${freshCount} (DB had ${profile.following_count})`);
             freshFollowingCount = freshCount;
+            expectedCountTrusted = true;
             await supabase.from("tracked_profiles").update({ following_count: freshCount }).eq("id", profileId);
           }
         } catch (e) {
-          console.warn(`[unfollow-check] Failed to parse info response:`, e);
+          console.warn(`[unfollow-check] Failed to parse gql info:`, e);
         }
-      } else if (infoResult.response) {
-        await infoResult.response.text(); // drain body
+      } else {
+        // Drain body, then try fallback
+        if (infoResult.response) await infoResult.response.text();
+        console.log(`[unfollow-check] gql info failed (${infoResult.response?.status}), trying v1 fallback...`);
+        const fallbackUrl = `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username as string)}`;
+        const fallbackResult = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, fallbackUrl, { "x-access-key": hikerApiKey });
+        if (fallbackResult.response?.ok) {
+          try {
+            const fbInfo = await fallbackResult.response.json();
+            if (typeof fbInfo?.following_count === "number") {
+              console.log(`[unfollow-check] Fresh following_count (v1 fallback): ${fbInfo.following_count}`);
+              freshFollowingCount = fbInfo.following_count;
+              expectedCountTrusted = true;
+              await supabase.from("tracked_profiles").update({ following_count: fbInfo.following_count }).eq("id", profileId);
+            }
+          } catch (e) {
+            console.warn(`[unfollow-check] Failed to parse v1 fallback:`, e);
+          }
+        } else if (fallbackResult.response) {
+          await fallbackResult.response.text();
+        }
       }
 
-      console.log(`[unfollow-check] Fetching all followings for ${profile.username}...`);
+      console.log(`[unfollow-check] Fetching all followings for ${profile.username} (expected ~${freshFollowingCount}, trusted=${expectedCountTrusted})...`);
       
       // Retry logic: up to 2 attempts for partial fetches
       let allFollowings: FollowingUser[] | null = null;
@@ -295,9 +313,10 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ error: "API_FAILED" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
-        // PARTIAL_FETCH guard only for expectedCount >= 10
-        if (expectedCount >= 10 && allFollowings.length < expectedCount * 0.5) {
-          console.warn(`[unfollow-check] Attempt ${attempt}: PARTIAL_FETCH got ${allFollowings.length} but expected ~${expectedCount}`);
+        // PARTIAL_FETCH guard: only strict if expectedCount is trusted AND >= 10
+        const threshold = expectedCountTrusted ? 0.5 : 0.3;
+        if (expectedCount >= 10 && allFollowings.length < expectedCount * threshold) {
+          console.warn(`[unfollow-check] Attempt ${attempt}: PARTIAL_FETCH got ${allFollowings.length} but expected ~${expectedCount} (trusted=${expectedCountTrusted}, threshold=${threshold})`);
           if (attempt < MAX_ATTEMPTS) {
             await sleep(2000);
             continue;
