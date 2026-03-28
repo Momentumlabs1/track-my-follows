@@ -71,22 +71,38 @@ function mapFollowingUser(raw: Record<string, unknown>): FollowingUser | null {
   };
 }
 
-// ── Full pagination fetch — robust cursor-set, no premature dupe-exit ──
+type FollowingSource = "gql" | "v1";
+
+// ── Full pagination fetch — robust cursor-set + source fallback on stale pages ──
 async function fetchAllFollowings(
   supabase: ReturnType<typeof createClient>,
   userId: string, hikerApiKey: string, profileId: string,
   expectedCount: number,
+  preferredSource: FollowingSource = "gql",
 ): Promise<FollowingUser[] | null> {
   const allUsers: FollowingUser[] = [];
   const seenIds = new Set<string>();
-  const seenCursors = new Set<string>(); // detect true cursor loops
+  const seenCursorsBySource: Record<FollowingSource, Set<string>> = {
+    gql: new Set<string>(),
+    v1: new Set<string>(),
+  };
   let nextMaxId: string | null = null;
   let page = 0;
-  // Adaptive max pages: enough for expectedCount at ~200/page, with buffer, capped at 60
-  const maxPages = expectedCount > 0 ? Math.min(Math.ceil(expectedCount / 200) + 5, 60) : 60;
+  let source: FollowingSource = preferredSource;
+  let sourceSwitches = 0;
+  let stalePages = 0;
+
+  // Adaptive max pages with safer floor to handle temporary duplicate bursts.
+  // Prevents premature stop (e.g. 7 pages for ~287 expected) while still capped.
+  const maxPages = expectedCount > 0
+    ? Math.min(Math.max(Math.ceil(expectedCount / 200) + 8, 20), 60)
+    : 20;
 
   while (page < maxPages) {
-    let url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${userId}&count=200`;
+    const basePath = source === "gql"
+      ? "https://api.hikerapi.com/gql/user/following/chunk"
+      : "https://api.hikerapi.com/v1/user/following/chunk";
+    let url = `${basePath}?user_id=${userId}&count=200`;
     if (nextMaxId) url += `&max_id=${nextMaxId}`;
 
     const result = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, url, { "x-access-key": hikerApiKey });
@@ -102,9 +118,12 @@ async function fetchAllFollowings(
       const u = mapFollowingUser(raw);
       if (u && !seenIds.has(u.pk)) { seenIds.add(u.pk); allUsers.push(u); newOnThisPage++; }
     }
+    stalePages = newOnThisPage === 0 ? stalePages + 1 : 0;
 
     page++;
-    console.log(`[unfollow-check] page ${page}: ${parsed.users.length} raw, ${newOnThisPage} new, total=${allUsers.length}/${expectedCount}, cursor=${parsed.nextMaxId ? 'yes' : 'none'}`);
+    console.log(
+      `[unfollow-check] [${source}] page ${page}: ${parsed.users.length} raw, ${newOnThisPage} new, total=${allUsers.length}/${expectedCount}, cursor=${parsed.nextMaxId ? "yes" : "none"}, stale=${stalePages}`,
+    );
 
     if (!parsed.nextMaxId || parsed.users.length === 0) break;
 
@@ -114,9 +133,30 @@ async function fetchAllFollowings(
       break;
     }
 
-    // True cursor loop detection (not dupe-page based)
+    const seenCursors = seenCursorsBySource[source];
+
+    // If gql keeps returning duplicate pages, switch once to v1 endpoint and continue.
+    if (source === "gql" && sourceSwitches === 0 && stalePages >= 3) {
+      console.log(`[unfollow-check] gql stale stream detected at page ${page}, switching to v1 endpoint`);
+      source = "v1";
+      sourceSwitches++;
+      nextMaxId = parsed.nextMaxId;
+      await sleep(300);
+      continue;
+    }
+
+    // True cursor loop detection per source
     if (seenCursors.has(parsed.nextMaxId)) {
-      console.log(`[unfollow-check] Cursor loop detected at page ${page} (cursor=${parsed.nextMaxId}), stopping`);
+      // Retry once via v1 when gql cursor loops.
+      if (source === "gql" && sourceSwitches === 0) {
+        console.log(`[unfollow-check] gql cursor loop at page ${page}, switching to v1 endpoint`);
+        source = "v1";
+        sourceSwitches++;
+        nextMaxId = parsed.nextMaxId;
+        await sleep(300);
+        continue;
+      }
+      console.log(`[unfollow-check] Cursor loop detected on ${source} at page ${page} (cursor=${parsed.nextMaxId}), stopping`);
       break;
     }
     seenCursors.add(parsed.nextMaxId);
@@ -125,7 +165,7 @@ async function fetchAllFollowings(
     await sleep(300);
   }
 
-  console.log(`[unfollow-check] Fetched ${allUsers.length} unique followings in ${page} pages`);
+  console.log(`[unfollow-check] Fetched ${allUsers.length} unique followings in ${page} pages (source=${source}, maxPages=${maxPages})`);
   return allUsers;
 }
 
@@ -306,7 +346,16 @@ Deno.serve(async (req) => {
       const MAX_ATTEMPTS = 2;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        allFollowings = await fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId, freshFollowingCount);
+        const preferredSource: FollowingSource = attempt === 1 ? "gql" : "v1";
+        console.log(`[unfollow-check] Attempt ${attempt}: fetching followings via ${preferredSource}`);
+        allFollowings = await fetchAllFollowings(
+          supabase,
+          igUserId,
+          hikerApiKey,
+          profileId,
+          freshFollowingCount,
+          preferredSource,
+        );
 
         if (allFollowings === null) {
           await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining }).eq("id", profile.id);
