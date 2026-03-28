@@ -1,74 +1,36 @@
 
 
-## Admin-Panel Redesign: Cleaner, Interactive, Drilldowns
+## Fix: Unfollow-Check Pagination frisst 60 statt 2-3 API Calls
 
-### Probleme aktuell
-1. **Free Users = -1** → `freeUsers` wird als `totalUsers - proUsers` berechnet, aber `proUsers` zählt alle aktiven/trial Subscriptions (auch mehrere pro User möglich). Fix: deduplizierte User-IDs zählen.
-2. **API-Kosten Monat** nicht klickbar, kein Drilldown
-3. **Visuelle Struktur** flach, keine klaren Sektionen
-4. **Keine Tages-Aufschlüsselung** im Monats-View
+### Problem
+`fetchAllFollowings` im `unfollow-check` paginiert bis zu 60 Seiten, obwohl `timwger` nur 267 Followings hat (= 2 Seiten). Die HikerAPI gibt endlos Cursors zurueck, der Loop hat keinen Early-Exit basierend auf erwarteter Datenmenge.
 
-### Änderungen
+Ergebnis: 1 Unfollow-Scan = 60 API Calls statt 3 (Info + 2 Pages). Das ist 20x zu teuer.
 
-#### 1. Backend: `admin-stats` Edge Function
-- Fix `proUsers`: Dedupliziere nach `user_id` bei aktiven Subscriptions
-- Neues Feld `dailyBreakdown`: Aggregation der API-Calls der letzten 30 Tage gruppiert nach Tag (Datum + Count + Cost)
-- Neues Feld `monthlyCallsByUser`: API-Calls diesen Monat pro User (user_id → count), analog zu `apiCallsByProfile` aber für den ganzen Monat
+### Loesung
+Zwei Fixes in `supabase/functions/unfollow-check/index.ts`:
 
-#### 2. Frontend: `AdminPage.tsx` komplett überarbeitet
+1. **Early-Exit in `fetchAllFollowings`**: Wenn `allUsers.length >= expectedCount` (die frische following_count), sofort abbrechen. Buffer von +10% fuer Sicherheit.
 
-**Übersicht-Tab — Sektionen mit Headern:**
+2. **`expectedCount` als Parameter uebergeben**: Die Funktion bekommt die frische following_count und nutzt sie als Stop-Bedingung.
 
-```text
-┌─────────────────────────────────┐
-│ 👥 NUTZER                       │
-│ ┌────┐ ┌────┐ ┌────┐           │
-│ │ 32 │ │ 5  │ │ 27 │           │
-│ │User│ │Pro │ │Free│           │
-│ └────┘ └────┘ └────┘           │
-├─────────────────────────────────┤
-│ 📊 PROFILE                      │
-│ ┌─────────┐ ┌─────────┐        │
-│ │   15    │ │    5    │        │
-│ │ Profile │ │  Spies  │        │
-│ └─────────┘ └─────────┘        │
-├─────────────────────────────────┤
-│ 💰 API-KOSTEN                   │
-│                                 │
-│ [Heute — klickbar]              │
-│  210 Calls · $0.14              │
-│  ████████░░░ 42% Budget         │
-│  → Drilldown: Calls pro User    │
-│                                 │
-│ [Monat — klickbar]              │
-│  866 Calls · $0.60              │
-│  → Drilldown: Tages-Liste +     │
-│    Calls pro User (Monat)       │
-│                                 │
-│ [Prognose]                      │
-│  Ø 124/Tag → ~$2.57/Monat      │
-├─────────────────────────────────┤
-│ 📈 AKTIVITÄT                    │
-│ [Calls/Stunde Chart]            │
-│ [Calls nach Function]           │
-└─────────────────────────────────┘
-```
+### Code-Aenderung
 
-**API-Kosten Monat Drilldown (klickbar):**
-- Zeigt Liste der letzten 30 Tage: Datum | Calls | Kosten
-- Jeder Tag klickbar → zeigt User-Aufschlüsselung für diesen Tag
-- Am Ende: Gesamtansicht Calls pro User im Monat (wie heute-Drilldown aber Monatsdaten)
+In `fetchAllFollowings`:
+- Neuer Parameter `expectedCount: number`
+- Nach jedem Page-Fetch: `if (expectedCount > 0 && allUsers.length >= expectedCount * 1.1) break;`
+- Logging wenn Early-Exit greift
 
-**Visuelle Verbesserungen:**
-- Sektions-Header mit Icons und Trennlinien
-- Konsistentes Spacing (gap-4 zwischen Sektionen, gap-3 innerhalb)
-- Chevron-Icon bei klickbaren Cards (auf/zu)
-- Smooth expand/collapse Animation mit framer-motion
+Am Aufruf-Ort:
+- `fetchAllFollowings(supabase, igUserId, hikerApiKey, profileId, freshFollowingCount)` statt ohne expectedCount
 
-### Dateien
+### Ergebnis
+- `timwger` (267 Followings): 1 Info + 2 Pages = **3 API Calls** statt 60
+- `saif_nassiri` (1084 Followings): 1 Info + 6 Pages = **7 API Calls** statt potentiell 60
 
-| Datei | Änderung |
+### Datei
+
+| Datei | Aenderung |
 |---|---|
-| `supabase/functions/admin-stats/index.ts` | Fix proUsers-Berechnung, `dailyBreakdown` (30 Tage) + `monthlyCallsByUser` hinzufügen |
-| `src/pages/AdminPage.tsx` | Sektions-Layout, Monat-Drilldown klickbar, Tages-Drilldown, cleaner Design |
+| `supabase/functions/unfollow-check/index.ts` | Early-Exit in `fetchAllFollowings` basierend auf `expectedCount` |
 
