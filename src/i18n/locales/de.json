@@ -453,7 +453,11 @@
     "teaser_title": "Unfollow-Erkennung",
     "teaser_subtitle": "Veränderungen in der Following-Liste erkannt",
     "teaser_desc": "Erkenne sofort wenn jemand entfolgt wird",
-    "teaser_unlock": "Mit Pro freischalten"
+    "teaser_unlock": "Mit Pro freischalten",
+    "hint_is_estimate": "Schätzwert basierend auf Zähler-Änderungen. Starte den Unfollow-Check für exakte Namen.",
+    "baseline_repaired": "Baseline repariert! Starte den Check erneut für genaue Ergebnisse.",
+    "partial_fetch": "Scan unvollständig – bitte erneut versuchen.",
+    "following_limit": "Unfollow-Check nur bis 1.500 Followings möglich."
   },
   "scan_status": {
     "auto_hourly": "Stündlich",
