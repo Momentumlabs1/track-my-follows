@@ -1,55 +1,35 @@
 
-Ziel: Die Zahlen im Entfolgt-Bereich eindeutig und korrekt machen, damit kein „überfüllt/falsch“ Eindruck entsteht.
 
-## Kurzdiagnose (bereits verifiziert)
-- Der Account `diego_gut1` wird seit **25.03.** getrackt (passt).
-- In der DB sind aktuell **4 echte Unfollow-Events** gespeichert:  
-  `shreya__yadavi`, `flipsefelix`, `charlymazuel_`, `secretfreeattraction` (passt zu deinem Screenshot).
-- Es gab 2 manuelle Checks (je **2 Unfollows**), daher:
-  - Karte oben zeigt „2 Unfollows erkannt“ = **letzter Check**
-  - Tab/Listen-Zahl zeigt „4“ = **gesamt seit Trackingstart**
-- Das „+18 neue Aktivität“ kommt aus einem technischen Backfill-Fall im `unfollow-check` und wirkt dadurch wie echte neue Follows (ist irreführend).
+## Root Cause
 
-## Umsetzungsplan
+In `unfollow-check/index.ts` Zeilen 492-526 gibt es diese Logik:
 
-### 1) Backend korrigieren: Backfill strikt von echten neuen Follows trennen
-**Datei:** `supabase/functions/unfollow-check/index.ts`
-- Neue Kandidaten, die nur wegen Baseline-Lücken auftauchen, als **Backfill** behandeln (nicht als echte neue Aktivität).
-- `new_follows_found` nur noch für verifizierbar echte neue Follows zählen.
-- Response erweitern um z. B. `baseline_backfill_count`, damit UI korrekt unterscheiden kann.
-- Ergebnis: Kein künstliches „+18 neue Aktivität“ mehr bei Baseline-Nachholung.
+```
+const maxNewFollows = lastFollowingCount !== null
+  ? Math.max(actualFollowingCount - lastFollowingCount, 0)
+  : 200;  // ← DAS IST DAS PROBLEM
+```
 
-### 2) UI-Logik im Check-Widget klarstellen
-**Datei:** `src/components/UnfollowCheckButton.tsx`
-- Ergebnistext explizit als **„Letzter Check“** kennzeichnen.
-- „+X neue Aktivität gefunden“ nur anzeigen, wenn es wirklich echte neue Follows sind (nicht Backfill).
-- Wenn Backfill passiert ist: neutrale Meldung anzeigen („Baseline ergänzt, bitte erneut prüfen“).
+Wenn `last_following_count` null ist (z.B. nach Baseline-Repair oder bei bestimmten Zuständen), werden bis zu **200 Kandidaten als echte "neue Follows"** behandelt statt als Backfill. Das heißt: Accounts, denen du vor Ewigkeiten gefolgt bist und die nur in der DB gefehlt haben, tauchen jetzt als "Folgt neu" auf mit `is_initial: false`.
 
-### 3) Entfolgt-Tab semantisch sauber machen
-**Datei:** `src/pages/ProfileDetail.tsx`
-- Klare Trennung der Kennzahlen:
-  - **Letzter Check** (aus letztem `unfollow_checks` Eintrag)
-  - **Gesamt seit Trackingstart** (kumulative Event-Liste)
-- Bestehende Liste als „Gesamt seit Trackingstart“ labeln, damit 2 vs 4 nicht mehr wie ein Fehler wirkt.
+Das ist genau was passiert ist — die 22 "neuen" Einträge sind keine echten neuen Follows, sondern Baseline-Lücken die fälschlich als Aktivität geloggt wurden.
 
-### 4) Texte/i18n angleichen
-**Dateien:** `src/i18n/locales/de.json`, `en.json` (ggf. `ar.json`)
-- Neue eindeutige Labels für:
-  - „Letzter Check“
-  - „Gesamt seit Trackingstart“
-  - „Baseline ergänzt (kein echter neuer Follow-Alarm)“
+## Fix
 
-### 5) Verifikation (konkret für Diego-Profil)
-- 1 manuellen Unfollow-Check auslösen.
-- Prüfen:
-  - Oben: nur letzter Run
-  - Liste/Tab: Gesamtzahl
-  - Keine künstlich aufgeblähte „neue Aktivität“ bei Backfill
-- DB-Kontrolle:
-  - `unfollow_checks` letzter Eintrag plausibel
-  - `follow_events` keine Massen-`is_initial=false` Inserts aus Backfill
+### 1) `maxNewFollows`-Fallback von 200 auf 0 ändern (`unfollow-check/index.ts`)
+- Wenn `last_following_count` null/undefined ist → `maxNewFollows = 0` (alles ist Backfill)
+- Damit werden neue Kandidaten nur als echte Follows gezählt, wenn wir eine verlässliche Vorher-Zahl haben
+- Zusätzlich: nach Baseline-Repair `last_following_count` auf die reparierte Gesamtzahl setzen, damit der nächste Run eine Referenz hat
 
-## Erwartetes Ergebnis
-- Keine widersprüchlichen Zahlen mehr.
-- Keine „überfüllte“ Aktivitätsmeldung durch Baseline-Nachholung.
-- Du siehst klar: Was war im letzten Check vs. was ist insgesamt seit 25.03 erkannt worden.
+### 2) Gleichen Fix in `create-baseline/index.ts` prüfen/anwenden
+- Sicherstellen dass `last_following_count` immer gesetzt wird wenn Baseline erstellt wird
+
+### 3) Falsche Events aufräumen (DB-Bereinigung)
+- Die 22 fälschlich als `is_initial: false` erstellten Events auf `is_initial: true` korrigieren, damit sie aus dem "Folgt neu"-Tab verschwinden und in "Vor Tracking" landen
+- Query: `UPDATE follow_events SET is_initial = true WHERE tracked_profile_id = '6a060c46-...' AND event_type = 'follow' AND direction = 'following' AND is_initial = false AND detected_at > [Zeitpunkt des fehlerhaften Runs]`
+
+### Betroffene Dateien
+- `supabase/functions/unfollow-check/index.ts` — Zeile 496: `200` → `0`
+- `supabase/functions/create-baseline/index.ts` — sicherstellen `last_following_count` gesetzt wird
+- DB-Migration für Event-Korrektur
+
