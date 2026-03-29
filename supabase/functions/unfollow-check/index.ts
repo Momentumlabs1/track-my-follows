@@ -390,6 +390,61 @@ Deno.serve(async (req) => {
         .eq("is_current", true)
         .limit(10000);
 
+      const dbCurrentCount = (dbFollowings || []).length;
+
+      // ══════════════════════════════════════════════
+      // BASELINE COVERAGE CHECK — auto-repair if incomplete
+      // ══════════════════════════════════════════════
+      const coverageRatio = freshFollowingCount > 0 ? dbCurrentCount / freshFollowingCount : 1;
+      console.log(`[unfollow-check] Baseline coverage: ${dbCurrentCount}/${freshFollowingCount} = ${(coverageRatio * 100).toFixed(1)}%`);
+
+      if (coverageRatio < 0.9 && freshFollowingCount >= 10) {
+        // Baseline is incomplete — repair it by inserting missing entries
+        console.log(`[unfollow-check] Baseline incomplete (${(coverageRatio * 100).toFixed(1)}%), repairing...`);
+
+        const existingPks = new Set((dbFollowings || []).map((f: Record<string, unknown>) => f.following_user_id as string));
+        const missingEntries: Record<string, unknown>[] = [];
+
+        for (const u of allFollowings) {
+          if (!existingPks.has(u.pk)) {
+            const genderTag = detectGender(u.full_name, u.username);
+            const category = categorizeFollow(u.follower_count, u.is_private);
+            missingEntries.push({
+              tracked_profile_id: profile.id,
+              following_username: u.username,
+              following_user_id: u.pk,
+              following_avatar_url: u.profile_pic_url || null,
+              following_display_name: u.full_name || null,
+              first_seen_at: new Date().toISOString(),
+              direction: "following",
+              is_current: true,
+              gender_tag: genderTag,
+              category,
+            });
+          }
+        }
+
+        if (missingEntries.length > 0) {
+          await batchUpsert(supabase, "profile_followings", missingEntries, "tracked_profile_id,following_user_id,direction");
+          console.log(`[unfollow-check] Repaired baseline: inserted ${missingEntries.length} missing entries`);
+        }
+
+        // Refund the scan budget since we used this check for repair, not comparison
+        await supabase.from("tracked_profiles").update({
+          unfollow_scans_today: unfollowRemaining,
+          last_following_count: allFollowings.length,
+        }).eq("id", profile.id);
+
+        return new Response(JSON.stringify({
+          success: true,
+          baseline_repaired: true,
+          missing_entries_added: missingEntries.length,
+          coverage_before: coverageRatio,
+          coverage_after: freshFollowingCount > 0 ? (dbCurrentCount + missingEntries.length) / freshFollowingCount : 1,
+          message: "Baseline was incomplete and has been repaired. Please run the check again for accurate results.",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       const now = Date.now();
       const lastTs = profile.last_scanned_at ? new Date(profile.last_scanned_at).getTime() : now - 60 * 60 * 1000;
       const spanMs = Math.max(now - lastTs, 60_000);

@@ -455,7 +455,11 @@
     "teaser_title": "Unfollow Detection",
     "teaser_subtitle": "Changes in following list detected",
     "teaser_desc": "Instantly detect when someone unfollows",
-    "teaser_unlock": "Unlock with Pro"
+    "teaser_unlock": "Unlock with Pro",
+    "hint_is_estimate": "Estimate based on counter changes. Run the unfollow check for exact names.",
+    "baseline_repaired": "Baseline repaired! Run the check again for accurate results.",
+    "partial_fetch": "Scan incomplete – please try again.",
+    "following_limit": "Unfollow check only available up to 1,500 followings."
   },
   "scan_status": {
     "auto_hourly": "Hourly",
