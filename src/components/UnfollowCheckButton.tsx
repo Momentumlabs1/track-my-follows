@@ -146,6 +146,8 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         checks_remaining?: number;
         fetched?: number;
         expected?: number;
+        baseline_repaired?: boolean;
+        missing_entries_added?: number;
       } = {};
       try { data = await res.json(); } catch { /* empty body */ }
 
