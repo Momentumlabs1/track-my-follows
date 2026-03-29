@@ -496,6 +496,7 @@ Deno.serve(async (req) => {
         : 200;
 
       let newFollowsFound = 0;
+      let backfillCount = 0;
       const newFollowingRows: Record<string, unknown>[] = [];
       const newFollowEvents: Record<string, unknown>[] = [];
 
@@ -521,13 +522,14 @@ Deno.serve(async (req) => {
           target_is_private: f.is_private || false,
           is_initial: isBackfill,
         });
-        if (!isBackfill) newFollowsFound++;
+        if (isBackfill) backfillCount++;
+        else newFollowsFound++;
       }
 
       // ══════════════════════════════════════════════
       // STEP 5: Write to DB
       // ══════════════════════════════════════════════
-      console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${newFollowsFound} new follows`);
+      console.log(`[unfollow-check] ${profile.username}: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${backfillCount} backfill`);
 
       if (unfollowUpdateIds.length > 0) {
         const CHUNK = 500;
@@ -560,10 +562,10 @@ Deno.serve(async (req) => {
       });
 
       const remaining = unfollowRemaining - 1;
-      console.log(`[unfollow-check] Done: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${remaining} remaining`);
+      console.log(`[unfollow-check] Done: ${unfollowsFound} unfollows, ${newFollowsFound} new follows, ${backfillCount} backfill, ${remaining} remaining`);
 
       return new Response(JSON.stringify({
-        success: true, unfollows_found: unfollowsFound, new_follows_found: newFollowsFound, checks_remaining: remaining,
+        success: true, unfollows_found: unfollowsFound, new_follows_found: newFollowsFound, baseline_backfill_count: backfillCount, checks_remaining: remaining,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     } finally {
