@@ -480,7 +480,7 @@ const ProfileDetail = () => {
             </div>
             {unfollowedByThem.length > 0 && (
               <div>
-                <p className="section-header px-1 mb-2 flex items-center gap-1.5">🚩 {t("profile.unfollowed_by_them")} <span className="text-destructive">{unfollowedByThem.length}</span></p>
+                <p className="section-header px-1 mb-2 flex items-center gap-1.5">🚩 {t("profile.unfollowed_by_them")} <span className="text-destructive">{unfollowedByThem.length}</span> <span className="text-muted-foreground font-normal" style={{ fontSize: '0.6875rem' }}>({t("unfollow_check.since_tracking", "seit Tracking")})</span></p>
                 <div className="native-card overflow-hidden">
                   {unfollowedByThem.map((e, i) => <CellRow key={e.id} username={e.target_username} displayName={e.target_display_name} avatarUrl={e.target_avatar_url} detectedAt={e.detected_at} timeAgo={timeAgo} index={i} />)}
                 </div>

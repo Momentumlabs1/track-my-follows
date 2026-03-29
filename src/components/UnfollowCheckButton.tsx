@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Lock, Shield, UserMinus, UserPlus, Check, ChevronDown } from "lucide-react";
+import { Search, Lock, Shield, UserMinus, UserPlus, Check, ChevronDown, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -37,6 +37,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const [result, setResult] = useState<{
     unfollows_found: number;
     new_follows_found: number;
+    baseline_backfill_count?: number;
   } | null>(null);
   const phaseTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const timeoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -143,6 +144,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         error?: string;
         unfollows_found?: number;
         new_follows_found?: number;
+        baseline_backfill_count?: number;
         checks_remaining?: number;
         fetched?: number;
         expected?: number;
@@ -190,6 +192,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         setResult({
           unfollows_found: data.unfollows_found || 0,
           new_follows_found: data.new_follows_found || 0,
+          baseline_backfill_count: data.baseline_backfill_count || 0,
         });
         setChecksRemaining(data.checks_remaining ?? null);
         if ((data.unfollows_found || 0) > 0) {
@@ -384,7 +387,17 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-3.5 w-3.5 text-primary" />
                   <p className="text-[11px] text-muted-foreground">
-                    +{result.new_follows_found} {t("unfollow_check.new_activity_found", "neue Aktivität gefunden")}
+                    +{result.new_follows_found} {t("unfollow_check.new_follows_detected", "neue Follows erkannt")}
+                  </p>
+                </div>
+              </div>
+            )}
+            {(result.baseline_backfill_count ?? 0) > 0 && result.new_follows_found === 0 && result.unfollows_found === 0 && (
+              <div className="native-card p-3 border border-border/30">
+                <div className="flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("unfollow_check.baseline_updated", "Baseline aktualisiert – nächster Check liefert exakte Ergebnisse")}
                   </p>
                 </div>
               </div>
