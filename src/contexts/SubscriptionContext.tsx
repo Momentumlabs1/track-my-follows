@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isNativeApp, launchNativePaywall, haptic } from "@/lib/native";
 
 interface SubscriptionState {
   plan: "free" | "pro";
@@ -23,6 +24,8 @@ interface SubscriptionContextType extends SubscriptionState {
   isPaywallOpen: boolean;
   closePaywall: () => void;
   paywallTrigger: string | null;
+  nativePurchaseSuccess: boolean;
+  clearNativePurchaseSuccess: () => void;
 }
 
 const defaultState: SubscriptionState = {
@@ -40,6 +43,9 @@ const defaultState: SubscriptionState = {
   isLoading: true,
 };
 
+const PURCHASE_POLL_INTERVAL_MS = 1500;
+const PURCHASE_POLL_ATTEMPTS = 20;
+
 const SubscriptionContext = createContext<SubscriptionContextType>({
   ...defaultState,
   refetch: async () => {},
@@ -47,15 +53,45 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   isPaywallOpen: false,
   closePaywall: () => {},
   paywallTrigger: null,
+  nativePurchaseSuccess: false,
+  clearNativePurchaseSuccess: () => {},
 });
 
 export const useSubscription = () => useContext(SubscriptionContext);
+
+async function isUserProInDatabase(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("plan_type, status, current_period_end")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data) return false;
+  const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+  const isWithinPaidPeriod =
+    data.plan_type === "pro" &&
+    ["expired", "canceled"].includes(data.status) &&
+    data.current_period_end &&
+    new Date(data.current_period_end) > new Date();
+  return isActiveOrTrial || !!isWithinPaidPeriod;
+}
+
+async function waitForUpgrade(userId: string): Promise<boolean> {
+  for (let i = 0; i < PURCHASE_POLL_ATTEMPTS; i++) {
+    const isPro = await isUserProInDatabase(userId);
+    if (isPro) return true;
+    await new Promise((r) => setTimeout(r, PURCHASE_POLL_INTERVAL_MS));
+  }
+  return false;
+}
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>(defaultState);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<string | null>(null);
+  const [nativePurchaseSuccess, setNativePurchaseSuccess] = useState(false);
+  const userRef = useRef(user);
+  userRef.current = user;
 
   const fetchSubscription = useCallback(async () => {
     if (!user) {
@@ -71,9 +107,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (data) {
-        // Check if user has Pro access:
-        // 1. Active or in_trial status
-        // 2. OR expired/canceled but still within paid period (current_period_end > now)
         const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
         const isWithinPaidPeriod = 
           data.plan_type === "pro" && 
@@ -82,7 +115,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           new Date(data.current_period_end) > new Date();
         
         const isPro = isActiveOrTrial || isWithinPaidPeriod;
-
         const proMax = isPro && (data.max_tracked_profiles ?? 0) >= 9999;
 
         setState({
@@ -127,18 +159,69 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchSubscription]);
 
+  // Register global onRevenueCatPurchase callback for native paywall
+  useEffect(() => {
+    if (!isNativeApp()) return;
+
+    (window as any).onRevenueCatPurchase = async () => {
+      console.log("[PaywallNative] onRevenueCatPurchase callback fired, polling DB...");
+      const currentUser = userRef.current;
+      if (!currentUser) return;
+
+      const upgraded = await waitForUpgrade(currentUser.id);
+      await fetchSubscription();
+
+      if (upgraded) {
+        haptic.success();
+        setNativePurchaseSuccess(true);
+      } else {
+        haptic.error();
+        console.warn("[PaywallNative] Purchase callback fired but DB not updated after polling");
+      }
+    };
+
+    // Also support the legacy iapSuccess callback
+    (window as any).iapSuccess = (window as any).onRevenueCatPurchase;
+
+    return () => {
+      delete (window as any).onRevenueCatPurchase;
+      delete (window as any).iapSuccess;
+    };
+  }, [fetchSubscription]);
+
   const showPaywall = useCallback((trigger?: string) => {
-    setPaywallTrigger(trigger || null);
-    setIsPaywallOpen(true);
-  }, []);
+    if (isNativeApp() && user) {
+      // Native: launch RevenueCat's native paywall
+      console.log("[PaywallNative] Launching RevenueCat native paywall");
+      launchNativePaywall(user.id);
+      // Don't open custom paywall — purchase result comes via onRevenueCatPurchase callback
+    } else {
+      // Web: show custom paywall
+      setPaywallTrigger(trigger || null);
+      setIsPaywallOpen(true);
+    }
+  }, [user]);
 
   const closePaywall = useCallback(() => {
     setIsPaywallOpen(false);
     setPaywallTrigger(null);
   }, []);
 
+  const clearNativePurchaseSuccess = useCallback(() => {
+    setNativePurchaseSuccess(false);
+  }, []);
+
   return (
-    <SubscriptionContext.Provider value={{ ...state, refetch: fetchSubscription, showPaywall, isPaywallOpen, closePaywall, paywallTrigger }}>
+    <SubscriptionContext.Provider value={{
+      ...state,
+      refetch: fetchSubscription,
+      showPaywall,
+      isPaywallOpen,
+      closePaywall,
+      paywallTrigger,
+      nativePurchaseSuccess,
+      clearNativePurchaseSuccess,
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );
