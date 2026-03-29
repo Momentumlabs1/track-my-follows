@@ -63,6 +63,12 @@ export const manageSubscription = () => {
   }
 };
 
+export const launchNativePaywall = async (userId: string) => {
+  if (!isNativeApp()) return;
+  const despia = (await import('despia-native')).default;
+  return despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`);
+};
+
 export const NATIVE_DEEPLINK_SCHEME = 'spysecret';
 
 export const openInstagram = (username: string) => {
