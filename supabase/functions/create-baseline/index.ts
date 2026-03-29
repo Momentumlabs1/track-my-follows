@@ -391,8 +391,14 @@ Deno.serve(async (req) => {
       // UPDATE PROFILE
       // ══════════════════════════════════════════
 
+      // Only mark baseline_complete if we actually got a meaningful amount of data
+      const baselineCoverage = followingCount > 0 ? dbTotal / followingCount : 1;
+      const shouldMarkComplete = isFullBaseline || baselineCoverage >= 0.85 || followingCount <= 10;
+
+      console.log(`[create-baseline] ${username}: baseline coverage=${(baselineCoverage * 100).toFixed(1)}%, isFullBaseline=${isFullBaseline}, markComplete=${shouldMarkComplete}`);
+
       await supabase.from("tracked_profiles").update({
-        baseline_complete: true,
+        baseline_complete: shouldMarkComplete,
         instagram_user_id: igUserId,
         last_following_count: followingCount,
         last_follower_count: userInfo.follower_count || 0,
@@ -426,10 +432,8 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error("[create-baseline] Error:", err);
-    // Mark baseline_complete even on error to prevent loops
-    if (supabase && profileId) {
-      await supabase.from("tracked_profiles").update({ baseline_complete: true }).eq("id", profileId);
-    }
+    // Do NOT mark baseline_complete on error — let recovery retry after 24h cooldown
+    // The last_baseline_attempt_at was already set at the start, preventing loops
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

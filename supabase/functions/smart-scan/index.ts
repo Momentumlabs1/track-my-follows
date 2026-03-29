@@ -389,16 +389,30 @@ async function performSpyScan(
 
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
-  // ── SMART UNFOLLOW DETECTION ──
+  // ── SMART UNFOLLOW DETECTION (guarded by baseline coverage) ──
   let unfollowsDetected = 0;
   if (profile.baseline_complete && lastFollowingCount !== null && lastFollowingCount !== undefined) {
-    const expectedCount = lastFollowingCount + newFollowCount;
-    const missingCount = expectedCount - actualFollowingCount;
-    if (missingCount > 0) {
-      console.log(`[SPY HINT] ${username}: +${missingCount} unfollows detected (hint)`);
-      unfollowsDetected = missingCount;
-      const currentHint = (profile.pending_unfollow_hint as number) || 0;
-      await supabaseClient.from("tracked_profiles").update({ pending_unfollow_hint: currentHint + missingCount }).eq("id", profileId);
+    // Check baseline coverage before incrementing hint
+    const { count: dbCurrentCount } = await supabaseClient
+      .from("profile_followings")
+      .select("*", { count: "exact", head: true })
+      .eq("tracked_profile_id", profileId)
+      .eq("direction", "following")
+      .eq("is_current", true);
+
+    const baselineCoverage = lastFollowingCount > 0 ? (dbCurrentCount ?? 0) / lastFollowingCount : 1;
+
+    if (baselineCoverage < 0.85) {
+      console.log(`[SPY HINT] ${username}: baseline coverage too low (${((dbCurrentCount ?? 0))}/${lastFollowingCount} = ${(baselineCoverage * 100).toFixed(1)}%), suppressing hint`);
+    } else {
+      const expectedCount = lastFollowingCount + newFollowCount;
+      const missingCount = expectedCount - actualFollowingCount;
+      if (missingCount > 0) {
+        console.log(`[SPY HINT] ${username}: +${missingCount} unfollows detected (hint, coverage=${(baselineCoverage * 100).toFixed(1)}%)`);
+        unfollowsDetected = missingCount;
+        const currentHint = (profile.pending_unfollow_hint as number) || 0;
+        await supabaseClient.from("tracked_profiles").update({ pending_unfollow_hint: currentHint + missingCount }).eq("id", profileId);
+      }
     }
   }
 

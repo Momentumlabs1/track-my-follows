@@ -168,6 +168,12 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
         setPhase("idle");
         setProgress(0);
         toast.error(t("unfollow_check.partial_fetch", "Scan unvollständig – bitte erneut versuchen."));
+      } else if (data.baseline_repaired) {
+        setPhase("idle");
+        setProgress(0);
+        toast.success(t("unfollow_check.baseline_repaired", "Baseline repariert! Starte den Check erneut für genaue Ergebnisse."));
+        queryClient.invalidateQueries({ queryKey: ["profile_followings"] });
+        queryClient.invalidateQueries({ queryKey: ["tracked_profiles"] });
       } else if (data.error === "FOLLOWING_LIMIT") {
         setPhase("idle");
         setProgress(0);

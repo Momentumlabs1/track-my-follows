@@ -465,7 +465,9 @@ const ProfileDetail = () => {
                 <span style={{ fontSize: '1.25rem' }}>⚠️</span>
                 <div>
                   <span className="font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>~{profile.pending_unfollow_hint} {t("spy.unfollows_detected")}</span>
-                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{t("spy.unfollow_hint_explanation")}</p>
+                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>
+                    {t("unfollow_check.hint_is_estimate", "Schätzwert basierend auf Zähler-Änderungen. Starte den Unfollow-Check für exakte Namen.")}
+                  </p>
                 </div>
               </div>
             )}
