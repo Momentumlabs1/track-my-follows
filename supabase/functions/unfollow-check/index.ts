@@ -493,7 +493,7 @@ Deno.serve(async (req) => {
       const lastFollowingCount = profile.last_following_count as number | null;
       const maxNewFollows = lastFollowingCount !== null && lastFollowingCount !== undefined
         ? Math.max(actualFollowingCount - lastFollowingCount, 0)
-        : 200;
+        : 0; // No reference count → treat all as backfill
 
       let newFollowsFound = 0;
       let backfillCount = 0;
