@@ -1,0 +1,1 @@
+UPDATE profile_followings SET first_seen_at = '2026-03-25T18:11:02.1Z' WHERE tracked_profile_id = '6a060c46-4919-4d0f-8c18-a509c74d48ea' AND direction = 'following' AND first_seen_at >= '2026-03-29 16:00:00' AND first_seen_at <= '2026-03-29 16:15:00';
