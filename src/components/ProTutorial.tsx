@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpotlightOverlay } from "@/components/SpotlightOverlay";
 import { ProScanOverlay, type ProScanResult } from "@/components/ProScanOverlay";
@@ -111,13 +112,16 @@ export function ProTutorial() {
     return idx;
   }, [step]);
 
+  const { nativePurchaseSuccess, clearNativePurchaseSuccess } = useSubscription();
+
   // Check if tutorial should show
   const shouldShow = useMemo(() => {
     if (!user) return false;
     if (localStorage.getItem(`pro_tutorial_done_${user.id}`)) return false;
-    if (!sessionStorage.getItem("show_pro_tutorial")) return false;
-    return true;
-  }, [user]);
+    const hasSessionFlag = sessionStorage.getItem("show_pro_tutorial") === "1";
+    if (hasSessionFlag || nativePurchaseSuccess) return true;
+    return false;
+  }, [user, nativePurchaseSuccess]);
 
   // Initialize
   useEffect(() => {
@@ -125,6 +129,11 @@ export function ProTutorial() {
     const storedStep = getStoredStep();
     setStep(storedStep);
     setActive(true);
+    // Clear nativePurchaseSuccess so it doesn't re-trigger
+    if (nativePurchaseSuccess) clearNativePurchaseSuccess();
+    // Ensure sessionStorage flag is set
+    try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
+    console.log("[ProTutorial] Tutorial activated, step:", storedStep);
 
     // Load first tracked profile for scanning
     const loadProfile = async () => {
