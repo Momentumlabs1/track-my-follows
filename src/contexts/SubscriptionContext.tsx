@@ -186,7 +186,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.log("[PaywallNative] Launching RevenueCat native paywall");
       launchNativePaywall(user.id);
     } else {
-      toast.info("Upgrade in der App verfügbar");
+      toast.info("Käufe & Abos sind nur in der App verfügbar. Öffne Spy Secret auf deinem iPhone.", {
+        duration: 5000,
+      });
     }
   }, [user]);
 

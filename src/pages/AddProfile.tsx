@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Loader2, Search, AlertCircle } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, Search, AlertCircle, UserCheck } from "lucide-react";
 import { useAddTrackedProfile, useTrackedProfiles } from "@/hooks/useTrackedProfiles";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -25,18 +25,30 @@ const AddProfile = () => {
     if (!username.trim()) return;
     setError(null);
 
+    const cleanUsername = username.trim().toLowerCase().replace(/^@/, "");
+
     if (currentCount >= maxProfiles) {
       haptic.warning();
       showPaywall("profiles");
       return;
     }
 
-    // Step 1: Pre-check username via check-username edge function
+    // Duplicate check
+    const isDuplicate = profiles.some(
+      (p) => p.username.toLowerCase() === cleanUsername
+    );
+    if (isDuplicate) {
+      haptic.warning();
+      setError(t("errors.profile_already_tracked"));
+      return;
+    }
+
+    // Step 1: Pre-check username
     setChecking(true);
     let avatarFromCheck: string | null = null;
     try {
       const { data: checkData, error: checkError } = await supabase.functions.invoke("check-username", {
-        body: { username: username.trim().toLowerCase() },
+        body: { username: cleanUsername },
       });
 
       if (checkError) throw checkError;
@@ -48,7 +60,6 @@ const AddProfile = () => {
         return;
       }
 
-      // Save avatar URL for passing to analyzing page
       avatarFromCheck = checkData.avatar_url || null;
       if (avatarFromCheck) {
         setCheckedAvatarUrl(avatarFromCheck);
@@ -62,23 +73,24 @@ const AddProfile = () => {
       }
     } catch (err) {
       console.error("[check-username] Error:", err);
-      // On check failure, continue with normal flow (don't block)
     }
     setChecking(false);
 
-    // Step 2: Profile is public and exists — add to DB
+    // Step 2: Add to DB
     haptic.light();
-    addProfile.mutate(username, {
+    addProfile.mutate(cleanUsername, {
       onSuccess: (data) => {
         haptic.success();
-        navigate(`/analyzing/${data.id}/${username.trim().toLowerCase()}`, {
+        navigate(`/analyzing/${data.id}/${cleanUsername}`, {
           state: { avatarUrl: avatarFromCheck },
         });
       },
       onError: (err) => {
         haptic.error();
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("private")) {
+        if (msg.includes("duplicate") || msg.includes("already")) {
+          setError(t("errors.profile_already_tracked"));
+        } else if (msg.includes("private")) {
           setError(t("errors.profile_private"));
         } else if (msg.includes("not found") || msg.includes("404")) {
           setError(t("errors.profile_not_found"));

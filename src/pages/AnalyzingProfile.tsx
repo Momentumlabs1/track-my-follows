@@ -18,6 +18,8 @@ const STEP_KEYS = [
   { title: "step_5", desc: "step_5_desc" },
 ];
 
+const SCAN_TIMEOUT_MS = 90_000; // 90 seconds
+
 const AnalyzingProfile = () => {
   const { t } = useTranslation();
   const { profileId, username } = useParams();
@@ -29,10 +31,21 @@ const AnalyzingProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     (location.state as any)?.avatarUrl || null
   );
+  const [timedOut, setTimedOut] = useState(false);
   const scanStarted = useRef(false);
   const scanDone = useRef(false);
 
   // Smooth progress simulation: 0→15→30 via steps, then 30→80 via interval
+  // Timeout fallback
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!scanDone.current) {
+        setTimedOut(true);
+      }
+    }, SCAN_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, []);
+
   useEffect(() => {
     const t1 = setTimeout(() => { setCurrentStep(1); setProgress(15); }, 1200);
     const t2 = setTimeout(() => { setCurrentStep(2); setProgress(30); }, 2500);
@@ -218,13 +231,43 @@ const AnalyzingProfile = () => {
         })}
       </div>
 
+      {/* Timeout fallback */}
+      {timedOut && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 w-full max-w-sm"
+        >
+          <div className="native-card p-4 border-destructive/30">
+            <p className="text-[13px] font-semibold text-foreground mb-1">{t("analyzing.timeout_title")}</p>
+            <p className="text-[11px] text-muted-foreground mb-3">{t("analyzing.timeout_text")}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/dashboard", { replace: true })}
+                className="flex-1 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-[12px] font-semibold min-h-[40px]"
+              >
+                {t("common.back")}
+              </button>
+              <button
+                onClick={() => { setTimedOut(false); window.location.reload(); }}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-[12px] font-semibold min-h-[40px]"
+              >
+                {t("common.retry")}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Full analysis note */}
-      <div className="mt-6 flex items-start gap-2 max-w-sm px-2">
-        <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-        <p className="text-[11px] text-muted-foreground leading-relaxed">
-          {t("analyzing.full_analysis_note")}
-        </p>
-      </div>
+      {!timedOut && (
+        <div className="mt-6 flex items-start gap-2 max-w-sm px-2">
+          <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            {t("analyzing.full_analysis_note")}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
