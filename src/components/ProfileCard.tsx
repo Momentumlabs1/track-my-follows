@@ -15,22 +15,22 @@ function getProxiedUrl(src: string): string {
   return src;
 }
 
+function isInstagramCdn(url: string): boolean {
+  return url.includes("cdninstagram.com") || url.includes("fbcdn.net");
+}
+
 function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
-  const [stage, setStage] = useState<'direct' | 'proxy' | 'fallback'>('direct');
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    setStage('direct');
-  }, [src]);
-
-  if (!src || stage === 'fallback') {
+  if (!src || failed) {
     return (
       <div className={`w-full h-full flex items-center justify-center font-bold text-muted-foreground ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(var(--muted))' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );
   }
-  const imgSrc = stage === 'direct' ? src : getProxiedUrl(src);
-  return <img src={imgSrc} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setStage(prev => prev === 'direct' ? 'proxy' : 'fallback')} />;
+  const imgSrc = isInstagramCdn(src) ? getProxiedUrl(src) : src;
+  return <img src={imgSrc} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setFailed(true)} />;
 }
 
 function useShortTimeAgo() {
