@@ -18,6 +18,8 @@ const STEP_KEYS = [
   { title: "step_5", desc: "step_5_desc" },
 ];
 
+const SCAN_TIMEOUT_MS = 90_000; // 90 seconds
+
 const AnalyzingProfile = () => {
   const { t } = useTranslation();
   const { profileId, username } = useParams();
@@ -29,6 +31,7 @@ const AnalyzingProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     (location.state as any)?.avatarUrl || null
   );
+  const [timedOut, setTimedOut] = useState(false);
   const scanStarted = useRef(false);
   const scanDone = useRef(false);
 
