@@ -128,20 +128,30 @@ export function SpyStatusCard({
       return;
     }
     haptic.light();
+    setScanResult(null);
+    setScanOverlayOpen(true);
     setPushScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke("trigger-scan", {
         body: { profileId, scanType: "push" },
       });
       if (error) throw error;
-      if (data?.error) { toast.error(data.error); setPushScanning(false); return; }
+      if (data?.error) { toast.error(data.error); setScanOverlayOpen(false); setPushScanning(false); return; }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(t("spy_detail.scan_complete", { count: newCount }));
+      setScanResult(newCount);
       invalidateAll();
     } catch {
       toast.error(t("spy_detail.scan_failed"));
+      setScanOverlayOpen(false);
     } finally {
       setPushScanning(false);
+    }
+  };
+
+  const handleScanOverlayClose = () => {
+    setScanOverlayOpen(false);
+    if (scanResult !== null && scanResult > 0 && onScanComplete) {
+      onScanComplete(scanResult);
     }
   };
 
