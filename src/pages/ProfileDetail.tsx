@@ -72,6 +72,15 @@ const ProfileDetail = () => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const moveSpy = useMoveSpy();
 
+  const handleScanComplete = useCallback((newCount: number) => {
+    if (newCount > 0 && tabsRef.current) {
+      setActiveTab("new_follows");
+      setTimeout(() => {
+        tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, []);
+
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEvents = [], isLoading: eventsLoading } = useFollowEvents(id);
   const { data: followerEvents = [] } = useFollowerEvents(id);
