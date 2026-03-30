@@ -9,7 +9,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BottomNav } from "@/components/BottomNav";
 import { AppTutorial } from "@/components/AppTutorial";
-import { PaywallSheet } from "@/components/PaywallSheet";
+
 import { SpaRedirector } from "@/components/SpaRedirector";
 import { useDirection } from "@/hooks/useDirection";
 import Splash from "./pages/Splash";
@@ -67,7 +67,7 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
-      <PaywallSheet />
+      
       <AppTutorial />
     </>
   );
