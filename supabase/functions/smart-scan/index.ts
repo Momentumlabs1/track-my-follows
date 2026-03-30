@@ -531,6 +531,7 @@ async function performBasicScan(
     await infoResult.response.text();
   }
 
+  const maxNewFollows = 200;
   const followingUsers = await fetchPage1(supabaseClient, "following", igUserId, hikerApiKey, profileId);
   if (followingUsers === null) return { new_follows: 0, new_followers: 0, unfollows_detected: 0, skipped_api: true };
 
