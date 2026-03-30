@@ -1,9 +1,59 @@
-// trigger-scan v5 — audit-hardened with apiGuard, scan locks, budget checks
+// trigger-scan v6 — re-added avatar refresh for existing rows
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 import { acquireScanLock, releaseScanLock, checkDailyBudget, trackedApiFetch } from "../_shared/apiGuard.ts";
 
 const FUNCTION_NAME = "trigger-scan";
+
+// ── Batch-refresh avatar URLs for existing followings/followers ──
+async function refreshFollowingAvatars(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+  users: FollowingUser[],
+) {
+  let updated = 0;
+  for (const u of users) {
+    if (!u.profile_pic_url) continue;
+    const { data } = await supabase
+      .from("profile_followings")
+      .select("following_avatar_url")
+      .eq("tracked_profile_id", profileId)
+      .eq("following_user_id", u.pk)
+      .eq("direction", "following")
+      .maybeSingle();
+    if (data && data.following_avatar_url !== u.profile_pic_url) {
+      await supabase.from("profile_followings").update({
+        following_avatar_url: u.profile_pic_url,
+      }).eq("tracked_profile_id", profileId).eq("following_user_id", u.pk).eq("direction", "following");
+      updated++;
+    }
+  }
+  if (updated > 0) console.log(`[AVATAR-REFRESH] followings: updated ${updated} avatars for ${profileId}`);
+}
+
+async function refreshFollowerAvatars(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+  users: FollowingUser[],
+) {
+  let updated = 0;
+  for (const u of users) {
+    if (!u.profile_pic_url) continue;
+    const { data } = await supabase
+      .from("profile_followers")
+      .select("follower_avatar_url")
+      .eq("tracked_profile_id", profileId)
+      .eq("follower_user_id", u.pk)
+      .maybeSingle();
+    if (data && data.follower_avatar_url !== u.profile_pic_url) {
+      await supabase.from("profile_followers").update({
+        follower_avatar_url: u.profile_pic_url,
+      }).eq("tracked_profile_id", profileId).eq("follower_user_id", u.pk);
+      updated++;
+    }
+  }
+  if (updated > 0) console.log(`[AVATAR-REFRESH] followers: updated ${updated} avatars for ${profileId}`);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -361,7 +411,36 @@ Deno.serve(async (req) => {
         const actualFollowingCount = (profile.following_count as number) ?? 0;
         const actualFollowerCount = (profile.follower_count as number) ?? 0;
 
-        // Call 1: Following page 1
+        // ★ Daily avatar refresh for tracked_profiles via user-info call
+        const lastScanned = profile.last_scanned_at ? new Date(profile.last_scanned_at as string).getTime() : 0;
+        const hoursSinceLastScan = (Date.now() - lastScanned) / (1000 * 60 * 60);
+        if (hoursSinceLastScan >= 24) {
+          console.log(`[trigger-scan] ${profile.username}: refreshing user info (${hoursSinceLastScan.toFixed(1)}h since last scan)`);
+          const infoResult = await trackedApiFetch(
+            supabase, FUNCTION_NAME, pId,
+            `https://api.hikerapi.com/v1/user/by/username?username=${encodeURIComponent(profile.username)}`,
+            { "x-access-key": hikerApiKey },
+          );
+          if (infoResult.response?.ok) {
+            try {
+              const userInfo = await infoResult.response.json();
+              const freshAvatar = userInfo.profile_pic_url || userInfo.hd_profile_pic_url_info?.url || null;
+              const updatePayload: Record<string, unknown> = {
+                follower_count: userInfo.follower_count ?? actualFollowerCount,
+                following_count: userInfo.following_count ?? actualFollowingCount,
+              };
+              if (freshAvatar) {
+                updatePayload.avatar_url = freshAvatar;
+                console.log(`[trigger-scan] ${profile.username}: avatar_url refreshed`);
+              }
+              await supabase.from("tracked_profiles").update(updatePayload).eq("id", pId);
+            } catch (e) {
+              console.warn(`[trigger-scan] ${profile.username}: failed to parse user info:`, e);
+            }
+          } else if (infoResult.response) {
+            await infoResult.response.text();
+          }
+        }
         const followingUsers = await fetchPage1(supabase, "following", igUserId, hikerApiKey, pId);
         if (followingUsers === null) {
           results.push({ username: profile.username, error: "api_failed" });
@@ -404,7 +483,11 @@ Deno.serve(async (req) => {
           newFollowerCount = await syncNewFollowers(supabase, pId, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
         }
 
-        // ★ FIX 1.9: NO avatar refresh for existing rows
+        // ★ Avatar refresh for existing rows
+        await refreshFollowingAvatars(supabase, pId, followingUsers);
+        if (followerUsers !== null) {
+          await refreshFollowerAvatars(supabase, pId, followerUsers);
+        }
 
         // Update counts
         await supabase.from("tracked_profiles").update({

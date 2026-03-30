@@ -1,9 +1,60 @@
-// smart-scan v5 — audit-hardened with apiGuard, scan locks, budget checks
+// smart-scan v6 — re-added avatar refresh for existing rows
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { detectGender } from "../_shared/genderDetection.ts";
 import { acquireScanLock, releaseScanLock, checkDailyBudget, trackedApiFetch } from "../_shared/apiGuard.ts";
 
 const FUNCTION_NAME = "smart-scan";
+
+// ── Batch-refresh avatar URLs for existing followings/followers ──
+async function refreshFollowingAvatars(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+  users: FollowingUser[],
+) {
+  let updated = 0;
+  for (const u of users) {
+    if (!u.profile_pic_url) continue;
+    const { data } = await supabase
+      .from("profile_followings")
+      .select("following_avatar_url")
+      .eq("tracked_profile_id", profileId)
+      .eq("following_user_id", u.pk)
+      .eq("direction", "following")
+      .maybeSingle();
+    if (data && data.following_avatar_url !== u.profile_pic_url) {
+      await supabase.from("profile_followings").update({
+        following_avatar_url: u.profile_pic_url,
+        following_display_name: u.full_name || data.following_avatar_url ? undefined : null,
+      }).eq("tracked_profile_id", profileId).eq("following_user_id", u.pk).eq("direction", "following");
+      updated++;
+    }
+  }
+  if (updated > 0) console.log(`[AVATAR-REFRESH] followings: updated ${updated} avatars for ${profileId}`);
+}
+
+async function refreshFollowerAvatars(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+  users: FollowingUser[],
+) {
+  let updated = 0;
+  for (const u of users) {
+    if (!u.profile_pic_url) continue;
+    const { data } = await supabase
+      .from("profile_followers")
+      .select("follower_avatar_url")
+      .eq("tracked_profile_id", profileId)
+      .eq("follower_user_id", u.pk)
+      .maybeSingle();
+    if (data && data.follower_avatar_url !== u.profile_pic_url) {
+      await supabase.from("profile_followers").update({
+        follower_avatar_url: u.profile_pic_url,
+      }).eq("tracked_profile_id", profileId).eq("follower_user_id", u.pk);
+      updated++;
+    }
+  }
+  if (updated > 0) console.log(`[AVATAR-REFRESH] followers: updated ${updated} avatars for ${profileId}`);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -456,7 +507,9 @@ async function performSpyScan(
     }
   }
 
-  // ★ FIX 1.9: NO avatar refresh for existing rows — only new inserts have fresh avatars
+  // ★ Avatar refresh for existing rows
+  await refreshFollowingAvatars(supabaseClient, profileId, followingUsers);
+  await refreshFollowerAvatars(supabaseClient, profileId, followerUsers);
 
   // ── Update profile ──
   await supabaseClient.from("tracked_profiles").update({
@@ -547,7 +600,8 @@ async function performBasicScan(
 
   const newFollowCount = await syncNewFollows(supabaseClient, profileId, followingUsers, profile.last_scanned_at as string | null, maxNewFollows);
 
-  // ★ FIX 1.9: NO avatar refresh for existing rows
+  // ★ Avatar refresh for existing followings
+  await refreshFollowingAvatars(supabaseClient, profileId, followingUsers);
 
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
