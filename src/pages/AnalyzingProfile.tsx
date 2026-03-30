@@ -36,6 +36,16 @@ const AnalyzingProfile = () => {
   const scanDone = useRef(false);
 
   // Smooth progress simulation: 0→15→30 via steps, then 30→80 via interval
+  // Timeout fallback
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!scanDone.current) {
+        setTimedOut(true);
+      }
+    }, SCAN_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, []);
+
   useEffect(() => {
     const t1 = setTimeout(() => { setCurrentStep(1); setProgress(15); }, 1200);
     const t2 = setTimeout(() => { setCurrentStep(2); setProgress(30); }, 2500);
