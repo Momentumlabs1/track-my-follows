@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
 
 function getProxiedUrl(src: string): string {
-  if (src.includes("cdninstagram.com") || src.includes("fbcdn.net")) {
-    return `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`;
-  }
-  return src;
+  return `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(src)}`;
 }
 
-type LoadStage = 'direct' | 'proxy' | 'fallback';
+function isInstagramCdn(url: string): boolean {
+  return url.includes("cdninstagram.com") || url.includes("fbcdn.net");
+}
 
 interface InstagramAvatarProps {
   src: string | null | undefined;
@@ -20,13 +19,9 @@ interface InstagramAvatarProps {
 }
 
 export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, className = '' }: InstagramAvatarProps) {
-  const [stage, setStage] = useState<LoadStage>('direct');
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    setStage('direct');
-  }, [src]);
-
-  if (!src || stage === 'fallback') {
+  if (!src || failed) {
     return (
       <div
         className={`rounded-full gradient-pink text-primary-foreground flex items-center justify-center font-semibold ${className}`}
@@ -37,7 +32,7 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
     );
   }
 
-  const imgSrc = stage === 'direct' ? src : getProxiedUrl(src);
+  const imgSrc = isInstagramCdn(src) ? getProxiedUrl(src) : src;
 
   return (
     <img
@@ -46,7 +41,7 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
       referrerPolicy="no-referrer"
       className={`rounded-full object-cover bg-muted ${className}`}
       style={{ width: size, height: size }}
-      onError={() => setStage(prev => prev === 'direct' ? 'proxy' : 'fallback')}
+      onError={() => setFailed(true)}
     />
   );
 }

@@ -415,7 +415,7 @@ Deno.serve(async (req) => {
               following_user_id: u.pk,
               following_avatar_url: u.profile_pic_url || null,
               following_display_name: u.full_name || null,
-              first_seen_at: new Date().toISOString(),
+              first_seen_at: profile.last_baseline_attempt_at || profile.created_at || new Date().toISOString(),
               direction: "following",
               is_current: true,
               gender_tag: genderTag,
