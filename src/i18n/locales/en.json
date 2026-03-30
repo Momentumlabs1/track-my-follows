@@ -76,7 +76,9 @@
     "step_4_desc": "Spy analyzes gender ratio of followed accounts",
     "step_5": "Finishing Up",
     "step_5_desc": "Data is being encrypted and stored",
-    "full_analysis_note": "This is a full analysis of the account and all followers – not just recent activity."
+    "full_analysis_note": "This is a full analysis of the account and all followers – not just recent activity.",
+    "timeout_title": "Taking longer than expected",
+    "timeout_text": "The scan seems to be having issues. You can try again or go back to the dashboard."
   },
   "profile_detail": {
     "tracking_since": "Tracking since {{date}}",
@@ -251,6 +253,11 @@
     "restore_purchases": "Restore Purchases",
     "subscription_restored": "Subscription restored! ✅",
     "no_subscription_found": "No active subscription found",
+    "restore_hint_native": "Make sure you're signed in with the same Apple ID you used to purchase.",
+    "restore_error": "Restore failed",
+    "restore_error_hint": "Check your internet connection and try again. Contact support if the problem persists.",
+    "restore_web_title": "Only available in the app",
+    "restore_web_hint": "Purchases can only be restored in the Spy Secret iOS app. Open the app on your iPhone.",
     "notifications": "Notifications 🔔",
     "notif_follows": "New Follows",
     "notif_follows_desc": "When they follow someone new 👀",
@@ -265,11 +272,18 @@
     "system": "System",
     "logout": "Log Out",
     "logout_toast": "See you soon! 👋",
+    "logout_confirm_text": "Are you sure you want to log out? You can log back in anytime.",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Delete your account and all data. This cannot be undone!",
     "delete_account": "Delete Account",
     "delete_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
     "delete_confirm_detailed": "Are you sure? This will permanently delete your account, all tracked profiles, and all data. This cannot be undone.",
+    "delete_pro_warning_title": "You have an active Pro subscription!",
+    "delete_pro_warning_text": "Your Pro subscription will not be automatically cancelled. Please cancel your subscription in the App Store first.",
+    "delete_pro_warning_note": "⚠️ Your subscription will continue and you'll be charged even after account deletion!",
+    "delete_continue": "Delete anyway",
+    "delete_type_instruction": "Type DELETE to confirm. This action cannot be undone.",
+    "delete_final": "Delete permanently",
     "account_deleted": "Account deleted. Goodbye! 😢",
     "billing_issue": "⚠️ Billing issue – please update your payment method",
     "legal": "Legal",
@@ -409,7 +423,8 @@
     "try_again": "Try again",
     "profile_not_found": "Profile not found. Check the username.",
     "profile_private": "This profile is private. We can only track public profiles.",
-    "scan_failed": "Scan failed. We'll try again automatically."
+    "scan_failed": "Scan failed. We'll try again automatically.",
+    "profile_already_tracked": "This profile is already being tracked."
   },
   "toast": {
     "profileTracked": "Profile is being tracked! 👀",
