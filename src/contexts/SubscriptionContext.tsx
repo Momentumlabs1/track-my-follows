@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isNativeApp, launchNativePaywall, haptic } from "@/lib/native";
+import { toast } from "sonner";
 
 interface SubscriptionState {
   plan: "free" | "pro";
@@ -21,9 +22,6 @@ interface SubscriptionState {
 interface SubscriptionContextType extends SubscriptionState {
   refetch: () => Promise<void>;
   showPaywall: (trigger?: string) => void;
-  isPaywallOpen: boolean;
-  closePaywall: () => void;
-  paywallTrigger: string | null;
   nativePurchaseSuccess: boolean;
   clearNativePurchaseSuccess: () => void;
 }
@@ -50,9 +48,6 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   ...defaultState,
   refetch: async () => {},
   showPaywall: () => {},
-  isPaywallOpen: false,
-  closePaywall: () => {},
-  paywallTrigger: null,
   nativePurchaseSuccess: false,
   clearNativePurchaseSuccess: () => {},
 });
@@ -87,8 +82,6 @@ async function waitForUpgrade(userId: string): Promise<boolean> {
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>(defaultState);
-  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
-  const [paywallTrigger, setPaywallTrigger] = useState<string | null>(null);
   const [nativePurchaseSuccess, setNativePurchaseSuccess] = useState(false);
   const userRef = useRef(user);
   userRef.current = user;
@@ -180,7 +173,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Also support the legacy iapSuccess callback
     (window as any).iapSuccess = (window as any).onRevenueCatPurchase;
 
     return () => {
@@ -189,23 +181,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchSubscription]);
 
-
   const showPaywall = useCallback((trigger?: string) => {
     if (isNativeApp() && user) {
-      // Native: launch RevenueCat's native paywall ONLY — no fallback to custom paywall
       console.log("[PaywallNative] Launching RevenueCat native paywall");
       launchNativePaywall(user.id);
     } else {
-      // Web: show custom paywall
-      setPaywallTrigger(trigger || null);
-      setIsPaywallOpen(true);
+      toast.info("Upgrade in der App verfügbar");
     }
   }, [user]);
-
-  const closePaywall = useCallback(() => {
-    setIsPaywallOpen(false);
-    setPaywallTrigger(null);
-  }, []);
 
   const clearNativePurchaseSuccess = useCallback(() => {
     setNativePurchaseSuccess(false);
@@ -216,9 +199,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       ...state,
       refetch: fetchSubscription,
       showPaywall,
-      isPaywallOpen,
-      closePaywall,
-      paywallTrigger,
       nativePurchaseSuccess,
       clearNativePurchaseSuccess,
     }}>
