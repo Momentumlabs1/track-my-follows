@@ -750,5 +750,17 @@
     "info_hourly": "Dein Spy scannt automatisch jede Stunde. Du kannst zusätzlich manuelle Scans auslösen.",
     "info_unfollow_baseline": "Unfollow-Scans funktionieren erst nach dem ersten vollständigen Scan.",
     "info_title": "Spy-Status Erklärung"
+  },
+  "scan_overlay": {
+    "connecting": "Verbinde mit Server...",
+    "scanning_followings": "Scanne Followings...",
+    "analyzing": "Analysiere Aktivitäten...",
+    "comparing": "Vergleiche Daten...",
+    "finalizing": "Finalisiere...",
+    "new_found": "{{count}} neue Aktivität gefunden!",
+    "new_found_plural": "{{count}} neue Aktivitäten gefunden!",
+    "all_clear": "Alles beim Alten",
+    "no_changes": "Keine neuen Aktivitäten erkannt",
+    "scroll_hint": "Scrolle runter für Details"
   }
 }

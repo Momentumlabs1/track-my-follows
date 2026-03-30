@@ -752,5 +752,17 @@
     "available_with_pro": "Available with Pro",
     "unlock_with_pro": "Unlock with Pro",
     "spy_teaser": "Suspicion score, gender analysis & more"
+  },
+  "scan_overlay": {
+    "connecting": "Connecting to server...",
+    "scanning_followings": "Scanning followings...",
+    "analyzing": "Analyzing activity...",
+    "comparing": "Comparing data...",
+    "finalizing": "Finalizing...",
+    "new_found": "{{count}} new activity found!",
+    "new_found_plural": "{{count}} new activities found!",
+    "all_clear": "All clear",
+    "no_changes": "No new activity detected",
+    "scroll_hint": "Scroll down for details"
   }
 }
