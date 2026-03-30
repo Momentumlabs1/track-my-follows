@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -21,6 +21,10 @@ function isInstagramCdn(url: string): boolean {
 
 function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
 
   if (!src || failed) {
     return (
