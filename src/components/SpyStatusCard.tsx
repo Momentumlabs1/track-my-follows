@@ -7,6 +7,7 @@ import { Info, ChevronDown, Search, Eye, Loader2 } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpyFindings } from "@/components/SpyFindings";
 import { Progress } from "@/components/ui/progress";
+import { ScanOverlay } from "@/components/ScanOverlay";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ interface SpyStatusCardProps {
   pushScansToday?: number | null;
   profileId?: string;
   unfollowScansToday?: number | null;
+  onScanComplete?: (newCount: number) => void;
 }
 
 type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
@@ -66,6 +68,7 @@ export function SpyStatusCard({
   pushScansToday,
   profileId,
   unfollowScansToday,
+  onScanComplete,
 }: SpyStatusCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -74,6 +77,8 @@ export function SpyStatusCard({
   const [expanded, setExpanded] = useState(false);
   const [pushScanning, setPushScanning] = useState(false);
   const [unfollowScanning, setUnfollowScanning] = useState(false);
+  const [scanOverlayOpen, setScanOverlayOpen] = useState(false);
+  const [scanResult, setScanResult] = useState<number | null>(null);
 
   const score = analysis?.overallScore ?? 0;
   const level = getSpyLevel(score);
@@ -123,20 +128,30 @@ export function SpyStatusCard({
       return;
     }
     haptic.light();
+    setScanResult(null);
+    setScanOverlayOpen(true);
     setPushScanning(true);
     try {
       const { data, error } = await supabase.functions.invoke("trigger-scan", {
         body: { profileId, scanType: "push" },
       });
       if (error) throw error;
-      if (data?.error) { toast.error(data.error); setPushScanning(false); return; }
+      if (data?.error) { toast.error(data.error); setScanOverlayOpen(false); setPushScanning(false); return; }
       const newCount = (data?.results?.[0]?.new_follows || 0) + (data?.results?.[0]?.new_followers || 0);
-      toast.success(t("spy_detail.scan_complete", { count: newCount }));
+      setScanResult(newCount);
       invalidateAll();
     } catch {
       toast.error(t("spy_detail.scan_failed"));
+      setScanOverlayOpen(false);
     } finally {
       setPushScanning(false);
+    }
+  };
+
+  const handleScanOverlayClose = () => {
+    setScanOverlayOpen(false);
+    if (scanResult !== null && scanResult > 0 && onScanComplete) {
+      onScanComplete(scanResult);
     }
   };
 
@@ -165,6 +180,7 @@ export function SpyStatusCard({
 
   return (
     <>
+      <ScanOverlay open={scanOverlayOpen} result={scanResult} onClose={handleScanOverlayClose} />
       <div className="my-5 mb-8">
         {/* Section title */}
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 px-1">

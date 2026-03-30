@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, Lock, Info } from "lucide-react";
@@ -71,6 +71,15 @@ const ProfileDetail = () => {
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
   const moveSpy = useMoveSpy();
+
+  const handleScanComplete = useCallback((newCount: number) => {
+    if (newCount > 0 && tabsRef.current) {
+      setActiveTab("new_follows");
+      setTimeout(() => {
+        tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, []);
 
   const { data: profiles = [], isLoading: profilesLoading } = useTrackedProfiles();
   const { data: followEvents = [], isLoading: eventsLoading } = useFollowEvents(id);
@@ -359,6 +368,7 @@ const ProfileDetail = () => {
               pushScansToday={profile.push_scans_today}
               profileId={profile.id}
               unfollowScansToday={profile.unfollow_scans_today}
+              onScanComplete={handleScanComplete}
             />
 
             <div className="border-t border-border/20 my-5" />
