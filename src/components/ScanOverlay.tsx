@@ -72,11 +72,11 @@ export function ScanOverlay({ open, result, onClose }: ScanOverlayProps) {
     if (result === null || phase !== "scanning") return;
 
     setProgress(100);
-    haptic.medium();
+    haptic.light();
 
     const revealTimer = setTimeout(() => {
       setPhase("reveal");
-      haptic.heavy();
+      haptic.success();
     }, 400);
 
     return () => clearTimeout(revealTimer);
