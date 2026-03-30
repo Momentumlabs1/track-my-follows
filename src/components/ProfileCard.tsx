@@ -16,15 +16,16 @@ function getProxiedUrl(src: string): string {
 }
 
 function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (!src || failed) {
+  const [stage, setStage] = useState<'direct' | 'proxy' | 'fallback'>('direct');
+  if (!src || stage === 'fallback') {
     return (
       <div className={`w-full h-full flex items-center justify-center font-bold text-muted-foreground ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(var(--muted))' }}>
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     );
   }
-  return <img src={getProxiedUrl(src)} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setFailed(true)} />;
+  const imgSrc = stage === 'direct' ? src : getProxiedUrl(src);
+  return <img src={imgSrc} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setStage(prev => prev === 'direct' ? 'proxy' : 'fallback')} />;
 }
 
 function useShortTimeAgo() {

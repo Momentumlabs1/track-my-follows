@@ -9,6 +9,8 @@ function getProxiedUrl(src: string): string {
   return src;
 }
 
+type LoadStage = 'direct' | 'proxy' | 'fallback';
+
 interface InstagramAvatarProps {
   src: string | null | undefined;
   alt: string;
@@ -18,9 +20,9 @@ interface InstagramAvatarProps {
 }
 
 export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, className = '' }: InstagramAvatarProps) {
-  const [showFallback, setShowFallback] = useState(false);
+  const [stage, setStage] = useState<LoadStage>('direct');
 
-  if (!src || showFallback) {
+  if (!src || stage === 'fallback') {
     return (
       <div
         className={`rounded-full gradient-pink text-primary-foreground flex items-center justify-center font-semibold ${className}`}
@@ -31,14 +33,16 @@ export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, classNa
     );
   }
 
+  const imgSrc = stage === 'direct' ? src : getProxiedUrl(src);
+
   return (
     <img
-      src={getProxiedUrl(src)}
+      src={imgSrc}
       alt={alt}
       referrerPolicy="no-referrer"
       className={`rounded-full object-cover bg-muted ${className}`}
       style={{ width: size, height: size }}
-      onError={() => setShowFallback(true)}
+      onError={() => setStage(prev => prev === 'direct' ? 'proxy' : 'fallback')}
     />
   );
 }
