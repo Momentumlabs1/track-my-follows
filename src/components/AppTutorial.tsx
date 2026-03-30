@@ -381,16 +381,30 @@ export function AppTutorial() {
 
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
 
-  // FIX 1: Trigger based ONLY on user + no localStorage key + 0 profiles
+  // Timeout fallback: if profiles stays undefined for 3s, treat as empty
+  const [profilesTimedOut, setProfilesTimedOut] = useState(false);
+  useEffect(() => {
+    if (profiles !== undefined) return;
+    const timer = setTimeout(() => {
+      console.log("[AppTutorial] profiles timeout fallback triggered");
+      setProfilesTimedOut(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [profiles]);
+
+  const resolvedProfiles = profiles ?? (profilesTimedOut ? [] : undefined);
+
+  // FIX 1: Trigger based ONLY on user + no localStorage key + 0 profiles + on /dashboard
   const shouldStartTutorial = useMemo(() => {
     if (!user) return false;
     if (!tutorialKey) return false;
     if (localStorage.getItem(tutorialKey)) return false;
-    // Wait until profiles query has loaded
-    if (profiles === undefined) return false;
-    if (profiles && profiles.length > 0) return false;
+    if (resolvedProfiles === undefined) return false;
+    if (resolvedProfiles.length > 0) return false;
+    if (location.pathname !== "/dashboard") return false;
+    console.log("[AppTutorial] shouldStartTutorial = true");
     return true;
-  }, [user, tutorialKey, profiles]);
+  }, [user, tutorialKey, resolvedProfiles, location.pathname]);
 
   useEffect(() => {
     if (!shouldStartTutorial) return;

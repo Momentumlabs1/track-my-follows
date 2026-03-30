@@ -145,7 +145,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
-        () => { fetchSubscription(); }
+        (payload: any) => {
+          fetchSubscription();
+          // If plan upgraded to pro, set tutorial flag
+          if (payload?.new?.plan_type === "pro" && ["active", "in_trial"].includes(payload?.new?.status)) {
+            try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
+            console.log("[SubscriptionContext] Realtime: pro upgrade detected, show_pro_tutorial flag set");
+          }
+        }
       )
       .subscribe();
 
@@ -167,6 +174,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (upgraded) {
         haptic.success();
         setNativePurchaseSuccess(true);
+        try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
+        console.log("[SubscriptionContext] Pro upgrade detected, show_pro_tutorial flag set");
       } else {
         haptic.error();
         console.warn("[PaywallNative] Purchase callback fired but DB not updated after polling");
