@@ -180,6 +180,7 @@ export function SpyStatusCard({
 
   return (
     <>
+      <ScanOverlay open={scanOverlayOpen} result={scanResult} onClose={handleScanOverlayClose} />
       <div className="my-5 mb-8">
         {/* Section title */}
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 px-1">
