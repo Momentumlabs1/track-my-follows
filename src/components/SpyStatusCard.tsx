@@ -7,6 +7,7 @@ import { Info, ChevronDown, Search, Eye, Loader2 } from "lucide-react";
 import { SpyIcon } from "@/components/SpyIcon";
 import { SpyFindings } from "@/components/SpyFindings";
 import { Progress } from "@/components/ui/progress";
+import { ScanOverlay } from "@/components/ScanOverlay";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ interface SpyStatusCardProps {
   pushScansToday?: number | null;
   profileId?: string;
   unfollowScansToday?: number | null;
+  onScanComplete?: (newCount: number) => void;
 }
 
 type SpyLevel = "gelassen" | "aufmerksam" | "wachsam" | "alarmiert";
