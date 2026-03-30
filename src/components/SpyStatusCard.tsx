@@ -68,6 +68,7 @@ export function SpyStatusCard({
   pushScansToday,
   profileId,
   unfollowScansToday,
+  onScanComplete,
 }: SpyStatusCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -76,6 +77,8 @@ export function SpyStatusCard({
   const [expanded, setExpanded] = useState(false);
   const [pushScanning, setPushScanning] = useState(false);
   const [unfollowScanning, setUnfollowScanning] = useState(false);
+  const [scanOverlayOpen, setScanOverlayOpen] = useState(false);
+  const [scanResult, setScanResult] = useState<number | null>(null);
 
   const score = analysis?.overallScore ?? 0;
   const level = getSpyLevel(score);
