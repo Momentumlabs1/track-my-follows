@@ -1,29 +1,82 @@
 
 
-## Plan: Custom Paywall (Web) entfernen
+## Plan: Immersives Push-Scan Erlebnis
 
-Da die native App ausschliesslich die RevenueCat-Paywall nutzt und auf Web keine Paywall gebraucht wird, entfernen wir die Custom-Paywall-Komponente und die zugehoerigen State-Variablen.
+### Problem
+Aktuell: User drückt "Push Scan" → kleiner Spinner im Button → Toast "Scan complete" → fertig. Kein Feedback, keine Spannung, kein visuelles Erlebnis.
 
-### Was sich aendert
+### Lösung: Fullscreen Scan-Overlay + Auto-Scroll zu Ergebnissen
 
-**1. `src/components/PaywallSheet.tsx` loeschen**
-- Gesamte Datei entfernen.
+```text
+┌─────────────────────────┐
+│  ┌───────────────────┐  │  Phase 1: Fullscreen Overlay (0-100%)
+│  │   🕵️ SpyIcon      │  │  - Pulsierender SpyIcon mit Glow
+│  │   "Scanning..."   │  │  - Animierte Fortschrittsanzeige
+│  │   ████████░░ 72%  │  │  - Radar-Sweep Animation
+│  │                   │  │  - Haptic Feedback bei Fortschritt
+│  └───────────────────┘  │
+│                         │  Phase 2: Ergebnis-Reveal (0.5s)
+│  ┌───────────────────┐  │  - Overlay morpht zu Ergebnis-Card
+│  │  ✨ 3 neue Follows │  │  - Konfetti/Partikel bei Fund
+│  │  gefunden!        │  │  - Dramatischer Countdown 3→2→1
+│  └───────────────────┘  │
+│                         │  Phase 3: Auto-Navigation
+│  → Scroll to Tabs ───── │  - Overlay faded out
+│  → "Folgt neu" Tab ──── │  - Smooth-Scroll zur Following-Liste
+│  → Neue Items pulsen ── │  - Neue Einträge kurz hervorgehoben
+└─────────────────────────┘
+```
 
-**2. `src/App.tsx` bereinigen**
-- Import von `PaywallSheet` entfernen (Zeile 12).
-- `<PaywallSheet />` aus dem JSX entfernen (Zeile 70).
+### Neue Komponente: `src/components/ScanOverlay.tsx`
 
-**3. `src/contexts/SubscriptionContext.tsx` vereinfachen**
-- `isPaywallOpen`, `closePaywall`, `paywallTrigger` State und Logik entfernen.
-- `showPaywall` bleibt erhalten — auf Native ruft es weiterhin `launchNativePaywall()` auf, auf Web wird es ein No-Op (oder zeigt einen Toast "Upgrade in der App").
-- Interface und Context-Default entsprechend anpassen.
+Fullscreen-Overlay mit drei Phasen:
 
-### Was NICHT geaendert wird
+**Phase 1 — Scanning (während API läuft)**
+- Schwarzes/dunkles Fullscreen-Overlay mit Backdrop-Blur
+- Grosser SpyIcon (120px) mit pulsierendem Glow-Ring
+- Radar-Sweep-Animation (kreisförmiger Gradient der rotiert)
+- Animierte Progress-Bar (simuliert 0→80% wie in AnalyzingProfile.tsx)
+- Statustext wechselt: "Verbinde..." → "Scanne Followings..." → "Analysiere..."
+- Haptic Ticks alle 20% Fortschritt
 
-- `showPaywall()` Aufrufe in 8 Dateien (Dashboard, FeedPage, Settings, ProfileDetail, etc.) bleiben bestehen. Sie funktionieren weiterhin: Native oeffnet RevenueCat, Web tut nichts.
-- Keine Aenderungen an Edge Functions oder Scan-Logik (Code-Freeze).
+**Phase 2 — Ergebnis-Reveal (nach API-Response)**
+- Progress springt auf 100%
+- SpyIcon macht Scale-Bounce
+- Ergebnis-Zahl zählt hoch (countUp Animation)
+- Bei Funden: Grüner Glow + "X neue Follows gefunden!"
+- Bei keinen Funden: Sanftes "Alles beim Alten ✓"
+- Starker Haptic-Impact
+
+**Phase 3 — Exit + Navigation (nach 1.5s)**
+- Overlay faded smooth aus
+- Wenn neue Follows gefunden: Auto-Scroll zum Tabs-Bereich
+- "Folgt neu" Tab wird automatisch aktiviert
+- Neue Events haben kurz einen leuchtenden Border-Pulse
+
+### Änderungen in bestehenden Dateien
+
+**`src/components/SpyStatusCard.tsx`**
+- `handlePushScan`: Statt direkt Toast zu zeigen, öffnet es das ScanOverlay
+- Neuer State: `scanOverlayOpen`, `scanResult`
+- Scan-Ergebnis wird an Overlay übergeben
+- Nach Overlay-Close: scrollt zu `#tabs-section` und setzt activeTab
+
+**`src/pages/ProfileDetail.tsx`**
+- Empfängt Callback von SpyStatusCard für Auto-Scroll + Tab-Switch
+- `tabsRef` wird für `scrollIntoView({ behavior: 'smooth' })` genutzt (existiert bereits)
+- Neue Events bekommen temporär eine CSS-Klasse für Highlight-Animation
+
+**`src/index.css`**
+- Neue Keyframes: `radar-sweep`, `glow-pulse`, `count-up-bounce`, `highlight-fade`
 
 ### Zusammenfassung
 
-3 Dateien betroffen: 1 loeschen, 2 editieren. Alle `showPaywall`-Aufrufe in der App bleiben funktional.
+| Datei | Aktion |
+|-------|--------|
+| `src/components/ScanOverlay.tsx` | NEU — Fullscreen Scan-Animation |
+| `src/components/SpyStatusCard.tsx` | EDIT — Overlay statt Toast |
+| `src/pages/ProfileDetail.tsx` | EDIT — Auto-Scroll + Tab-Switch Callback |
+| `src/index.css` | EDIT — Neue Animationen |
+
+4 Dateien, 1 neu, 3 editiert. Kein Backend-Change.
 
