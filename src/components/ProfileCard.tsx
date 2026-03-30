@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -17,6 +17,11 @@ function getProxiedUrl(src: string): string {
 
 function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
   const [stage, setStage] = useState<'direct' | 'proxy' | 'fallback'>('direct');
+
+  useEffect(() => {
+    setStage('direct');
+  }, [src]);
+
   if (!src || stage === 'fallback') {
     return (
       <div className={`w-full h-full flex items-center justify-center font-bold text-muted-foreground ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(var(--muted))' }}>
