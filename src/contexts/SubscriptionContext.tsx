@@ -189,15 +189,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchSubscription]);
 
-  const nativeFallbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Clear fallback timer when native purchase succeeds
-  useEffect(() => {
-    if (nativePurchaseSuccess && nativeFallbackTimer.current) {
-      clearTimeout(nativeFallbackTimer.current);
-      nativeFallbackTimer.current = null;
-    }
-  }, [nativePurchaseSuccess]);
 
   const showPaywall = useCallback((trigger?: string) => {
     if (isNativeApp() && user) {
