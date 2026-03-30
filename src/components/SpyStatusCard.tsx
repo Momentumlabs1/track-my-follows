@@ -82,7 +82,7 @@ export function SpyStatusCard({
 
   const { isProMax } = useSubscription();
   const pushRemaining = isProMax ? 999 : (pushScansToday ?? 4);
-  const unfollowRemaining = unfollowScansToday ?? 1;
+  const unfollowRemaining = isProMax ? 999 : (unfollowScansToday ?? 1);
 
   const labelMap: Record<SpyLevel, string> = {
     gelassen: t("spy_status.gelassen", "Gelassen"),
@@ -317,9 +317,9 @@ export function SpyStatusCard({
                       : t("spy_detail.tomorrow", "Morgen wieder verfügbar ⏰")}
                   </p>
                   <p className="text-[10px] font-semibold text-muted-foreground mb-1">
-                    {t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
+                    {isProMax ? t("spy_detail.unlimited", "∞ unlimited") : t("spy_detail.remaining", { current: unfollowRemaining, max: 1 })}
                   </p>
-                  <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />
+                  {!isProMax && <Progress value={(unfollowRemaining / 1) * 100} className="h-1.5 bg-muted" />}
                 </button>
               </div>
             )}

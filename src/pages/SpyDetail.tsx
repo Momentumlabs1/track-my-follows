@@ -42,7 +42,7 @@ export default function SpyDetail() {
   const spyName = (profileAny.spy_name as string) || t("dashboard.spy_default_name", "Spion 🕵️");
   const { isProMax } = useSubscription();
   const pushRemaining = isProMax ? 999 : ((profileAny.push_scans_today as number) ?? 4);
-  const unfollowRemaining = Math.min((profileAny.unfollow_scans_today as number) ?? 1, 1);
+  const unfollowRemaining = isProMax ? 999 : Math.min((profileAny.unfollow_scans_today as number) ?? 1, 1);
   const spyAssignedAt = spyProfile.spy_assigned_at;
 
   const handleSaveName = async (newName: string) => {
@@ -358,9 +358,9 @@ export default function SpyDetail() {
                 borderRadius: 8,
                 padding: "2px 8px",
               }}
-            >
-              {unfollowRemaining}/1
-            </span>
+              >
+               {isProMax ? "∞" : `${unfollowRemaining}/1`}
+             </span>
           </div>
           <p style={{ fontSize: 11, color: "#8E8E93", lineHeight: 1.4 }}>
             {unfollowRemaining > 0

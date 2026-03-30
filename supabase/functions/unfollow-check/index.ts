@@ -225,10 +225,11 @@ Deno.serve(async (req) => {
     }
 
     // ── Pro check ──
-    const { data: sub } = await supabase.from("subscriptions").select("plan_type, status").eq("user_id", user.id).maybeSingle();
+    const { data: sub } = await supabase.from("subscriptions").select("plan_type, status, max_tracked_profiles").eq("user_id", user.id).maybeSingle();
     if (sub?.plan_type !== "pro" || !["active", "in_trial"].includes(sub?.status || "")) {
       return new Response(JSON.stringify({ error: "PRO_REQUIRED" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const isProMax = (sub?.max_tracked_profiles ?? 0) >= 9999;
 
     const body = await req.json().catch(() => ({}));
     profileId = body.profileId;
@@ -249,22 +250,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Profile not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Budget check ──
-    const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
-    const todayMidnight = new Date();
-    todayMidnight.setHours(0, 0, 0, 0);
-
+    // ── Budget check (skipped for Pro Max) ──
     let unfollowRemaining = profile.unfollow_scans_today ?? 2;
-    if (resetAt < todayMidnight) {
-      unfollowRemaining = 2;
-      await supabase.from("tracked_profiles").update({ push_scans_today: 4, unfollow_scans_today: 2, scans_reset_at: new Date().toISOString() }).eq("id", profile.id);
-    }
-    if (unfollowRemaining <= 0) {
-      return new Response(JSON.stringify({ error: "LIMIT_REACHED", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    if (!isProMax) {
+      const resetAt = profile.scans_reset_at ? new Date(profile.scans_reset_at) : new Date(0);
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
 
-    // Decrement budget
-    await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining - 1 }).eq("id", profile.id);
+      if (resetAt < todayMidnight) {
+        unfollowRemaining = 2;
+        await supabase.from("tracked_profiles").update({ push_scans_today: 4, unfollow_scans_today: 2, scans_reset_at: new Date().toISOString() }).eq("id", profile.id);
+      }
+      if (unfollowRemaining <= 0) {
+        return new Response(JSON.stringify({ error: "LIMIT_REACHED", remaining: 0 }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Decrement budget
+      await supabase.from("tracked_profiles").update({ unfollow_scans_today: unfollowRemaining - 1 }).eq("id", profile.id);
+    }
 
     const igUserId = profile.instagram_user_id as string | null;
     if (!igUserId) {

@@ -28,7 +28,7 @@ const PHASE_RANGES: Record<string, [number, number, number]> = {
 
 export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
   const { t } = useTranslation();
-  const { plan, showPaywall } = useSubscription();
+  const { plan, showPaywall, isProMax } = useSubscription();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<ScanPhase>("idle");
@@ -59,6 +59,10 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
 
   useEffect(() => {
     if (plan !== "pro") return;
+    if (isProMax) {
+      setChecksRemaining(null);
+      return;
+    }
     const loadChecks = async () => {
       const today = new Date().toISOString().split("T")[0];
       const { count } = await supabase
@@ -69,7 +73,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
       setChecksRemaining(2 - (count || 0));
     };
     loadChecks();
-  }, [profileId, plan]);
+  }, [profileId, plan, isProMax]);
 
   useEffect(() => {
     return () => {
@@ -221,7 +225,7 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
     }
   };
 
-  const isDisabled = loading || (checksRemaining !== null && checksRemaining <= 0 && plan === "pro");
+  const isDisabled = loading || (!isProMax && checksRemaining !== null && checksRemaining <= 0 && plan === "pro");
   const isPro = plan === "pro";
 
   const SCAN_STEPS = [
@@ -468,9 +472,9 @@ export function UnfollowCheckButton({ profileId }: UnfollowCheckButtonProps) {
                     {t("unfollow_check.description", "Vergleicht die Following-Liste mit dem letzten Scan")}
                   </p>
                 </div>
-                {checksRemaining !== null && (
+                {(checksRemaining !== null || isProMax) && (
                   <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full tabular-nums shrink-0">
-                    {checksRemaining}/2
+                    {isProMax ? "∞" : `${checksRemaining}/2`}
                   </span>
                 )}
               </div>
