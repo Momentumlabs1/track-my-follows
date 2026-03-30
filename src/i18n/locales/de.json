@@ -76,7 +76,9 @@
     "step_4_desc": "Spy analysiert ob mehr Frauen oder Männer gefolgt werden",
     "step_5": "Abschluss",
     "step_5_desc": "Daten werden verschlüsselt gespeichert",
-    "full_analysis_note": "Dies ist eine Gesamtanalyse des Accounts und aller Follower – nicht nur der letzten Aktivitäten."
+    "full_analysis_note": "Dies ist eine Gesamtanalyse des Accounts und aller Follower – nicht nur der letzten Aktivitäten.",
+    "timeout_title": "Das dauert länger als erwartet",
+    "timeout_text": "Der Scan scheint Probleme zu haben. Du kannst es erneut versuchen oder zum Dashboard zurückkehren."
   },
   "profile_detail": {
     "tracking_since": "Tracking seit {{date}}",
@@ -251,6 +253,11 @@
     "restore_purchases": "Käufe wiederherstellen",
     "subscription_restored": "Abo wiederhergestellt! ✅",
     "no_subscription_found": "Kein aktives Abo gefunden",
+    "restore_hint_native": "Stelle sicher, dass du mit derselben Apple-ID angemeldet bist, mit der du das Abo abgeschlossen hast.",
+    "restore_error": "Wiederherstellung fehlgeschlagen",
+    "restore_error_hint": "Überprüfe deine Internetverbindung und versuche es erneut. Kontaktiere den Support, wenn das Problem bestehen bleibt.",
+    "restore_web_title": "Nur in der App verfügbar",
+    "restore_web_hint": "Käufe können nur in der Spy Secret iOS-App wiederhergestellt werden. Öffne die App auf deinem iPhone.",
     "notifications": "Benachrichtigungen 🔔",
     "notif_follows": "Neue Follows",
     "notif_follows_desc": "Wenn er jemand Neuem folgt 👀",
@@ -265,11 +272,18 @@
     "system": "System",
     "logout": "Ausloggen",
     "logout_toast": "Bis bald! 👋",
+    "logout_confirm_text": "Möchtest du dich wirklich ausloggen? Du kannst dich jederzeit wieder anmelden.",
     "danger_zone": "Danger Zone ⚠️",
     "danger_text": "Lösche dein Konto und alle Daten. Das geht nicht rückgängig!",
     "delete_account": "Konto löschen",
     "delete_confirm": "Bist du sicher, dass du dein Konto löschen willst?",
     "delete_confirm_detailed": "Bist du sicher? Dies löscht dauerhaft dein Konto, alle getrackten Profile und alle Daten. Dies kann nicht rückgängig gemacht werden.",
+    "delete_pro_warning_title": "Du hast ein aktives Pro-Abo!",
+    "delete_pro_warning_text": "Dein Pro-Abo wird nicht automatisch gekündigt. Bitte kündige zuerst dein Abo im App Store.",
+    "delete_pro_warning_note": "⚠️ Dein Abo läuft weiter und wird dir berechnet, auch wenn du dein Konto löschst!",
+    "delete_continue": "Trotzdem löschen",
+    "delete_type_instruction": "Gib DELETE ein, um die Löschung zu bestätigen. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "delete_final": "Endgültig löschen",
     "account_deleted": "Konto gelöscht. Tschüss! 😢",
     "billing_issue": "⚠️ Zahlungsproblem – bitte Zahlungsmethode aktualisieren",
     "legal": "Rechtliches",
@@ -407,7 +421,8 @@
     "try_again": "Erneut versuchen",
     "profile_not_found": "Profil nicht gefunden. Überprüfe den Benutzernamen.",
     "profile_private": "Dieses Profil ist privat. Wir können nur öffentliche Profile tracken.",
-    "scan_failed": "Scan fehlgeschlagen. Wir versuchen es automatisch erneut."
+    "scan_failed": "Scan fehlgeschlagen. Wir versuchen es automatisch erneut.",
+    "profile_already_tracked": "Dieses Profil wird bereits getrackt."
   },
   "toast": {
     "profileTracked": "Profil wird getrackt! 👀",
