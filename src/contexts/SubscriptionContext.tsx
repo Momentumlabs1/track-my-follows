@@ -201,16 +201,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const showPaywall = useCallback((trigger?: string) => {
     if (isNativeApp() && user) {
-      // Native: launch RevenueCat's native paywall
+      // Native: launch RevenueCat's native paywall ONLY — no fallback to custom paywall
       console.log("[PaywallNative] Launching RevenueCat native paywall");
       launchNativePaywall(user.id);
-      // 3s fallback: if native paywall fails to appear, show custom paywall
-      nativeFallbackTimer.current = setTimeout(() => {
-        console.log("[PaywallNative] 3s fallback → opening custom paywall");
-        setPaywallTrigger(trigger || null);
-        setIsPaywallOpen(true);
-        nativeFallbackTimer.current = null;
-      }, 3000);
     } else {
       // Web: show custom paywall
       setPaywallTrigger(trigger || null);
