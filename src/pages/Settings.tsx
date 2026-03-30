@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { Trash2, LogOut, Globe, Crown, Palette, Scale, RotateCcw, ExternalLink, Loader2 } from "lucide-react";
+import { Trash2, LogOut, Globe, Crown, Palette, Scale, RotateCcw, ExternalLink, Loader2, AlertTriangle, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,14 +26,24 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [appVersion, setAppVersion] = useState<string>("web");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2 | 3>(0); // 0=hidden, 1=warning, 2=type DELETE, 3=final
+  const [deleteInput, setDeleteInput] = useState("");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [restoreResult, setRestoreResult] = useState<"idle" | "loading" | "success" | "not_found" | "error" | "web_hint">("idle");
 
   useEffect(() => {
     getAppVersion().then(v => setAppVersion(`${v.versionNumber} (${v.bundleNumber})`));
   }, []);
 
-  const handleLogout = async () => {
+  // --- LOGOUT with confirmation ---
+  const handleLogoutClick = () => {
     haptic.light();
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    haptic.light();
+    setShowLogoutConfirm(false);
     await signOut();
     toast.success(t("settings.logout_toast"));
     navigate("/onboarding");
@@ -69,40 +79,89 @@ const Settings = () => {
     }
   };
 
+  // --- RESTORE PURCHASES (improved) ---
   const handleRestore = async () => {
     if (!user) return;
     haptic.light();
+
+    // Web users: show hint instead of attempting native restore
+    if (!isNativeApp()) {
+      setRestoreResult("web_hint");
+      return;
+    }
+
+    setRestoreResult("loading");
     setRestoring(true);
     try {
       await restorePurchases(user.id);
-      // Wait a moment for webhook to process
-      await new Promise(r => setTimeout(r, 2000));
+      // Poll DB for up to 10 seconds
+      let found = false;
+      for (let i = 0; i < 7; i++) {
+        await new Promise(r => setTimeout(r, 1500));
+        const { data } = await supabase
+          .from("subscriptions")
+          .select("plan_type, status")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const isPro = data?.plan_type === "pro" && ["active", "in_trial"].includes(data?.status ?? "");
+        if (isPro) {
+          found = true;
+          break;
+        }
+      }
       await refetch();
-      // Check DB directly instead of stale state
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("plan_type, status")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      const isPro = data?.plan_type === "pro" && ["active", "in_trial"].includes(data?.status ?? "");
-      if (isPro) {
+      if (found) {
         haptic.success();
-        toast.success(t("settings.subscription_restored"));
+        setRestoreResult("success");
       } else {
-        toast.info(t("settings.no_subscription_found"));
+        haptic.warning();
+        setRestoreResult("not_found");
       }
     } catch {
-      toast.error(t("common.error"));
+      haptic.error();
+      setRestoreResult("error");
     } finally {
       setRestoring(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
+  // --- DELETE ACCOUNT (3-step) ---
+  const handleDeleteStart = () => {
+    haptic.warning();
+    if (plan === "pro") {
+      setDeleteStep(1); // Show subscription warning first
+    } else {
+      setDeleteStep(2); // Skip to type DELETE
+    }
+  };
+
+  const handleDeleteProceed = () => {
+    haptic.light();
+    setDeleteStep(2);
+    setDeleteInput("");
+  };
+
+  const handleDeleteFinal = async () => {
     if (!user) return;
+    if (deleteInput !== "DELETE") return;
     haptic.error();
     setDeleting(true);
     try {
+      // Send deletion confirmation email
+      try {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "account-deletion",
+            recipientEmail: user.email,
+            idempotencyKey: `account-delete-${user.id}-${Date.now()}`,
+            templateData: { email: user.email },
+          },
+        });
+      } catch (emailErr) {
+        console.warn("[DeleteAccount] Email send failed:", emailErr);
+        // Don't block deletion if email fails
+      }
+
       const { error } = await supabase.rpc("delete_own_account");
       if (error) throw error;
       await supabase.auth.signOut();
@@ -112,7 +171,7 @@ const Settings = () => {
       toast.error(t("common.error"));
     } finally {
       setDeleting(false);
-      setShowDeleteConfirm(false);
+      setDeleteStep(0);
     }
   };
 
@@ -231,6 +290,52 @@ const Settings = () => {
                   {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                   {t("settings.restore_purchases")}
                 </button>
+
+                {/* Restore Result Feedback */}
+                <AnimatePresence>
+                  {restoreResult !== "idle" && restoreResult !== "loading" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3"
+                    >
+                      {restoreResult === "success" && (
+                        <div className="p-3 rounded-xl bg-green-500/10 flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-[12px] font-medium text-green-600 dark:text-green-400">{t("settings.subscription_restored")}</p>
+                        </div>
+                      )}
+                      {restoreResult === "not_found" && (
+                        <div className="p-3 rounded-xl bg-accent/50 flex items-start gap-2">
+                          <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[12px] font-semibold text-foreground">{t("settings.no_subscription_found")}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{t("settings.restore_hint_native")}</p>
+                          </div>
+                        </div>
+                      )}
+                      {restoreResult === "error" && (
+                        <div className="p-3 rounded-xl bg-destructive/10 flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[12px] font-semibold text-destructive">{t("settings.restore_error")}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{t("settings.restore_error_hint")}</p>
+                          </div>
+                        </div>
+                      )}
+                      {restoreResult === "web_hint" && (
+                        <div className="p-3 rounded-xl bg-accent/50 flex items-start gap-2">
+                          <ShieldAlert className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[12px] font-semibold text-foreground">{t("settings.restore_web_title")}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{t("settings.restore_web_hint")}</p>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -258,7 +363,6 @@ const Settings = () => {
                   Widerrufsbelehrung
                 </button>
               </div>
-              {/* Instagram/Meta Disclaimer */}
               <p className="text-[10px] text-muted-foreground/60 mt-4 leading-relaxed">
                 {t("settings.disclaimer", "Spy-Secret ist ein unabhängiges Produkt und ist in keiner Weise mit Instagram oder Meta Platforms, Inc. verbunden, assoziiert oder offiziell anerkannt.")}
               </p>
@@ -281,7 +385,7 @@ const Settings = () => {
 
             {/* Logout */}
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="w-full ios-card flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
             >
               <LogOut className="h-4 w-4" />
@@ -296,7 +400,7 @@ const Settings = () => {
               </div>
               <p className="text-[13px] text-muted-foreground mb-3">{t("settings.danger_text")}</p>
               <button
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={handleDeleteStart}
                 className="px-5 py-2.5 rounded-2xl text-[13px] font-semibold border border-destructive/20 text-destructive hover:bg-destructive/5 transition-colors min-h-[44px]"
               >
                 {t("settings.delete_account")}
@@ -311,36 +415,112 @@ const Settings = () => {
         </motion.div>
       </main>
 
-      {/* Delete Account Confirmation Dialog */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative bg-card rounded-3xl p-6 max-w-sm w-full shadow-2xl"
-          >
-            <span className="text-4xl block text-center mb-3">⚠️</span>
-            <h3 className="text-lg font-extrabold text-center text-foreground mb-2">{t("settings.delete_account")}</h3>
-            <p className="text-[13px] text-muted-foreground text-center mb-6">{t("settings.delete_confirm_detailed")}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground text-[13px] font-semibold min-h-[44px]"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground text-[13px] font-semibold min-h-[44px] disabled:opacity-50"
-              >
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : t("settings.delete_account")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* ===== LOGOUT CONFIRMATION ===== */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLogoutConfirm(false)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-card rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <span className="text-4xl block text-center mb-3">👋</span>
+              <h3 className="text-lg font-extrabold text-center text-foreground mb-2">{t("settings.logout")}</h3>
+              <p className="text-[13px] text-muted-foreground text-center mb-6">{t("settings.logout_confirm_text")}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground text-[13px] font-semibold min-h-[44px]"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground text-[13px] font-semibold min-h-[44px]"
+                >
+                  {t("settings.logout")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== DELETE ACCOUNT MULTI-STEP DIALOG ===== */}
+      <AnimatePresence>
+        {deleteStep > 0 && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setDeleteStep(0); setDeleteInput(""); }} />
+            <motion.div
+              key={`delete-step-${deleteStep}`}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-card rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              {/* Step 1: Pro subscription warning */}
+              {deleteStep === 1 && (
+                <>
+                  <span className="text-4xl block text-center mb-3">💎</span>
+                  <h3 className="text-lg font-extrabold text-center text-foreground mb-2">{t("settings.delete_pro_warning_title")}</h3>
+                  <p className="text-[13px] text-muted-foreground text-center mb-4">{t("settings.delete_pro_warning_text")}</p>
+                  <div className="p-3 rounded-xl bg-destructive/10 mb-6">
+                    <p className="text-[12px] text-destructive font-medium text-center">{t("settings.delete_pro_warning_note")}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { setDeleteStep(0); }}
+                      className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground text-[13px] font-semibold min-h-[44px]"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                    <button
+                      onClick={handleDeleteProceed}
+                      className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground text-[13px] font-semibold min-h-[44px]"
+                    >
+                      {t("settings.delete_continue")}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 2: Type DELETE */}
+              {deleteStep === 2 && (
+                <>
+                  <span className="text-4xl block text-center mb-3">⚠️</span>
+                  <h3 className="text-lg font-extrabold text-center text-foreground mb-2">{t("settings.delete_account")}</h3>
+                  <p className="text-[13px] text-muted-foreground text-center mb-4">{t("settings.delete_type_instruction")}</p>
+                  <input
+                    type="text"
+                    value={deleteInput}
+                    onChange={(e) => setDeleteInput(e.target.value.toUpperCase())}
+                    placeholder="DELETE"
+                    className="w-full rounded-2xl bg-background border-2 border-destructive/30 px-4 py-3 text-center text-base font-bold tracking-[0.3em] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-destructive mb-4"
+                    autoFocus
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { setDeleteStep(0); setDeleteInput(""); }}
+                      className="flex-1 py-3 rounded-2xl bg-secondary text-secondary-foreground text-[13px] font-semibold min-h-[44px]"
+                    >
+                      {t("common.cancel")}
+                    </button>
+                    <button
+                      onClick={handleDeleteFinal}
+                      disabled={deleteInput !== "DELETE" || deleting}
+                      className="flex-1 py-3 rounded-2xl bg-destructive text-destructive-foreground text-[13px] font-semibold min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      {deleting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : t("settings.delete_final")}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
