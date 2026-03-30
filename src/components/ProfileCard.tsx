@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import { InstagramAvatar } from "@/components/InstagramAvatar";
@@ -15,17 +15,8 @@ function getProxiedUrl(src: string): string {
   return src;
 }
 
-function isInstagramCdn(url: string): boolean {
-  return url.includes("cdninstagram.com") || url.includes("fbcdn.net");
-}
-
 function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | null; alt: string; fallback: string; className?: string }) {
   const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
   if (!src || failed) {
     return (
       <div className={`w-full h-full flex items-center justify-center font-bold text-muted-foreground ${className}`} style={{ fontSize: '0.75rem', background: 'hsl(var(--muted))' }}>
@@ -33,8 +24,7 @@ function RectAvatar({ src, alt, fallback, className = "" }: { src?: string | nul
       </div>
     );
   }
-  const imgSrc = isInstagramCdn(src) ? getProxiedUrl(src) : src;
-  return <img src={imgSrc} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setFailed(true)} />;
+  return <img src={getProxiedUrl(src)} alt={alt} referrerPolicy="no-referrer" className={`w-full h-full object-cover ${className}`} onError={() => setFailed(true)} />;
 }
 
 function useShortTimeAgo() {
