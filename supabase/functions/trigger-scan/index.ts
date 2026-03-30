@@ -25,17 +25,16 @@ async function refreshFollowingAvatars(
       await supabase.from("profile_followings").update({
         following_avatar_url: u.profile_pic_url,
       }).eq("tracked_profile_id", profileId).eq("following_user_id", u.pk).eq("direction", "following");
-
-      await supabase
-        .from("follow_events")
-        .update({ target_avatar_url: u.profile_pic_url })
-        .eq("tracked_profile_id", profileId)
-        .eq("direction", "following")
-        .eq("target_username", u.username)
-        .neq("target_avatar_url", u.profile_pic_url);
-
       updated++;
     }
+
+    await supabase
+      .from("follow_events")
+      .update({ target_avatar_url: u.profile_pic_url })
+      .eq("tracked_profile_id", profileId)
+      .eq("direction", "following")
+      .eq("target_username", u.username)
+      .neq("target_avatar_url", u.profile_pic_url);
   }
   if (updated > 0) console.log(`[AVATAR-REFRESH] followings+events: updated ${updated} avatars for ${profileId}`);
 }
@@ -58,16 +57,15 @@ async function refreshFollowerAvatars(
       await supabase.from("profile_followers").update({
         follower_avatar_url: u.profile_pic_url,
       }).eq("tracked_profile_id", profileId).eq("follower_user_id", u.pk);
-
-      await supabase
-        .from("follower_events")
-        .update({ profile_pic_url: u.profile_pic_url })
-        .eq("profile_id", profileId)
-        .eq("username", u.username)
-        .neq("profile_pic_url", u.profile_pic_url);
-
       updated++;
     }
+
+    await supabase
+      .from("follower_events")
+      .update({ profile_pic_url: u.profile_pic_url })
+      .eq("profile_id", profileId)
+      .eq("username", u.username)
+      .neq("profile_pic_url", u.profile_pic_url);
   }
   if (updated > 0) console.log(`[AVATAR-REFRESH] followers+events: updated ${updated} avatars for ${profileId}`);
 }
