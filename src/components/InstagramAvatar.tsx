@@ -22,6 +22,10 @@ interface InstagramAvatarProps {
 export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, className = '' }: InstagramAvatarProps) {
   const [stage, setStage] = useState<LoadStage>('direct');
 
+  useEffect(() => {
+    setStage('direct');
+  }, [src]);
+
   if (!src || stage === 'fallback') {
     return (
       <div
