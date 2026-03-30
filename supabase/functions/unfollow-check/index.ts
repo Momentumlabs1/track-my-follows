@@ -501,10 +501,11 @@ Deno.serve(async (req) => {
       const newFollowEvents: Record<string, unknown>[] = [];
 
       const newCandidates = allFollowings.filter(f => !existingIds.has(f.pk));
+      const baselineDate = profile.last_baseline_attempt_at || profile.created_at || new Date().toISOString();
       for (let i = 0; i < newCandidates.length; i++) {
         const f = newCandidates[i];
         const isBackfill = i >= maxNewFollows;
-        const ts = new Date(lastTs + Math.random() * spanMs).toISOString();
+        const ts = isBackfill ? baselineDate : new Date(lastTs + Math.random() * spanMs).toISOString();
         const newGenderTag = detectGender(f.full_name, f.username);
         const newCategory = categorizeFollow(f.follower_count, f.is_private);
         newFollowingRows.push({

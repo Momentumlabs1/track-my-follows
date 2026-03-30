@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SUPABASE_URL = "https://bqqmfajowxzkdcvmrtyd.supabase.co";
 
@@ -20,6 +20,10 @@ interface InstagramAvatarProps {
 
 export function InstagramAvatar({ src, alt, fallbackInitials, size = 40, className = '' }: InstagramAvatarProps) {
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
 
   if (!src || failed) {
     return (
