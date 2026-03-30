@@ -483,7 +483,11 @@ Deno.serve(async (req) => {
           newFollowerCount = await syncNewFollowers(supabase, pId, followerUsers, profile.last_scanned_at, isInitialScan, maxNewFollowers);
         }
 
-        // ★ FIX 1.9: NO avatar refresh for existing rows
+        // ★ Avatar refresh for existing rows
+        await refreshFollowingAvatars(supabase, pId, followingUsers);
+        if (followerUsers !== null) {
+          await refreshFollowerAvatars(supabase, pId, followerUsers);
+        }
 
         // Update counts
         await supabase.from("tracked_profiles").update({
