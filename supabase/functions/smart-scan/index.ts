@@ -356,11 +356,15 @@ async function performSpyScan(
         console.log(`[SPY-SCAN] ${username}: fresh follower_count=${freshFollower} (DB had ${actualFollowerCount})`);
         actualFollowerCount = freshFollower;
       }
-      // Update DB with fresh counts
-      await supabaseClient.from("tracked_profiles").update({
+      // Update DB with fresh counts + avatar
+      const freshAvatar = info?.profile_pic_url || info?.response?.profile_pic_url ||
+        info?.hd_profile_pic_url_info?.url || info?.response?.hd_profile_pic_url_info?.url || null;
+      const updatePayload: Record<string, unknown> = {
         following_count: actualFollowingCount,
         follower_count: actualFollowerCount,
-      }).eq("id", profileId);
+      };
+      if (freshAvatar) updatePayload.avatar_url = freshAvatar;
+      await supabaseClient.from("tracked_profiles").update(updatePayload).eq("id", profileId);
     } catch (e) {
       console.warn(`[SPY-SCAN] ${username}: Failed to parse info response:`, e);
     }
@@ -499,10 +503,35 @@ async function performBasicScan(
     }).eq("id", profileId);
   }
 
-  const actualFollowingCount = (profile.following_count as number) ?? 0;
-  const actualFollowerCount = (profile.follower_count as number) ?? 0;
-  const maxNewFollows = 200;
+  // Refresh avatar + counts from user info API
+  let actualFollowingCount = (profile.following_count as number) ?? 0;
+  let actualFollowerCount = (profile.follower_count as number) ?? 0;
 
+  const infoUrl = `https://api.hikerapi.com/gql/user/info/by/id?id=${igUserId}`;
+  const infoResult = await trackedApiFetch(supabaseClient, FUNCTION_NAME, profileId, infoUrl, { "x-access-key": hikerApiKey });
+  if (infoResult.response?.ok) {
+    try {
+      const info = await infoResult.response.json();
+      const freshFollowing = info?.following_count ?? info?.response?.following_count;
+      const freshFollower = info?.follower_count ?? info?.response?.follower_count;
+      if (typeof freshFollowing === "number") actualFollowingCount = freshFollowing;
+      if (typeof freshFollower === "number") actualFollowerCount = freshFollower;
+      const freshAvatar = info?.profile_pic_url || info?.response?.profile_pic_url ||
+        info?.hd_profile_pic_url_info?.url || info?.response?.hd_profile_pic_url_info?.url || null;
+      const updatePayload: Record<string, unknown> = {
+        following_count: actualFollowingCount,
+        follower_count: actualFollowerCount,
+      };
+      if (freshAvatar) updatePayload.avatar_url = freshAvatar;
+      await supabaseClient.from("tracked_profiles").update(updatePayload).eq("id", profileId);
+    } catch (e) {
+      console.warn(`[BASIC-SCAN] Failed to parse info:`, e);
+    }
+  } else if (infoResult.response) {
+    await infoResult.response.text();
+  }
+
+  const maxNewFollows = 200;
   const followingUsers = await fetchPage1(supabaseClient, "following", igUserId, hikerApiKey, profileId);
   if (followingUsers === null) return { new_follows: 0, new_followers: 0, unfollows_detected: 0, skipped_api: true };
 
