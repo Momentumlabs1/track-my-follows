@@ -730,5 +730,17 @@
     "available_with_pro": "متاح مع Pro",
     "unlock_with_pro": "فتح مع Pro",
     "spy_teaser": "مؤشر الشك، تحليل الجنس والمزيد"
+  },
+  "scan_overlay": {
+    "connecting": "جاري الاتصال بالخادم...",
+    "scanning_followings": "جاري فحص المتابَعين...",
+    "analyzing": "جاري تحليل النشاط...",
+    "comparing": "جاري مقارنة البيانات...",
+    "finalizing": "جاري الإنهاء...",
+    "new_found": "تم العثور على {{count}} نشاط جديد!",
+    "new_found_plural": "تم العثور على {{count}} أنشطة جديدة!",
+    "all_clear": "كل شيء على ما يرام",
+    "no_changes": "لم يتم اكتشاف نشاط جديد",
+    "scroll_hint": "مرر لأسفل للتفاصيل"
   }
 }
