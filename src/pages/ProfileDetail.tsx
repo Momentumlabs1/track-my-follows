@@ -98,22 +98,9 @@ const ProfileDetail = () => {
     [followEvents]);
 
   const initialFollowEvents = useMemo(() =>
-    followings
-      .sort((a, b) => new Date(b.first_seen_at).getTime() - new Date(a.first_seen_at).getTime())
-      .map((f, idx) => ({
-        id: `initial-${f.following_username}-${f.first_seen_at}-${idx}`,
-        event_type: "follow",
-        target_username: f.following_username,
-        target_display_name: f.following_display_name,
-        target_avatar_url: f.following_avatar_url,
-        detected_at: f.first_seen_at,
-        is_read: true,
-        gender_tag: f.gender_tag,
-        is_mutual: false,
-        category: undefined,
-        target_follower_count: null,
-      })),
-    [followings]);
+    followEvents.filter((e) => (e.event_type === "follow" || e.event_type === "new_following") && (e as Record<string, unknown>).is_initial === true && (e as Record<string, unknown>).direction === "following")
+      .sort((a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()),
+    [followEvents]);
 
   const newFollowerEventsList = useMemo(() =>
     followerEvents.filter((e) => e.event_type === "gained" && !e.is_initial)
