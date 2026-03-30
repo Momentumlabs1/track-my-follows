@@ -189,12 +189,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchSubscription]);
 
+  const nativeFallbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear fallback timer when native purchase succeeds
+  useEffect(() => {
+    if (nativePurchaseSuccess && nativeFallbackTimer.current) {
+      clearTimeout(nativeFallbackTimer.current);
+      nativeFallbackTimer.current = null;
+    }
+  }, [nativePurchaseSuccess]);
+
   const showPaywall = useCallback((trigger?: string) => {
     if (isNativeApp() && user) {
       // Native: launch RevenueCat's native paywall
       console.log("[PaywallNative] Launching RevenueCat native paywall");
       launchNativePaywall(user.id);
-      // Don't open custom paywall — purchase result comes via onRevenueCatPurchase callback
+      // 3s fallback: if native paywall fails to appear, show custom paywall
+      nativeFallbackTimer.current = setTimeout(() => {
+        console.log("[PaywallNative] 3s fallback → opening custom paywall");
+        setPaywallTrigger(trigger || null);
+        setIsPaywallOpen(true);
+        nativeFallbackTimer.current = null;
+      }, 3000);
     } else {
       // Web: show custom paywall
       setPaywallTrigger(trigger || null);
