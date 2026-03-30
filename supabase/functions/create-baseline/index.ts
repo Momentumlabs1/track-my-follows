@@ -155,6 +155,16 @@ Deno.serve(async (req) => {
 
     try {
       const username = profile.username as string;
+      const profileUserId = profile.user_id as string;
+
+      // ── Check subscription: free users get 1 page only ──
+      const { data: subData } = await supabase
+        .from("subscriptions")
+        .select("plan_type, status")
+        .eq("user_id", profileUserId)
+        .maybeSingle();
+      const isPro = subData?.plan_type === "pro" && ["active", "in_trial"].includes(subData?.status || "");
+      console.log(`[create-baseline] ${username}: isPro=${isPro} (plan=${subData?.plan_type}, status=${subData?.status})`);
 
       // ── Get profile info ──
       const userInfoResult = await trackedApiFetch(
@@ -188,9 +198,9 @@ Deno.serve(async (req) => {
       let isFullBaseline = true;
       let rawLoaded = 0;
 
-      if (followingCount > 10000) {
-        // Over 10K: sample page 1 only
-        console.log(`[create-baseline] ${username}: ${followingCount} followings > 10K, sampling page 1 only`);
+      if (!isPro || followingCount > 10000) {
+        // Free users OR over 10K: sample page 1 only
+        console.log(`[create-baseline] ${username}: ${followingCount} followings, ${!isPro ? 'FREE user' : '>10K'} — sampling page 1 only`);
         const url = `https://api.hikerapi.com/gql/user/following/chunk?user_id=${igUserId}`;
         const result = await trackedApiFetch(supabase, FUNCTION_NAME, profileId, url, { "x-access-key": hikerApiKey });
         apiCallCount++;
