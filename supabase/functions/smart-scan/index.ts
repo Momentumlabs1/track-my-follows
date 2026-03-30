@@ -356,11 +356,15 @@ async function performSpyScan(
         console.log(`[SPY-SCAN] ${username}: fresh follower_count=${freshFollower} (DB had ${actualFollowerCount})`);
         actualFollowerCount = freshFollower;
       }
-      // Update DB with fresh counts
-      await supabaseClient.from("tracked_profiles").update({
+      // Update DB with fresh counts + avatar
+      const freshAvatar = info?.profile_pic_url || info?.response?.profile_pic_url ||
+        info?.hd_profile_pic_url_info?.url || info?.response?.hd_profile_pic_url_info?.url || null;
+      const updatePayload: Record<string, unknown> = {
         following_count: actualFollowingCount,
         follower_count: actualFollowerCount,
-      }).eq("id", profileId);
+      };
+      if (freshAvatar) updatePayload.avatar_url = freshAvatar;
+      await supabaseClient.from("tracked_profiles").update(updatePayload).eq("id", profileId);
     } catch (e) {
       console.warn(`[SPY-SCAN] ${username}: Failed to parse info response:`, e);
     }
