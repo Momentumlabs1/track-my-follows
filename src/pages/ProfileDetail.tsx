@@ -99,10 +99,9 @@ const ProfileDetail = () => {
 
   const initialFollowEvents = useMemo(() =>
     followings
-      .filter((f) => f.direction === "following")
       .sort((a, b) => new Date(b.first_seen_at).getTime() - new Date(a.first_seen_at).getTime())
-      .map((f) => ({
-        id: `initial-${f.following_user_id}-${f.first_seen_at}`,
+      .map((f, idx) => ({
+        id: `initial-${f.following_username}-${f.first_seen_at}-${idx}`,
         event_type: "follow",
         target_username: f.following_username,
         target_display_name: f.following_display_name,
@@ -111,7 +110,7 @@ const ProfileDetail = () => {
         is_read: true,
         gender_tag: f.gender_tag,
         is_mutual: false,
-        category: f.category,
+        category: undefined,
         target_follower_count: null,
       })),
     [followings]);
