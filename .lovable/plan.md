@@ -1,115 +1,40 @@
 
 
-## Masterplan: Pro-Tutorial Reboot + Free-User Kostensenkung
+## Plan: Tutorial-Trigger Bugs fixen
 
-### Zwei grosse Aenderungen
+### Problem-Analyse
 
-**A) Free-User: Nur 1 Page Followings abrufen (Kostensenkung)**
-**B) Pro-Tutorial komplett neu: Interaktiver Onboarding-Flow mit echtem Scan**
+**2 Bugs gefunden:**
 
----
+1. **Pro-Tutorial zeigt nie**: `sessionStorage.setItem("show_pro_tutorial", "1")` wird **nirgendwo** im Code aufgerufen. Die alte PaywallSheet (die das Flag setzte) wurde geloescht. Der `nativePurchaseSuccess`-State im SubscriptionContext wird zwar gesetzt, aber von keiner Komponente gelesen.
 
-### Teil A: Free-User auf 1 Page limitieren
+2. **App-Tutorial unzuverlaessig**: Die Logik ist korrekt (profiles === [] + kein localStorage-Key), aber es fehlen Sicherheitsnetze:
+   - Kein Logging zum Debuggen
+   - Keine Route-Pruefung (Tutorial koennte starten bevor User auf /dashboard ist)
+   - Race Condition: `profiles` ist kurz `undefined` bevor es `[]` wird
 
-**Problem:** Aktuell ruft `create-baseline` fuer ALLE User die komplette Following-Liste ab (bis zu 100 API-Calls). Free-User brauchen das nicht — sie sehen eh nur geblurrte Insights.
+### Fixes
 
-**Aenderung in `supabase/functions/create-baseline/index.ts`:**
-- Vor dem Paginierungs-Loop: Subscription-Status des Users pruefen
-- Wenn Free-User: nur 1 Page (GQL, ~200 Followings) laden, `baseline_complete = true` setzen, fertig
-- Wenn Pro-User: voller Baseline-Loop wie bisher
-- Spart ca. 10-50 API-Calls pro Free-User-Profil
+**1. `src/contexts/SubscriptionContext.tsx`** — Pro-Tutorial Trigger einbauen
+- Im `onRevenueCatPurchase`-Callback: nach erfolgreichem Upgrade `sessionStorage.setItem("show_pro_tutorial", "1")` setzen
+- Gleiches im Realtime-Listener: wenn Subscription von free auf pro wechselt, Flag setzen
 
-**Aenderung in `supabase/functions/trigger-scan/index.ts`:**
-- Ist bereits auf 1 Page limitiert (fetchPage1) — keine Aenderung noetig
-- Der bestehende `PAYWALL_REQUIRED` Guard (Zeile 368) blockt bereits Wiederholungs-Scans fuer Free-User
+**2. `src/components/ProTutorial.tsx`** — Alternativen Trigger hinzufuegen
+- Zusaetzlich zum sessionStorage-Check: auch `nativePurchaseSuccess` aus SubscriptionContext als Trigger akzeptieren
+- Wenn `nativePurchaseSuccess === true` UND `pro_tutorial_done` nicht in localStorage → Tutorial starten + `clearNativePurchaseSuccess()` aufrufen
 
-**Aenderung in `src/pages/AnalyzingProfile.tsx`:**
-- Leichte UI-Anpassung: Da der erste Scan fuer Free-User viel schneller ist (~3-5s statt 15-30s), wird der Fortschrittsbalken schneller laufen
-- Evtl. weniger Steps anzeigen (kein "Baseline laden" Step fuer Free)
+**3. `src/components/AppTutorial.tsx`** — Robustheit verbessern
+- Console-Logs einbauen fuer Debugging (`[AppTutorial] shouldStart`, `[AppTutorial] phase change`)
+- Sicherstellen dass Tutorial nur auf `/dashboard` startet (Route-Check)
+- `profiles` Fallback: wenn nach 3s immer noch `undefined`, als `[]` behandeln (Timeout-Fallback)
 
----
+### Betroffene Dateien
 
-### Teil B: Pro-Tutorial komplett neu
+| Datei | Aenderung |
+|-------|-----------|
+| `src/contexts/SubscriptionContext.tsx` | `show_pro_tutorial` sessionStorage setzen bei Upgrade |
+| `src/components/ProTutorial.tsx` | `nativePurchaseSuccess` als alternativen Trigger |
+| `src/components/AppTutorial.tsx` | Route-Check + Timeout-Fallback + Debug-Logs |
 
-Aktuell: 3 Steps (Info → Spotlight auf Spy-Zone → Fertig). Langweilig.
-
-**Neuer Flow (6-7 Steps):**
-
-```text
-Step 1: Welcome-Info
-  "Du bist jetzt Pro! Dein Spion ist bereit."
-
-Step 2: Navigate zu /spy → Spotlight auf Spy-Name-Feld
-  "Gib deinem Spion einen Namen!"
-  → User kann tatsaechlich den Namen editieren
-  → "Weiter" erst aktiv nach Name-Eingabe oder Skip
-
-Step 3: Spotlight auf "Aktueller Einsatz" Sektion
-  "Dein Spion ueberwacht dieses Profil."
-  → Zeigt das erste gescannte Profil
-
-Step 4: Navigate zu /profile/:id → Pro-Scan Overlay
-  "Jetzt scannen wir das komplette Profil!"
-  → System loest einmalig trigger-scan + create-baseline aus
-  → Immersives ScanOverlay (das neue) wird angezeigt
-  → Im Hintergrund: Gender-Berechnung, Spy-Score Setup
-
-Step 5: Ergebnis-Screen im Overlay
-  → Zeigt: X Followings analysiert, Gender-Verteilung, Spy-Score
-  → "Dein Spion ist einsatzbereit!"
-
-Step 6: Completion
-  → Kurze Zusammenfassung was Pro alles kann
-  → Button "Los geht's!" → Navigate zu /dashboard
-```
-
-**Technische Umsetzung:**
-
-| Datei | Aktion |
-|-------|--------|
-| `src/components/ProTutorial.tsx` | KOMPLETT NEU — Multi-Page Flow mit Navigation |
-| `src/components/ProScanOverlay.tsx` | NEU — Spezieller Scan-Overlay fuer Tutorial (basiert auf ScanOverlay) |
-| `supabase/functions/create-baseline/index.ts` | EDIT — Free-User 1-Page Limit |
-| `src/pages/AnalyzingProfile.tsx` | EDIT — Schnellerer Flow fuer Free-User |
-| `src/i18n/locales/de.json` | EDIT — Neue Tutorial-Texte |
-| `src/i18n/locales/en.json` | EDIT — Neue Tutorial-Texte |
-| `src/i18n/locales/ar.json` | EDIT — Neue Tutorial-Texte |
-
-**ProTutorial.tsx — Architektur:**
-- Eigener Router-State: Tutorial navigiert den User physisch zu /spy und /profile/:id
-- Nutzt `useNavigate()` um zwischen Seiten zu wechseln
-- Overlay bleibt persistent ueber Seitenwechsel (in App.tsx gemounted)
-- Neuer Step-Typ: `{ type: "navigate"; route: string }` um Seitenwechsel zu triggern
-- Neuer Step-Typ: `{ type: "scan"; profileId: string }` um den Pro-Scan auszuloesen
-- Das Tutorial merkt sich den State in sessionStorage um Seitenwechsel zu ueberleben
-
-**ProScanOverlay.tsx:**
-- Basiert auf dem bestehenden ScanOverlay
-- Ruft `trigger-scan` + `create-baseline` parallel auf
-- Zeigt nach Abschluss: Anzahl Followings, Gender-Split, initialer Spy-Score
-- Kein Auto-Close — wartet auf "Weiter" Button
-
-**create-baseline Free-User Limit:**
-```typescript
-// Neu: User-ID aus Auth extrahieren, Subscription pruefen
-const { data: sub } = await supabase
-  .from("subscriptions")
-  .select("plan_type, status")
-  .eq("user_id", userId)
-  .maybeSingle();
-const isPro = sub?.plan_type === "pro" && ["active","in_trial"].includes(sub?.status || "");
-
-if (!isPro) {
-  // Free: nur 1 Page, dann baseline_complete
-  // ... fetch 1 page, save, mark complete, return
-}
-// Pro: voller Loop wie bisher
-```
-
-### Zusammenfassung
-
-- **7 Dateien** betroffen (2 neu, 5 editiert)
-- **1 Edge Function** editiert (create-baseline)
-- **Kostensenkung:** Free-User sparen 10-50 API-Calls pro Profil
-- **UX-Upgrade:** Pro-Tutorial wird zu einem interaktiven Erlebnis mit echtem Scan
+3 Dateien editiert, keine neuen Dateien.
 
