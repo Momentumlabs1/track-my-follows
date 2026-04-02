@@ -1,40 +1,85 @@
 
+Ziel: Den banalen, aber kritischen Onboarding-Fehler sauber beheben, ohne bestehende App-Flows funktional zu verändern, und dabei die nächsten offensichtlichen Trigger-/Flow-Bugs mit absichern.
 
-## Plan: Tutorial-Trigger Bugs fixen
+1. App-Tutorial-Trigger hart korrigieren
+- `src/components/AppTutorial.tsx` umbauen, damit das Tutorial nur noch startet, wenn die Profil-Query wirklich erfolgreich geladen ist.
+- Den 3-Sekunden-Fallback entfernen bzw. nicht mehr als “0 Profile” interpretieren.
+- Startbedingung auf echte Fakten begrenzen:
+  - User vorhanden
+  - Route exakt `/dashboard`
+  - Query erfolgreich
+  - Profil-Liste wirklich leer
+  - Tutorial-Key für diesen User noch nicht gesetzt
+- Zusätzlichen Guard einbauen: Falls das Tutorial bereits offen ist und danach doch Profile > 0 geladen werden, sofort abbrechen.
 
-### Problem-Analyse
+2. Doppeltes Mounting vom Pro-Tutorial bereinigen
+- `ProTutorial` ist aktuell doppelt eingebunden:
+  - global in `src/App.tsx`
+  - zusätzlich in `src/pages/Dashboard.tsx`
+- Das auf genau eine Quelle reduzieren, damit keine doppelten Effekte, Re-Initialisierungen oder Session-Races mehr entstehen.
+- Dasselbe Prinzip für Tutorial-/Overlay-Komponenten generell beibehalten: ein globaler Trigger, nicht doppelt in Page + App.
 
-**2 Bugs gefunden:**
+3. Onboarding-Signalquellen vereinheitlichen
+- Aktuell setzen `AuthContext.tsx` und `AuthCallback.tsx` bereits `show_welcome_*`, aber `AppTutorial` startet faktisch über eine getrennte Logik.
+- Die Trigger-Architektur vereinheitlichen:
+  - “Neuer User” Signal sauber auswerten
+  - “0 Profile” als zusätzliche Sicherheitsbedingung behalten
+  - keine implizite Ableitung mehr nur aus Lade-Timeouts
+- Damit wird verhindert, dass bestehende Accounts wegen langsamer Datenladung als “neu” behandelt werden.
 
-1. **Pro-Tutorial zeigt nie**: `sessionStorage.setItem("show_pro_tutorial", "1")` wird **nirgendwo** im Code aufgerufen. Die alte PaywallSheet (die das Flag setzte) wurde geloescht. Der `nativePurchaseSuccess`-State im SubscriptionContext wird zwar gesetzt, aber von keiner Komponente gelesen.
+4. Reset- und Persistenzlogik absichern
+- Prüfen und korrigieren, dass der Restart in `Settings.tsx` genau die richtigen Keys zurücksetzt und nichts anderes.
+- Sicherstellen, dass:
+  - App-Tutorial nur durch den korrekten User-Key gesteuert wird
+  - Pro-Tutorial nur durch Kauf-/Upgrade-Signale gesteuert wird
+  - Skip/Close/Done immer deterministisch die passenden Keys setzen
+- So vermeiden wir erneute “ploppt plötzlich auf”-Effekte.
 
-2. **App-Tutorial unzuverlaessig**: Die Logik ist korrekt (profiles === [] + kein localStorage-Key), aber es fehlen Sicherheitsnetze:
-   - Kein Logging zum Debuggen
-   - Keine Route-Pruefung (Tutorial koennte starten bevor User auf /dashboard ist)
-   - Race Condition: `profiles` ist kurz `undefined` bevor es `[]` wird
+5. Zusätzliche Bug-Suche direkt im selben Themenblock
+- Rund um globale Trigger gezielt nach ähnlichen Fehlern suchen und mitfixen, ohne das UX-Verhalten neu zu erfinden:
+  - weitere doppelt gemountete Overlay-/Tutorial-Komponenten
+  - lose Trigger über `sessionStorage`/`localStorage`
+  - Route-unabhängige Popups, die global leben
+  - Effekte, die auf `undefined`/Timeout statt auf echten Ladezustand reagieren
 
-### Fixes
+6. Bereits identifizierter weiterer kritischer Bug für den nächsten Schritt vormerken
+- `src/pages/AdminPage.tsx` prüft Admin-Rechte aktuell clientseitig über eine hartcodierte E-Mail, während die Route selbst nur mit normalem `ProtectedRoute` geschützt ist.
+- Das ist ein echter Sicherheitsfehler und sollte als separater Fix direkt danach eingeplant werden, weil es nichts mit dem Tutorial zu tun hat, aber klar auffällig ist.
 
-**1. `src/contexts/SubscriptionContext.tsx`** — Pro-Tutorial Trigger einbauen
-- Im `onRevenueCatPurchase`-Callback: nach erfolgreichem Upgrade `sessionStorage.setItem("show_pro_tutorial", "1")` setzen
-- Gleiches im Realtime-Listener: wenn Subscription von free auf pro wechselt, Flag setzen
+Betroffene Dateien
+- `src/components/AppTutorial.tsx`
+- `src/App.tsx`
+- `src/pages/Dashboard.tsx`
+- optional zur Vereinheitlichung: `src/contexts/AuthContext.tsx`, `src/pages/AuthCallback.tsx`, `src/pages/Settings.tsx`
 
-**2. `src/components/ProTutorial.tsx`** — Alternativen Trigger hinzufuegen
-- Zusaetzlich zum sessionStorage-Check: auch `nativePurchaseSuccess` aus SubscriptionContext als Trigger akzeptieren
-- Wenn `nativePurchaseSuccess === true` UND `pro_tutorial_done` nicht in localStorage → Tutorial starten + `clearNativePurchaseSuccess()` aufrufen
+Technische Leitlinie
+```text
+Falsch:
+profiles === undefined
+-> timeout
+-> als [] behandeln
+-> Tutorial startet bei Alt-Account
 
-**3. `src/components/AppTutorial.tsx`** — Robustheit verbessern
-- Console-Logs einbauen fuer Debugging (`[AppTutorial] shouldStart`, `[AppTutorial] phase change`)
-- Sicherstellen dass Tutorial nur auf `/dashboard` startet (Route-Check)
-- `profiles` Fallback: wenn nach 3s immer noch `undefined`, als `[]` behandeln (Timeout-Fallback)
+Richtig:
+query success === true
+AND profiles.length === 0
+AND route === /dashboard
+AND tutorial_shown_<userId> fehlt
+-> Tutorial startet
 
-### Betroffene Dateien
+Zusätzlich:
+Wenn später profiles.length > 0
+-> Tutorial sofort schließen
+```
 
-| Datei | Aenderung |
-|-------|-----------|
-| `src/contexts/SubscriptionContext.tsx` | `show_pro_tutorial` sessionStorage setzen bei Upgrade |
-| `src/components/ProTutorial.tsx` | `nativePurchaseSuccess` als alternativen Trigger |
-| `src/components/AppTutorial.tsx` | Route-Check + Timeout-Fallback + Debug-Logs |
+Erkannte Root Causes aus dem aktuellen Code
+- `AppTutorial` nutzt einen Timeout-Fallback, der “noch nicht geladen” in “leer” verwandelt.
+- `ProTutorial` ist doppelt gemountet.
+- New-user-Signale (`show_welcome_*`) existieren, werden aber nicht sauber als zentrale Wahrheit benutzt.
+- Trigger-Logik ist auf mehrere Dateien verteilt und dadurch fehleranfällig.
 
-3 Dateien editiert, keine neuen Dateien.
-
+Umsetzungsergebnis
+- Bestehende Accounts bekommen kein falsches Intro mehr.
+- Neue Accounts mit wirklich 0 Profilen bekommen das Tutorial weiterhin.
+- Pro-Tutorial läuft stabiler, weil es nicht doppelt initialisiert wird.
+- Die Tutorial-Logik wird robuster, ohne das restliche Produktverhalten umzubauen.
