@@ -369,7 +369,7 @@ export function AppTutorial() {
   const { showPaywall } = useSubscription();
   const location = useLocation();
   const navigate = useNavigate();
-  const { data: profiles } = useTrackedProfiles();
+  const { data: profiles, isSuccess: profilesLoaded } = useTrackedProfiles();
 
   const [phase, setPhase] = useState<"idle" | "intro" | "walkthrough" | "done">("idle");
   const [step, setStep] = useState(0);
@@ -381,30 +381,26 @@ export function AppTutorial() {
 
   const tutorialKey = user ? `tutorial_shown_${user.id}` : null;
 
-  // Timeout fallback: if profiles stays undefined for 3s, treat as empty
-  const [profilesTimedOut, setProfilesTimedOut] = useState(false);
-  useEffect(() => {
-    if (profiles !== undefined) return;
-    const timer = setTimeout(() => {
-      console.log("[AppTutorial] profiles timeout fallback triggered");
-      setProfilesTimedOut(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [profiles]);
-
-  const resolvedProfiles = profiles ?? (profilesTimedOut ? [] : undefined);
-
-  // FIX 1: Trigger based ONLY on user + no localStorage key + 0 profiles + on /dashboard
+  // Trigger based ONLY on user + query success + 0 profiles + on /dashboard + no localStorage key
   const shouldStartTutorial = useMemo(() => {
     if (!user) return false;
     if (!tutorialKey) return false;
     if (localStorage.getItem(tutorialKey)) return false;
-    if (resolvedProfiles === undefined) return false;
-    if (resolvedProfiles.length > 0) return false;
+    if (!profilesLoaded) return false; // Wait for real query success — no timeout fallback
+    if ((profiles?.length ?? 0) > 0) return false;
     if (location.pathname !== "/dashboard") return false;
-    console.log("[AppTutorial] shouldStartTutorial = true");
+    console.log("[AppTutorial] shouldStartTutorial = true (query loaded, 0 profiles)");
     return true;
-  }, [user, tutorialKey, resolvedProfiles, location.pathname]);
+  }, [user, tutorialKey, profilesLoaded, profiles, location.pathname]);
+
+  // Late-loading guard: if tutorial is open but profiles arrive > 0, abort immediately
+  useEffect(() => {
+    if (phase === "idle" || phase === "done") return;
+    if (profilesLoaded && (profiles?.length ?? 0) > 0) {
+      console.log("[AppTutorial] Late-loading guard: profiles arrived, aborting tutorial");
+      setPhase("done");
+    }
+  }, [phase, profilesLoaded, profiles]);
 
   useEffect(() => {
     if (!shouldStartTutorial) return;
