@@ -540,7 +540,7 @@ async function performSpyScan(
 }
 
 // ═══════════════════════════════════════════════════════
-// BASIC SCAN: Only Following page 1 (for non-spy profiles)
+// BASIC SCAN: Following page 1 + Followers page 1 (for non-spy profiles)
 // ═══════════════════════════════════════════════════════
 async function performBasicScan(
   supabaseClient: ReturnType<typeof createClient>,
@@ -617,6 +617,14 @@ async function performBasicScan(
   // ★ Avatar refresh for existing followings
   await refreshFollowingAvatars(supabaseClient, profileId, followingUsers);
 
+  // ★ Followers page 1 — detect new followers in daily auto-scan
+  let newFollowerCount = 0;
+  const followerUsers = await fetchPage1(supabaseClient, "followers", igUserId, hikerApiKey, profileId);
+  if (followerUsers !== null && followerUsers.length > 0) {
+    newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers);
+    await refreshFollowerAvatars(supabaseClient, followerUsers);
+  }
+
   await supabaseClient.from("tracked_profiles").update({
     previous_follower_count: profile.follower_count || 0,
     previous_following_count: profile.following_count || 0,
@@ -626,8 +634,8 @@ async function performBasicScan(
     initial_scan_done: true,
   }).eq("id", profileId);
 
-  console.log(`[BASIC-SCAN] ${username}: ${newFollowCount} new follows`);
-  return { new_follows: newFollowCount, new_followers: 0, unfollows_detected: 0 };
+  console.log(`[BASIC-SCAN] ${username}: ${newFollowCount} new follows, ${newFollowerCount} new followers`);
+  return { new_follows: newFollowCount, new_followers: newFollowerCount, unfollows_detected: 0 };
 }
 
 // ── Main handler ──
