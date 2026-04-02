@@ -148,9 +148,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         (payload: any) => {
           fetchSubscription();
           // If plan upgraded to pro, set tutorial flag
-          if (payload?.new?.plan_type === "pro" && ["active", "in_trial"].includes(payload?.new?.status)) {
+          const wasNotPro = payload?.old?.plan_type !== "pro" || !["active", "in_trial"].includes(payload?.old?.status);
+          const isNowPro = payload?.new?.plan_type === "pro" && ["active", "in_trial"].includes(payload?.new?.status);
+          if (wasNotPro && isNowPro) {
             try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
-            console.log("[SubscriptionContext] Realtime: pro upgrade detected, show_pro_tutorial flag set");
+            console.log("[SubscriptionContext] Realtime: genuine upgrade detected, show_pro_tutorial flag set");
           }
         }
       )
