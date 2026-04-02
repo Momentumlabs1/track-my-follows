@@ -3,12 +3,12 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface ScanStatusProps {
   lastScannedAt: string | null;
+  hasSpy?: boolean;
 }
 
-export function ScanStatus({ lastScannedAt }: ScanStatusProps) {
+export function ScanStatus({ lastScannedAt, hasSpy }: ScanStatusProps) {
   const { t } = useTranslation();
   const { plan } = useSubscription();
-
   const timeAgo = (dateStr: string | null): string => {
     if (!dateStr) return t("dashboard.never_scanned");
     const diff = Date.now() - new Date(dateStr).getTime();
