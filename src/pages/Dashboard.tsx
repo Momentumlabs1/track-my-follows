@@ -5,7 +5,7 @@ import { SpyWidget } from "@/components/SpyAgentCard";
 import { ProfileCard } from "@/components/ProfileCard";
 import { SpyIcon } from "@/components/SpyIcon";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
-import { ProTutorial } from "@/components/ProTutorial";
+
 
 import { InstagramAvatar } from "@/components/InstagramAvatar";
 import { useTrackedProfiles } from "@/hooks/useTrackedProfiles";
