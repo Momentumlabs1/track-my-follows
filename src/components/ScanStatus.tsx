@@ -24,7 +24,7 @@ export function ScanStatus({ lastScannedAt, hasSpy }: ScanStatusProps) {
     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
       <span>{timeAgo(lastScannedAt)}</span>
       <span className="opacity-40">·</span>
-      {plan === "pro" ? (
+      {plan === "pro" && hasSpy ? (
         <span className="text-brand-green font-medium">✓ {t("scan_status.auto_hourly")}</span>
       ) : (
         <span>{t("scan_status.once_daily")}</span>
