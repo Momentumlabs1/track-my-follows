@@ -540,7 +540,7 @@ async function performSpyScan(
 }
 
 // ═══════════════════════════════════════════════════════
-// BASIC SCAN: Only Following page 1 (for non-spy profiles)
+// BASIC SCAN: Following page 1 + Followers page 1 (for non-spy profiles)
 // ═══════════════════════════════════════════════════════
 async function performBasicScan(
   supabaseClient: ReturnType<typeof createClient>,
