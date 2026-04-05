@@ -684,6 +684,10 @@ Deno.serve(async (req) => {
 
     const results: Array<Record<string, unknown>> = [];
 
+    // ★ DEDUP: Track which IG accounts have already been basic-scanned this run
+    const basicScannedAccounts = new Set<string>();
+    const today = new Date().toISOString().split("T")[0];
+
     for (const profile of profiles) {
       // ★ FIX 1.7: Stop processing if runtime > 45s
       if (Date.now() - functionStartTime > 45_000) {
@@ -716,16 +720,72 @@ Deno.serve(async (req) => {
           const res = await performSpyScan(supabaseClient, profile, hikerApiKey);
           results.push({ username: profile.username, scan_type: "spy", ...res });
         } else {
+          // ★ DEDUP: Account-level key for non-spy basic scans
+          const accountKey = (profile.instagram_user_id as string) || (profile.username as string).toLowerCase();
+
+          // Check 1: Already scanned in this cron run?
+          if (basicScannedAccounts.has(accountKey)) {
+            console.log(`[DEDUP] ${profile.username} (row ${profileId}): IG account ${accountKey} already scanned this run, syncing last_scanned_at`);
+            await supabaseClient.from("tracked_profiles").update({ last_scanned_at: new Date().toISOString() }).eq("id", profileId);
+            results.push({ username: profile.username, scan_type: "basic", skipped: true, reason: "dedup_run" });
+            continue;
+          }
+
+          // Check 2: This row's own daily gate
           const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at as string) : null;
           if (lastScan) {
-            const today = new Date().toISOString().split("T")[0];
             const lastScanDate = lastScan.toISOString().split("T")[0];
             if (lastScanDate === today) {
+              basicScannedAccounts.add(accountKey);
               results.push({ username: profile.username, scan_type: "basic", skipped: true });
               continue;
             }
           }
+
+          // Check 3: Any sibling row for same IG account already scanned today?
+          if (profile.instagram_user_id) {
+            const { data: siblings } = await supabaseClient
+              .from("tracked_profiles")
+              .select("id, last_scanned_at")
+              .eq("instagram_user_id", profile.instagram_user_id as string)
+              .eq("is_active", true)
+              .neq("id", profileId)
+              .limit(10);
+
+            const siblingScannedToday = (siblings || []).some((s: Record<string, unknown>) => {
+              if (!s.last_scanned_at) return false;
+              return new Date(s.last_scanned_at as string).toISOString().split("T")[0] === today;
+            });
+
+            if (siblingScannedToday) {
+              console.log(`[DEDUP] ${profile.username} (row ${profileId}): sibling row already scanned today for IG ${profile.instagram_user_id}, syncing last_scanned_at`);
+              await supabaseClient.from("tracked_profiles").update({ last_scanned_at: new Date().toISOString() }).eq("id", profileId);
+              basicScannedAccounts.add(accountKey);
+              results.push({ username: profile.username, scan_type: "basic", skipped: true, reason: "dedup_sibling" });
+              continue;
+            }
+          }
+
           const res = await performBasicScan(supabaseClient, profile, hikerApiKey);
+          basicScannedAccounts.add(accountKey);
+
+          // ★ DEDUP: Update all sibling rows' last_scanned_at so they don't scan again
+          if (profile.instagram_user_id && !res.skipped_api) {
+            const { data: siblingRows } = await supabaseClient
+              .from("tracked_profiles")
+              .select("id")
+              .eq("instagram_user_id", profile.instagram_user_id as string)
+              .eq("is_active", true)
+              .neq("id", profileId)
+              .limit(10);
+
+            if (siblingRows && siblingRows.length > 0) {
+              const siblingIds = siblingRows.map((s: Record<string, unknown>) => s.id as string);
+              await supabaseClient.from("tracked_profiles").update({ last_scanned_at: new Date().toISOString() }).in("id", siblingIds);
+              console.log(`[DEDUP] ${profile.username}: synced last_scanned_at to ${siblingRows.length} sibling row(s)`);
+            }
+          }
+
           results.push({ username: profile.username, scan_type: "basic", ...res });
         }
 
