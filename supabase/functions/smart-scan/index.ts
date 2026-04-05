@@ -622,7 +622,7 @@ async function performBasicScan(
   const followerUsers = await fetchPage1(supabaseClient, "followers", igUserId, hikerApiKey, profileId);
   if (followerUsers !== null && followerUsers.length > 0) {
     newFollowerCount = await syncNewFollowers(supabaseClient, profileId, followerUsers);
-    await refreshFollowerAvatars(supabaseClient, followerUsers);
+    await refreshFollowerAvatars(supabaseClient, profileId, followerUsers);
   }
 
   await supabaseClient.from("tracked_profiles").update({
