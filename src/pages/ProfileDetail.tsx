@@ -67,7 +67,7 @@ const ProfileDetail = () => {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab || "new_follows");
   const [isScanning, setIsScanning] = useState(false);
   const [moveSpyOpen, setMoveSpyOpen] = useState(false);
-  const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats } = useSubscription();
+  const { plan, canUseUnfollows, shouldBlur, showPaywall, canUseStats, canUseSpy } = useSubscription();
   const { user } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
   const moveSpy = useMoveSpy();
@@ -91,6 +91,8 @@ const ProfileDetail = () => {
   const hasSpy = profile?.has_spy === true;
   const isLoading = profilesLoading || eventsLoading;
   const isPro = plan === "pro";
+  const isPaid = plan === "pro" || plan === "basic";
+  const isGuest = !user;
   const isFreeAndScanned = plan === "free" && profile?.initial_scan_done === true;
 
   // Safe counts
@@ -199,7 +201,7 @@ const ProfileDetail = () => {
 
   const getTabLock = (tabId: TabId): { locked: boolean; lockType: "paywall" | "spy" | null } => {
     if (tabId === "new_follows" || tabId === "new_followers") return { locked: false, lockType: null };
-    if (plan === "free") return { locked: true, lockType: "paywall" };
+    if (!isPaid) return { locked: true, lockType: "paywall" };
     if (!hasSpy) return { locked: true, lockType: "spy" };
     return { locked: false, lockType: null };
   };
@@ -325,13 +327,13 @@ const ProfileDetail = () => {
       <div id="locked-analysis" className="px-5 mb-2">
         <div className="relative">
           {/* Overlay for free users OR pro without spy */}
-          {(!isPro || !hasSpy) && (
+          {(!canUseSpy || !hasSpy) && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl gap-3">
               <div className="absolute inset-0 rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 shimmer-overlay" />
               </div>
               <button
-                onClick={() => !isPro ? showPaywall("analysis") : setMoveSpyOpen(true)}
+                onClick={() => !canUseSpy ? showPaywall("analysis") : setMoveSpyOpen(true)}
                 className="relative z-20 flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-primary-foreground text-sm shadow-lg min-h-[44px]"
                 style={{
                   background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-rose)))",
@@ -339,18 +341,18 @@ const ProfileDetail = () => {
                 }}
               >
                 <SpyIcon size={16} />
-                {!isPro
+                {!canUseSpy
                   ? t("locked_feature.unlock_with_pro", "Mit Pro freischalten")
                   : t("spy.assign_spy_here")}
               </button>
               <p className="relative z-20 text-muted-foreground text-xs text-center px-8">
-                {!isPro
+                {!canUseSpy
                   ? t("locked_feature.spy_teaser", "Verdachts-Score, Geschlechter-Analyse & mehr")
                   : t("spy.spy_required_description")}
               </p>
             </div>
           )}
-          <div className={(!isPro || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
+          <div className={(!canUseSpy || !hasSpy) ? "blur-md pointer-events-none select-none" : ""}>
 
 
 

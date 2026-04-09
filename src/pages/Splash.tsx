@@ -9,7 +9,7 @@ export default function Splash() {
 
   useEffect(() => {
     if (loading) return;
-    navigate(user ? "/dashboard" : "/onboarding", { replace: true });
+    navigate(user ? "/dashboard" : "/", { replace: true });
   }, [user, loading, navigate]);
 
   return <div className="min-h-[100dvh] bg-background" />;

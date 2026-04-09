@@ -112,10 +112,6 @@ export function SpyLupe({ active, children, onSpyClick, hintText = "🕵️ Drag
             }
           }}
           className="absolute z-30 cursor-grab active:cursor-grabbing touch-none select-none top-4 right-4"
-          style={{
-            filter: "grayscale(0.8)",
-            opacity: isDragging ? 1 : 0.6,
-          }}
         >
           <motion.div
             animate={isDragging ? {} : {
