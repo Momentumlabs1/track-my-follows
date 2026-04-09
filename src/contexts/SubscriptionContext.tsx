@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isNativeApp, launchNativePaywall, haptic } from "@/lib/native";
 import { toast } from "sonner";
+import { SpyPaywall } from "@/components/SpyPaywall";
 
 interface SubscriptionState {
-  plan: "free" | "pro";
+  plan: "free" | "basic" | "pro";
   status: "active" | "in_trial" | "canceled" | "past_due" | "expired";
   billingPeriod: "weekly" | "monthly" | "yearly" | null;
   maxProfiles: number;
@@ -13,6 +14,8 @@ interface SubscriptionState {
   canUseUnfollows: boolean;
   canUsePush: boolean;
   canUseStats: boolean;
+  canViewFollows: boolean;
+  canUseSpy: boolean;
   shouldBlur: boolean;
   trialEnd: string | null;
   currentPeriodEnd: string | null;
@@ -35,6 +38,8 @@ const defaultState: SubscriptionState = {
   canUseUnfollows: false,
   canUsePush: false,
   canUseStats: false,
+  canViewFollows: false,
+  canUseSpy: false,
   shouldBlur: true,
   trialEnd: null,
   currentPeriodEnd: null,
@@ -61,13 +66,13 @@ async function isUserProInDatabase(userId: string): Promise<boolean> {
     .eq("user_id", userId)
     .maybeSingle();
   if (!data) return false;
-  const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+  const isPaid = ["pro", "basic"].includes(data.plan_type) && ["active", "in_trial"].includes(data.status);
   const isWithinPaidPeriod =
-    data.plan_type === "pro" &&
+    ["pro", "basic"].includes(data.plan_type) &&
     ["expired", "canceled"].includes(data.status) &&
     data.current_period_end &&
     new Date(data.current_period_end) > new Date();
-  return isActiveOrTrial || !!isWithinPaidPeriod;
+  return isPaid || !!isWithinPaidPeriod;
 }
 
 async function waitForUpgrade(userId: string): Promise<boolean> {
@@ -83,6 +88,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>(defaultState);
   const [nativePurchaseSuccess, setNativePurchaseSuccess] = useState(false);
+  const [webPaywallOpen, setWebPaywallOpen] = useState(false);
   const userRef = useRef(user);
   userRef.current = user;
 
@@ -100,18 +106,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (data) {
-        const isActiveOrTrial = data.plan_type === "pro" && ["active", "in_trial"].includes(data.status);
+        const isActiveOrTrial = ["pro", "basic"].includes(data.plan_type) && ["active", "in_trial"].includes(data.status);
         const isWithinPaidPeriod = 
-          data.plan_type === "pro" && 
+          ["pro", "basic"].includes(data.plan_type) && 
           ["expired", "canceled"].includes(data.status) && 
           data.current_period_end && 
           new Date(data.current_period_end) > new Date();
         
-        const isPro = isActiveOrTrial || isWithinPaidPeriod;
+        const isPaid = isActiveOrTrial || isWithinPaidPeriod;
+        const isPro = isPaid && data.plan_type === "pro";
+        const isBasic = isPaid && data.plan_type === "basic";
         const proMax = isPro && (data.max_tracked_profiles ?? 0) >= 9999;
 
         setState({
-          plan: isPro ? "pro" : "free",
+          plan: isPro ? "pro" : isBasic ? "basic" : "free",
           status: (data.status as SubscriptionState["status"]) || "active",
           billingPeriod: (data.billing_period as SubscriptionState["billingPeriod"]) || null,
           maxProfiles: data.max_tracked_profiles || 1,
@@ -119,7 +127,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           canUseUnfollows: isPro,
           canUsePush: isPro,
           canUseStats: isPro,
-          shouldBlur: !isPro,
+          canViewFollows: isPaid,
+          canUseSpy: isPaid,
+          shouldBlur: !isPaid,
           trialEnd: data.trial_end || null,
           currentPeriodEnd: data.current_period_end || null,
           isLoading: false,
@@ -147,12 +157,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
         (payload: any) => {
           fetchSubscription();
-          // If plan upgraded to pro, set tutorial flag
           const wasNotPro = payload?.old?.plan_type !== "pro" || !["active", "in_trial"].includes(payload?.old?.status);
           const isNowPro = payload?.new?.plan_type === "pro" && ["active", "in_trial"].includes(payload?.new?.status);
           if (wasNotPro && isNowPro) {
             try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
-            console.log("[SubscriptionContext] Realtime: genuine upgrade detected, show_pro_tutorial flag set");
           }
         }
       )
@@ -166,7 +174,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (!isNativeApp()) return;
 
     (window as any).onRevenueCatPurchase = async () => {
-      console.log("[PaywallNative] onRevenueCatPurchase callback fired, polling DB...");
       const currentUser = userRef.current;
       if (!currentUser) return;
 
@@ -177,10 +184,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         haptic.success();
         setNativePurchaseSuccess(true);
         try { sessionStorage.setItem("show_pro_tutorial", "1"); } catch {}
-        console.log("[SubscriptionContext] Pro upgrade detected, show_pro_tutorial flag set");
       } else {
         haptic.error();
-        console.warn("[PaywallNative] Purchase callback fired but DB not updated after polling");
       }
     };
 
@@ -194,12 +199,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const showPaywall = useCallback((trigger?: string) => {
     if (isNativeApp() && user) {
-      console.log("[PaywallNative] Launching RevenueCat native paywall");
       launchNativePaywall(user.id);
     } else {
-      toast.info("Käufe & Abos sind nur in der App verfügbar. Öffne Spy Secret auf deinem iPhone.", {
-        duration: 5000,
-      });
+      setWebPaywallOpen(true);
     }
   }, [user]);
 
@@ -216,6 +218,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       clearNativePurchaseSuccess,
     }}>
       {children}
+      <SpyPaywall open={webPaywallOpen} onClose={() => setWebPaywallOpen(false)} />
     </SubscriptionContext.Provider>
   );
 }

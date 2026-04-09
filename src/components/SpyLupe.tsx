@@ -111,10 +111,8 @@ export function SpyLupe({ active, children, onSpyClick, hintText = "🕵️ Drag
               onSpyClick?.();
             }
           }}
-          className="absolute z-30 cursor-grab active:cursor-grabbing touch-none select-none"
+          className="absolute z-30 cursor-grab active:cursor-grabbing touch-none select-none top-4 right-4"
           style={{
-            top: 16,
-            right: 16,
             filter: "grayscale(0.8)",
             opacity: isDragging ? 1 : 0.6,
           }}
