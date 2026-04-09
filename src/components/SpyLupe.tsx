@@ -91,7 +91,7 @@ export function SpyLupe({ active, children, onSpyClick, hintText = "🕵️ Drag
           dragElastic={0.5}
           dragMomentum={false}
           dragConstraints={containerRef}
-          style={{ x: dragX, y: dragY } as any}
+          style={{ x: dragX, y: dragY, filter: "grayscale(0.8)", opacity: isDragging ? 1 : 0.6 } as any}
           onPointerDown={() => {
             tapStart.current = Date.now();
             didDrag.current = false;
