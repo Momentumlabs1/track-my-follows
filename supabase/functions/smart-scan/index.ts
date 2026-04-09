@@ -708,12 +708,15 @@ Deno.serve(async (req) => {
       try {
         const sub = subMap.get(profile.user_id) as Record<string, unknown> | undefined;
         const isPro = sub?.plan_type === "pro" && ["active", "in_trial"].includes(sub?.status as string || "");
-        const hasSpy = profile.has_spy === true && isPro;
+        const isBasic = sub?.plan_type === "basic" && ["active", "in_trial"].includes(sub?.status as string || "");
+        const hasSpy = profile.has_spy === true && (isPro || isBasic);
 
         if (hasSpy) {
           const lastScan = profile.last_scanned_at ? new Date(profile.last_scanned_at as string) : null;
-          const fiftyFiveMinAgo = new Date(Date.now() - 55 * 60 * 1000);
-          if (lastScan && lastScan > fiftyFiveMinAgo) {
+          // Pro: 55 min cooldown, Basic: 120 min cooldown
+          const cooldownMs = isPro ? 55 * 60 * 1000 : 120 * 60 * 1000;
+          const cooldownCutoff = new Date(Date.now() - cooldownMs);
+          if (lastScan && lastScan > cooldownCutoff) {
             results.push({ username: profile.username, scan_type: "spy", skipped: true });
             continue;
           }

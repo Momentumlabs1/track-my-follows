@@ -60,6 +60,8 @@ const Dashboard = () => {
   }, [user?.id]);
   const spyProfile = profiles.find((p) => p.has_spy === true) || null;
   const isPro = plan === "pro";
+  const isBasic = plan === "basic";
+  const isPaid = isPro || isBasic;
 
   // Sort profiles: spy profile goes to the bottom
   const sortedProfiles = useMemo(() =>
@@ -98,12 +100,12 @@ const Dashboard = () => {
       {/* Top bar */}
       <div className="px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-3">
         <div className="flex items-center justify-between">
-          {isPro && (
+          {isPaid && (
             <span
               className="font-bold tracking-wider uppercase flex items-center gap-1"
               style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.55)" }}
             >
-              ✦ Spy Secret Pro
+              ✦ Spy Secret {isPro ? "Pro" : "Basic"}
             </span>
           )}
           <span
@@ -126,13 +128,13 @@ const Dashboard = () => {
           {spyProfile?.spy_name || t("dashboard.spy_default_name", "Spion 🕵️")}
         </motion.h1>
         <p className="text-primary-foreground/50 mt-1" style={{ fontSize: "0.75rem" }}>
-          {isPro ? t("dashboard.greeting_subtitle_pro") : t("dashboard.greeting_subtitle_free")}
+          {isPaid ? t("dashboard.greeting_subtitle_pro") : t("dashboard.greeting_subtitle_free")}
         </p>
       </div>
 
       {/* ─── Spy Agent Zone ─── */}
       <div id="spy-agent-zone" className="px-5 pt-2 pb-12" style={{ position: "relative", zIndex: 10 }}>
-          {isPro ? (
+          {isPaid ? (
             <div className="relative rounded-[1.75rem]" style={{ background: "linear-gradient(135deg, hsl(340 65% 45%), hsl(340 70% 55%))", boxShadow: "0 8px 30px -6px rgba(200,50,100,0.35)", overflow: "visible" }}>
               {/* Scan-line effect on full dark bg */}
               <div
@@ -358,7 +360,7 @@ const Dashboard = () => {
             className="w-full py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 min-h-[44px] text-muted-foreground bg-card border border-border"
             style={{ fontSize: "0.875rem" }}
           >
-            <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPro ? 5 : 1})
+            <Plus className="h-4 w-4" /> {t("nav.add")} ({profiles.length}/{isPaid ? (isPro ? 5 : 4) : 1})
           </button>
         </div>
       )}
