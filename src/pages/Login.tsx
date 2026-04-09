@@ -47,6 +47,11 @@ const Login = () => {
   const handleAppleLogin = async () => {
     setSocialLoading("apple");
     try {
+      // Persist pending username for OAuth redirect flow
+      const pendingUsername = sessionStorage.getItem("pending_track_username");
+      if (pendingUsername) {
+        localStorage.setItem("pending_track_username_oauth", pendingUsername);
+      }
       if (isNativeApp()) {
         // Native: use auth-start edge function + oauth:// deeplink (same as Google)
         const { data, error } = await supabase.functions.invoke("auth-start", {
@@ -97,6 +102,11 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setSocialLoading("google");
     try {
+      // Persist pending username for OAuth redirect flow
+      const pendingUsername = sessionStorage.getItem("pending_track_username");
+      if (pendingUsername) {
+        localStorage.setItem("pending_track_username_oauth", pendingUsername);
+      }
       if (isNativeApp()) {
         const { data, error } = await supabase.functions.invoke("auth-start", {
           body: { provider: "google", deeplink_scheme: NATIVE_DEEPLINK_SCHEME },

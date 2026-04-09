@@ -13,6 +13,7 @@ import { ProTutorial } from "@/components/ProTutorial";
 
 import { SpaRedirector } from "@/components/SpaRedirector";
 import { useDirection } from "@/hooks/useDirection";
+import LandingPage from "./pages/LandingPage";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -43,7 +44,7 @@ function AppContent() {
     <>
       <SpaRedirector />
       <Routes>
-        <Route path="/" element={<Splash />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/splash" element={<Splash />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
@@ -59,9 +60,9 @@ function AppContent() {
         <Route path="/legal/widerruf" element={<LegalWiderruf />} />
         <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/profile/:id" element={<ProtectedRoute><ProfileDetail /></ProtectedRoute>} />
+        <Route path="/profile/:id" element={<ProfileDetail />} />
         <Route path="/add-profile" element={<ProtectedRoute><AddProfile /></ProtectedRoute>} />
-        <Route path="/analyzing/:profileId/:username" element={<ProtectedRoute><AnalyzingProfile /></ProtectedRoute>} />
+        <Route path="/analyzing/:profileId/:username" element={<AnalyzingProfile />} />
         <Route path="/spy" element={<ProtectedRoute><SpyDetail /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />

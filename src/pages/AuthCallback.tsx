@@ -85,6 +85,12 @@ const AuthCallback = () => {
         }
 
         console.info("[auth/callback] Session set successfully");
+        // Transfer pending username from OAuth localStorage to sessionStorage
+        const pendingFromOAuth = localStorage.getItem("pending_track_username_oauth");
+        if (pendingFromOAuth) {
+          sessionStorage.setItem("pending_track_username", pendingFromOAuth);
+          localStorage.removeItem("pending_track_username_oauth");
+        }
         // Check if user is new (created < 60s ago) → trigger tutorial
         const { data: { user: sessionUser } } = await supabase.auth.getUser();
         if (sessionUser) {
