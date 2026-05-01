@@ -55,6 +55,39 @@ export type Database = {
           },
         ]
       }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id: string
+          metadata?: Json | null
+          recipient_email: string
+          status?: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+        }
+        Relationships: []
+      }
       follow_events: {
         Row: {
           category: string | null
@@ -178,6 +211,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      landing_snapshot_cache: {
+        Row: {
+          expires_at: string
+          fetched_at: string
+          last_refresh_attempt: string | null
+          last_refresh_status: string | null
+          snapshot: Json
+          username: string
+        }
+        Insert: {
+          expires_at: string
+          fetched_at?: string
+          last_refresh_attempt?: string | null
+          last_refresh_status?: string | null
+          snapshot: Json
+          username: string
+        }
+        Update: {
+          expires_at?: string
+          fetched_at?: string
+          last_refresh_attempt?: string | null
+          last_refresh_status?: string | null
+          snapshot?: Json
+          username?: string
+        }
+        Relationships: []
+      }
+      landing_visits: {
+        Row: {
+          converted_at: string | null
+          country: string | null
+          created_at: string
+          device: string | null
+          id: string
+          is_first_ever: boolean | null
+          landed_on_signup: boolean | null
+          language: string | null
+          path: string
+          referrer: string | null
+          referrer_domain: string | null
+          referrer_source: string | null
+          screen_w: number | null
+          session_id: string
+          session_is_new: boolean | null
+          signup_email: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          converted_at?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          is_first_ever?: boolean | null
+          landed_on_signup?: boolean | null
+          language?: string | null
+          path: string
+          referrer?: string | null
+          referrer_domain?: string | null
+          referrer_source?: string | null
+          screen_w?: number | null
+          session_id: string
+          session_is_new?: boolean | null
+          signup_email?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          converted_at?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          id?: string
+          is_first_ever?: boolean | null
+          landed_on_signup?: boolean | null
+          language?: string | null
+          path?: string
+          referrer?: string | null
+          referrer_domain?: string | null
+          referrer_source?: string | null
+          screen_w?: number | null
+          session_id?: string
+          session_is_new?: boolean | null
+          signup_email?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
+      likes_cache: {
+        Row: {
+          expires_at: string
+          fetched_at: string | null
+          likers: Json | null
+          username: string
+        }
+        Insert: {
+          expires_at: string
+          fetched_at?: string | null
+          likers?: Json | null
+          username: string
+        }
+        Update: {
+          expires_at?: string
+          fetched_at?: string | null
+          likers?: Json | null
+          username?: string
+        }
+        Relationships: []
       }
       profile_followers: {
         Row: {
@@ -323,6 +476,30 @@ export type Database = {
           },
         ]
       }
+      story_cache: {
+        Row: {
+          expires_at: string
+          fetched_at: string | null
+          highlights: Json | null
+          stories: Json | null
+          username: string
+        }
+        Insert: {
+          expires_at: string
+          fetched_at?: string | null
+          highlights?: Json | null
+          stories?: Json | null
+          username: string
+        }
+        Update: {
+          expires_at?: string
+          fetched_at?: string | null
+          highlights?: Json | null
+          stories?: Json | null
+          username?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string
@@ -353,6 +530,7 @@ export type Database = {
           created_at: string | null
           current_period_end: string | null
           current_period_start: string | null
+          has_used_trial: boolean
           id: string
           max_tracked_profiles: number
           plan_type: string
@@ -361,6 +539,8 @@ export type Database = {
           spy_count: number
           status: string
           store: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           trial_end: string | null
           updated_at: string | null
           user_id: string
@@ -370,6 +550,7 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          has_used_trial?: boolean
           id?: string
           max_tracked_profiles?: number
           plan_type?: string
@@ -378,6 +559,8 @@ export type Database = {
           spy_count?: number
           status?: string
           store?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           trial_end?: string | null
           updated_at?: string | null
           user_id: string
@@ -387,6 +570,7 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          has_used_trial?: boolean
           id?: string
           max_tracked_profiles?: number
           plan_type?: string
@@ -395,6 +579,8 @@ export type Database = {
           spy_count?: number
           status?: string
           store?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           trial_end?: string | null
           updated_at?: string | null
           user_id?: string
@@ -607,11 +793,20 @@ export type Database = {
       }
       delete_own_account: { Args: never; Returns: undefined }
       get_daily_api_calls: { Args: never; Returns: number }
+      get_max_profiles_for_plan: {
+        Args: { p_plan_type: string }
+        Returns: number
+      }
       get_max_tracked_profiles: { Args: { _user_id: string }; Returns: number }
       get_user_limits: { Args: { p_user_id: string }; Returns: Json }
       increment_gender_count: {
         Args: { p_gender: string; p_profile_id: string }
         Returns: undefined
+      }
+      is_pro_paid: { Args: { p_user_id: string }; Returns: boolean }
+      is_spy_charged: {
+        Args: { p_tracked_profile_id: string; p_user_id: string }
+        Returns: boolean
       }
       move_spy: {
         Args: { p_new_profile_id: string; p_user_id: string }
